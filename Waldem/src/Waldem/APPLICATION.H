@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core.h"
+#include "Application.h"
 
 namespace Waldem
 {
@@ -8,12 +9,10 @@ namespace Waldem
 	{
 	public:
 		Application();
-		virtual ~Application();
 
 		void Run();
 	};
 
-	//to be declined in CLIENT
+	//to be defined in CLIENT
 	Application* CreateApplication();
 }
-
