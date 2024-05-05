@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Core.h"
-#include "Application.h"
+#include "Window.h"
 
 namespace Waldem
 {
@@ -9,8 +9,12 @@ namespace Waldem
 	{
 	public:
 		Application();
+		virtual ~Application();
 
 		void Run();
+	private:
+		std::unique_ptr<Window> Window;
+		bool IsRunning = true;
 	};
 
 	//to be defined in CLIENT

@@ -1,19 +1,26 @@
+#include <wdpch.h>
 #include "Application.h"
-#include  "Waldem/Events/ApplicationEvent.h"
-#include  "Waldem/Log.h"
+#include "Waldem/Log.h"
+#include "GLFW/glfw3.h"
 
 namespace Waldem
 {
 	Application::Application()
 	{
+		Window = std::unique_ptr<Waldem::Window>(Window::Create());
+	}
 
+	Application::~Application()
+	{
 	}
 
 	void Application::Run()
 	{
-		WindowResizeEvent e(1280, 720);
-		WD_TRACE(e);
-		
-		while (true);
+		while (IsRunning)
+		{
+			glClearColor(1,0,1,1);
+			glClear(GL_COLOR_BUFFER_BIT);
+			Window->OnUpdate();
+		}
 	}
 } 

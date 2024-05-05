@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="Platform">
+      <UniqueIdentifier>{2AC788B4-1694-E3BF-3FAD-D1672BD9184E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Platform\Windows">
+      <UniqueIdentifier>{64FBD71A-50F4-F66C-7926-DCF1657ED678}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Waldem">
       <UniqueIdentifier>{1F0CE8D9-0BAE-12B0-F468-2604E0A99900}</UniqueIdentifier>
     </Filter>
@@ -9,6 +15,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Platform\Windows\WindowsWindow.h">
+      <Filter>Platform\Windows</Filter>
+    </ClInclude>
     <ClInclude Include="src\Waldem.h" />
     <ClInclude Include="src\Waldem\Application.h">
       <Filter>Waldem</Filter>
@@ -34,13 +43,21 @@
     <ClInclude Include="src\Waldem\Log.h">
       <Filter>Waldem</Filter>
     </ClInclude>
+    <ClInclude Include="src\Waldem\Window.h">
+      <Filter>Waldem</Filter>
+    </ClInclude>
+    <ClInclude Include="src\wdpch.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Platform\Windows\WindowsWindow.cpp">
+      <Filter>Platform\Windows</Filter>
+    </ClCompile>
     <ClCompile Include="src\Waldem\Application.cpp">
       <Filter>Waldem</Filter>
     </ClCompile>
     <ClCompile Include="src\Waldem\Log.cpp">
       <Filter>Waldem</Filter>
     </ClCompile>
+    <ClCompile Include="src\wdpch.cpp" />
   </ItemGroup>
 </Project>
