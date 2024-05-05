@@ -4,7 +4,5 @@
 
 #include <stdio.h>
 #include "Waldem/Application.h"
-
-//---Entry Point-------------------------------------
+#include "Waldem/Log.h"
 #include "Waldem/EntryPoint.h"
-//---Entry Point-------------------------------------
