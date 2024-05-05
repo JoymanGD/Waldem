@@ -1,62 +1,61 @@
 #pragma once
 
 #include "Event.h"
-#include <sstream>
 
 namespace Waldem
 {
     class WALDEM_API MouseMovedEvent : public Event
     {
     public:
-        MouseMovedEvent(float x, float y) : m_MouseX(x), m_MouseY(y) {}
+        MouseMovedEvent(float x, float y) : MouseX(x), MouseY(y) {}
         
-        inline float GetX() const { return m_MouseX; }
-        inline float GetY() const { return m_MouseY; }
+        inline float GetX() const { return MouseX; }
+        inline float GetY() const { return MouseY; }
 
         std::string ToString() const override
         {
             std::stringstream ss;
-            ss << "MouseMovedEvent: " << m_MouseX << ", " << m_MouseY;
+            ss << "MouseMovedEvent: " << MouseX << ", " << MouseY;
             return ss.str();
         }
 
         EVENT_CLASS_TYPE(MouseMoved)
         EVENT_CLASS_CATEGORY(EventCategoryMouse | EventCategoryInput)
     private:
-        float m_MouseX, m_MouseY;
+        float MouseX, MouseY;
     };
     
     class WALDEM_API MouseScrolledEvent : public Event
     {
     public:
-        MouseScrolledEvent(float xOffset, float yOffset) : m_XOffset(xOffset), m_YOffset(yOffset) {}
+        MouseScrolledEvent(float xOffset, float yOffset) : XOffset(xOffset), YOffset(yOffset) {}
         
-        inline float GetXOffset() const { return m_XOffset; }
-        inline float GetYOffset() const { return m_YOffset; }
+        inline float GetXOffset() const { return XOffset; }
+        inline float GetYOffset() const { return YOffset; }
 
         std::string ToString() const override
         {
             std::stringstream ss;
-            ss << "MouseScrolledEvent: " << m_XOffset << ", " << m_YOffset;
+            ss << "MouseScrolledEvent: " << XOffset << ", " << YOffset;
             return ss.str();
         }
 
         EVENT_CLASS_TYPE(MouseScrolled)
         EVENT_CLASS_CATEGORY(EventCategoryMouse | EventCategoryInput)
     private:
-        float m_XOffset, m_YOffset;
+        float XOffset, YOffset;
     };
     
     class WALDEM_API MouseButtonEvent : public Event
     {
     public:
-        inline int GetMouseButton() const { return m_Button; }
+        inline int GetMouseButton() const { return Button; }
         
         EVENT_CLASS_CATEGORY(EventCategoryMouse | EventCategoryMouseButton | EventCategoryInput)
     protected:
-        MouseButtonEvent(int button) : m_Button(button) {}
+        MouseButtonEvent(int button) : Button(button) {}
         
-        int m_Button;
+        int Button;
     };
     
     class WALDEM_API MouseButtonPressedEvent : public MouseButtonEvent
@@ -67,7 +66,7 @@ namespace Waldem
         std::string ToString() const override
         {
             std::stringstream ss;
-            ss << "MouseButtonPressedEvent: " << m_Button;
+            ss << "MouseButtonPressedEvent: " << Button;
             return ss.str();
         }
 
@@ -82,7 +81,7 @@ namespace Waldem
         std::string ToString() const override
         {
             std::stringstream ss;
-            ss << "MouseButtonReleasedEvent: " << m_Button;
+            ss << "MouseButtonReleasedEvent: " << Button;
             return ss.str();
         }
 

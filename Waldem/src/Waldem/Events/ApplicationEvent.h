@@ -1,30 +1,29 @@
 #pragma once
 
 #include "Event.h"
-#include <sstream>
 
 namespace Waldem
 {
     class WALDEM_API WindowResizeEvent : public Event
     {
     public:
-        WindowResizeEvent(uint32_t width, uint32_t height) : m_Width(width), m_Height(height) {}
+        WindowResizeEvent(uint32_t width, uint32_t height) : Width(width), Height(height) {}
         
-        inline unsigned int GetWidth() const { return m_Width; }
-        inline unsigned int GetHeight() const { return m_Height; }
-        // inline std::tuple<unsigned int, unsigned int> GetSize() const { return std::tuple(m_Width, m_Height); }
+        inline uint32_t GetWidth() const { return Width; }
+        inline uint32_t GetHeight() const { return Height; }
+        inline std::tuple<uint32_t, uint32_t> GetSize() const { return std::tuple(Width, Height); }
 
         std::string ToString() const override
         {
             std::stringstream ss;
-            ss << "WindowResizeEvent: " << m_Width << ", " << m_Height;
+            ss << "WindowResizeEvent: " << Width << ", " << Height;
             return ss.str();
         }
 
         EVENT_CLASS_TYPE(WindowResize)
         EVENT_CLASS_CATEGORY(EventCategoryApplication)
     private:
-        unsigned int m_Width, m_Height;
+        uint32_t Width, Height;
     };
     
     class WALDEM_API WindowCloseEvent : public Event
