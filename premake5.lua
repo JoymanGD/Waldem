@@ -21,7 +21,6 @@ project "Waldem"
     kind "SharedLib"
     language "C++"
     cppdialect "C++20"
-    staticruntime "on"
 
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
@@ -64,16 +63,19 @@ project "Waldem"
 
     filter "configurations:Debug"
         defines "WD_DEBUG"
+        staticruntime "off"
         runtime "Debug"
         symbols "On"
 
     filter "configurations:Release"
         defines "WD_RELEASE"
+        staticruntime "off"
         runtime "Release"
         optimize "On"
 
     filter "configurations:Dist"
         defines "WD_DIST"
+        staticruntime "off"
         runtime "Release"
         optimize "On"
 
@@ -82,7 +84,6 @@ project "Sandbox"
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++20"
-    staticruntime "off"
 
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
@@ -111,15 +112,18 @@ project "Sandbox"
 
     filter "configurations:Debug"
         defines "WD_DEBUG"
+        staticruntime "off"
         runtime "Debug"
         symbols "On"
 
     filter "configurations:Release"
         defines "WD_RELEASE"
+        staticruntime "off"
         runtime "Release"
         optimize "On"
 
     filter "configurations:Dist"
         defines "WD_DIST"
+        staticruntime "off"
         runtime "Release"
         optimize "On"
