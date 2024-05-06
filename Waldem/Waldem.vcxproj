@@ -83,7 +83,7 @@
       <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -109,7 +109,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -136,7 +136,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -161,6 +161,8 @@
     <ClInclude Include="src\Waldem\Events\Event.h" />
     <ClInclude Include="src\Waldem\Events\KeyEvent.h" />
     <ClInclude Include="src\Waldem\Events\MouseEvent.h" />
+    <ClInclude Include="src\Waldem\Layer.h" />
+    <ClInclude Include="src\Waldem\LayerStack.h" />
     <ClInclude Include="src\Waldem\Log.h" />
     <ClInclude Include="src\Waldem\Window.h" />
     <ClInclude Include="src\wdpch.h" />
@@ -168,6 +170,8 @@
   <ItemGroup>
     <ClCompile Include="src\Platform\Windows\WindowsWindow.cpp" />
     <ClCompile Include="src\Waldem\Application.cpp" />
+    <ClCompile Include="src\Waldem\Layer.cpp" />
+    <ClCompile Include="src\Waldem\LayerStack.cpp" />
     <ClCompile Include="src\Waldem\Log.cpp" />
     <ClCompile Include="src\wdpch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>

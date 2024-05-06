@@ -40,6 +40,12 @@
     <ClInclude Include="src\Waldem\Events\MouseEvent.h">
       <Filter>Waldem\Events</Filter>
     </ClInclude>
+    <ClInclude Include="src\Waldem\Layer.h">
+      <Filter>Waldem</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\LayerStack.h">
+      <Filter>Waldem</Filter>
+    </ClInclude>
     <ClInclude Include="src\Waldem\Log.h">
       <Filter>Waldem</Filter>
     </ClInclude>
@@ -53,6 +59,12 @@
       <Filter>Platform\Windows</Filter>
     </ClCompile>
     <ClCompile Include="src\Waldem\Application.cpp">
+      <Filter>Waldem</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Waldem\Layer.cpp">
+      <Filter>Waldem</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Waldem\LayerStack.cpp">
       <Filter>Waldem</Filter>
     </ClCompile>
     <ClCompile Include="src\Waldem\Log.cpp">

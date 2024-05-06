@@ -2,6 +2,9 @@
 
 #include "Core.h"
 #include "Window.h"
+#include "Waldem/LayerStack.h"
+#include "Waldem/Events/Event.h"
+#include "Waldem/Events/ApplicationEvent.h"
 
 namespace Waldem
 {
@@ -12,9 +15,17 @@ namespace Waldem
 		virtual ~Application();
 
 		void Run();
+
+		void OnEvent(Event& e);
+
+		void PushLayer(Layer* layer);
+		void PushOverlay(Layer* overlay);
 	private:
+		bool OnWindowClose(WindowCloseEvent& e);
+		
 		std::unique_ptr<Window> Window;
 		bool IsRunning = true;
+		LayerStack LayerStack;
 	};
 
 	//to be defined in CLIENT
