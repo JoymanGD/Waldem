@@ -1,7 +1,8 @@
 #include <wdpch.h>
 #include "Application.h"
+
+#include "glad/glad.h"
 #include "Waldem/Log.h"
-#include "GLFW/glfw3.h"
 
 namespace Waldem
 {
