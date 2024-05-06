@@ -4,6 +4,8 @@
 #include "Waldem/Events/MouseEvent.h"
 #include "Waldem/Events/KeyEvent.h"
 #include "WindowsWindow.h"
+
+#include "glad/glad.h"
 #include "Waldem/Log.h"
 
 namespace Waldem {
@@ -49,6 +51,8 @@ namespace Waldem {
 		++s_GLFWWindowCount;
 
 		glfwMakeContextCurrent(Window);
+		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+		WD_CORE_ASSERT(status, "Failed to initialize Glad!");
 		glfwSetWindowUserPointer(Window, &Data);
 		SetVSync(true);
 

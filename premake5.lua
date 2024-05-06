@@ -13,8 +13,12 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 IncludeDir = {}
 IncludeDir["GLFW"] = "Waldem/vendor/GLFW/include"
+IncludeDir["Glad"] = "Waldem/vendor/Glad/include"
+IncludeDir["ImGui"] = "Waldem/vendor/imgui"
 
 include "Waldem/vendor/GLFW"
+include "Waldem/vendor/Glad"
+include "Waldem/vendor/imgui"
 
 project "Waldem"
     location "Waldem"    
@@ -38,12 +42,16 @@ project "Waldem"
     {
         "%{prj.name}/src",
         "%{prj.name}/vendor/spdlog/include",
-        "%{IncludeDir.GLFW}"
+        "%{IncludeDir.GLFW}",
+        "%{IncludeDir.Glad}",
+        "%{IncludeDir.ImGui}"
     }
     
     links
     {
         "GLFW",
+        "Glad",
+        "ImGui",
         "opengl32.lib"
     }
 
@@ -53,7 +61,8 @@ project "Waldem"
         defines
         {
             "WD_PLATFORM_WINDOWS",
-            "WD_BUILD_DLL"
+            "WD_BUILD_DLL",
+            "GLFW_INCLUDE_NONE"
         }
 
         postbuildcommands
