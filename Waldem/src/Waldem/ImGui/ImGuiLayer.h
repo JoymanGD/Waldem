@@ -1,5 +1,8 @@
 #pragma once
 #include "Waldem/Layer.h"
+#include "Waldem/Events/ApplicationEvent.h"
+#include "Waldem/Events/KeyEvent.h"
+#include "Waldem/Events/MouseEvent.h"
 
 namespace Waldem
 {
@@ -8,12 +11,14 @@ namespace Waldem
     public:
         ImGuiLayer();
         ~ImGuiLayer();
-
+        
+        void Begin() override;
+        void End() override;
         void OnAttach() override;
         void OnDetach() override;
-        void OnUpdate() override;
         void OnEvent(Event& event) override;
+        void OnImGuiRender() override;
     private:
-        
+		bool m_BlockEvents = false;
     };
 }

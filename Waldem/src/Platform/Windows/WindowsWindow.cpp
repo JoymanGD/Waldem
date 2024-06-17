@@ -105,6 +105,13 @@ namespace Waldem {
 			}
 		});
 
+		glfwSetCharCallback(Window, [](GLFWwindow* window, unsigned int keycode)
+		{
+			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+			KeyTypedEvent event(keycode);
+			data.EventCallback(event);
+		});
+
 		glfwSetMouseButtonCallback(Window, [](GLFWwindow* window, int button, int action, int modes)
 		{
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);

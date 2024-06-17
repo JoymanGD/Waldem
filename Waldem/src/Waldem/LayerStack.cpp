@@ -5,18 +5,21 @@ namespace Waldem
 {
     LayerStack::LayerStack()
     {
-        LayerInsert = Layers.begin();
     }
 
     LayerStack::~LayerStack()
     {
         for (Layer* layer : Layers)
+        {
+            layer->OnDetach();
             delete layer;
+        }
     }
 
     void LayerStack::PushLayer(Layer* layer)
     {
-        LayerInsert = Layers.emplace(LayerInsert, layer);
+        Layers.emplace(Layers.begin() + LayerInsertIndex, layer);
+        LayerInsertIndex++;
     }
 
     void LayerStack::PushOverlay(Layer* overlay)
@@ -30,8 +33,9 @@ namespace Waldem
 
         if(it != Layers.end())
         {
+			layer->OnDetach();
             Layers.erase(it);
-            LayerInsert--;
+            LayerInsertIndex--;
         }
     }
 
@@ -40,6 +44,9 @@ namespace Waldem
         auto it = std::find(Layers.begin(), Layers.end(), overlay);
 
         if(it != Layers.end())
+        {
+			overlay->OnDetach();
             Layers.erase(it);
+        }
     }
 }
