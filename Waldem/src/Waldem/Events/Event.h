@@ -6,7 +6,7 @@ namespace Waldem
 {
     enum class EventType
     {
-        Nonce = 0,
+        None = 0,
         WindowClose,
         WindowResize,
         WindowFocus,
@@ -17,6 +17,7 @@ namespace Waldem
         AppRender,
         KeyPressed,
         KeyReleased,
+        KeyTyped,
         MouseButtonPressed,
         MouseButtonReleased,
         MouseMoved,

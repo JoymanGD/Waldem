@@ -7,11 +7,11 @@ namespace Waldem
     class WALDEM_API WindowResizeEvent : public Event
     {
     public:
-        WindowResizeEvent(uint32_t width, uint32_t height) : Width(width), Height(height) {}
+        WindowResizeEvent(float width, float height) : Width(width), Height(height) {}
         
-        inline uint32_t GetWidth() const { return Width; }
-        inline uint32_t GetHeight() const { return Height; }
-        inline std::tuple<uint32_t, uint32_t> GetSize() const { return std::tuple(Width, Height); }
+        inline float GetWidth() const { return Width; }
+        inline float GetHeight() const { return Height; }
+        inline std::array<float, 2> GetSize() const { return { Width, Height }; }
 
         std::string ToString() const override
         {
@@ -23,7 +23,7 @@ namespace Waldem
         EVENT_CLASS_TYPE(WindowResize)
         EVENT_CLASS_CATEGORY(EventCategoryApplication)
     private:
-        uint32_t Width, Height;
+        float Width, Height;
     };
     
     class WALDEM_API WindowCloseEvent : public Event

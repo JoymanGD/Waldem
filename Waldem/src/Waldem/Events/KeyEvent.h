@@ -49,4 +49,19 @@ namespace Waldem
 
         EVENT_CLASS_TYPE(KeyReleased)
     };
+    
+    class WALDEM_API KeyTypedEvent : public KeyEvent
+    {
+    public:
+        KeyTypedEvent(int keycode) : KeyEvent(keycode) {}
+
+        std::string ToString() const override
+        {
+            std::stringstream ss;
+            ss << "KeyTypedEvent: " << KeyCode;
+            return ss.str();
+        }
+
+        EVENT_CLASS_TYPE(KeyTyped)
+    };
 }

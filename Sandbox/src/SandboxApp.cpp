@@ -10,12 +10,10 @@ public:
 
 	void OnUpdate() override
 	{
-		WD_INFO("ExampleLayer::Update");
 	}
 
 	void OnEvent(Waldem::Event& event) override
 	{
-		WD_TRACE("{0}", event);
 	}
 };
 
@@ -25,6 +23,7 @@ public:
 	Sandbox()
 	{
 		PushLayer(new ExampleLayer());
+		// PushOverlay(new Waldem::ImGuiLayer());
 	}
 
 	~Sandbox()

@@ -13,16 +13,16 @@ namespace Waldem {
 
         void OnUpdate() override;
 
-        uint32_t GetWidth() const override { return Data.Width; }
-        uint32_t GetHeight() const override { return Data.Height; }
-        std::tuple<uint32_t, uint32_t> GetSize() const override { return std::tuple(Data.Width, Data.Height); }
+        float GetWidth() const override { return Data.Width; }
+        float GetHeight() const override { return Data.Height; }
+        std::array<float, 2> GetSize() const override { return { Data.Width, Data.Height }; }
 
         // Window attributes
         void SetEventCallback(const EventCallbackFn& callback) override { Data.EventCallback = callback; }
         void SetVSync(bool enabled) override;
         bool IsVSync() const override;
 
-        virtual void* GetNativeWindow() const { return Window; }
+        virtual void* GetNativeWindow() const override { return Window; }
     private:
         virtual void Init(const WindowProps& props);
         virtual void Shutdown();
@@ -32,7 +32,7 @@ namespace Waldem {
         struct WindowData
         {
             std::string Title;
-            uint32_t Width, Height;
+            float Width, Height;
             bool VSync;
 
             EventCallbackFn EventCallback;
