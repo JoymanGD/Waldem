@@ -43,7 +43,7 @@ namespace Waldem
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(OnWindowClose));
 		
-		WD_CORE_TRACE("{0}", e);
+		// WD_CORE_TRACE("{0}", e);
 
 		for(auto it = LayerStack.end(); it != LayerStack.begin(); )
 		{
