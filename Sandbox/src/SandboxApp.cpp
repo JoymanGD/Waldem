@@ -10,6 +10,10 @@ public:
 
 	void OnUpdate() override
 	{
+		if(Waldem::Input::IsKeyPressed(WD_KEY_TAB))
+		{
+			WD_TRACE("TAB was pressed");
+		}
 	}
 
 	void OnEvent(Waldem::Event& event) override
@@ -23,7 +27,6 @@ public:
 	Sandbox()
 	{
 		PushLayer(new ExampleLayer());
-		// PushOverlay(new Waldem::ImGuiLayer());
 	}
 
 	~Sandbox()
