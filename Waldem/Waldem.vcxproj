@@ -153,6 +153,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\Platform\OpenGL\ImGuiOpenGLRenderer.h" />
+    <ClInclude Include="src\Platform\Windows\WindowsInput.h" />
     <ClInclude Include="src\Platform\Windows\WindowsWindow.h" />
     <ClInclude Include="src\Waldem.h" />
     <ClInclude Include="src\Waldem\Application.h" />
@@ -163,6 +164,7 @@
     <ClInclude Include="src\Waldem\Events\KeyEvent.h" />
     <ClInclude Include="src\Waldem\Events\MouseEvent.h" />
     <ClInclude Include="src\Waldem\ImGui\ImGuiLayer.h" />
+    <ClInclude Include="src\Waldem\Input.h" />
     <ClInclude Include="src\Waldem\Layer.h" />
     <ClInclude Include="src\Waldem\LayerStack.h" />
     <ClInclude Include="src\Waldem\Log.h" />
@@ -171,6 +173,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Platform\OpenGL\ImGuiOpenGLRenderer.cpp" />
+    <ClCompile Include="src\Platform\Windows\WindowsInput.cpp" />
     <ClCompile Include="src\Platform\Windows\WindowsWindow.cpp" />
     <ClCompile Include="src\Waldem\Application.cpp" />
     <ClCompile Include="src\Waldem\ImGui\ImGuiLayer.cpp" />

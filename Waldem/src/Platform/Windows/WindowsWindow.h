@@ -26,7 +26,7 @@ namespace Waldem {
     private:
         virtual void Init(const WindowProps& props);
         virtual void Shutdown();
-    private:
+    
         GLFWwindow* Window;
 
         struct WindowData
