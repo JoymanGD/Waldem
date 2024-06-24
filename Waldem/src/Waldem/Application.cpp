@@ -13,7 +13,7 @@ namespace Waldem
 	
 	Application::Application()
 	{
-		WD_CORE_ASSERT(!Instance, "Application already exists!");
+		WD_CORE_ASSERT(!Instance, "Application already exists!")
 		Instance = this;
 		Window = std::unique_ptr<Waldem::Window>(Window::Create());
 		Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
@@ -43,8 +43,6 @@ namespace Waldem
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(OnWindowClose));
 		
-		// WD_CORE_TRACE("{0}", e);
-
 		for(auto it = LayerStack.end(); it != LayerStack.begin(); )
 		{
 			(*--it)->OnEvent(e);
@@ -69,9 +67,9 @@ namespace Waldem
 			}
 
 			ImGuiLayer->Begin();
+			for (Layer* layer : LayerStack)
 			{
-				for (Layer* layer : LayerStack)
-					layer->OnImGuiRender();
+				layer->OnImGuiRender();
 			}
 			ImGuiLayer->End();
 			

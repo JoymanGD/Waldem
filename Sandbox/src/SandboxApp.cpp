@@ -1,6 +1,8 @@
 #include "wdpch.h"
 #include <Waldem.h>
 
+#include "imgui/imgui.h"
+
 class ExampleLayer : public Waldem::Layer
 {
 public:
@@ -14,6 +16,13 @@ public:
 
 	void OnEvent(Waldem::Event& event) override
 	{
+	}
+
+	void OnImGuiRender() override
+	{
+		ImGui::Begin("Test");
+		ImGui::Text("Hello world");
+		ImGui::End();
 	}
 };
 
