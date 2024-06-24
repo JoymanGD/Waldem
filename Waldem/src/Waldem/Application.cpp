@@ -2,6 +2,7 @@
 #include "Application.h"
 #include "glad/glad.h"
 #include "Waldem/Log.h"
+#include "Input.h"
 
 namespace Waldem
 {
