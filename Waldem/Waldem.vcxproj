@@ -165,9 +165,11 @@
     <ClInclude Include="src\Waldem\Events\MouseEvent.h" />
     <ClInclude Include="src\Waldem\ImGui\ImGuiLayer.h" />
     <ClInclude Include="src\Waldem\Input.h" />
+    <ClInclude Include="src\Waldem\KeyCodes.h" />
     <ClInclude Include="src\Waldem\Layer.h" />
     <ClInclude Include="src\Waldem\LayerStack.h" />
     <ClInclude Include="src\Waldem\Log.h" />
+    <ClInclude Include="src\Waldem\MouseButtonCodes.h" />
     <ClInclude Include="src\Waldem\Window.h" />
     <ClInclude Include="src\wdpch.h" />
   </ItemGroup>
