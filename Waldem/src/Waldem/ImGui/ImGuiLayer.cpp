@@ -1,11 +1,11 @@
 #include "wdpch.h"
 #include "ImGuiLayer.h"
 #include "imgui.h"
-#include "glad/glad.h"
-#include "Platform/OpenGL/ImGuiOpenGLRenderer.h"
-#include "GLFW/glfw3.h"
-#include "Platform/Windows/WindowsWindow.h"
+#include <backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_opengl3.h>
 #include "Waldem/Application.h"
+
+#include "GLFW/glfw3.h"
 
 Waldem::ImGuiLayer::ImGuiLayer() : Layer("ImGuiLayer")
 {
