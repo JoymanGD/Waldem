@@ -60,11 +60,14 @@ namespace Waldem {
 ////////////////////////////////////////////////////
 		glfwSetWindowSizeCallback(Window, [](GLFWwindow* window, int width, int height)
 		{
+			float widthf = static_cast<float>(width);
+			float heightf = static_cast<float>(height);
+			
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-			data.Width = width;
-			data.Height = height;
+			data.Width = widthf;
+			data.Height = heightf;
 
-			WindowResizeEvent event(width, height);
+			WindowResizeEvent event(heightf, heightf);
 			data.EventCallback(event);
 		});
 

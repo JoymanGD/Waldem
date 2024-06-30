@@ -23,15 +23,21 @@ include "Waldem/vendor/imgui"
 
 project "Waldem"
     location "Waldem"    
-    kind "SharedLib"
+    kind "StaticLib"
     language "C++"
     cppdialect "C++20"
+    staticruntime "on"
 
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
     
     pchheader "wdpch.h"
     pchsource "Waldem/src/wdpch.cpp"
+    
+    defines
+    {
+        "_CRT_SECURE_NO_WARNINGS"
+    }
 
     files
     {
@@ -69,34 +75,27 @@ project "Waldem"
             "GLFW_INCLUDE_NONE"
         }
 
-        postbuildcommands
-        {
-            ("{COPY} %{cfg.buildtarget.relpath} ../bin/" .. outputdir .. "/Sandbox")
-        }
-
     filter "configurations:Debug"
         defines "WD_DEBUG"
-        staticruntime "off"
         runtime "Debug"
-        symbols "On"
+        symbols "on"
 
     filter "configurations:Release"
         defines "WD_RELEASE"
-        staticruntime "off"
         runtime "Release"
-        optimize "On"
+        optimize "on"
 
     filter "configurations:Dist"
         defines "WD_DIST"
-        staticruntime "off"
         runtime "Release"
-        optimize "On"
+        optimize "on"
 
 project "Sandbox"
     location "Sandbox"
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++20"
+    staticruntime "on"
 
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
@@ -126,18 +125,15 @@ project "Sandbox"
 
     filter "configurations:Debug"
         defines "WD_DEBUG"
-        staticruntime "off"
         runtime "Debug"
-        symbols "On"
+        symbols "on"
 
     filter "configurations:Release"
         defines "WD_RELEASE"
-        staticruntime "off"
         runtime "Release"
-        optimize "On"
+        optimize "on"
 
     filter "configurations:Dist"
         defines "WD_DIST"
-        staticruntime "off"
         runtime "Release"
-        optimize "On"
+        optimize "on"

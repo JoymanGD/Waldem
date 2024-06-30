@@ -4,7 +4,7 @@
 
 extern Waldem::Application* Waldem::CreateApplication();
 
-inline int main(int argc, char** argv)
+int main(int argc, char** argv)
 {
 	Waldem::Log::Init();
 	WD_CORE_WARN("Initialized log!");
