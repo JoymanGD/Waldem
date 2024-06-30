@@ -1,10 +1,14 @@
 #pragma once
 
 #ifdef WD_PLATFORM_WINDOWS
-	#ifdef WD_BUILD_DLL
-		#define WALDEM_API __declspec(dllexport)
+	#if WD_DYNAMIC_LINK
+		#ifdef WD_BUILD_DLL
+			#define WALDEM_API __declspec(dllexport)
+		#else
+			#define WALDEM_API __declspec(dllimport)
+		#endif
 	#else
-		#define WALDEM_API __declspec(dllimport)
+		#define WALDEM_API
 	#endif
 #else
 	#error Waldem only support Windows!
