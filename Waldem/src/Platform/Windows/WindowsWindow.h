@@ -2,6 +2,7 @@
 
 #include <GLFW/glfw3.h>
 #include "Waldem/Window.h"
+#include "Waldem/Renderer/RenderingContext.h"
 
 namespace Waldem {
 
@@ -28,6 +29,7 @@ namespace Waldem {
         virtual void Shutdown();
     
         GLFWwindow* Window;
+        RenderingContext* Context;
 
         struct WindowData
         {

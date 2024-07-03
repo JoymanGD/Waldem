@@ -143,6 +143,9 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\Platform\OpenGL\OpenGLBuffer.h" />
+    <ClInclude Include="src\Platform\OpenGL\OpenGLContext.h" />
+    <ClInclude Include="src\Platform\OpenGL\OpenGLVertexArray.h" />
     <ClInclude Include="src\Platform\Windows\WindowsInput.h" />
     <ClInclude Include="src\Platform\Windows\WindowsWindow.h" />
     <ClInclude Include="src\Waldem.h" />
@@ -160,6 +163,11 @@
     <ClInclude Include="src\Waldem\LayerStack.h" />
     <ClInclude Include="src\Waldem\Log.h" />
     <ClInclude Include="src\Waldem\MouseButtonCodes.h" />
+    <ClInclude Include="src\Waldem\Renderer\Buffer.h" />
+    <ClInclude Include="src\Waldem\Renderer\Renderer.h" />
+    <ClInclude Include="src\Waldem\Renderer\RenderingContext.h" />
+    <ClInclude Include="src\Waldem\Renderer\Shader.h" />
+    <ClInclude Include="src\Waldem\Renderer\VertexArray.h" />
     <ClInclude Include="src\Waldem\Window.h" />
     <ClInclude Include="src\wdpch.h" />
     <ClInclude Include="vendor\glm\glm\common.hpp" />
@@ -580,6 +588,9 @@
     <ClInclude Include="vendor\glm\glm\vector_relational.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Platform\OpenGL\OpenGLBuffer.cpp" />
+    <ClCompile Include="src\Platform\OpenGL\OpenGLContext.cpp" />
+    <ClCompile Include="src\Platform\OpenGL\OpenGLVertexArray.cpp" />
     <ClCompile Include="src\Platform\Windows\WindowsInput.cpp" />
     <ClCompile Include="src\Platform\Windows\WindowsWindow.cpp" />
     <ClCompile Include="src\Waldem\Application.cpp" />
@@ -588,6 +599,10 @@
     <ClCompile Include="src\Waldem\Layer.cpp" />
     <ClCompile Include="src\Waldem\LayerStack.cpp" />
     <ClCompile Include="src\Waldem\Log.cpp" />
+    <ClCompile Include="src\Waldem\Renderer\Buffer.cpp" />
+    <ClCompile Include="src\Waldem\Renderer\Renderer.cpp" />
+    <ClCompile Include="src\Waldem\Renderer\Shader.cpp" />
+    <ClCompile Include="src\Waldem\Renderer\VertexArray.cpp" />
     <ClCompile Include="src\wdpch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>

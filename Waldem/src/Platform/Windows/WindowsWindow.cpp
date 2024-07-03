@@ -5,7 +5,7 @@
 #include "Waldem/Events/KeyEvent.h"
 #include "WindowsWindow.h"
 
-#include "glad/glad.h"
+#include "Platform/OpenGL/OpenGLContext.h"
 #include "Waldem/Log.h"
 
 namespace Waldem {
@@ -49,10 +49,12 @@ namespace Waldem {
 
 		Window = glfwCreateWindow((int)props.Width, (int)props.Height, Data.Title.c_str(), nullptr, nullptr);
 		++s_GLFWWindowCount;
-
-		glfwMakeContextCurrent(Window);
-		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-		WD_CORE_ASSERT(status, "Failed to initialize Glad!");
+		
+		Context = new OpenGLContext(Window);
+		Context->Init();
+		WD_CORE_INFO("{0} info:", Context->GetContextName());
+		Context->LogContextInfo();
+		
 		glfwSetWindowUserPointer(Window, &Data);
 		SetVSync(true);
 
@@ -169,7 +171,7 @@ namespace Waldem {
 	void WindowsWindow::OnUpdate()
 	{
 		glfwPollEvents();
-		glfwSwapBuffers(Window);
+		Context->SwapBuffers();
 	}
 
 	void WindowsWindow::SetVSync(bool enabled)
