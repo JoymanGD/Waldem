@@ -1,12 +1,6 @@
 [submodule "Waldem/vendor/spdlog"]
 	path = Waldem/vendor/spdlog
 	url = https://github.com/gabime/spdlog
-[submodule "Waldem/vendor/GLFW"]
-	path = Waldem/vendor/GLFW
-	url = https://github.com/TheCherno/GLFW
-[submodule "Waldem/vendor/imgui"]
-	path = Waldem/vendor/imgui
-	url = https://github.com/TheCherno/imgui
 [submodule "Waldem/vendor/glm"]
 	path = Waldem/vendor/glm
 	url = https://github.com/g-truc/glm
