@@ -1,4 +1,5 @@
 #pragma once
+#include "Model/Mesh.h"
 
 namespace Waldem
 {
@@ -13,6 +14,7 @@ namespace Waldem
     class Renderer
     {
     public:
+        static void DrawMesh(Mesh* mesh);
         inline static RendererAPI GetAPI() { return RAPI; }
         static RendererAPI RAPI;
     };
