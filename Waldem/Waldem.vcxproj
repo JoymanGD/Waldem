@@ -54,20 +54,20 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>..\bin\Debug-windows-x86_64\Waldem\</OutDir>
-    <IntDir>..\bin-int\Debug-windows-x86_64\Waldem\</IntDir>
+    <OutDir>..\bin\Debug\Waldem\</OutDir>
+    <IntDir>..\bin-int\Debug\Waldem\</IntDir>
     <TargetName>Waldem</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>..\bin\Release-windows-x86_64\Waldem\</OutDir>
-    <IntDir>..\bin-int\Release-windows-x86_64\Waldem\</IntDir>
+    <OutDir>..\bin\Release\Waldem\</OutDir>
+    <IntDir>..\bin-int\Release\Waldem\</IntDir>
     <TargetName>Waldem</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
-    <OutDir>..\bin\Dist-windows-x86_64\Waldem\</OutDir>
-    <IntDir>..\bin-int\Dist-windows-x86_64\Waldem\</IntDir>
+    <OutDir>..\bin\Dist\Waldem\</OutDir>
+    <IntDir>..\bin-int\Dist\Waldem\</IntDir>
     <TargetName>Waldem</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
@@ -164,10 +164,15 @@
     <ClInclude Include="src\Waldem\Log.h" />
     <ClInclude Include="src\Waldem\MouseButtonCodes.h" />
     <ClInclude Include="src\Waldem\Renderer\Buffer.h" />
+    <ClInclude Include="src\Waldem\Renderer\Camera.h" />
+    <ClInclude Include="src\Waldem\Renderer\Model\Mesh.h" />
+    <ClInclude Include="src\Waldem\Renderer\Model\Transform.h" />
+    <ClInclude Include="src\Waldem\Renderer\PixelShader.h" />
     <ClInclude Include="src\Waldem\Renderer\Renderer.h" />
     <ClInclude Include="src\Waldem\Renderer\RenderingContext.h" />
-    <ClInclude Include="src\Waldem\Renderer\Shader.h" />
     <ClInclude Include="src\Waldem\Renderer\VertexArray.h" />
+    <ClInclude Include="src\Waldem\SceneManagement\Scene.h" />
+    <ClInclude Include="src\Waldem\SceneManagement\SceneManager.h" />
     <ClInclude Include="src\Waldem\Window.h" />
     <ClInclude Include="src\wdpch.h" />
     <ClInclude Include="vendor\glm\glm\common.hpp" />
@@ -600,9 +605,14 @@
     <ClCompile Include="src\Waldem\LayerStack.cpp" />
     <ClCompile Include="src\Waldem\Log.cpp" />
     <ClCompile Include="src\Waldem\Renderer\Buffer.cpp" />
+    <ClCompile Include="src\Waldem\Renderer\Camera.cpp" />
+    <ClCompile Include="src\Waldem\Renderer\Model\Mesh.cpp" />
+    <ClCompile Include="src\Waldem\Renderer\Model\Transform.cpp" />
+    <ClCompile Include="src\Waldem\Renderer\PixelShader.cpp" />
     <ClCompile Include="src\Waldem\Renderer\Renderer.cpp" />
-    <ClCompile Include="src\Waldem\Renderer\Shader.cpp" />
     <ClCompile Include="src\Waldem\Renderer\VertexArray.cpp" />
+    <ClCompile Include="src\Waldem\SceneManagement\Scene.cpp" />
+    <ClCompile Include="src\Waldem\SceneManagement\SceneManager.cpp" />
     <ClCompile Include="src\wdpch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>

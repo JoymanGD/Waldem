@@ -3,12 +3,10 @@
 #include "Core.h"
 #include "Window.h"
 #include "ImGui/ImGuiLayer.h"
-#include "Renderer/Buffer.h"
-#include "Renderer/VertexArray.h"
+#include "SceneManagement/SceneManager.h"
 #include "Waldem/LayerStack.h"
 #include "Waldem/Events/Event.h"
 #include "Waldem/Events/ApplicationEvent.h"
-#include "Waldem/Renderer/Shader.h"
 
 namespace Waldem
 {
@@ -22,7 +20,9 @@ namespace Waldem
 		void PushLayer(Layer* layer);
 		void PushOverlay(Layer* overlay);
 		Window& GetWindow() { return *Window; }
-	public:
+		void OpenScene(Scene* scene);
+	
+		//Singleton
 		static Application* Instance;
 	private:
 		bool OnWindowClose(WindowCloseEvent& e);
@@ -31,12 +31,8 @@ namespace Waldem
 		bool IsRunning = true;
 		LayerStack LayerStack;
 		ImGuiLayer* ImGuiLayer;
-
-		std::shared_ptr<Shader> TrisShader;
-		std::shared_ptr<VertexArray> TrisVA;
-		
-		std::shared_ptr<Shader> SquareShader;
-		std::shared_ptr<VertexArray> SquareVA;
+        Scene* CurrentScene;
+	protected:
 	};
 
 	//to be defined in CLIENT

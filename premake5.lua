@@ -9,7 +9,7 @@ workspace "Waldem"
         "Dist"
     }
 
-outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
+outputdir = "%{cfg.buildcfg}"
 
 IncludeDir = {}
 IncludeDir["GLFW"] = "Waldem/vendor/GLFW/include"
@@ -111,6 +111,7 @@ project "Sandbox"
         "Waldem/vendor/spdlog/include",
         "Waldem/src",
         "Waldem/vendor",
+        "%{IncludeDir.Glad}",
         "%{IncludeDir.glm}"
     }
 
@@ -122,6 +123,17 @@ project "Sandbox"
     filter "system:windows"
         systemversion "latest"
         defines "WD_PLATFORM_WINDOWS"
+        
+        prebuildcommands
+        {
+            "if exist %{wks.location}bin\\Debug\\Sandbox\\Shaders (rmdir /s /q %{wks.location}bin\\Debug\\Sandbox\\Shaders)"
+        }
+        
+        postbuildcommands
+        {
+            "echo Copying files...",
+            "{COPY} %{wks.location}%{prj.name}\\src\\Shaders\\Test\\*.glsl %{cfg.targetdir}\\Shaders\\"
+        }
 
     filter "configurations:Debug"
         defines "WD_DEBUG"
