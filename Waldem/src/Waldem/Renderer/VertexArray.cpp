@@ -31,11 +31,11 @@ namespace Waldem
     {
     }
 
-    void VertexArray::AddVertexBuffer(std::shared_ptr<VertexBuffer>& vertexBuffer)
+    void VertexArray::AddVertexBuffer(VertexBuffer* vertexBuffer)
     {
     }
 
-    void VertexArray::SetIndexBuffer(std::shared_ptr<IndexBuffer>& indexBuffer)
+    void VertexArray::SetIndexBuffer(IndexBuffer* indexBuffer)
     {
     }
 }

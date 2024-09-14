@@ -42,6 +42,11 @@ namespace Waldem
         CompileMatrix();
     }
 
+    void Transform::SetPosition(float x, float y, float z)
+    {
+        SetPosition({ x, y, z });
+    }
+
     void Transform::Translate(glm::vec3 translation)
     {
         Position += translation;

@@ -1,4 +1,6 @@
 #pragma once
+#include <map>
+
 #include "glad/glad.h"
 
 namespace Waldem
@@ -14,15 +16,10 @@ namespace Waldem
     struct ShaderParam
     {
         ShaderParamType Type;
-        const GLchar* Name;
         void* Value;
 
-        ShaderParam(ShaderParamType type, const GLchar* name, void* value)
-        {
-            Type = type;
-            Name = name;
-            Value = value;
-        }
+        ShaderParam(ShaderParamType type, const GLchar* name) : Type(type), Value(nullptr) {}
+        ShaderParam(ShaderParamType type, const GLchar* name, void* value) : Type(type), Value(value) {}
     };
     
     enum class ShaderType
@@ -39,15 +36,22 @@ namespace Waldem
         PixelShader(const std::string& shaderName);
         ~PixelShader();
 
-        void Bind(std::vector<ShaderParam*>& shaderParams);
-        void Unbind(std::vector<ShaderParam*>& shaderParams);
+        void Bind();
+        void Unbind();
+        
+        void AddParam(ShaderParamType type, const GLchar* name);
+        void SetParam(const GLchar* name, void* value);
+
+        uint32_t GetProgramID() { return ProgramID; }
 
     private:
         std::string LoadShaderFile(std::string& filename);
         void InitializeShader(const std::string& vertexSrc, const std::string& fragmentSrc);
+        // std::vector<ShaderParam*> ShaderParameters;
+        std::map<std::string, ShaderParam*> ShaderParameters;
         
         GLuint VS;
         GLuint PS;
-        uint32_t RendererID;
+        uint32_t ProgramID;
     };
 }

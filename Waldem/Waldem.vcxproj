@@ -77,7 +77,7 @@
       <PrecompiledHeaderFile>wdpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WD_PLATFORM_WINDOWS;WD_BUILD_DLL;GLFW_INCLUDE_NONE;WD_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\GLFW\include;vendor\Glad\include;vendor\imgui;vendor\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\assimp\include;vendor\stb\include;vendor\GLFW\include;vendor\Glad\include;vendor\imgui;vendor\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -89,7 +89,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;assimp-vc142-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>vendor\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -98,7 +99,7 @@
       <PrecompiledHeaderFile>wdpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WD_PLATFORM_WINDOWS;WD_BUILD_DLL;GLFW_INCLUDE_NONE;WD_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\GLFW\include;vendor\Glad\include;vendor\imgui;vendor\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\assimp\include;vendor\stb\include;vendor\GLFW\include;vendor\Glad\include;vendor\imgui;vendor\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -114,7 +115,8 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib>
-      <AdditionalDependencies>opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;assimp-vc142-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>vendor\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
@@ -123,7 +125,7 @@
       <PrecompiledHeaderFile>wdpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WD_PLATFORM_WINDOWS;WD_BUILD_DLL;GLFW_INCLUDE_NONE;WD_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\GLFW\include;vendor\Glad\include;vendor\imgui;vendor\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\assimp\include;vendor\stb\include;vendor\GLFW\include;vendor\Glad\include;vendor\imgui;vendor\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -139,7 +141,8 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib>
-      <AdditionalDependencies>opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;assimp-vc142-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>vendor\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -156,17 +159,23 @@
     <ClInclude Include="src\Waldem\Events\Event.h" />
     <ClInclude Include="src\Waldem\Events\KeyEvent.h" />
     <ClInclude Include="src\Waldem\Events\MouseEvent.h" />
+    <ClInclude Include="src\Waldem\Geometry\Import\FBXImporter.h" />
+    <ClInclude Include="src\Waldem\Geometry\Import\ModelImporter.h" />
     <ClInclude Include="src\Waldem\ImGui\ImGuiLayer.h" />
     <ClInclude Include="src\Waldem\Input.h" />
+    <ClInclude Include="src\Waldem\Interfaces\Importer.h" />
     <ClInclude Include="src\Waldem\KeyCodes.h" />
     <ClInclude Include="src\Waldem\Layer.h" />
     <ClInclude Include="src\Waldem\LayerStack.h" />
     <ClInclude Include="src\Waldem\Log.h" />
     <ClInclude Include="src\Waldem\MouseButtonCodes.h" />
     <ClInclude Include="src\Waldem\Renderer\Buffer.h" />
-    <ClInclude Include="src\Waldem\Renderer\Camera.h" />
+    <ClInclude Include="src\Waldem\Renderer\Model\Material.h" />
     <ClInclude Include="src\Waldem\Renderer\Model\Mesh.h" />
+    <ClInclude Include="src\Waldem\Renderer\Model\Model.h" />
+    <ClInclude Include="src\Waldem\Renderer\Model\Texture.h" />
     <ClInclude Include="src\Waldem\Renderer\Model\Transform.h" />
+    <ClInclude Include="src\Waldem\Renderer\Pipeline.h" />
     <ClInclude Include="src\Waldem\Renderer\PixelShader.h" />
     <ClInclude Include="src\Waldem\Renderer\Renderer.h" />
     <ClInclude Include="src\Waldem\Renderer\RenderingContext.h" />
@@ -174,6 +183,7 @@
     <ClInclude Include="src\Waldem\SceneManagement\Scene.h" />
     <ClInclude Include="src\Waldem\SceneManagement\SceneManager.h" />
     <ClInclude Include="src\Waldem\Window.h" />
+    <ClInclude Include="src\Waldem\World\Camera.h" />
     <ClInclude Include="src\wdpch.h" />
     <ClInclude Include="vendor\glm\glm\common.hpp" />
     <ClInclude Include="vendor\glm\glm\detail\_features.hpp" />
@@ -599,20 +609,23 @@
     <ClCompile Include="src\Platform\Windows\WindowsInput.cpp" />
     <ClCompile Include="src\Platform\Windows\WindowsWindow.cpp" />
     <ClCompile Include="src\Waldem\Application.cpp" />
+    <ClCompile Include="src\Waldem\Geometry\Import\FBXImporter.cpp" />
+    <ClCompile Include="src\Waldem\Geometry\Import\ModelImporter.cpp" />
     <ClCompile Include="src\Waldem\ImGui\ImGuiBuild.cpp" />
     <ClCompile Include="src\Waldem\ImGui\ImGuiLayer.cpp" />
     <ClCompile Include="src\Waldem\Layer.cpp" />
     <ClCompile Include="src\Waldem\LayerStack.cpp" />
     <ClCompile Include="src\Waldem\Log.cpp" />
     <ClCompile Include="src\Waldem\Renderer\Buffer.cpp" />
-    <ClCompile Include="src\Waldem\Renderer\Camera.cpp" />
     <ClCompile Include="src\Waldem\Renderer\Model\Mesh.cpp" />
     <ClCompile Include="src\Waldem\Renderer\Model\Transform.cpp" />
+    <ClCompile Include="src\Waldem\Renderer\Pipeline.cpp" />
     <ClCompile Include="src\Waldem\Renderer\PixelShader.cpp" />
     <ClCompile Include="src\Waldem\Renderer\Renderer.cpp" />
     <ClCompile Include="src\Waldem\Renderer\VertexArray.cpp" />
     <ClCompile Include="src\Waldem\SceneManagement\Scene.cpp" />
     <ClCompile Include="src\Waldem\SceneManagement\SceneManager.cpp" />
+    <ClCompile Include="src\Waldem\World\Camera.cpp" />
     <ClCompile Include="src\wdpch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>

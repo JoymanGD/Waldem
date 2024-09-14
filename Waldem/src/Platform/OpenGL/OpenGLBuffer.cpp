@@ -7,7 +7,7 @@
 //  VertexBuffer  /////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-Waldem::OpenGLVertexBuffer::OpenGLVertexBuffer(float* vertices, uint32_t size)
+Waldem::OpenGLVertexBuffer::OpenGLVertexBuffer(void* vertices, uint32_t size)
 {
     glCreateBuffers(1, &RendererID);
 	OpenGLVertexBuffer::Bind();

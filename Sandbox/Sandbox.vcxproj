@@ -79,7 +79,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WD_PLATFORM_WINDOWS;WD_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Waldem\vendor\spdlog\include;..\Waldem\src;..\Waldem\vendor;..\Waldem\vendor\Glad\include;..\Waldem\vendor\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Waldem\vendor\assimp\include;..\Waldem\vendor\spdlog\include;..\Waldem\vendor\stb\include;..\Waldem\src;..\Waldem\vendor;..\Waldem\vendor\Glad\include;..\Waldem\vendor\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -90,11 +90,9 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <PreBuildEvent>
-      <Command>if exist $(SolutionDir)bin\Debug\Sandbox\Shaders (rmdir /s /q $(SolutionDir)bin\Debug\Sandbox\Shaders)</Command>
-    </PreBuildEvent>
     <PostBuildEvent>
-      <Command>echo Copying files...
+      <Command>if exist $(SolutionDir)bin\Debug\Sandbox\Shaders (rmdir /s /q $(SolutionDir)bin\Debug\Sandbox\Shaders)
+echo Copying files...
 IF EXIST $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl\ (xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl ..\bin\Debug\Sandbox\Shaders &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl ..\bin\Debug\Sandbox\Shaders &gt; nul)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -103,7 +101,7 @@ IF EXIST $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl\ (xcopy /Q /E /Y /
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WD_PLATFORM_WINDOWS;WD_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Waldem\vendor\spdlog\include;..\Waldem\src;..\Waldem\vendor;..\Waldem\vendor\Glad\include;..\Waldem\vendor\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Waldem\vendor\assimp\include;..\Waldem\vendor\spdlog\include;..\Waldem\vendor\stb\include;..\Waldem\src;..\Waldem\vendor;..\Waldem\vendor\Glad\include;..\Waldem\vendor\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -118,11 +116,9 @@ IF EXIST $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl\ (xcopy /Q /E /Y /
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
-    <PreBuildEvent>
-      <Command>if exist $(SolutionDir)bin\Debug\Sandbox\Shaders (rmdir /s /q $(SolutionDir)bin\Debug\Sandbox\Shaders)</Command>
-    </PreBuildEvent>
     <PostBuildEvent>
-      <Command>echo Copying files...
+      <Command>if exist $(SolutionDir)bin\Debug\Sandbox\Shaders (rmdir /s /q $(SolutionDir)bin\Debug\Sandbox\Shaders)
+echo Copying files...
 IF EXIST $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl\ (xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl ..\bin\Release\Sandbox\Shaders &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl ..\bin\Release\Sandbox\Shaders &gt; nul)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -131,7 +127,7 @@ IF EXIST $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl\ (xcopy /Q /E /Y /
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WD_PLATFORM_WINDOWS;WD_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Waldem\vendor\spdlog\include;..\Waldem\src;..\Waldem\vendor;..\Waldem\vendor\Glad\include;..\Waldem\vendor\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Waldem\vendor\assimp\include;..\Waldem\vendor\spdlog\include;..\Waldem\vendor\stb\include;..\Waldem\src;..\Waldem\vendor;..\Waldem\vendor\Glad\include;..\Waldem\vendor\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -146,11 +142,9 @@ IF EXIST $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl\ (xcopy /Q /E /Y /
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
-    <PreBuildEvent>
-      <Command>if exist $(SolutionDir)bin\Debug\Sandbox\Shaders (rmdir /s /q $(SolutionDir)bin\Debug\Sandbox\Shaders)</Command>
-    </PreBuildEvent>
     <PostBuildEvent>
-      <Command>echo Copying files...
+      <Command>if exist $(SolutionDir)bin\Debug\Sandbox\Shaders (rmdir /s /q $(SolutionDir)bin\Debug\Sandbox\Shaders)
+echo Copying files...
 IF EXIST $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl\ (xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl ..\bin\Dist\Sandbox\Shaders &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl ..\bin\Dist\Sandbox\Shaders &gt; nul)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -164,13 +158,13 @@ IF EXIST $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl\ (xcopy /Q /E /Y /
     <ClCompile Include="src\Scenes\DefaultScene.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="src\Shaders\Test\Default.frag.glsl" />
+    <None Include="src\Shaders\Test\Default.vert.glsl" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Waldem\Waldem.vcxproj">
       <Project>{1F0CE8D9-0BAE-12B0-F468-2604E0A99900}</Project>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="src\Shaders\Test\Default.frag.glsl" />
-    <Content Include="src\Shaders\Test\Default.vert.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

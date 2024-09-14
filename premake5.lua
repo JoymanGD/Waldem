@@ -46,23 +46,31 @@ project "Waldem"
         "%{prj.name}/vendor/glm/glm/**.hpp",
         "%{prj.name}/vendor/glm/glm/**.inl"
     }
-
+    
     includedirs
     {
         "%{prj.name}/src",
         "%{prj.name}/vendor/spdlog/include",
+        "%{prj.name}/vendor/assimp/include",
+        "%{prj.name}/vendor/stb/include",
         "%{IncludeDir.GLFW}",
         "%{IncludeDir.Glad}",
         "%{IncludeDir.ImGui}",
         "%{IncludeDir.glm}"
     }
     
+    libdirs
+    {
+        "%{prj.name}/vendor/assimp/lib"
+    }
+
     links
     {
         "GLFW",
         "Glad",
         "ImGui",
-        "opengl32.lib"
+        "opengl32.lib",
+        "assimp-vc142-mt.lib"
     }
 
     filter "system:windows"
@@ -103,12 +111,15 @@ project "Sandbox"
     files
     {
         "%{prj.name}/src/**.h",
-        "%{prj.name}/src/**.cpp"
+        "%{prj.name}/src/**.cpp",
+        "%{prj.name}/src/**.glsl"
     }
 
     includedirs
     {
+        "Waldem/vendor/assimp/include",
         "Waldem/vendor/spdlog/include",
+        "Waldem/vendor/stb/include",
         "Waldem/src",
         "Waldem/vendor",
         "%{IncludeDir.Glad}",
@@ -124,13 +135,9 @@ project "Sandbox"
         systemversion "latest"
         defines "WD_PLATFORM_WINDOWS"
         
-        prebuildcommands
-        {
-            "if exist %{wks.location}bin\\Debug\\Sandbox\\Shaders (rmdir /s /q %{wks.location}bin\\Debug\\Sandbox\\Shaders)"
-        }
-        
         postbuildcommands
         {
+            "if exist %{wks.location}bin\\Debug\\Sandbox\\Shaders (rmdir /s /q %{wks.location}bin\\Debug\\Sandbox\\Shaders)",
             "echo Copying files...",
             "{COPY} %{wks.location}%{prj.name}\\src\\Shaders\\Test\\*.glsl %{cfg.targetdir}\\Shaders\\"
         }
