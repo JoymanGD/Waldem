@@ -52,7 +52,7 @@ namespace Waldem
         glBindVertexArray(0);
     }
 
-    void OpenGLVertexArray::AddVertexBuffer(std::shared_ptr<VertexBuffer>& vertexBuffer)
+    void OpenGLVertexArray::AddVertexBuffer(VertexBuffer* vertexBuffer)
     {
         WD_CORE_ASSERT(vertexBuffer->GetLayout().GetElements().size(), "Vertex buffer has no layout")
 
@@ -72,13 +72,17 @@ namespace Waldem
         }
         
         VertexBuffers.push_back(vertexBuffer);
+
+        Unbind();
     }
 
-    void OpenGLVertexArray::SetIndexBuffer(std::shared_ptr<Waldem::IndexBuffer>& indexBuffer)
+    void OpenGLVertexArray::SetIndexBuffer(Waldem::IndexBuffer* indexBuffer)
     {
         Bind();
         indexBuffer->Bind();
 
         IndexBuffer = indexBuffer;
+
+        Unbind();
     }
 }

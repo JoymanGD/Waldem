@@ -2,6 +2,7 @@
 #include "Application.h"
 
 #include "GLFW/glfw3.h"
+#include "Renderer/Renderer.h"
 #include "Waldem/Log.h"
 
 namespace Waldem
@@ -20,6 +21,8 @@ namespace Waldem
 
 		ImGuiLayer = new Waldem::ImGuiLayer();
 		PushOverlay(ImGuiLayer);
+
+		Renderer::Initialize();
 	}
 	
 	void Application::OpenScene(Scene* scene)

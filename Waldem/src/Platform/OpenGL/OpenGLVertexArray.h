@@ -11,14 +11,14 @@ namespace Waldem
         virtual ~OpenGLVertexArray();
         void Bind() const override;
         void Unbind() const override;
-        void AddVertexBuffer(std::shared_ptr<VertexBuffer>& vertexBuffer) override;
-        void SetIndexBuffer(std::shared_ptr<IndexBuffer>& indexBuffer) override;
-        const std::vector<std::shared_ptr<VertexBuffer>>& GetVertexBuffers() const override { return VertexBuffers; }
-        const std::shared_ptr<IndexBuffer>& GetIndexBuffer() const override { return IndexBuffer; }
+        void AddVertexBuffer(VertexBuffer* vertexBuffer) override;
+        void SetIndexBuffer(IndexBuffer* indexBuffer) override;
+        const std::vector<VertexBuffer*> GetVertexBuffers() const override { return VertexBuffers; }
+        const IndexBuffer* GetIndexBuffer() const override { return IndexBuffer; }
 
     private:
         uint32_t RendererID;
-        std::vector<std::shared_ptr<VertexBuffer>> VertexBuffers;
-        std::shared_ptr<IndexBuffer> IndexBuffer;
+        std::vector<VertexBuffer*> VertexBuffers;
+        IndexBuffer* IndexBuffer;
     };
 }

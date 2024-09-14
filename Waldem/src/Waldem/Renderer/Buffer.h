@@ -84,7 +84,7 @@ namespace Waldem
         BufferLayout() {}
         BufferLayout(const std::initializer_list<BufferElement>& elements) : Elements(elements)
         {
-            CalculateOffsetsAndStrine();
+            CalculateOffsetsAndStride();
         }
         
         const std::vector<BufferElement>& GetElements() const { return Elements; }
@@ -95,7 +95,7 @@ namespace Waldem
         std::vector<BufferElement>::const_iterator begin() const { return Elements.begin(); }
         std::vector<BufferElement>::const_iterator end() const { return Elements.end(); }
     private:
-        void CalculateOffsetsAndStrine()
+        void CalculateOffsetsAndStride()
         {
             uint32_t offset = 0;
             Stride = 0;
@@ -122,7 +122,7 @@ namespace Waldem
         virtual const BufferLayout& GetLayout() const = 0;
         virtual void SetLayout(const BufferLayout& layout) = 0;
         
-        static VertexBuffer* Create(float* vertices, uint32_t size);
+        static VertexBuffer* Create(void* data, uint32_t size);
     };
     
     class IndexBuffer
@@ -134,5 +134,8 @@ namespace Waldem
         virtual uint32_t GetCount() const = 0;
 
         static IndexBuffer* Create(uint32_t* indices, uint32_t count);
+        void SetIndices(uint32_t* indices) { Indices = indices; }
+
+        uint32_t* Indices;
     };
 }

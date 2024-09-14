@@ -49,46 +49,55 @@ namespace Waldem
 
     PixelShader::~PixelShader()
     {
-    	glDeleteProgram(RendererID);
+    	glDeleteProgram(ProgramID);
     }
 
-    void PixelShader::Bind(std::vector<ShaderParam*>& shaderParams)
+    void PixelShader::Bind()
     {
-    	glUseProgram(RendererID);
+    	glUseProgram(ProgramID);
 
-	    for (int i = 0; i < shaderParams.size(); ++i)
+	    for (auto paramPair : ShaderParameters)
 	    {
-	    	auto param = shaderParams[i];
-	    	GLint glParam = glGetUniformLocation(RendererID, param->Name);
+	    	auto param = paramPair.second;
+	    	
+	    	GLint glParam = glGetUniformLocation(ProgramID, paramPair.first.c_str());
 
-		    switch (param->Type)
-		    {
-		    case ShaderParamType::MAT4:
+	    	switch (param->Type)
+	    	{
+	    	case ShaderParamType::MAT4:
 	    		glUniformMatrix4fv(glParam, 1, GL_FALSE, (float*)param->Value);
-		    	break;
-		    case ShaderParamType::FLOAT:
+	    		break;
+	    	case ShaderParamType::FLOAT:
 	    		glUniform1f(glParam, *(float*)param->Value);
-		    	break;
-		    case ShaderParamType::VEC3:
+	    		break;
+	    	case ShaderParamType::VEC3:
 	    		glUniform3fv(glParam, 1, (float*)param->Value);
-		    	break;
-		    case ShaderParamType::UINT:
+	    		break;
+	    	case ShaderParamType::UINT:
 	    		glUniform1ui(glParam, *(uint32_t*)param->Value);
-		    	break;
-		    }
+	    		break;
+	    	}
 	    }
     }
 
-    void PixelShader::Unbind(std::vector<ShaderParam*>& shaderParams)
+    void PixelShader::Unbind()
     {
     	glUseProgram(0);
+    }
 
-    	for (auto element : shaderParams)
+    void PixelShader::AddParam(ShaderParamType type, const GLchar* name)
+    {
+    	if(ShaderParameters.contains(name))
     	{
-    		delete element;
+    		delete ShaderParameters[name];
     	}
+    	
+    	ShaderParameters[name] = new ShaderParam(type, name);
+    }
 
-    	shaderParams.clear();
+	void PixelShader::SetParam(const GLchar* name, void* value)
+    {
+    	ShaderParameters[name]->Value = value;
     }
 
     std::string PixelShader::LoadShaderFile(std::string& filename)
@@ -178,29 +187,29 @@ namespace Waldem
 		// Vertex and fragment shaders are successfully compiled.
 		// Now time to link them together into a program.
 		// Get a program object.
-		RendererID = glCreateProgram();
+		ProgramID = glCreateProgram();
 
 		// Attach our shaders to our program
-		glAttachShader(RendererID, VS);
-		glAttachShader(RendererID, PS);
+		glAttachShader(ProgramID, VS);
+		glAttachShader(ProgramID, PS);
 
 		// Link our program
-		glLinkProgram(RendererID);
+		glLinkProgram(ProgramID);
 
 		// Note the different functions here: glGetProgram* instead of glGetShader*.
 		GLint isLinked = 0;
-		glGetProgramiv(RendererID, GL_LINK_STATUS, (int *)&isLinked);
+		glGetProgramiv(ProgramID, GL_LINK_STATUS, (int *)&isLinked);
 		if (isLinked == GL_FALSE)
 		{
 			GLint maxLength = 0;
-			glGetProgramiv(RendererID, GL_INFO_LOG_LENGTH, &maxLength);
+			glGetProgramiv(ProgramID, GL_INFO_LOG_LENGTH, &maxLength);
 
 			// The maxLength includes the NULL character
 			std::vector<GLchar> infoLog(maxLength);
-			glGetProgramInfoLog(RendererID, maxLength, &maxLength, &infoLog[0]);
+			glGetProgramInfoLog(ProgramID, maxLength, &maxLength, &infoLog[0]);
 			
 			// We don't need the program anymore.
-			glDeleteProgram(RendererID);
+			glDeleteProgram(ProgramID);
 			// Don't leak shaders either.
 			glDeleteShader(VS);
 			glDeleteShader(PS);
@@ -214,7 +223,7 @@ namespace Waldem
 		}
 
 		// Always detach shaders after a successful link.
-		glDetachShader(RendererID, VS);
-		glDetachShader(RendererID, PS);
+		glDetachShader(ProgramID, VS);
+		glDetachShader(ProgramID, PS);
     }
 }

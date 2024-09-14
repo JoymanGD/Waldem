@@ -1,8 +1,10 @@
 #pragma once
 
-#include "Waldem/Renderer/Camera.h"
+#include "Waldem/Renderer/Pipeline.h"
 #include "Waldem/Renderer/Model/Mesh.h"
+#include "Waldem/Renderer/Model/Model.h"
 #include "Waldem/SceneManagement/Scene.h"
+#include "Waldem/World/Camera.h"
 
 namespace Sandbox
 {
@@ -13,8 +15,10 @@ namespace Sandbox
         void Draw() override;
         void Initialize() override;
     private:
-        std::unique_ptr<Waldem::Mesh> QuadMesh;
-        std::unique_ptr<Waldem::Mesh> TrisMesh;
         std::unique_ptr<Waldem::Camera> MainCamera;
+        Waldem::Pipeline* RasterPipeline = nullptr;
+
+        Waldem::Model* TestModel;
+        Waldem::Transform TestModelTransform;
     };
 }

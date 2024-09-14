@@ -3,34 +3,22 @@
 
 namespace Waldem
 {
-	Mesh::Mesh(float* vertices, uint32_t verticesSize, uint32_t* indices, uint32_t indicesAmount, PixelShader* shader, const BufferLayout& layout)
+	Mesh::Mesh(void* vertexBufferData, uint32_t vertexBufferDataSize, uint32_t* indices, uint32_t indicesAmount, const BufferLayout& layout, Material material)
 	{
-		MeshShader.reset(shader);
-		
-		VB.reset(VertexBuffer::Create(vertices, verticesSize));
+		VB = VertexBuffer::Create(vertexBufferData, vertexBufferDataSize);
 		VB->SetLayout(layout);
-		IB.reset(IndexBuffer::Create(indices, indicesAmount));
-	    VA.reset(VertexArray::Create());
+		IB = IndexBuffer::Create(indices, indicesAmount);
+		IB->SetIndices(indices);
+	    VA = VertexArray::Create();
 
 		VA->SetIndexBuffer(IB);
 		VA->AddVertexBuffer(VB);
 
-		WorldTransform.Reset();
+		MeshMaterial = material;
 	}
 
-	void Mesh::Bind()
+	void Mesh::Initialize(Pipeline* pipeline)
 	{
-		MeshShader->Bind(ShaderParameters);
-		VA->Bind();
-	}
-
-	void Mesh::Unbind()
-	{
-        MeshShader->Unbind(ShaderParameters);
-	}
-
-	void Mesh::SetShaderParam(ShaderParamType type, const GLchar* name, void* value)
-	{
-		ShaderParameters.push_back(new ShaderParam(type, name, value));
+		MeshMaterial.SetTexturesParams(pipeline->Shader->GetProgramID());
 	}
 }

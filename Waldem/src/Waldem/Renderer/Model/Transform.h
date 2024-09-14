@@ -23,6 +23,7 @@ namespace Waldem
         
         void Reset();
         void SetPosition(glm::vec3 newPosition);
+        void SetPosition(float x, float y, float z);
         void Translate(glm::vec3 translation);
         void Rotate(glm::quat rotation);
         void SetRotation(glm::quat newRotation);

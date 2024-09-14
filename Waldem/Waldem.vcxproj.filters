@@ -19,8 +19,17 @@
     <Filter Include="src\Waldem\Events">
       <UniqueIdentifier>{7A748699-E68A-842F-2F02-10519B5755B7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Waldem\Geometry">
+      <UniqueIdentifier>{717314E8-DDD4-F1F5-6642-38A8D2A228B5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Waldem\Geometry\Import">
+      <UniqueIdentifier>{5B887139-4798-1D0A-B051-82289C800CA3}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Waldem\ImGui">
       <UniqueIdentifier>{0083373B-EC7B-568D-15AE-3B1201063699}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Waldem\Interfaces">
+      <UniqueIdentifier>{E98737B2-55F4-F2AC-1EE8-8A0A8A131515}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\Waldem\Renderer">
       <UniqueIdentifier>{BC89F00B-28EB-CD19-B158-14CC1DB904D9}</UniqueIdentifier>
@@ -30,6 +39,9 @@
     </Filter>
     <Filter Include="src\Waldem\SceneManagement">
       <UniqueIdentifier>{10821B4F-FC91-C71F-654B-2C3E517AB6B8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Waldem\World">
+      <UniqueIdentifier>{8DA8363C-79A1-558E-A2D3-3A138E2B359A}</UniqueIdentifier>
     </Filter>
     <Filter Include="vendor">
       <UniqueIdentifier>{B3738122-9F15-ACF8-88D0-BF4C74113349}</UniqueIdentifier>
@@ -93,11 +105,20 @@
     <ClInclude Include="src\Waldem\Events\MouseEvent.h">
       <Filter>src\Waldem\Events</Filter>
     </ClInclude>
+    <ClInclude Include="src\Waldem\Geometry\Import\FBXImporter.h">
+      <Filter>src\Waldem\Geometry\Import</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\Geometry\Import\ModelImporter.h">
+      <Filter>src\Waldem\Geometry\Import</Filter>
+    </ClInclude>
     <ClInclude Include="src\Waldem\ImGui\ImGuiLayer.h">
       <Filter>src\Waldem\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\Input.h">
       <Filter>src\Waldem</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\Interfaces\Importer.h">
+      <Filter>src\Waldem\Interfaces</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\KeyCodes.h">
       <Filter>src\Waldem</Filter>
@@ -117,8 +138,23 @@
     <ClInclude Include="src\Waldem\Renderer\Buffer.h">
       <Filter>src\Waldem\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="src\Waldem\Renderer\Model\Material.h">
+      <Filter>src\Waldem\Renderer\Model</Filter>
+    </ClInclude>
     <ClInclude Include="src\Waldem\Renderer\Model\Mesh.h">
       <Filter>src\Waldem\Renderer\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\Renderer\Model\Model.h">
+      <Filter>src\Waldem\Renderer\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\Renderer\Model\Texture.h">
+      <Filter>src\Waldem\Renderer\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\Renderer\Model\Transform.h">
+      <Filter>src\Waldem\Renderer\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\Renderer\Pipeline.h">
+      <Filter>src\Waldem\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\Renderer\PixelShader.h">
       <Filter>src\Waldem\Renderer</Filter>
@@ -140,6 +176,9 @@
     </ClInclude>
     <ClInclude Include="src\Waldem\Window.h">
       <Filter>src\Waldem</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\World\Camera.h">
+      <Filter>src\Waldem\World</Filter>
     </ClInclude>
     <ClInclude Include="src\wdpch.h">
       <Filter>src</Filter>
@@ -1412,6 +1451,12 @@
     <ClCompile Include="src\Waldem\Application.cpp">
       <Filter>src\Waldem</Filter>
     </ClCompile>
+    <ClCompile Include="src\Waldem\Geometry\Import\FBXImporter.cpp">
+      <Filter>src\Waldem\Geometry\Import</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Waldem\Geometry\Import\ModelImporter.cpp">
+      <Filter>src\Waldem\Geometry\Import</Filter>
+    </ClCompile>
     <ClCompile Include="src\Waldem\ImGui\ImGuiBuild.cpp">
       <Filter>src\Waldem\ImGui</Filter>
     </ClCompile>
@@ -1433,6 +1478,12 @@
     <ClCompile Include="src\Waldem\Renderer\Model\Mesh.cpp">
       <Filter>src\Waldem\Renderer\Model</Filter>
     </ClCompile>
+    <ClCompile Include="src\Waldem\Renderer\Model\Transform.cpp">
+      <Filter>src\Waldem\Renderer\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Waldem\Renderer\Pipeline.cpp">
+      <Filter>src\Waldem\Renderer</Filter>
+    </ClCompile>
     <ClCompile Include="src\Waldem\Renderer\PixelShader.cpp">
       <Filter>src\Waldem\Renderer</Filter>
     </ClCompile>
@@ -1447,6 +1498,9 @@
     </ClCompile>
     <ClCompile Include="src\Waldem\SceneManagement\SceneManager.cpp">
       <Filter>src\Waldem\SceneManagement</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Waldem\World\Camera.cpp">
+      <Filter>src\Waldem\World</Filter>
     </ClCompile>
     <ClCompile Include="src\wdpch.cpp">
       <Filter>src</Filter>
