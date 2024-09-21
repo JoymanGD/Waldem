@@ -17,8 +17,8 @@ namespace Waldem
 		MeshMaterial = material;
 	}
 
-	void Mesh::Initialize(Pipeline* pipeline)
+	void Mesh::BindResourcesToPipeline(Pipeline* pipeline)
 	{
-		MeshMaterial.SetTexturesParams(pipeline->Shader->GetProgramID());
+		MeshMaterial.BindTexturesToShader(pipeline->Shader);
 	}
 }

@@ -1,7 +1,6 @@
 #include "wdpch.h"
 #include "Renderer.h"
-
-#include <backends/imgui_impl_opengl3_loader.h>
+#include "Platform/Graphics/OpenGL/OpenGLRenderer.h"
 
 namespace Waldem
 {
@@ -9,16 +8,32 @@ namespace Waldem
 
     void Renderer::Initialize()
     {
-		glEnable(GL_DEPTH_TEST);
-        glEnable(GL_CULL_FACE);
-        glCullFace(GL_BACK);
+        switch (RAPI)
+        {
+        case RendererAPI::None:
+            break;
+        case RendererAPI::OpenGL:
+            CurrentRenderer = (IRenderer*)new OpenGLRenderer();
+            break;
+        case RendererAPI::DirectX:
+            break;
+        case RendererAPI::Vulkan:
+            break;
+        }
+
+        CurrentRenderer->Initialize();
+    }
+
+    void Renderer::Clear()
+    {
+        CurrentRenderer->Clear(ClearColor);
     }
 
     void Renderer::DrawMesh(Mesh* mesh)
     {
         mesh->VA->Bind();
         mesh->MeshMaterial.Bind();
-		glDrawElements(GL_TRIANGLES, mesh->VA->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+        CurrentRenderer->Render(mesh->VA->GetIndexBuffer()->GetCount());
         mesh->MeshMaterial.Unbind();
         mesh->VA->Unbind();
     }

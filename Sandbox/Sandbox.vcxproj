@@ -92,8 +92,10 @@
     </Link>
     <PostBuildEvent>
       <Command>if exist $(SolutionDir)bin\Debug\Sandbox\Shaders (rmdir /s /q $(SolutionDir)bin\Debug\Sandbox\Shaders)
+if exist $(SolutionDir)bin\Debug\Sandbox\Content (rmdir /s /q $(SolutionDir)bin\Debug\Sandbox\Content)
 echo Copying files...
-IF EXIST $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl\ (xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl ..\bin\Debug\Sandbox\Shaders &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl ..\bin\Debug\Sandbox\Shaders &gt; nul)</Command>
+IF EXIST $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl\ (xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl ..\bin\Debug\Sandbox\Shaders &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl ..\bin\Debug\Sandbox\Shaders &gt; nul)
+xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Debug\Sandbox\Content</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -118,8 +120,10 @@ IF EXIST $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl\ (xcopy /Q /E /Y /
     </Link>
     <PostBuildEvent>
       <Command>if exist $(SolutionDir)bin\Debug\Sandbox\Shaders (rmdir /s /q $(SolutionDir)bin\Debug\Sandbox\Shaders)
+if exist $(SolutionDir)bin\Debug\Sandbox\Content (rmdir /s /q $(SolutionDir)bin\Debug\Sandbox\Content)
 echo Copying files...
-IF EXIST $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl\ (xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl ..\bin\Release\Sandbox\Shaders &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl ..\bin\Release\Sandbox\Shaders &gt; nul)</Command>
+IF EXIST $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl\ (xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl ..\bin\Release\Sandbox\Shaders &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl ..\bin\Release\Sandbox\Shaders &gt; nul)
+xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Release\Sandbox\Content</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
@@ -144,8 +148,10 @@ IF EXIST $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl\ (xcopy /Q /E /Y /
     </Link>
     <PostBuildEvent>
       <Command>if exist $(SolutionDir)bin\Debug\Sandbox\Shaders (rmdir /s /q $(SolutionDir)bin\Debug\Sandbox\Shaders)
+if exist $(SolutionDir)bin\Debug\Sandbox\Content (rmdir /s /q $(SolutionDir)bin\Debug\Sandbox\Content)
 echo Copying files...
-IF EXIST $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl\ (xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl ..\bin\Dist\Sandbox\Shaders &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl ..\bin\Dist\Sandbox\Shaders &gt; nul)</Command>
+IF EXIST $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl\ (xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl ..\bin\Dist\Sandbox\Shaders &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl ..\bin\Dist\Sandbox\Shaders &gt; nul)
+xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Dist\Sandbox\Content</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

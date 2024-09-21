@@ -1,16 +1,13 @@
 #include "wdpch.h"
 #include "VertexArray.h"
-
 #include "Renderer.h"
-#include "Platform/OpenGL/OpenGLVertexArray.h"
+#include "Platform/Graphics/OpenGL/OpenGLVertexArray.h"
 
 namespace Waldem
 {
     VertexArray* VertexArray::Create()
     {
-        auto rAPI = Renderer::GetAPI();
-
-        switch (rAPI)
+        switch (Renderer::RAPI)
         {
         case RendererAPI::None:
             WD_CORE_ASSERT(false, "RendererAPI 'None' is not supported!")

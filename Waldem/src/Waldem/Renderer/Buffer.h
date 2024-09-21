@@ -138,4 +138,15 @@ namespace Waldem
 
         uint32_t* Indices;
     };
+
+    class StorageBuffer
+    {
+    public:
+        virtual ~StorageBuffer() {}
+
+        virtual void Bind() const = 0;
+        virtual void Unbind() const = 0;
+        
+        static StorageBuffer* Create(void* data, size_t size);
+    };
 }

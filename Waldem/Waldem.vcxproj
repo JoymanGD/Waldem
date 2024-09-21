@@ -146,11 +146,14 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\Platform\OpenGL\OpenGLBuffer.h" />
-    <ClInclude Include="src\Platform\OpenGL\OpenGLContext.h" />
-    <ClInclude Include="src\Platform\OpenGL\OpenGLVertexArray.h" />
-    <ClInclude Include="src\Platform\Windows\WindowsInput.h" />
-    <ClInclude Include="src\Platform\Windows\WindowsWindow.h" />
+    <ClInclude Include="src\Platform\Graphics\OpenGL\OpenGLBuffer.h" />
+    <ClInclude Include="src\Platform\Graphics\OpenGL\OpenGLContext.h" />
+    <ClInclude Include="src\Platform\Graphics\OpenGL\OpenGLRenderer.h" />
+    <ClInclude Include="src\Platform\Graphics\OpenGL\OpenGLShader.h" />
+    <ClInclude Include="src\Platform\Graphics\OpenGL\OpenGLTexture.h" />
+    <ClInclude Include="src\Platform\Graphics\OpenGL\OpenGLVertexArray.h" />
+    <ClInclude Include="src\Platform\OS\Windows\WindowsInput.h" />
+    <ClInclude Include="src\Platform\OS\Windows\WindowsWindow.h" />
     <ClInclude Include="src\Waldem.h" />
     <ClInclude Include="src\Waldem\Application.h" />
     <ClInclude Include="src\Waldem\Core.h" />
@@ -159,9 +162,8 @@
     <ClInclude Include="src\Waldem\Events\Event.h" />
     <ClInclude Include="src\Waldem\Events\KeyEvent.h" />
     <ClInclude Include="src\Waldem\Events\MouseEvent.h" />
-    <ClInclude Include="src\Waldem\Geometry\Import\FBXImporter.h" />
-    <ClInclude Include="src\Waldem\Geometry\Import\ModelImporter.h" />
     <ClInclude Include="src\Waldem\ImGui\ImGuiLayer.h" />
+    <ClInclude Include="src\Waldem\Import\ModelImporter.h" />
     <ClInclude Include="src\Waldem\Input.h" />
     <ClInclude Include="src\Waldem\Interfaces\Importer.h" />
     <ClInclude Include="src\Waldem\KeyCodes.h" />
@@ -170,15 +172,16 @@
     <ClInclude Include="src\Waldem\Log.h" />
     <ClInclude Include="src\Waldem\MouseButtonCodes.h" />
     <ClInclude Include="src\Waldem\Renderer\Buffer.h" />
+    <ClInclude Include="src\Waldem\Renderer\Light.h" />
     <ClInclude Include="src\Waldem\Renderer\Model\Material.h" />
     <ClInclude Include="src\Waldem\Renderer\Model\Mesh.h" />
     <ClInclude Include="src\Waldem\Renderer\Model\Model.h" />
-    <ClInclude Include="src\Waldem\Renderer\Model\Texture.h" />
     <ClInclude Include="src\Waldem\Renderer\Model\Transform.h" />
     <ClInclude Include="src\Waldem\Renderer\Pipeline.h" />
-    <ClInclude Include="src\Waldem\Renderer\PixelShader.h" />
     <ClInclude Include="src\Waldem\Renderer\Renderer.h" />
     <ClInclude Include="src\Waldem\Renderer\RenderingContext.h" />
+    <ClInclude Include="src\Waldem\Renderer\Shader.h" />
+    <ClInclude Include="src\Waldem\Renderer\Texture.h" />
     <ClInclude Include="src\Waldem\Renderer\VertexArray.h" />
     <ClInclude Include="src\Waldem\SceneManagement\Scene.h" />
     <ClInclude Include="src\Waldem\SceneManagement\SceneManager.h" />
@@ -603,16 +606,18 @@
     <ClInclude Include="vendor\glm\glm\vector_relational.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Platform\OpenGL\OpenGLBuffer.cpp" />
-    <ClCompile Include="src\Platform\OpenGL\OpenGLContext.cpp" />
-    <ClCompile Include="src\Platform\OpenGL\OpenGLVertexArray.cpp" />
-    <ClCompile Include="src\Platform\Windows\WindowsInput.cpp" />
-    <ClCompile Include="src\Platform\Windows\WindowsWindow.cpp" />
+    <ClCompile Include="src\Platform\Graphics\OpenGL\OpenGLBuffer.cpp" />
+    <ClCompile Include="src\Platform\Graphics\OpenGL\OpenGLContext.cpp" />
+    <ClCompile Include="src\Platform\Graphics\OpenGL\OpenGLRenderer.cpp" />
+    <ClCompile Include="src\Platform\Graphics\OpenGL\OpenGLShader.cpp" />
+    <ClCompile Include="src\Platform\Graphics\OpenGL\OpenGLTexture.cpp" />
+    <ClCompile Include="src\Platform\Graphics\OpenGL\OpenGLVertexArray.cpp" />
+    <ClCompile Include="src\Platform\OS\Windows\WindowsInput.cpp" />
+    <ClCompile Include="src\Platform\OS\Windows\WindowsWindow.cpp" />
     <ClCompile Include="src\Waldem\Application.cpp" />
-    <ClCompile Include="src\Waldem\Geometry\Import\FBXImporter.cpp" />
-    <ClCompile Include="src\Waldem\Geometry\Import\ModelImporter.cpp" />
     <ClCompile Include="src\Waldem\ImGui\ImGuiBuild.cpp" />
     <ClCompile Include="src\Waldem\ImGui\ImGuiLayer.cpp" />
+    <ClCompile Include="src\Waldem\Import\ModelImporter.cpp" />
     <ClCompile Include="src\Waldem\Layer.cpp" />
     <ClCompile Include="src\Waldem\LayerStack.cpp" />
     <ClCompile Include="src\Waldem\Log.cpp" />
@@ -620,11 +625,11 @@
     <ClCompile Include="src\Waldem\Renderer\Model\Mesh.cpp" />
     <ClCompile Include="src\Waldem\Renderer\Model\Transform.cpp" />
     <ClCompile Include="src\Waldem\Renderer\Pipeline.cpp" />
-    <ClCompile Include="src\Waldem\Renderer\PixelShader.cpp" />
     <ClCompile Include="src\Waldem\Renderer\Renderer.cpp" />
+    <ClCompile Include="src\Waldem\Renderer\Shader.cpp" />
+    <ClCompile Include="src\Waldem\Renderer\Texture.cpp" />
     <ClCompile Include="src\Waldem\Renderer\VertexArray.cpp" />
     <ClCompile Include="src\Waldem\SceneManagement\Scene.cpp" />
-    <ClCompile Include="src\Waldem\SceneManagement\SceneManager.cpp" />
     <ClCompile Include="src\Waldem\World\Camera.cpp" />
     <ClCompile Include="src\wdpch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -640,6 +645,10 @@
     <ProjectReference Include="vendor\imgui\ImGui.vcxproj">
       <Project>{C0FF640D-2C14-8DBE-F595-301E616989EF}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="src\Platform\Graphics\DirectX\" />
+    <Folder Include="src\Platform\OS\" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

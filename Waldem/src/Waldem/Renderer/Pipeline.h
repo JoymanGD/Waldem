@@ -1,5 +1,5 @@
 #pragma once
-#include "PixelShader.h"
+#include "Shader.h"
 
 namespace Waldem
 {
@@ -14,7 +14,7 @@ namespace Waldem
         void Bind();
         void Unbind();
         
-        void AddShaderParam(ShaderParamType type, const GLchar* name);
-        void SetShaderParam(const GLchar* name, void* value);
+        void SetShaderParam(ShaderParamType type, const char* name, void* value);
+        void SetShaderBufferParam(const char* name, void* value, uint32_t size, uint32_t binding);
     };
 }

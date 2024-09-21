@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Waldem/Renderer/Light.h"
 #include "Waldem/Renderer/Pipeline.h"
 #include "Waldem/Renderer/Model/Mesh.h"
 #include "Waldem/Renderer/Model/Model.h"
@@ -12,13 +13,15 @@ namespace Sandbox
     {
     protected:
         void Update(float deltaTime) override;
-        void Draw() override;
+        void Draw(Waldem::Renderer* renderer) override;
         void Initialize() override;
     private:
+        void CreateLights();
+        
         std::unique_ptr<Waldem::Camera> MainCamera;
         Waldem::Pipeline* RasterPipeline = nullptr;
-
         Waldem::Model* TestModel;
         Waldem::Transform TestModelTransform;
+        std::vector<Waldem::Light> Lights;
     };
 }

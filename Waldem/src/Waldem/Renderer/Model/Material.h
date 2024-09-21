@@ -1,34 +1,33 @@
 #pragma once
-#include "Texture.h"
+#include "../Texture.h"
+#include "Waldem/Renderer/Shader.h"
 
-class Material
+namespace Waldem
 {
-public:
-    Material() = default;
-    Material(Texture* diffuseTexture)
+    class Material
     {
-        DiffuseTexture = diffuseTexture;
-    }
-    
-    void SetTexturesParams(uint32_t shaderProgramID)
-    {
-        DiffuseTexture->SetParam(shaderProgramID);
-    }
-    
-    void Bind()
-    {
-        DiffuseTexture->Bind();
-    }
+    public:
+        Material() = default;
+        Material(Texture2D* diffuseTexture)
+        {
+            DiffuseTexture = diffuseTexture;
+        }
+        
+        void BindTexturesToShader(PixelShader* shader)
+        {
+            shader->SetParam(ShaderParamType::TEXTURE2D, DiffuseTexture->GetName().c_str(), DiffuseTexture->GetSlot());
+        }
+        
+        void Bind()
+        {
+            DiffuseTexture->Bind();
+        }
 
-    void Unbind()
-    {
-        DiffuseTexture->Unbind();
-    }
-
-    void Destroy()
-    {
-        DiffuseTexture->Destroy();
-    }
-private:
-    Texture* DiffuseTexture;
-};
+        void Unbind()
+        {
+            DiffuseTexture->Unbind();
+        }
+    private:
+        Texture2D* DiffuseTexture;
+    };
+}

@@ -22,7 +22,9 @@ namespace Waldem
 		ImGuiLayer = new Waldem::ImGuiLayer();
 		PushOverlay(ImGuiLayer);
 
-		Renderer::Initialize();
+		CurrentRenderer = {};
+
+		CurrentRenderer.Initialize();
 	}
 	
 	void Application::OpenScene(Scene* scene)
@@ -76,7 +78,9 @@ namespace Waldem
 
 			CurrentScene->UpdateInternal(deltaTime);
 
-			CurrentScene->DrawInternal();
+			CurrentRenderer.Clear();
+
+			CurrentScene->DrawInternal(&CurrentRenderer);
 
 			for (Layer* layer : LayerStack)
 			{

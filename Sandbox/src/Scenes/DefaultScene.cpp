@@ -6,7 +6,7 @@
 #include "Waldem/Input.h"
 #include "Waldem/KeyCodes.h"
 #include "Waldem/MouseButtonCodes.h"
-#include "Waldem/Geometry/Import/FBXImporter.h"
+#include "Waldem/Import/ModelImporter.h"
 #include "Waldem/Renderer/Renderer.h"
 #include "Waldem/World/Camera.h"
 
@@ -15,11 +15,9 @@ namespace Sandbox
 	void DefaultScene::Initialize()
 	{
 		RasterPipeline = new Waldem::Pipeline("RasterPipeline", "Default", true, true, true);
-		RasterPipeline->AddShaderParam(Waldem::ShaderParamType::MAT4, "world");
-		RasterPipeline->AddShaderParam(Waldem::ShaderParamType::MAT4, "viewProjection");
 		
-		Waldem::FBXImporter importer;
-		std::string path = "Content/Models/Mage.fbx";
+		Waldem::ModelImporter importer;
+		std::string path = "Content/Models/Sponza/Sponza.gltf";
 		TestModel = importer.Import(path, true);
 		TestModel->Initialize(RasterPipeline);
 		TestModelTransform.Reset();
@@ -29,6 +27,21 @@ namespace Sandbox
 		float screenHeight = Waldem::Application::Instance->GetWindow().GetHeight();
 		
 		MainCamera.reset(new Waldem::Camera(70.0f , screenWidth / screenHeight, .01f, 10000, { 0, 0, 0 }, 100.0f, 1.0f));
+
+		CreateLights();
+	}
+
+	void DefaultScene::CreateLights()
+	{
+		Waldem::Light dirLight;
+		dirLight.Color = { .03f, .2f, .3f };
+		dirLight.Intensity = 1.0f;
+		dirLight.Position = { 0, 0, 0 };
+		dirLight.Type = Waldem::LightType::Directional;
+		dirLight.Direciton = { 0.33f, -1, 0.33f };
+		dirLight.Range = 100.0f;
+
+		Lights.push_back(dirLight);
 	}
 
 	void DefaultScene::Update(float deltaTime)
@@ -80,14 +93,18 @@ namespace Sandbox
 		lastMouseY = mouseY;
 	}
 
-	void DefaultScene::Draw()
+	void DefaultScene::Draw(Waldem::Renderer* renderer)
 	{
 		auto viewProjectionMatrix = MainCamera.get()->GetViewProjectionMatrix();
-		RasterPipeline->SetShaderParam("viewProjection", &viewProjectionMatrix);
+		RasterPipeline->SetShaderParam(Waldem::ShaderParamType::MAT4, "viewProjection", &viewProjectionMatrix);
 
-		auto trisWorldMatrix = TestModelTransform.GetMatrix();
-		RasterPipeline->SetShaderParam("world", &trisWorldMatrix);
+		auto testModelWorldMatrix = TestModelTransform.GetMatrix();
+		
+		RasterPipeline->SetShaderParam(Waldem::ShaderParamType::MAT4, "world", &testModelWorldMatrix);
+		uint32_t numLights = Lights.size();
+		RasterPipeline->SetShaderParam(Waldem::ShaderParamType::UINT, "NumLights", &numLights);
+		RasterPipeline->SetShaderBufferParam("Lights", Lights.data(), Lights.size() * sizeof(Waldem::Light), 0);
 
-		Waldem::Renderer::DrawModel(RasterPipeline, TestModel);
+		renderer->DrawModel(RasterPipeline, TestModel);
 	}
 }
