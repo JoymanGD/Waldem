@@ -3,6 +3,7 @@
 #include "Core.h"
 #include "Window.h"
 #include "ImGui/ImGuiLayer.h"
+#include "Renderer/Renderer.h"
 #include "SceneManagement/SceneManager.h"
 #include "Waldem/LayerStack.h"
 #include "Waldem/Events/Event.h"
@@ -28,6 +29,7 @@ namespace Waldem
 		bool OnWindowClose(WindowCloseEvent& e);
 		
 		std::unique_ptr<Window> Window;
+		Renderer CurrentRenderer;
 		bool IsRunning = true;
 		LayerStack LayerStack;
 		ImGuiLayer* ImGuiLayer;

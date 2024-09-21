@@ -13,14 +13,32 @@ namespace Waldem
         Vulkan = 3,
     };
 
+    class IRenderer
+    {
+    public:
+        virtual ~IRenderer() = default;
+        virtual void Initialize() = 0;
+        virtual void Clear(glm::vec4 clearColor) = 0;
+        virtual void Render(uint32_t indexCount) = 0;
+    };
+
     class Renderer
     {
     public:
-        static void Initialize();
-        static void DrawMesh(Mesh* mesh);
-        static void DrawMesh(Pipeline* pipeline, Mesh* mesh);
-        static void DrawModel(Pipeline* pipeline, Model* model);
-        inline static RendererAPI GetAPI() { return RAPI; }
+        void Initialize();
+        void Clear();
+        void DrawMesh(Mesh* mesh);
+        void DrawMesh(Pipeline* pipeline, Mesh* mesh);
+        void DrawModel(Pipeline* pipeline, Model* model);
+        
+        void CreateStorageBuffer(void* data, size_t size)
+        {
+            StorageBuffer::Create(data, size);
+        }
+        
         static RendererAPI RAPI;
+    private:
+        IRenderer* CurrentRenderer;
+        glm::vec4 ClearColor = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
     };
 }

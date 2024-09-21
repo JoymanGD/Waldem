@@ -1,27 +1,30 @@
 #include "wdpch.h"
 #include "Pipeline.h"
 
-Waldem::Pipeline::Pipeline(const std::string& name, const std::string& shaderName, bool bDepthTest, bool bDepthWrite, bool bBlending)
+namespace Waldem
 {
-    Shader = new PixelShader(shaderName);
-}
+    Pipeline::Pipeline(const std::string& name, const std::string& shaderName, bool bDepthTest, bool bDepthWrite, bool bBlending)
+    {
+        Shader = PixelShader::Create(shaderName);
+    }
 
-void Waldem::Pipeline::Bind()
-{
-    Shader->Bind();
-}
+    void Pipeline::Bind()
+    {
+        Shader->Bind();
+    }
 
-void Waldem::Pipeline::Unbind()
-{
-    Shader->Unbind();
-}
+    void Pipeline::Unbind()
+    {
+        Shader->Unbind();
+    }
 
-void Waldem::Pipeline::AddShaderParam(ShaderParamType type, const GLchar* name)
-{
-    Shader->AddParam(type, name);
-}
-
-void Waldem::Pipeline::SetShaderParam(const GLchar* name, void* value)
-{
-    Shader->SetParam(name, value);
+    void Pipeline::SetShaderParam(ShaderParamType type, const char* name, void* value)
+    {
+        Shader->SetParam(type, name, value);
+    }
+    
+    void Pipeline::SetShaderBufferParam(const char* name, void* value, uint32_t size, uint32_t binding)
+    {
+        Shader->SetBufferParam(name, value, size, binding);
+    }
 }

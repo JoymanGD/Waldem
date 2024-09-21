@@ -20,6 +20,8 @@ namespace Waldem
         glm::vec3 GetForwardVector() { return glm::vec3(Matrix * glm::vec4(0, 0, -1, 0)); }
         glm::vec3 GetRightVector() { return glm::vec3(Matrix * glm::vec4(1, 0, 0, 0)); }
         glm::vec3 GetUpVector() { return glm::vec3(Matrix * glm::vec4(0, 1, 0, 0)); }
+
+        operator glm::mat4() const { return Matrix; }
         
         void Reset();
         void SetPosition(glm::vec3 newPosition);

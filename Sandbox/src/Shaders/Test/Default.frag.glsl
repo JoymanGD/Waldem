@@ -1,14 +1,48 @@
-#version 330 core
+#version 420
+
+#define MAX_LIGHTS 25
+
+struct Light
+{
+    vec3 Position;
+    uint Type;
+    vec3 Direciton;
+    float Intensity;
+    vec3 Color;
+    float Range;
+};
 
 layout(location = 0) out vec4 Color;
-in vec3 OutPosition;
-in vec3 OutNormal;
-in vec4 OutColor;
-in vec2 OutUV;
+in vec3 Position;
+in vec3 Normal;
+in vec2 UV;
 uniform sampler2D DiffuseTexture;
+uniform uint NumLights;
+layout(std140, binding = 0) uniform LightsBlock
+{
+    Light Lights[MAX_LIGHTS];
+};
 
 void main()
 {
-    //Color = vec4(texture(DiffuseTexture, OutUV));
-    Color = vec4(abs(OutNormal), 1.0f);
+    vec4 textureColor = vec4(texture(DiffuseTexture, UV));
+    
+    if(textureColor.a < 0.33f)
+    {
+        discard;
+    }
+    
+    vec4 finalColor = textureColor;
+    
+    for(int i = 0; i < NumLights; i++)
+    {
+        Light light = Lights[i];
+        
+        if(light.Type == 0)
+        {
+            finalColor *= vec4(light.Color, 1.0f);
+        }
+    }
+        
+    Color = finalColor;
 }

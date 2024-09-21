@@ -19,7 +19,7 @@ namespace Waldem
         {
             for (auto mesh : Meshes)
             {
-                mesh->Initialize(pipeline);
+                mesh->BindResourcesToPipeline(pipeline);
             }
         }
     };
