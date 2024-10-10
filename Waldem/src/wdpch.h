@@ -13,6 +13,7 @@
 #include <unordered_set>
 
 #include "Waldem/Log.h"
+#include "Waldem/Types/Types.h"
 
 #ifdef WD_PLATFORM_WINDOWS
 #include <Windows.h>

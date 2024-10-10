@@ -7,11 +7,20 @@
     <Filter Include="src\Platform">
       <UniqueIdentifier>{21CA02E5-0D2D-9289-B6B2-CA3FA2F45D0C}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\Platform\OpenGL">
-      <UniqueIdentifier>{35A49437-A105-7245-2A73-B8F796D3A804}</UniqueIdentifier>
+    <Filter Include="src\Platform\Graphics">
+      <UniqueIdentifier>{8187169E-EDF3-D198-B6E7-69F62213F400}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\Platform\Windows">
-      <UniqueIdentifier>{5B054582-4794-CE4B-F0B2-E246DC20DFF1}</UniqueIdentifier>
+    <Filter Include="src\Platform\Graphics\DirectX">
+      <UniqueIdentifier>{435B2676-AF73-0DA0-7820-9D39E4F7A139}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Platform\Graphics\OpenGL">
+      <UniqueIdentifier>{959521D0-8150-117C-2A08-8AC616A25B0C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Platform\OS">
+      <UniqueIdentifier>{F274994C-5E00-0711-6711-8A05D31B6311}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Platform\OS\Windows">
+      <UniqueIdentifier>{2CF17DDC-9828-C673-A132-2A970DE9EC6C}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\Waldem">
       <UniqueIdentifier>{56E54637-429D-8884-ABA4-61E0977B2375}</UniqueIdentifier>
@@ -36,6 +45,9 @@
     </Filter>
     <Filter Include="src\Waldem\SceneManagement">
       <UniqueIdentifier>{10821B4F-FC91-C71F-654B-2C3E517AB6B8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Waldem\Types">
+      <UniqueIdentifier>{7AD1053C-66CA-248E-8FFC-09137B54049A}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\Waldem\World">
       <UniqueIdentifier>{8DA8363C-79A1-558E-A2D3-3A138E2B359A}</UniqueIdentifier>
@@ -63,26 +75,32 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Platform\OpenGL\OpenGLBuffer.h">
-      <Filter>src\Platform\OpenGL</Filter>
+    <ClInclude Include="src\Platform\Graphics\DirectX\DirectXRenderer.h">
+      <Filter>src\Platform\Graphics\DirectX</Filter>
     </ClInclude>
-    <ClInclude Include="src\Platform\OpenGL\OpenGLContext.h">
-      <Filter>src\Platform\OpenGL</Filter>
+    <ClInclude Include="src\Platform\Graphics\OpenGL\OpenGLBuffer.h">
+      <Filter>src\Platform\Graphics\OpenGL</Filter>
     </ClInclude>
-    <ClInclude Include="src\Platform\OpenGL\OpenGLShader.h">
-      <Filter>src\Platform\OpenGL</Filter>
+    <ClInclude Include="src\Platform\Graphics\OpenGL\OpenGLContext.h">
+      <Filter>src\Platform\Graphics\OpenGL</Filter>
     </ClInclude>
-    <ClInclude Include="src\Platform\OpenGL\OpenGLTexture.h">
-      <Filter>src\Platform\OpenGL</Filter>
+    <ClInclude Include="src\Platform\Graphics\OpenGL\OpenGLRenderer.h">
+      <Filter>src\Platform\Graphics\OpenGL</Filter>
     </ClInclude>
-    <ClInclude Include="src\Platform\OpenGL\OpenGLVertexArray.h">
-      <Filter>src\Platform\OpenGL</Filter>
+    <ClInclude Include="src\Platform\Graphics\OpenGL\OpenGLShader.h">
+      <Filter>src\Platform\Graphics\OpenGL</Filter>
     </ClInclude>
-    <ClInclude Include="src\Platform\Windows\WindowsInput.h">
-      <Filter>src\Platform\Windows</Filter>
+    <ClInclude Include="src\Platform\Graphics\OpenGL\OpenGLTexture.h">
+      <Filter>src\Platform\Graphics\OpenGL</Filter>
     </ClInclude>
-    <ClInclude Include="src\Platform\Windows\WindowsWindow.h">
-      <Filter>src\Platform\Windows</Filter>
+    <ClInclude Include="src\Platform\Graphics\OpenGL\OpenGLVertexArray.h">
+      <Filter>src\Platform\Graphics\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\OS\Windows\WindowsInput.h">
+      <Filter>src\Platform\OS\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\OS\Windows\WindowsWindow.h">
+      <Filter>src\Platform\OS\Windows</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem.h">
       <Filter>src</Filter>
@@ -176,6 +194,12 @@
     </ClInclude>
     <ClInclude Include="src\Waldem\SceneManagement\SceneManager.h">
       <Filter>src\Waldem\SceneManagement</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\Types\MathTypes.h">
+      <Filter>src\Waldem\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\Types\Types.h">
+      <Filter>src\Waldem\Types</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\Window.h">
       <Filter>src\Waldem</Filter>
@@ -1436,26 +1460,32 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Platform\OpenGL\OpenGLBuffer.cpp">
-      <Filter>src\Platform\OpenGL</Filter>
+    <ClCompile Include="src\Platform\Graphics\DirectX\DirectXRenderer.cpp">
+      <Filter>src\Platform\Graphics\DirectX</Filter>
     </ClCompile>
-    <ClCompile Include="src\Platform\OpenGL\OpenGLContext.cpp">
-      <Filter>src\Platform\OpenGL</Filter>
+    <ClCompile Include="src\Platform\Graphics\OpenGL\OpenGLBuffer.cpp">
+      <Filter>src\Platform\Graphics\OpenGL</Filter>
     </ClCompile>
-    <ClCompile Include="src\Platform\OpenGL\OpenGLShader.cpp">
-      <Filter>src\Platform\OpenGL</Filter>
+    <ClCompile Include="src\Platform\Graphics\OpenGL\OpenGLContext.cpp">
+      <Filter>src\Platform\Graphics\OpenGL</Filter>
     </ClCompile>
-    <ClCompile Include="src\Platform\OpenGL\OpenGLTexture.cpp">
-      <Filter>src\Platform\OpenGL</Filter>
+    <ClCompile Include="src\Platform\Graphics\OpenGL\OpenGLRenderer.cpp">
+      <Filter>src\Platform\Graphics\OpenGL</Filter>
     </ClCompile>
-    <ClCompile Include="src\Platform\OpenGL\OpenGLVertexArray.cpp">
-      <Filter>src\Platform\OpenGL</Filter>
+    <ClCompile Include="src\Platform\Graphics\OpenGL\OpenGLShader.cpp">
+      <Filter>src\Platform\Graphics\OpenGL</Filter>
     </ClCompile>
-    <ClCompile Include="src\Platform\Windows\WindowsInput.cpp">
-      <Filter>src\Platform\Windows</Filter>
+    <ClCompile Include="src\Platform\Graphics\OpenGL\OpenGLTexture.cpp">
+      <Filter>src\Platform\Graphics\OpenGL</Filter>
     </ClCompile>
-    <ClCompile Include="src\Platform\Windows\WindowsWindow.cpp">
-      <Filter>src\Platform\Windows</Filter>
+    <ClCompile Include="src\Platform\Graphics\OpenGL\OpenGLVertexArray.cpp">
+      <Filter>src\Platform\Graphics\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\OS\Windows\WindowsInput.cpp">
+      <Filter>src\Platform\OS\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\OS\Windows\WindowsWindow.cpp">
+      <Filter>src\Platform\OS\Windows</Filter>
     </ClCompile>
     <ClCompile Include="src\Waldem\Application.cpp">
       <Filter>src\Waldem</Filter>
@@ -1503,9 +1533,6 @@
       <Filter>src\Waldem\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Waldem\SceneManagement\Scene.cpp">
-      <Filter>src\Waldem\SceneManagement</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Waldem\SceneManagement\SceneManager.cpp">
       <Filter>src\Waldem\SceneManagement</Filter>
     </ClCompile>
     <ClCompile Include="src\Waldem\World\Camera.cpp">

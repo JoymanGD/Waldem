@@ -14,9 +14,7 @@ namespace Waldem
 		WindowProps(const std::string& title = "Waldem Engine",
 					float width = 1280,
 					float height = 720)
-			: Title(title), Width(width), Height(height)
-		{
-		}
+			: Title(title), Width(width), Height(height) {}
 	};
 	
 	//Interface representing a desktop system based Window
@@ -39,6 +37,7 @@ namespace Waldem
 		virtual bool IsVSync() const = 0;
 
 		virtual void* GetNativeWindow() const = 0;
+		virtual HWND GetWindowsHandle() const = 0;
 
 		static Window* Create(const WindowProps& props = WindowProps());
 	};

@@ -9,9 +9,9 @@ namespace Waldem
 {
     struct Vertex
     {
-        glm::vec3 Position;
-        glm::vec3 Normal;
-        glm::vec2 UV;
+        Vector3 Position;
+        Vector3 Normal;
+        Vector2 UV;
     };
     
     class WALDEM_API Mesh

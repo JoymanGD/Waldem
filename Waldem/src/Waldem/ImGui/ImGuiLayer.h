@@ -17,7 +17,7 @@ namespace Waldem
         void OnAttach() override;
         void OnDetach() override;
         void OnEvent(Event& event) override;
-        void OnImGuiRender() override;
+        void OnUIRender() override;
     private:
 		bool m_BlockEvents = false;
     };

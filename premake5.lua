@@ -16,6 +16,7 @@ IncludeDir["GLFW"] = "Waldem/vendor/GLFW/include"
 IncludeDir["Glad"] = "Waldem/vendor/Glad/include"
 IncludeDir["ImGui"] = "Waldem/vendor/imgui"
 IncludeDir["glm"] = "Waldem/vendor/glm"
+IncludeDir["SDL"] = "Waldem/vendor/SDL/include"
 
 include "Waldem/vendor/GLFW"
 include "Waldem/vendor/Glad"
@@ -54,6 +55,7 @@ project "Waldem"
         "%{prj.name}/vendor/assimp/include",
         "%{prj.name}/vendor/stb/include",
         "%{IncludeDir.GLFW}",
+        "%{IncludeDir.SDL}",
         "%{IncludeDir.Glad}",
         "%{IncludeDir.ImGui}",
         "%{IncludeDir.glm}"
@@ -61,16 +63,19 @@ project "Waldem"
     
     libdirs
     {
-        "%{prj.name}/vendor/assimp/lib"
+        "%{prj.name}/vendor/assimp/lib",
+        "%{prj.name}/vendor/SDL/lib"
     }
 
     links
     {
         "GLFW",
         "Glad",
+        "SDL2", "SDL2main",
         "ImGui",
         "opengl32.lib",
-        "assimp-vc142-mt.lib"
+        "assimp-vc142-mt.lib",
+        "d3d12", "dxgi", "d3dcompiler"
     }
 
     filter "system:windows"
@@ -140,7 +145,8 @@ project "Sandbox"
             "if exist %{wks.location}bin\\Debug\\Sandbox\\Shaders (rmdir /s /q %{wks.location}bin\\Debug\\Sandbox\\Shaders)",
             "if exist %{wks.location}bin\\Debug\\Sandbox\\Content (rmdir /s /q %{wks.location}bin\\Debug\\Sandbox\\Content)",
             "echo Copying files...",
-            "{COPY} %{wks.location}%{prj.name}\\src\\Shaders\\Test\\*.glsl %{cfg.targetdir}\\Shaders\\",
+            "{COPY} %{wks.location}%{prj.name}\\src\\Shaders\\Test\\*.glsl %{cfg.targetdir}\\Shaders\\",         
+            "{COPY} %{wks.location}Waldem\\vendor\\SDL\\lib\\SDL2.dll %{cfg.targetdir}\\",
             "{COPYDIR} %{wks.location}%{prj.name}\\Content\\ %{cfg.targetdir}\\Content\\"
         }
 

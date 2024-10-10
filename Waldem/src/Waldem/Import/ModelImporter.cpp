@@ -41,16 +41,16 @@ namespace Waldem
                 for (uint32_t j = 0; j < assimpMesh->mNumVertices; ++j)
                 {
                     Vertex vertex = {};
-                    vertex.Position = glm::vec3(assimpMesh->mVertices[j].x, assimpMesh->mVertices[j].y, assimpMesh->mVertices[j].z);
-                    vertex.Normal = glm::vec3(assimpMesh->mNormals[j].x, assimpMesh->mNormals[j].y, assimpMesh->mNormals[j].z);
+                    vertex.Position = Vector3(assimpMesh->mVertices[j].x, assimpMesh->mVertices[j].y, assimpMesh->mVertices[j].z);
+                    vertex.Normal = Vector3(assimpMesh->mNormals[j].x, assimpMesh->mNormals[j].y, assimpMesh->mNormals[j].z);
 
                     if(assimpMesh->HasTextureCoords(0))
                     {
-                        vertex.UV = glm::vec2(assimpMesh->mTextureCoords[0][j].x, assimpMesh->mTextureCoords[0][j].y);
+                        vertex.UV = Vector2(assimpMesh->mTextureCoords[0][j].x, assimpMesh->mTextureCoords[0][j].y);
                     }
                     else
                     {
-                        vertex.UV = glm::vec2(0, 0);
+                        vertex.UV = Vector2(0, 0);
                     }
                     
                     vertexData.push_back(vertex);
@@ -88,7 +88,7 @@ namespace Waldem
                     height = 1;
 
                     // Fake orange texture data for the case when texture is not found
-                    glm::vec4 fakeData = glm::vec4(1.f, .5f, 0.f, 1.f);
+                    Vector4 fakeData = Vector4(1.f, .5f, 0.f, 1.f);
                     image_data = (uint8_t*)&fakeData;
                 }
 

@@ -95,6 +95,7 @@
 if exist $(SolutionDir)bin\Debug\Sandbox\Content (rmdir /s /q $(SolutionDir)bin\Debug\Sandbox\Content)
 echo Copying files...
 IF EXIST $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl\ (xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl ..\bin\Debug\Sandbox\Shaders &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl ..\bin\Debug\Sandbox\Shaders &gt; nul)
+IF EXIST $(SolutionDir)Waldem\vendor\SDL\lib\SDL2.dll\ (xcopy /Q /E /Y /I $(SolutionDir)Waldem\vendor\SDL\lib\SDL2.dll ..\bin\Debug\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)Waldem\vendor\SDL\lib\SDL2.dll ..\bin\Debug\Sandbox &gt; nul)
 xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Debug\Sandbox\Content</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -123,6 +124,7 @@ xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Debug\Sandbox\Cont
 if exist $(SolutionDir)bin\Debug\Sandbox\Content (rmdir /s /q $(SolutionDir)bin\Debug\Sandbox\Content)
 echo Copying files...
 IF EXIST $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl\ (xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl ..\bin\Release\Sandbox\Shaders &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl ..\bin\Release\Sandbox\Shaders &gt; nul)
+IF EXIST $(SolutionDir)Waldem\vendor\SDL\lib\SDL2.dll\ (xcopy /Q /E /Y /I $(SolutionDir)Waldem\vendor\SDL\lib\SDL2.dll ..\bin\Release\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)Waldem\vendor\SDL\lib\SDL2.dll ..\bin\Release\Sandbox &gt; nul)
 xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Release\Sandbox\Content</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -151,6 +153,7 @@ xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Release\Sandbox\Co
 if exist $(SolutionDir)bin\Debug\Sandbox\Content (rmdir /s /q $(SolutionDir)bin\Debug\Sandbox\Content)
 echo Copying files...
 IF EXIST $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl\ (xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl ..\bin\Dist\Sandbox\Shaders &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl ..\bin\Dist\Sandbox\Shaders &gt; nul)
+IF EXIST $(SolutionDir)Waldem\vendor\SDL\lib\SDL2.dll\ (xcopy /Q /E /Y /I $(SolutionDir)Waldem\vendor\SDL\lib\SDL2.dll ..\bin\Dist\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)Waldem\vendor\SDL\lib\SDL2.dll ..\bin\Dist\Sandbox &gt; nul)
 xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Dist\Sandbox\Content</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>

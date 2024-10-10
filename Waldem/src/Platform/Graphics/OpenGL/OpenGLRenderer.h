@@ -1,10 +1,13 @@
 #pragma once
 #include "Waldem/Renderer/Renderer.h"
 
-class OpenGLRenderer : Waldem::IRenderer
+namespace Waldem
 {
-public:
-    void Initialize() override;
-    void Clear(glm::vec4 clearColor) override;
-    void Render(uint32_t indexCount) override;
-};
+    class OpenGLRenderer : public IRenderer
+    {
+    public:
+        void Initialize(Window* window) override;
+        void Clear(Vector4 clearColor) override;
+        void Render(uint32_t indexCount) override;
+    };
+}
