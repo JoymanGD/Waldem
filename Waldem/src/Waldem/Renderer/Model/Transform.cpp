@@ -3,16 +3,16 @@
 
 namespace Waldem
 {
-    Transform::Transform(glm::vec3 position)
+    Transform::Transform(Vector3 position)
     {
         Position = position;
         Rotation = { 1, 0, 0, 0 };
-        LocalScale = glm::vec3(1.0f);
+        LocalScale = Vector3(1.0f);
 
         CompileMatrix();
     }
 
-    Transform::Transform(glm::vec3 position, glm::quat rotation, glm::vec3 localScale)
+    Transform::Transform(Vector3 position, Quaternion rotation, Vector3 localScale)
     {
         Position = position;
         Rotation = rotation;
@@ -21,7 +21,7 @@ namespace Waldem
         CompileMatrix();
     }
 
-    Transform::Transform(glm::mat4 matrix)
+    Transform::Transform(Matrix4 matrix)
     {
         SetMatrix(matrix);
     }
@@ -35,7 +35,7 @@ namespace Waldem
         CompileMatrix();
     }
 
-    void Transform::SetPosition(glm::vec3 newPosition)
+    void Transform::SetPosition(Vector3 newPosition)
     {
         Position = newPosition;
         
@@ -47,61 +47,61 @@ namespace Waldem
         SetPosition({ x, y, z });
     }
 
-    void Transform::Translate(glm::vec3 translation)
+    void Transform::Translate(Vector3 translation)
     {
         Position += translation;
 
         CompileMatrix();
     }
 
-    void Transform::Rotate(glm::quat rotation)
+    void Transform::Rotate(Quaternion rotation)
     {
         Rotation = rotation * Rotation;
         
         CompileMatrix();
     }
 
-    void Transform::SetRotation(glm::quat newRotation)
+    void Transform::SetRotation(Quaternion newRotation)
     {
         Rotation = newRotation;
 
         CompileMatrix();
     }
 
-    void Transform::Scale(glm::vec3 localScale)
+    void Transform::Scale(Vector3 localScale)
     {
         LocalScale = localScale;
         
         CompileMatrix();
     }
 
-    void Transform::SetMatrix(glm::mat4 matrix)
+    void Transform::SetMatrix(Matrix4 matrix)
     {
-        Matrix = glm::mat4(matrix);
+        Matrix = Matrix4(matrix);
         
         Position = matrix[3];
         
-        glm::vec3 scale;
-        scale.x = length(glm::vec3(matrix[0]));
-        scale.y = length(glm::vec3(matrix[1]));
-        scale.z = length(glm::vec3(matrix[2]));
+        Vector3 scale;
+        scale.x = length(Vector3(matrix[0]));
+        scale.y = length(Vector3(matrix[1]));
+        scale.z = length(Vector3(matrix[2]));
         LocalScale = scale;
 
-        glm::mat4 rotationMatrix = matrix;
+        Matrix4 rotationMatrix = matrix;
         rotationMatrix[0] /= scale.x;
         rotationMatrix[1] /= scale.y;
         rotationMatrix[2] /= scale.z;
-        glm::quat rotation = glm::quat_cast(rotationMatrix);
+        Quaternion rotation = quat_cast(rotationMatrix);
         Rotation = rotation;
     }
 
-    glm::mat4 Transform::Inverse()
+    Matrix4 Transform::Inverse()
     {
         return inverse(Matrix);
     }
 
     void Transform::CompileMatrix()
     {
-        Matrix = glm::mat4(translate(glm::mat4(1.0f), Position) * mat4_cast(Rotation) * scale(glm::mat4(1.0f), LocalScale));
+        Matrix = Matrix4(translate(Matrix4(1.0f), Position) * mat4_cast(Rotation) * scale(Matrix4(1.0f), LocalScale));
     }
 }

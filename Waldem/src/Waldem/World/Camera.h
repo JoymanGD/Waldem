@@ -15,9 +15,9 @@ namespace Waldem
         float Pitch = 0.0f;
         float Roll = 0.0f;
         
-        Camera(float fov, float aspectRatio, float nearClip, float farClip, glm::vec3 position, float movementSpeed, float rotationSpeed);
+        Camera(float fov, float aspectRatio, float nearClip, float farClip, Vector3 position, float movementSpeed, float rotationSpeed);
         glm::mat4 GetViewProjectionMatrix();
-        void Move(glm::vec3 delta);
+        void Move(Vector3 delta);
         void Rotate(float yaw, float pitch, float roll);
 
     private:

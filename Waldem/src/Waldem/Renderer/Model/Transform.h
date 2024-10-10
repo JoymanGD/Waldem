@@ -9,36 +9,36 @@ namespace Waldem
     {
     public:
         Transform() {}
-        Transform(glm::vec3 position);
-        Transform(glm::vec3 position, glm::quat rotation, glm::vec3 localScale);
-        Transform(glm::mat4 matrix);
+        Transform(Vector3 position);
+        Transform(Vector3 position, Quaternion rotation, Vector3 localScale);
+        Transform(Matrix4 matrix);
         
-        glm::mat4 GetMatrix() { return Matrix; }
-        glm::vec3 GetPosition() { return Position; }
-        glm::quat GetRotation() { return Rotation; }
-        glm::vec3 GetLocalScale() { return LocalScale; }
-        glm::vec3 GetForwardVector() { return glm::vec3(Matrix * glm::vec4(0, 0, -1, 0)); }
-        glm::vec3 GetRightVector() { return glm::vec3(Matrix * glm::vec4(1, 0, 0, 0)); }
-        glm::vec3 GetUpVector() { return glm::vec3(Matrix * glm::vec4(0, 1, 0, 0)); }
+        Matrix4 GetMatrix() { return Matrix; }
+        Vector3 GetPosition() { return Position; }
+        Quaternion GetRotation() { return Rotation; }
+        Vector3 GetLocalScale() { return LocalScale; }
+        Vector3 GetForwardVector() { return Vector3(Matrix * Vector4(0, 0, -1, 0)); }
+        Vector3 GetRightVector() { return Vector3(Matrix * Vector4(1, 0, 0, 0)); }
+        Vector3 GetUpVector() { return Vector3(Matrix * Vector4(0, 1, 0, 0)); }
 
-        operator glm::mat4() const { return Matrix; }
+        operator Matrix4() const { return Matrix; }
         
         void Reset();
-        void SetPosition(glm::vec3 newPosition);
+        void SetPosition(Vector3 newPosition);
         void SetPosition(float x, float y, float z);
-        void Translate(glm::vec3 translation);
-        void Rotate(glm::quat rotation);
-        void SetRotation(glm::quat newRotation);
-        void Scale(glm::vec3 scale);
-        void SetMatrix(glm::mat4 matrix);
-        glm::mat4 Inverse();
+        void Translate(Vector3 translation);
+        void Rotate(Quaternion rotation);
+        void SetRotation(Quaternion newRotation);
+        void Scale(Vector3 scale);
+        void SetMatrix(Matrix4 matrix);
+        Matrix4 Inverse();
     private:
         void CompileMatrix();
         
-        glm::vec3 Position;
-        glm::quat Rotation;
-        glm::vec3 LocalScale;
-        glm::mat4 Matrix;
-        glm::mat4 InversedMatrix;
+        Vector3 Position;
+        Quaternion Rotation;
+        Vector3 LocalScale;
+        Matrix4 Matrix;
+        Matrix4 InversedMatrix;
     };
 }

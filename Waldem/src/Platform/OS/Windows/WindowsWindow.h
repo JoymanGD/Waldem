@@ -1,35 +1,41 @@
 #pragma once
 
-#include <GLFW/glfw3.h>
 #include "Waldem/Window.h"
 #include "Waldem/Renderer/RenderingContext.h"
 
-namespace Waldem {
+#define WALDEM_WINDOW_API_GLFW
 
+#if defined(WALDEM_WINDOW_API_SDL)
+#include <SDL.h>
+#elif defined(WALDEM_WINDOW_API_GLFW)
+#include "GLFW/glfw3.h"
+#endif
+
+namespace Waldem
+{
     class WindowsWindow : public Window
     {
     public:
         WindowsWindow(const WindowProps& props);
-        ~WindowsWindow() override;
+        virtual ~WindowsWindow();
 
         void OnUpdate() override;
-
+    
         float GetWidth() const override { return Data.Width; }
         float GetHeight() const override { return Data.Height; }
-        std::array<float, 2> GetSize() const override { return { Data.Width, Data.Height }; }
-
-        // Window attributes
+    
         void SetEventCallback(const EventCallbackFn& callback) override { Data.EventCallback = callback; }
         void SetVSync(bool enabled) override;
-        bool IsVSync() const override;
+        bool IsVSync() const override { return Data.VSync; }
 
-        virtual void* GetNativeWindow() const override { return Window; }
+        void* GetNativeWindow() const override { return Window; }
+        HWND GetWindowsHandle() const override;
+
     private:
-        virtual void Init(const WindowProps& props);
-        virtual void Shutdown();
+        void Init(const WindowProps& props);
+        void Shutdown();
     
-        GLFWwindow* Window;
-        RenderingContext* Context;
+        void ProcessEvents();
 
         struct WindowData
         {
@@ -41,6 +47,11 @@ namespace Waldem {
         };
 
         WindowData Data;
+#if defined(WALDEM_WINDOW_API_SDL)
+        SDL_Window* Window;
+#elif defined(WALDEM_WINDOW_API_GLFW)
+        GLFWwindow* Window;
+        RenderingContext* Context;
+#endif
     };
-
 }

@@ -11,11 +11,11 @@ namespace Waldem
     
     struct Light
     {
-        glm::vec3 Position;
+        Vector3 Position;
         LightType Type;
-        glm::vec3 Direciton;
+        Vector3 Direciton;
         float Intensity;
-        glm::vec3 Color;
+        Vector3 Color;
         float Range;
     };
 }

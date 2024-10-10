@@ -78,8 +78,8 @@ void Waldem::ImGuiLayer::OnEvent(Event& event)
     }
 }
 
-void Waldem::ImGuiLayer::OnImGuiRender()
+void Waldem::ImGuiLayer::OnUIRender()
 {
-    Layer::OnImGuiRender();
+    Layer::OnUIRender();
 }
  

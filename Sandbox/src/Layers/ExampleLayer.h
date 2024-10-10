@@ -19,7 +19,7 @@ namespace Sandbox
         {
         }
 
-        void OnImGuiRender() override
+        void OnUIRender() override
         {
             ImGui::Begin("Test");
             ImGui::Text("Hello world");

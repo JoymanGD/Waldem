@@ -1,12 +1,14 @@
 #include "wdpch.h"
 #include "Renderer.h"
+
+#include "Platform/Graphics/DirectX/DirectXRenderer.h"
 #include "Platform/Graphics/OpenGL/OpenGLRenderer.h"
 
 namespace Waldem
 {
     RendererAPI Renderer::RAPI = RendererAPI::OpenGL;
 
-    void Renderer::Initialize()
+    void Renderer::Initialize(Window* window)
     {
         switch (RAPI)
         {
@@ -16,12 +18,13 @@ namespace Waldem
             CurrentRenderer = (IRenderer*)new OpenGLRenderer();
             break;
         case RendererAPI::DirectX:
+            CurrentRenderer = (IRenderer*)new DirectXRenderer();
             break;
         case RendererAPI::Vulkan:
             break;
         }
 
-        CurrentRenderer->Initialize();
+        CurrentRenderer->Initialize(window);
     }
 
     void Renderer::Clear()

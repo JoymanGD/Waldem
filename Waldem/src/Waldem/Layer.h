@@ -17,7 +17,7 @@ namespace Waldem
         virtual void OnDetach() {}
         virtual void OnUpdate() {}
         virtual void OnEvent(Event& event) {}
-        virtual void OnImGuiRender() {}
+        virtual void OnUIRender() {}
 
         inline const std::string& GetName() const { return DebugName; }
     protected:

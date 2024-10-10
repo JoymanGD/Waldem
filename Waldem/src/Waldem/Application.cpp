@@ -24,7 +24,7 @@ namespace Waldem
 
 		CurrentRenderer = {};
 
-		CurrentRenderer.Initialize();
+		CurrentRenderer.Initialize(Window.get());
 	}
 	
 	void Application::OpenScene(Scene* scene)
@@ -90,7 +90,7 @@ namespace Waldem
 			ImGuiLayer->Begin();
 			for (Layer* layer : LayerStack)
 			{
-				layer->OnImGuiRender();
+				layer->OnUIRender();
 			}
 			ImGuiLayer->End();
 
