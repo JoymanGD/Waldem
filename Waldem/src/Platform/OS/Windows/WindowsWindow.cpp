@@ -5,7 +5,7 @@
 #include "Waldem/Events/KeyEvent.h"
 #include "WindowsWindow.h"
 
-#include "Platform/OpenGL/OpenGLContext.h"
+#include "Platform/Graphics/OpenGL/OpenGLContext.h"
 #include "Waldem/Log.h"
 
 namespace Waldem {
