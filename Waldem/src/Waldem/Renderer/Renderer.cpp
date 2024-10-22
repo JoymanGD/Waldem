@@ -17,7 +17,7 @@ namespace Waldem
         case RendererAPI::OpenGL:
             CurrentRenderer = (IRenderer*)new OpenGLRenderer();
             break;
-        case RendererAPI::DirectX:
+        case RendererAPI::DirectX: 
             CurrentRenderer = (IRenderer*)new DirectXRenderer();
             break;
         case RendererAPI::Vulkan:
