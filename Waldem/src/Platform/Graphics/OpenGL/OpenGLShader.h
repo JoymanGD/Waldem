@@ -12,7 +12,6 @@ namespace Waldem
         void Unbind() const override;
 
     private:
-        std::string LoadShaderFile(std::string& filename);
         void InitializeShader(const std::string& vertexSrc, const std::string& fragmentSrc);
         
         uint32_t VS;

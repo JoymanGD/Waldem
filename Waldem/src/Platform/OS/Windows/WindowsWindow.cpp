@@ -117,6 +117,7 @@ namespace Waldem
     {
         Data.VSync = enabled;
     }
+	
 #elif defined(WALDEM_WINDOW_API_GLFW)
 
 	static uint8_t s_GLFWWindowCount = 0;
