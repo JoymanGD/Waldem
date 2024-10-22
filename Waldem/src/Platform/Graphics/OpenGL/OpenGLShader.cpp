@@ -1,28 +1,14 @@
 #include "wdpch.h"
 #include "OpenGLShader.h"
 #include "glad/glad.h"
-
 #include <fstream>
+#include "Waldem/Utils/FileUtils.h"
 
 namespace Waldem
 {
 	///////////////////////////////////////////////////////////////////////////////////////////
 	//  PixelShader  //////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////////
-
-	std::string GetCurrentFolder()
-	{
-		char buffer[MAX_PATH];
-		GetModuleFileNameA(NULL, buffer, MAX_PATH);
-		auto currentPath = std::string(buffer);
-		size_t pos = currentPath.find_last_of("\\/");
-		if (pos != std::string::npos)
-		{
-			currentPath = currentPath.substr(0, pos);
-		}
-
-		return currentPath;
-	}
 	
 	OpenGLPixelShader::OpenGLPixelShader(const std::string& shaderName)
 	{
@@ -93,21 +79,6 @@ namespace Waldem
 	void OpenGLPixelShader::Unbind() const
 	{
 	    glUseProgram(0);
-	}
-
-	std::string OpenGLPixelShader::LoadShaderFile(std::string& filename)
-	{
-	    std::ifstream file(filename);
-	    
-	    if (!file.is_open())
-	    {
-    		WD_CORE_INFO("Failed to open file: {0}", filename);
-    		return "";
-	    }
-	    
-	    std::stringstream buffer;
-	    buffer << file.rdbuf();
-	    return buffer.str();
 	}
 
 	void OpenGLPixelShader::InitializeShader(const std::string& vertexSrc, const std::string& fragmentSrc)

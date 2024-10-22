@@ -1,6 +1,10 @@
 #include "wdpch.h"
 #include "Shader.h"
+
+#include <fstream>
+
 #include "Renderer.h"
+#include "..\..\Platform\Graphics\DirectX\DirectXShader.h"
 #include "Platform/Graphics/OpenGL/OpenGLShader.h"
 
 namespace Waldem
@@ -25,6 +29,21 @@ namespace Waldem
         ShaderParameters[name]->Value = value;
     }
 
+    std::string PixelShader::LoadShaderFile(std::string& filename)
+    {
+        std::ifstream file(filename);
+	    
+        if (!file.is_open())
+        {
+            WD_CORE_INFO("Failed to open file: {0}", filename);
+            return "";
+        }
+	    
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        return buffer.str();
+    }
+
     PixelShader* PixelShader::Create(const std::string& shaderName)
     {
         switch (Renderer::RAPI)
@@ -34,8 +53,10 @@ namespace Waldem
             return nullptr;
         case RendererAPI::OpenGL:
             return new OpenGLPixelShader(shaderName);
+        case RendererAPI::DirectX:
+            return new DirectXPixelShader(shaderName);
         default:
-            WD_CORE_ASSERT(false, "The API is not supported as an Rendering API")
+            WD_CORE_ASSERT(false, "The API is not supported as an Rendering API: {0}", Renderer::RAPI);
             return nullptr;
         }
     }

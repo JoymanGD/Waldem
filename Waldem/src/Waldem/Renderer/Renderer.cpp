@@ -6,7 +6,7 @@
 
 namespace Waldem
 {
-    RendererAPI Renderer::RAPI = RendererAPI::OpenGL;
+    RendererAPI Renderer::RAPI = RendererAPI::DirectX;
 
     void Renderer::Initialize(Window* window)
     {

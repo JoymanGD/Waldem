@@ -51,5 +51,6 @@ namespace Waldem
 
     protected:
         std::map<std::string, ShaderParam*> ShaderParameters;
+        std::string LoadShaderFile(std::string& filename);
     };
 }
