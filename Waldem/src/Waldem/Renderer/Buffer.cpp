@@ -1,7 +1,6 @@
 #include "wdpch.h"
 #include "Buffer.h"
 #include "Renderer.h"
-#include "Platform/Graphics/OpenGL/OpenGLBuffer.h"
 
 namespace Waldem
 {
@@ -12,8 +11,6 @@ namespace Waldem
         case RendererAPI::None:
             WD_CORE_ASSERT(false, "RendererAPI 'None' is not supported!")
             return nullptr;
-        case RendererAPI::OpenGL:
-            return new OpenGLVertexBuffer(data, size);
         default:
             WD_CORE_ASSERT(false, "The API is not supported as an Rendering API")
             return nullptr;
@@ -27,8 +24,6 @@ namespace Waldem
         case RendererAPI::None:
             WD_CORE_ASSERT(false, "RendererAPI 'None' is not supported!")
             return nullptr;
-        case RendererAPI::OpenGL:
-            return new OpenGLIndexBuffer(indices, count);
         default:
             WD_CORE_ASSERT(false, "The API is not supported as an Rendering API")
             return nullptr;
@@ -42,8 +37,6 @@ namespace Waldem
         case RendererAPI::None:
             WD_CORE_ASSERT(false, "RendererAPI 'None' is not supported!")
             return nullptr;
-        case RendererAPI::OpenGL:
-            return new OpenGLStorageBuffer(data, size);
         default:
             WD_CORE_ASSERT(false, "The API is not supported as an Rendering API")
             return nullptr;

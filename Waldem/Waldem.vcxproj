@@ -147,13 +147,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\Platform\Graphics\DirectX\DirectXRenderer.h" />
-    <ClInclude Include="src\Platform\Graphics\DirectX\DirectXShader.h" />
-    <ClInclude Include="src\Platform\Graphics\OpenGL\OpenGLBuffer.h" />
-    <ClInclude Include="src\Platform\Graphics\OpenGL\OpenGLContext.h" />
-    <ClInclude Include="src\Platform\Graphics\OpenGL\OpenGLRenderer.h" />
-    <ClInclude Include="src\Platform\Graphics\OpenGL\OpenGLShader.h" />
-    <ClInclude Include="src\Platform\Graphics\OpenGL\OpenGLTexture.h" />
-    <ClInclude Include="src\Platform\Graphics\OpenGL\OpenGLVertexArray.h" />
+    <ClInclude Include="src\Platform\Graphics\DirectX\DX12PixelShader.h" />
+    <ClInclude Include="src\Platform\Graphics\DirectX\DX12Buffer.h" />
+    <ClInclude Include="src\Platform\Graphics\DirectX\DX12CommandList.h" />
     <ClInclude Include="src\Platform\OS\Windows\WindowsInput.h" />
     <ClInclude Include="src\Platform\OS\Windows\WindowsWindow.h" />
     <ClInclude Include="src\Waldem.h" />
@@ -174,19 +170,18 @@
     <ClInclude Include="src\Waldem\Log.h" />
     <ClInclude Include="src\Waldem\MouseButtonCodes.h" />
     <ClInclude Include="src\Waldem\Renderer\Buffer.h" />
-    <ClInclude Include="src\Waldem\Renderer\CommandList.h" />
     <ClInclude Include="src\Waldem\Renderer\Light.h" />
     <ClInclude Include="src\Waldem\Renderer\Model\Material.h" />
     <ClInclude Include="src\Waldem\Renderer\Model\Mesh.h" />
     <ClInclude Include="src\Waldem\Renderer\Model\Model.h" />
     <ClInclude Include="src\Waldem\Renderer\Model\Transform.h" />
-    <ClInclude Include="src\Waldem\Renderer\Pipeline.h" />
+    <ClInclude Include="src\Waldem\Renderer\Rect.h" />
     <ClInclude Include="src\Waldem\Renderer\Renderer.h" />
     <ClInclude Include="src\Waldem\Renderer\RenderingContext.h" />
     <ClInclude Include="src\Waldem\Renderer\Resources\ResourceManager.h" />
     <ClInclude Include="src\Waldem\Renderer\Shader.h" />
     <ClInclude Include="src\Waldem\Renderer\Texture.h" />
-    <ClInclude Include="src\Waldem\Renderer\VertexArray.h" />
+    <ClInclude Include="src\Waldem\Renderer\Viewport.h" />
     <ClInclude Include="src\Waldem\SceneManagement\Scene.h" />
     <ClInclude Include="src\Waldem\SceneManagement\SceneManager.h" />
     <ClInclude Include="src\Waldem\Types\MathTypes.h" />
@@ -613,13 +608,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Platform\Graphics\DirectX\DirectXRenderer.cpp" />
-    <ClCompile Include="src\Platform\Graphics\DirectX\DirectXShader.cpp" />
-    <ClCompile Include="src\Platform\Graphics\OpenGL\OpenGLBuffer.cpp" />
-    <ClCompile Include="src\Platform\Graphics\OpenGL\OpenGLContext.cpp" />
-    <ClCompile Include="src\Platform\Graphics\OpenGL\OpenGLRenderer.cpp" />
-    <ClCompile Include="src\Platform\Graphics\OpenGL\OpenGLShader.cpp" />
-    <ClCompile Include="src\Platform\Graphics\OpenGL\OpenGLTexture.cpp" />
-    <ClCompile Include="src\Platform\Graphics\OpenGL\OpenGLVertexArray.cpp" />
+    <ClCompile Include="src\Platform\Graphics\DirectX\DX12PixelShader.cpp" />
+    <ClCompile Include="src\Platform\Graphics\DirectX\DX12Buffer.cpp" />
+    <ClCompile Include="src\Platform\Graphics\DirectX\DX12CommandList.cpp" />
     <ClCompile Include="src\Platform\OS\Windows\WindowsInput.cpp" />
     <ClCompile Include="src\Platform\OS\Windows\WindowsWindow.cpp" />
     <ClCompile Include="src\Waldem\Application.cpp" />
@@ -630,15 +621,12 @@
     <ClCompile Include="src\Waldem\LayerStack.cpp" />
     <ClCompile Include="src\Waldem\Log.cpp" />
     <ClCompile Include="src\Waldem\Renderer\Buffer.cpp" />
-    <ClCompile Include="src\Waldem\Renderer\CommandList.cpp" />
     <ClCompile Include="src\Waldem\Renderer\Model\Mesh.cpp" />
     <ClCompile Include="src\Waldem\Renderer\Model\Transform.cpp" />
-    <ClCompile Include="src\Waldem\Renderer\Pipeline.cpp" />
     <ClCompile Include="src\Waldem\Renderer\Renderer.cpp" />
     <ClCompile Include="src\Waldem\Renderer\Resources\ResourceManager.cpp" />
     <ClCompile Include="src\Waldem\Renderer\Shader.cpp" />
     <ClCompile Include="src\Waldem\Renderer\Texture.cpp" />
-    <ClCompile Include="src\Waldem\Renderer\VertexArray.cpp" />
     <ClCompile Include="src\Waldem\SceneManagement\Scene.cpp" />
     <ClInclude Include="src\Waldem\Utils\FileUtils.h" />
     <ClCompile Include="src\Waldem\World\Camera.cpp" />

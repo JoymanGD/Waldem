@@ -1,31 +1,53 @@
 #include "wdpch.h"
 #include <d3dcompiler.h>
-#include "DirectXShader.h"
+#include "DX12PixelShader.h"
 #include "Waldem/Utils/FileUtils.h"
 
 namespace Waldem
 {
-    DirectXPixelShader::DirectXPixelShader(const std::string& shaderName)
+    DX12PixelShader::DX12PixelShader(ID3D12Device* device, const std::string& shaderName)
     {
         if(CompileFromFile(shaderName))
         {
-            
+            // Root signature
+            D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
+            rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+            ID3DBlob* signature;
+            ID3DBlob* error;
+            D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error);
+            device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
+
+            // Pipeline state
+            D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+            psoDesc.pRootSignature = rootSignature;
+            psoDesc.VS = { vertexShader->GetBufferPointer(), vertexShader->GetBufferSize() };
+            psoDesc.PS = { pixelShader->GetBufferPointer(), pixelShader->GetBufferSize() };
+            psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+            psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+            psoDesc.RasterizerState.FrontCounterClockwise = FALSE;
+            psoDesc.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+            psoDesc.DepthStencilState.DepthEnable = FALSE;
+            psoDesc.DepthStencilState.StencilEnable = FALSE;
+            psoDesc.SampleMask = UINT_MAX;
+            psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+            psoDesc.NumRenderTargets = 1;
+            psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+            psoDesc.SampleDesc.Count = 1;
+            D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
+                { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+                { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+                { "UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+            };
+            psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
+            device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState));
         }
     }
 
-    DirectXPixelShader::~DirectXPixelShader()
+    DX12PixelShader::~DX12PixelShader()
     {
     }
 
-    void DirectXPixelShader::Bind() const
-    {
-    }
-
-    void DirectXPixelShader::Unbind() const
-    {
-    }
-
-    bool DirectXPixelShader::CompileFromFile(const std::string& shaderName)
+    bool DX12PixelShader::CompileFromFile(const std::string& shaderName)
     {
         std::string entryPoint = "main"; //TODO: make this configurable?
         
@@ -92,22 +114,6 @@ namespace Waldem
             return false;
         }
 
-        return true;
-    }
-
-    bool DirectXPixelShader::CreatePipelineState(ID3D12Device* device, D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc)
-    {
-        psoDesc.VS = { vertexShader->GetBufferPointer(), vertexShader->GetBufferSize() };
-        psoDesc.PS = { pixelShader->GetBufferPointer(), pixelShader->GetBufferSize() };
-
-        HRESULT hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState));
-        
-        if (FAILED(hr))
-        {
-            WD_CORE_ERROR("Failed to create PSO!");
-            return false;
-        }
-    
         return true;
     }
 }

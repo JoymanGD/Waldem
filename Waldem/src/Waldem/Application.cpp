@@ -29,7 +29,8 @@ namespace Waldem
 	
 	void Application::OpenScene(Scene* scene)
 	{
-		scene->Initialize();
+		SceneData sceneData = { &CurrentRenderer };
+		scene->Initialize(&sceneData);
         
 		CurrentScene = scene;
 	}
@@ -69,6 +70,7 @@ namespace Waldem
 	void Application::Run()
 	{
 		float lastFrameTime = (float)glfwGetTime();
+		uint32_t renderingFrame = 0;
 
 		while (IsRunning)
 		{
@@ -78,9 +80,10 @@ namespace Waldem
 
 			CurrentScene->UpdateInternal(deltaTime);
 
-			CurrentRenderer.Clear();
-
-			CurrentScene->DrawInternal(&CurrentRenderer);
+			CurrentRenderer.Begin(renderingFrame);
+			SceneData sceneData = { &CurrentRenderer };
+			CurrentScene->DrawInternal(&sceneData);
+			CurrentRenderer.End();
 
 			for (Layer* layer : LayerStack)
 			{
@@ -95,6 +98,9 @@ namespace Waldem
 			ImGuiLayer->End();
 
 			Window->OnUpdate();
+
+			renderingFrame++;
+			renderingFrame %= SWAPCHAIN_SIZE;
 		}
 	}
 

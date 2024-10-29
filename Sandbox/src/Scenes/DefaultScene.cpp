@@ -12,14 +12,13 @@
 
 namespace Sandbox
 {
-	void DefaultScene::Initialize()
+	void DefaultScene::Initialize(Waldem::SceneData* sceneData)
 	{
-		RasterPipeline = new Waldem::Pipeline("RasterPipeline", "Default", true, true, true);
+		TestPixelShader = sceneData->Renderer->LoadShader("Default");
 		
 		Waldem::ModelImporter importer;
 		std::string path = "Content/Models/Sponza/Sponza.gltf";
 		TestModel = importer.Import(path, true);
-		TestModel->Initialize(RasterPipeline);
 		TestModelTransform.Reset();
 		TestModelTransform.SetPosition(0, 0, 4);
 		
@@ -93,18 +92,16 @@ namespace Sandbox
 		lastMouseY = mouseY;
 	}
 
-	void DefaultScene::Draw(Waldem::Renderer* renderer)
+	void DefaultScene::Draw(Waldem::SceneData* sceneData)
 	{
 		auto viewProjectionMatrix = MainCamera.get()->GetViewProjectionMatrix();
-		RasterPipeline->SetShaderParam(Waldem::ShaderParamType::MAT4, "viewProjection", &viewProjectionMatrix);
 
 		auto testModelWorldMatrix = TestModelTransform.GetMatrix();
 		
-		RasterPipeline->SetShaderParam(Waldem::ShaderParamType::MAT4, "world", &testModelWorldMatrix);
 		uint32_t numLights = Lights.size();
-		RasterPipeline->SetShaderParam(Waldem::ShaderParamType::UINT, "NumLights", &numLights);
-		RasterPipeline->SetShaderBufferParam("Lights", Lights.data(), Lights.size() * sizeof(Waldem::Light), 0);
 
-		renderer->DrawModel(RasterPipeline, TestModel);
+		//pass params to shader
+
+		sceneData->Renderer->DrawModel(TestModel, TestPixelShader);
 	}
 }

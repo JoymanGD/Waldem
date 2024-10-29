@@ -4,13 +4,18 @@
 
 namespace Waldem
 {
+    struct SceneData
+    {
+        Renderer* Renderer;
+    };
+    
     class WALDEM_API Scene
     {
     public:
         Scene() {}
         virtual ~Scene() = default;
-        virtual void Initialize() = 0;
-        void DrawInternal(Renderer* renderer);
+        virtual void Initialize(SceneData* sceneData) = 0;
+        void DrawInternal(SceneData* sceneData);
         void UpdateInternal(float deltaTime);
 
         //Draw events
@@ -18,7 +23,7 @@ namespace Waldem
         std::function<void()> PostDraw = {};
 
     protected:
-        virtual void Draw(Renderer* renderer) = 0;
+        virtual void Draw(SceneData* sceneData) = 0;
         virtual void Update(float deltaTime) = 0;
     };
 }
