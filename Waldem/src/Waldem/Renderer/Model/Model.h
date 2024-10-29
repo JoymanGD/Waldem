@@ -14,13 +14,5 @@ namespace Waldem
         std::vector<Mesh*> GetMeshes() { return Meshes; }
 
         void AddMesh(Mesh* mesh) { Meshes.push_back(mesh); }
-        
-        void Initialize(Pipeline* pipeline)
-        {
-            for (auto mesh : Meshes)
-            {
-                mesh->BindResourcesToPipeline(pipeline);
-            }
-        }
     };
 }

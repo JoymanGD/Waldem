@@ -9,16 +9,7 @@ namespace Waldem
 		VB->SetLayout(layout);
 		IB = IndexBuffer::Create(indices, indicesAmount);
 		IB->SetIndices(indices);
-	    VA = VertexArray::Create();
-
-		VA->SetIndexBuffer(IB);
-		VA->AddVertexBuffer(VB);
 
 		MeshMaterial = material;
-	}
-
-	void Mesh::BindResourcesToPipeline(Pipeline* pipeline)
-	{
-		MeshMaterial.BindTexturesToShader(pipeline->Shader);
 	}
 }

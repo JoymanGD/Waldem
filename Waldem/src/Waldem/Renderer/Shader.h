@@ -42,15 +42,10 @@ namespace Waldem
     {
     public:
         virtual ~PixelShader() {}
-        virtual void Bind() const = 0;
-        virtual void Unbind() const = 0;
         void SetParam(ShaderParamType type, const char* name, void* value);
         void SetBufferParam(const char* name, void* value, uint32_t size, uint32_t binding);
 
-        static PixelShader* Create(const std::string& shaderName);
-
     protected:
         std::map<std::string, ShaderParam*> ShaderParameters;
-        std::string LoadShaderFile(std::string& filename);
     };
 }

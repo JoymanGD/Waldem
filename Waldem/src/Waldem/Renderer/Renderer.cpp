@@ -2,7 +2,7 @@
 #include "Renderer.h"
 
 #include "Platform/Graphics/DirectX/DirectXRenderer.h"
-#include "Platform/Graphics/OpenGL/OpenGLRenderer.h"
+#include "Platform/Graphics/DirectX/DX12PixelShader.h"
 
 namespace Waldem
 {
@@ -14,9 +14,6 @@ namespace Waldem
         {
         case RendererAPI::None:
             break;
-        case RendererAPI::OpenGL:
-            CurrentRenderer = (IRenderer*)new OpenGLRenderer();
-            break;
         case RendererAPI::DirectX: 
             CurrentRenderer = (IRenderer*)new DirectXRenderer();
             break;
@@ -27,40 +24,35 @@ namespace Waldem
         CurrentRenderer->Initialize(window);
     }
 
-    void Renderer::Clear()
+    void Renderer::Begin(uint32_t frame)
     {
-        CurrentRenderer->Clear(ClearColor);
+        CurrentRenderer->SetFrameIndex(frame);
+
+        CurrentRenderer->Begin();
     }
 
-    void Renderer::DrawMesh(Mesh* mesh)
+    void Renderer::End()
     {
-        mesh->VA->Bind();
-        mesh->MeshMaterial.Bind();
-        CurrentRenderer->Render(mesh->VA->GetIndexBuffer()->GetCount());
-        mesh->MeshMaterial.Unbind();
-        mesh->VA->Unbind();
+        CurrentRenderer->End();
     }
 
-    void Renderer::DrawMesh(Pipeline* pipeline, Mesh* mesh)
+    void Renderer::DrawMesh(Mesh* mesh, PixelShader* pixelShader)
     {
-        pipeline->Bind();
-
-        DrawMesh(mesh);
-        
-        pipeline->Unbind();
+        CurrentRenderer->DrawMesh(mesh, pixelShader);
     }
 
-    void Renderer::DrawModel(Pipeline* pipeline, Model* model)
+    void Renderer::DrawModel(Model* model, PixelShader* pixelShader)
     {
-        pipeline->Bind();
-
         auto meshes = model->GetMeshes();
         
         for (auto mesh : meshes)
         {
-            DrawMesh(mesh);
+            DrawMesh(mesh, pixelShader);
         }
-        
-        pipeline->Unbind();
+    }
+
+    PixelShader* Renderer::LoadShader(std::string shaderName)
+    {
+        return CurrentRenderer->LoadShader(shaderName);
     }
 }

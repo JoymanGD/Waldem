@@ -1,7 +1,6 @@
 #include "wdpch.h"
 #include "Texture.h"
 #include "Renderer.h"
-#include "Platform/Graphics/OpenGL/OpenGLTexture.h"
 
 namespace Waldem
 {
@@ -12,8 +11,6 @@ namespace Waldem
         case RendererAPI::None:
             WD_CORE_ASSERT(false, "RendererAPI 'None' is not supported!")
             return nullptr;
-        case RendererAPI::OpenGL:
-            return new OpenGLTexture2D(name, width, height, channels, data, slot);
         default:
             WD_CORE_ASSERT(false, "The API is not supported as an Rendering API")
             return nullptr;

@@ -3,7 +3,7 @@
 #include "Waldem/Window.h"
 #include "Waldem/Renderer/RenderingContext.h"
 
-#define WALDEM_WINDOW_API_GLFW
+#define WALDEM_WINDOW_API_SDL
 
 #if defined(WALDEM_WINDOW_API_SDL)
 #include <SDL.h>
