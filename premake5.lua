@@ -102,6 +102,19 @@ project "Waldem"
         defines "WD_DIST"
         runtime "Release"
         optimize "on"
+        
+    filter { "files:**.hlsl" }
+       flags "ExcludeFromBuild"
+       shadermodel "5.0"
+    filter { "files:**.ps.hlsl" }
+       removeflags "ExcludeFromBuild"
+       shadertype "Pixel"
+       shaderentry "main"
+    filter { "files:**.vs.hlsl" }
+       removeflags "ExcludeFromBuild"
+       shadertype "Vertex"
+       shaderentry "main"
+    filter {}
 
 project "Sandbox"
     location "Sandbox"
@@ -117,7 +130,8 @@ project "Sandbox"
     {
         "%{prj.name}/src/**.h",
         "%{prj.name}/src/**.cpp",
-        "%{prj.name}/src/**.glsl"
+        "%{prj.name}/src/**.glsl",
+        "%{prj.name}/src/**.hlsl"
     }
 
     includedirs
@@ -145,7 +159,7 @@ project "Sandbox"
             "if exist %{wks.location}bin\\Debug\\Sandbox\\Shaders (rmdir /s /q %{wks.location}bin\\Debug\\Sandbox\\Shaders)",
             "if exist %{wks.location}bin\\Debug\\Sandbox\\Content (rmdir /s /q %{wks.location}bin\\Debug\\Sandbox\\Content)",
             "echo Copying files...",
-            "{COPY} %{wks.location}%{prj.name}\\src\\Shaders\\Test\\*.glsl %{cfg.targetdir}\\Shaders\\",         
+            "{COPY} %{wks.location}%{prj.name}\\src\\Shaders\\Test\\*.hlsl %{cfg.targetdir}\\Shaders\\",         
             "{COPY} %{wks.location}Waldem\\vendor\\SDL\\lib\\SDL2.dll %{cfg.targetdir}\\",
             "{COPY} %{wks.location}Waldem\\vendor\\assimp\\lib\\assimp-vc142-mt.dll %{cfg.targetdir}\\",
             "{COPYDIR} %{wks.location}%{prj.name}\\Content\\ %{cfg.targetdir}\\Content\\"
@@ -165,3 +179,16 @@ project "Sandbox"
         defines "WD_DIST"
         runtime "Release"
         optimize "on"
+        
+    filter { "files:**.hlsl" }
+       flags "ExcludeFromBuild"
+       shadermodel "5.0"
+    filter { "files:**.ps.hlsl" }
+       removeflags "ExcludeFromBuild"
+       shadertype "Pixel"
+       shaderentry "main"
+    filter { "files:**.vs.hlsl" }
+       removeflags "ExcludeFromBuild"
+       shadertype "Vertex"
+       shaderentry "main"
+    filter {}

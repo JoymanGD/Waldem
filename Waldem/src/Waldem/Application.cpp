@@ -1,7 +1,6 @@
 #include <wdpch.h>
 #include "Application.h"
 
-#include "GLFW/glfw3.h"
 #include "Renderer/Renderer.h"
 #include "Waldem/Log.h"
 
@@ -29,7 +28,7 @@ namespace Waldem
 	
 	void Application::OpenScene(Scene* scene)
 	{
-		SceneData sceneData = { &CurrentRenderer };
+		SceneData sceneData = { &CurrentRenderer, Window.get() };
 		scene->Initialize(&sceneData);
         
 		CurrentScene = scene;
@@ -69,33 +68,34 @@ namespace Waldem
 
 	void Application::Run()
 	{
-		float lastFrameTime = (float)glfwGetTime();
+		auto lastFrameTime = std::chrono::high_resolution_clock::now();
 		uint32_t renderingFrame = 0;
 
 		while (IsRunning)
 		{
-			float currentFrameTime = (float)glfwGetTime();
-			float deltaTime = currentFrameTime - lastFrameTime;
+			auto currentFrameTime = std::chrono::high_resolution_clock::now();
+			std::chrono::duration<float> deltaTime = currentFrameTime - lastFrameTime;
 			lastFrameTime = currentFrameTime;
 
-			CurrentScene->UpdateInternal(deltaTime);
+			CurrentScene->UpdateInternal(deltaTime.count());
 
 			CurrentRenderer.Begin(renderingFrame);
 			SceneData sceneData = { &CurrentRenderer };
 			CurrentScene->DrawInternal(&sceneData);
 			CurrentRenderer.End();
+			CurrentRenderer.Present();
 
 			for (Layer* layer : LayerStack)
 			{
 				layer->OnUpdate();
 			}
 
-			ImGuiLayer->Begin();
-			for (Layer* layer : LayerStack)
-			{
-				layer->OnUIRender();
-			}
-			ImGuiLayer->End();
+			// ImGuiLayer->Begin();
+			// for (Layer* layer : LayerStack)
+			// {
+			// 	layer->OnUIRender();
+			// }
+			// ImGuiLayer->End();
 
 			Window->OnUpdate();
 

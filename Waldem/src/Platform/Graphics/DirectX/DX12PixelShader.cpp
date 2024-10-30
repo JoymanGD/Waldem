@@ -15,7 +15,12 @@ namespace Waldem
             ID3DBlob* signature;
             ID3DBlob* error;
             D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error);
-            device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
+            HRESULT hr = device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
+
+            if(FAILED(hr))
+            {
+                throw std::runtime_error("Failed to create root signature!");
+            }
 
             // Pipeline state
             D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
@@ -36,10 +41,15 @@ namespace Waldem
             D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
                 { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
                 { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-                { "UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+                { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
             };
             psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
-            device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState));
+            hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState));
+
+            if(FAILED(hr))
+            {
+                throw std::runtime_error("Failed to create pipeline state!");
+            }
         }
     }
 
@@ -64,7 +74,7 @@ namespace Waldem
         // Extract the base name
         std::wstring baseName = wShaderName.substr(lastSlash + 1);
         
-        std::wstring shaderPath = pathToShaders + baseName + L".vert.hlsl";
+        std::wstring shaderPath = pathToShaders + baseName + L".vs.hlsl";
         std::string target = "vs_5_0";
 
         //vertex shader
@@ -90,7 +100,7 @@ namespace Waldem
         }
 
         //pixel shader
-        shaderPath = pathToShaders + baseName + L".frag.hlsl";
+        shaderPath = pathToShaders + baseName + L".ps.hlsl";
         target = "ps_5_0";
         
         hr = D3DCompileFromFile(

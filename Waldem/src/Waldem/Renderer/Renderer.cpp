@@ -1,8 +1,8 @@
 #include "wdpch.h"
 #include "Renderer.h"
 
-#include "Platform/Graphics/DirectX/DirectXRenderer.h"
 #include "Platform/Graphics/DirectX/DX12PixelShader.h"
+#include "Platform/Graphics/DirectX/DX12Renderer.h"
 
 namespace Waldem
 {
@@ -15,44 +15,62 @@ namespace Waldem
         case RendererAPI::None:
             break;
         case RendererAPI::DirectX: 
-            CurrentRenderer = (IRenderer*)new DirectXRenderer();
+            PlatformRenderer = (IRenderer*)new DX12Renderer();
             break;
         case RendererAPI::Vulkan:
-            break;
+            throw std::runtime_error("Vulkan is not supported yet!");
         }
 
-        CurrentRenderer->Initialize(window);
+        PlatformRenderer->Initialize(window);
     }
 
     void Renderer::Begin(uint32_t frame)
     {
-        CurrentRenderer->SetFrameIndex(frame);
-
-        CurrentRenderer->Begin();
+        PlatformRenderer->Begin();
     }
 
     void Renderer::End()
     {
-        CurrentRenderer->End();
+        PlatformRenderer->End();
     }
 
-    void Renderer::DrawMesh(Mesh* mesh, PixelShader* pixelShader)
+    void Renderer::Present()
     {
-        CurrentRenderer->DrawMesh(mesh, pixelShader);
+        PlatformRenderer->Present();
     }
 
-    void Renderer::DrawModel(Model* model, PixelShader* pixelShader)
+    void Renderer::Draw(Mesh* mesh, PixelShader* pixelShader)
+    {
+        PlatformRenderer->Draw(mesh, pixelShader);
+    }
+
+    void Renderer::Draw(Model* model, PixelShader* pixelShader)
     {
         auto meshes = model->GetMeshes();
         
         for (auto mesh : meshes)
         {
-            DrawMesh(mesh, pixelShader);
+            Draw(mesh, pixelShader);
         }
     }
 
     PixelShader* Renderer::LoadShader(std::string shaderName)
     {
-        return CurrentRenderer->LoadShader(shaderName);
+        return PlatformRenderer->LoadShader(shaderName);
+    }
+
+    Texture2D* Renderer::CreateTexture(std::string name, int width, int height, int channels, uint8_t* data)
+    {
+        return PlatformRenderer->CreateTexture(name, width, height, channels, data);
+    }
+
+    VertexBuffer* Renderer::CreateVertexBuffer(void* data, uint32_t size)
+    {
+        return PlatformRenderer->CreateVertexBuffer(data, size);
+    }
+
+    IndexBuffer* Renderer::CreateIndexBuffer(void* data, uint32_t count)
+    {
+        return PlatformRenderer->CreateIndexBuffer(data, count);
     }
 }

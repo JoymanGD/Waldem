@@ -7,6 +7,7 @@ namespace Waldem
     struct SceneData
     {
         Renderer* Renderer;
+        Window* Window;
     };
     
     class WALDEM_API Scene

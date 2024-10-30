@@ -22,8 +22,8 @@ namespace Sandbox
 		TestModelTransform.Reset();
 		TestModelTransform.SetPosition(0, 0, 4);
 		
-		float screenWidth = Waldem::Application::Instance->GetWindow().GetWidth();
-		float screenHeight = Waldem::Application::Instance->GetWindow().GetHeight();
+		float screenWidth = sceneData->Window->GetWidth();
+		float screenHeight = sceneData->Window->GetHeight();
 		
 		MainCamera.reset(new Waldem::Camera(70.0f , screenWidth / screenHeight, .01f, 10000, { 0, 0, 0 }, 100.0f, 1.0f));
 
@@ -45,32 +45,32 @@ namespace Sandbox
 
 	void DefaultScene::Update(float deltaTime)
 	{
-		if(Waldem::Input::IsKeyPressed(WD_KEY_W))
+		if(Waldem::Input::IsKeyPressed(W))
 		{
 			float movementSpeed = deltaTime * MainCamera.get()->MovementSpeed;
 			MainCamera.get()->Move({ 0, 0, 0.1f * movementSpeed });
 		}
-		if(Waldem::Input::IsKeyPressed(WD_KEY_S))
+		if(Waldem::Input::IsKeyPressed(S))
 		{
 			float movementSpeed = deltaTime * MainCamera.get()->MovementSpeed;
 			MainCamera.get()->Move({ 0, 0, -0.1f * movementSpeed });
 		}
-		if(Waldem::Input::IsKeyPressed(WD_KEY_A))
+		if(Waldem::Input::IsKeyPressed(A))
 		{
 			float movementSpeed = deltaTime * MainCamera.get()->MovementSpeed;
 			MainCamera.get()->Move({ -0.1f * movementSpeed, 0, 0 });
 		}
-		if(Waldem::Input::IsKeyPressed(WD_KEY_D))
+		if(Waldem::Input::IsKeyPressed(D))
 		{
 			float movementSpeed = deltaTime * MainCamera.get()->MovementSpeed;
 			MainCamera.get()->Move({ 0.1f * movementSpeed, 0, 0 });
 		}
-		if(Waldem::Input::IsKeyPressed(WD_KEY_E))
+		if(Waldem::Input::IsKeyPressed(E))
 		{
 			float movementSpeed = deltaTime * MainCamera.get()->MovementSpeed;
 			MainCamera.get()->Move({ 0, 0.1f * movementSpeed, 0 });
 		}
-		if(Waldem::Input::IsKeyPressed(WD_KEY_Q))
+		if(Waldem::Input::IsKeyPressed(Q))
 		{
 			float movementSpeed = deltaTime * MainCamera.get()->MovementSpeed;
 			MainCamera.get()->Move({ 0, -0.1f * movementSpeed, 0 });
@@ -102,6 +102,6 @@ namespace Sandbox
 
 		//pass params to shader
 
-		sceneData->Renderer->DrawModel(TestModel, TestPixelShader);
+		sceneData->Renderer->Draw(TestModel, TestPixelShader);
 	}
 }
