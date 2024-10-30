@@ -116,8 +116,6 @@ namespace Waldem
     {
     public:
         virtual ~VertexBuffer() {}
-        
-        static VertexBuffer* Create(void* data, uint32_t size);
     };
     
     class IndexBuffer
@@ -126,7 +124,6 @@ namespace Waldem
         virtual ~IndexBuffer() {}
         virtual uint32_t GetCount() const = 0;
 
-        static IndexBuffer* Create(uint32_t* indices, uint32_t count);
         void SetIndices(uint32_t* indices) { Indices = indices; }
 
         uint32_t* Indices;

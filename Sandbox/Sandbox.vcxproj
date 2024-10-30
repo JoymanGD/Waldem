@@ -94,8 +94,9 @@
       <Command>if exist $(SolutionDir)bin\Debug\Sandbox\Shaders (rmdir /s /q $(SolutionDir)bin\Debug\Sandbox\Shaders)
 if exist $(SolutionDir)bin\Debug\Sandbox\Content (rmdir /s /q $(SolutionDir)bin\Debug\Sandbox\Content)
 echo Copying files...
-IF EXIST $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl\ (xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl ..\bin\Debug\Sandbox\Shaders &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl ..\bin\Debug\Sandbox\Shaders &gt; nul)
+IF EXIST $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.hlsl\ (xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.hlsl ..\bin\Debug\Sandbox\Shaders &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.hlsl ..\bin\Debug\Sandbox\Shaders &gt; nul)
 IF EXIST $(SolutionDir)Waldem\vendor\SDL\lib\SDL2.dll\ (xcopy /Q /E /Y /I $(SolutionDir)Waldem\vendor\SDL\lib\SDL2.dll ..\bin\Debug\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)Waldem\vendor\SDL\lib\SDL2.dll ..\bin\Debug\Sandbox &gt; nul)
+IF EXIST $(SolutionDir)Waldem\vendor\assimp\lib\assimp-vc142-mt.dll\ (xcopy /Q /E /Y /I $(SolutionDir)Waldem\vendor\assimp\lib\assimp-vc142-mt.dll ..\bin\Debug\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)Waldem\vendor\assimp\lib\assimp-vc142-mt.dll ..\bin\Debug\Sandbox &gt; nul)
 xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Debug\Sandbox\Content</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -123,8 +124,9 @@ xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Debug\Sandbox\Cont
       <Command>if exist $(SolutionDir)bin\Debug\Sandbox\Shaders (rmdir /s /q $(SolutionDir)bin\Debug\Sandbox\Shaders)
 if exist $(SolutionDir)bin\Debug\Sandbox\Content (rmdir /s /q $(SolutionDir)bin\Debug\Sandbox\Content)
 echo Copying files...
-IF EXIST $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl\ (xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl ..\bin\Release\Sandbox\Shaders &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl ..\bin\Release\Sandbox\Shaders &gt; nul)
+IF EXIST $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.hlsl\ (xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.hlsl ..\bin\Release\Sandbox\Shaders &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.hlsl ..\bin\Release\Sandbox\Shaders &gt; nul)
 IF EXIST $(SolutionDir)Waldem\vendor\SDL\lib\SDL2.dll\ (xcopy /Q /E /Y /I $(SolutionDir)Waldem\vendor\SDL\lib\SDL2.dll ..\bin\Release\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)Waldem\vendor\SDL\lib\SDL2.dll ..\bin\Release\Sandbox &gt; nul)
+IF EXIST $(SolutionDir)Waldem\vendor\assimp\lib\assimp-vc142-mt.dll\ (xcopy /Q /E /Y /I $(SolutionDir)Waldem\vendor\assimp\lib\assimp-vc142-mt.dll ..\bin\Release\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)Waldem\vendor\assimp\lib\assimp-vc142-mt.dll ..\bin\Release\Sandbox &gt; nul)
 xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Release\Sandbox\Content</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -152,8 +154,9 @@ xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Release\Sandbox\Co
       <Command>if exist $(SolutionDir)bin\Debug\Sandbox\Shaders (rmdir /s /q $(SolutionDir)bin\Debug\Sandbox\Shaders)
 if exist $(SolutionDir)bin\Debug\Sandbox\Content (rmdir /s /q $(SolutionDir)bin\Debug\Sandbox\Content)
 echo Copying files...
-IF EXIST $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl\ (xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl ..\bin\Dist\Sandbox\Shaders &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.glsl ..\bin\Dist\Sandbox\Shaders &gt; nul)
+IF EXIST $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.hlsl\ (xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.hlsl ..\bin\Dist\Sandbox\Shaders &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\Test\*.hlsl ..\bin\Dist\Sandbox\Shaders &gt; nul)
 IF EXIST $(SolutionDir)Waldem\vendor\SDL\lib\SDL2.dll\ (xcopy /Q /E /Y /I $(SolutionDir)Waldem\vendor\SDL\lib\SDL2.dll ..\bin\Dist\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)Waldem\vendor\SDL\lib\SDL2.dll ..\bin\Dist\Sandbox &gt; nul)
+IF EXIST $(SolutionDir)Waldem\vendor\assimp\lib\assimp-vc142-mt.dll\ (xcopy /Q /E /Y /I $(SolutionDir)Waldem\vendor\assimp\lib\assimp-vc142-mt.dll ..\bin\Dist\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)Waldem\vendor\assimp\lib\assimp-vc142-mt.dll ..\bin\Dist\Sandbox &gt; nul)
 xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Dist\Sandbox\Content</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -167,8 +170,16 @@ xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Dist\Sandbox\Conte
     <ClCompile Include="src\Scenes\DefaultScene.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\Shaders\Test\Default.frag.glsl" />
-    <None Include="src\Shaders\Test\Default.vert.glsl" />
+    <FxCompile Include="src\Shaders\Test\Default.ps.hlsl">
+      <ShaderType>Pixel</ShaderType>
+      <ShaderModel>5.0</ShaderModel>
+      <EntryPointName>main</EntryPointName>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Test\Default.vs.hlsl">
+      <ShaderType>Vertex</ShaderType>
+      <ShaderModel>5.0</ShaderModel>
+      <EntryPointName>main</EntryPointName>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Waldem\Waldem.vcxproj">

@@ -146,10 +146,11 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\Platform\Graphics\DirectX\DirectXRenderer.h" />
-    <ClInclude Include="src\Platform\Graphics\DirectX\DX12PixelShader.h" />
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12Buffer.h" />
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12CommandList.h" />
+    <ClInclude Include="src\Platform\Graphics\DirectX\DX12PixelShader.h" />
+    <ClInclude Include="src\Platform\Graphics\DirectX\DX12Renderer.h" />
+    <ClInclude Include="src\Platform\Graphics\DirectX\DX12Texture.h" />
     <ClInclude Include="src\Platform\OS\Windows\WindowsInput.h" />
     <ClInclude Include="src\Platform\OS\Windows\WindowsWindow.h" />
     <ClInclude Include="src\Waldem.h" />
@@ -175,17 +176,15 @@
     <ClInclude Include="src\Waldem\Renderer\Model\Mesh.h" />
     <ClInclude Include="src\Waldem\Renderer\Model\Model.h" />
     <ClInclude Include="src\Waldem\Renderer\Model\Transform.h" />
-    <ClInclude Include="src\Waldem\Renderer\Rect.h" />
     <ClInclude Include="src\Waldem\Renderer\Renderer.h" />
-    <ClInclude Include="src\Waldem\Renderer\RenderingContext.h" />
     <ClInclude Include="src\Waldem\Renderer\Resources\ResourceManager.h" />
     <ClInclude Include="src\Waldem\Renderer\Shader.h" />
     <ClInclude Include="src\Waldem\Renderer\Texture.h" />
-    <ClInclude Include="src\Waldem\Renderer\Viewport.h" />
     <ClInclude Include="src\Waldem\SceneManagement\Scene.h" />
     <ClInclude Include="src\Waldem\SceneManagement\SceneManager.h" />
     <ClInclude Include="src\Waldem\Types\MathTypes.h" />
     <ClInclude Include="src\Waldem\Types\Types.h" />
+    <ClInclude Include="src\Waldem\Utils\FileUtils.h" />
     <ClInclude Include="src\Waldem\Window.h" />
     <ClInclude Include="src\Waldem\World\Camera.h" />
     <ClInclude Include="src\wdpch.h" />
@@ -607,10 +606,11 @@
     <ClInclude Include="vendor\glm\glm\vector_relational.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Platform\Graphics\DirectX\DirectXRenderer.cpp" />
-    <ClCompile Include="src\Platform\Graphics\DirectX\DX12PixelShader.cpp" />
     <ClCompile Include="src\Platform\Graphics\DirectX\DX12Buffer.cpp" />
     <ClCompile Include="src\Platform\Graphics\DirectX\DX12CommandList.cpp" />
+    <ClCompile Include="src\Platform\Graphics\DirectX\DX12PixelShader.cpp" />
+    <ClCompile Include="src\Platform\Graphics\DirectX\DX12Renderer.cpp" />
+    <ClCompile Include="src\Platform\Graphics\DirectX\DX12Texture.cpp" />
     <ClCompile Include="src\Platform\OS\Windows\WindowsInput.cpp" />
     <ClCompile Include="src\Platform\OS\Windows\WindowsWindow.cpp" />
     <ClCompile Include="src\Waldem\Application.cpp" />
@@ -628,7 +628,6 @@
     <ClCompile Include="src\Waldem\Renderer\Shader.cpp" />
     <ClCompile Include="src\Waldem\Renderer\Texture.cpp" />
     <ClCompile Include="src\Waldem\SceneManagement\Scene.cpp" />
-    <ClInclude Include="src\Waldem\Utils\FileUtils.h" />
     <ClCompile Include="src\Waldem\World\Camera.cpp" />
     <ClCompile Include="src\wdpch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>

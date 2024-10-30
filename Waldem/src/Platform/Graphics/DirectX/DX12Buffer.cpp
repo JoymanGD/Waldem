@@ -19,13 +19,18 @@ namespace Waldem
         resourceDesc.SampleDesc.Count = 1;
         resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
-        device->CreateCommittedResource(
+        HRESULT hr = device->CreateCommittedResource(
             &heapProps,
             D3D12_HEAP_FLAG_NONE,
             &resourceDesc,
             D3D12_RESOURCE_STATE_GENERIC_READ,
             nullptr,
             IID_PPV_ARGS(&BufferResource));
+
+        if (FAILED(hr))
+        {
+            throw std::runtime_error("Failed to create index buffer!");
+        }
 
         UINT8* pVertexDataBegin;
         D3D12_RANGE readRange = { 0, 0 };
@@ -38,8 +43,12 @@ namespace Waldem
         BufferView.SizeInBytes = size;
     }
 
-    DX12IndexBuffer::DX12IndexBuffer(ID3D12Device* device, void* data, uint32_t size)
+    DX12IndexBuffer::DX12IndexBuffer(ID3D12Device* device, void* data, uint32_t count)
     {
+        Count = count;
+
+        uint32_t size = count * sizeof(uint32_t);
+        
         D3D12_HEAP_PROPERTIES heapProps = {};
         heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
         
@@ -52,13 +61,18 @@ namespace Waldem
         indexBufferDesc.SampleDesc.Count = 1;
         indexBufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
-        device->CreateCommittedResource(
+        HRESULT hr = device->CreateCommittedResource(
             &heapProps,
             D3D12_HEAP_FLAG_NONE,
             &indexBufferDesc,
             D3D12_RESOURCE_STATE_GENERIC_READ,
             nullptr,
             IID_PPV_ARGS(&BufferResource));
+
+        if (FAILED(hr))
+        {
+            throw std::runtime_error("Failed to create index buffer!");
+        }
 
         UINT8* pIndexDataBegin;
         D3D12_RANGE readRange = { 0, 0 };

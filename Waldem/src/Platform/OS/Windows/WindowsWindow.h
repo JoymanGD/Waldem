@@ -1,18 +1,19 @@
 #pragma once
 
 #include "Waldem/Window.h"
-#include "Waldem/Renderer/RenderingContext.h"
-
-#define WALDEM_WINDOW_API_SDL
-
-#if defined(WALDEM_WINDOW_API_SDL)
 #include <SDL.h>
-#elif defined(WALDEM_WINDOW_API_GLFW)
-#include "GLFW/glfw3.h"
-#endif
 
 namespace Waldem
 {
+    struct WindowData
+    {
+        std::string Title;
+        float Width, Height;
+        bool VSync;
+
+        EventCallbackFn EventCallback;
+    };
+    
     class WindowsWindow : public Window
     {
     public:
@@ -37,21 +38,7 @@ namespace Waldem
     
         void ProcessEvents();
 
-        struct WindowData
-        {
-            std::string Title;
-            float Width, Height;
-            bool VSync;
-
-            EventCallbackFn EventCallback;
-        };
-
         WindowData Data;
-#if defined(WALDEM_WINDOW_API_SDL)
         SDL_Window* Window;
-#elif defined(WALDEM_WINDOW_API_GLFW)
-        GLFWwindow* Window;
-        RenderingContext* Context;
-#endif
     };
 }

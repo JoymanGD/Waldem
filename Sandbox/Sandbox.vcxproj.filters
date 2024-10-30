@@ -30,11 +30,11 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\Shaders\Test\Default.frag.glsl">
+    <FxCompile Include="src\Shaders\Test\Default.ps.hlsl">
       <Filter>Shaders\Test</Filter>
-    </None>
-    <None Include="src\Shaders\Test\Default.vert.glsl">
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Test\Default.vs.hlsl">
       <Filter>Shaders\Test</Filter>
-    </None>
+    </FxCompile>
   </ItemGroup>
 </Project>
