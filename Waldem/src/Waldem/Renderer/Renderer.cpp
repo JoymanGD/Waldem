@@ -24,7 +24,7 @@ namespace Waldem
         PlatformRenderer->Initialize(window);
     }
 
-    void Renderer::Begin(uint32_t frame)
+    void Renderer::Begin()
     {
         PlatformRenderer->Begin();
     }
@@ -54,9 +54,9 @@ namespace Waldem
         }
     }
 
-    PixelShader* Renderer::LoadShader(std::string shaderName)
+    PixelShader* Renderer::LoadShader(std::string shaderName, std::vector<ResourceDesc> resources)
     {
-        return PlatformRenderer->LoadShader(shaderName);
+        return PlatformRenderer->LoadShader(shaderName, resources);
     }
 
     Texture2D* Renderer::CreateTexture(std::string name, int width, int height, int channels, uint8_t* data)

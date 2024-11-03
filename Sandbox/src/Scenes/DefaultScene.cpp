@@ -14,18 +14,25 @@ namespace Sandbox
 {
 	void DefaultScene::Initialize(Waldem::SceneData* sceneData)
 	{
-		TestPixelShader = sceneData->Renderer->LoadShader("Default");
-		
 		Waldem::ModelImporter importer;
 		std::string path = "Content/Models/Sponza/Sponza.gltf";
 		TestModel = importer.Import(path, true);
 		TestModelTransform.Reset();
-		TestModelTransform.SetPosition(0, 0, 4);
+		TestModelTransform.SetPosition(0, 0, 20);
 		
 		float screenWidth = sceneData->Window->GetWidth();
 		float screenHeight = sceneData->Window->GetHeight();
 		
-		MainCamera.reset(new Waldem::Camera(70.0f , screenWidth / screenHeight, .01f, 10000, { 0, 0, 0 }, 100.0f, 1.0f));
+		MainCamera = new Waldem::Camera(70.0f , screenWidth / screenHeight, .01f, 10000, { 0, 0, 0 }, 100.0f, 1.0f);
+		
+		std::vector<Waldem::ResourceDesc> resources;
+		Waldem::Matrix4 viewProjectionMatrix = MainCamera->GetViewProjectionMatrix();
+		Waldem::Matrix4 testModelWorldMatrix = TestModelTransform.GetMatrix();
+		Waldem::Vector3 testColor = { 1, 0, 0 };
+		resources.push_back({ "MyConstantBuffer1", Waldem::ResourceType::ConstantBuffer, &viewProjectionMatrix, 0, sizeof(Waldem::Matrix4), 0 });
+		resources.push_back({ "MyConstantBuffer2", Waldem::ResourceType::ConstantBuffer, &testModelWorldMatrix, 0, sizeof(Waldem::Matrix4), 1 });
+		// resources.push_back({ "TestBuffer", Waldem::ResourceType::Buffer, &testColor, sizeof(Waldem::Vector3), sizeof(Waldem::Vector3), 0 }); TODO: go on from this place
+		TestPixelShader = sceneData->Renderer->LoadShader("Default", resources);
 
 		CreateLights();
 	}
@@ -47,33 +54,33 @@ namespace Sandbox
 	{
 		if(Waldem::Input::IsKeyPressed(W))
 		{
-			float movementSpeed = deltaTime * MainCamera.get()->MovementSpeed;
-			MainCamera.get()->Move({ 0, 0, 0.1f * movementSpeed });
+			float movementSpeed = deltaTime * MainCamera->MovementSpeed;
+			MainCamera->Move({ 0, 0, 0.1f * movementSpeed });
 		}
 		if(Waldem::Input::IsKeyPressed(S))
 		{
-			float movementSpeed = deltaTime * MainCamera.get()->MovementSpeed;
-			MainCamera.get()->Move({ 0, 0, -0.1f * movementSpeed });
+			float movementSpeed = deltaTime * MainCamera->MovementSpeed;
+			MainCamera->Move({ 0, 0, -0.1f * movementSpeed });
 		}
 		if(Waldem::Input::IsKeyPressed(A))
 		{
-			float movementSpeed = deltaTime * MainCamera.get()->MovementSpeed;
-			MainCamera.get()->Move({ -0.1f * movementSpeed, 0, 0 });
+			float movementSpeed = deltaTime * MainCamera->MovementSpeed;
+			MainCamera->Move({ -0.1f * movementSpeed, 0, 0 });
 		}
 		if(Waldem::Input::IsKeyPressed(D))
 		{
-			float movementSpeed = deltaTime * MainCamera.get()->MovementSpeed;
-			MainCamera.get()->Move({ 0.1f * movementSpeed, 0, 0 });
+			float movementSpeed = deltaTime * MainCamera->MovementSpeed;
+			MainCamera->Move({ 0.1f * movementSpeed, 0, 0 });
 		}
 		if(Waldem::Input::IsKeyPressed(E))
 		{
-			float movementSpeed = deltaTime * MainCamera.get()->MovementSpeed;
-			MainCamera.get()->Move({ 0, 0.1f * movementSpeed, 0 });
+			float movementSpeed = deltaTime * MainCamera->MovementSpeed;
+			MainCamera->Move({ 0, 0.1f * movementSpeed, 0 });
 		}
 		if(Waldem::Input::IsKeyPressed(Q))
 		{
-			float movementSpeed = deltaTime * MainCamera.get()->MovementSpeed;
-			MainCamera.get()->Move({ 0, -0.1f * movementSpeed, 0 });
+			float movementSpeed = deltaTime * MainCamera->MovementSpeed;
+			MainCamera->Move({ 0, -0.1f * movementSpeed, 0 });
 		}
 		static float lastMouseX = 0;
 		static float lastMouseY = 0;
@@ -85,7 +92,7 @@ namespace Sandbox
 			float deltaX = (mouseX - lastMouseX) * deltaTime;
 			float deltaY = (mouseY - lastMouseY) * deltaTime;
 
-			MainCamera.get()->Rotate(deltaX, deltaY, 0);
+			MainCamera->Rotate(deltaX, deltaY, 0);
 		}
 
 		lastMouseX = mouseX;
@@ -94,13 +101,13 @@ namespace Sandbox
 
 	void DefaultScene::Draw(Waldem::SceneData* sceneData)
 	{
-		auto viewProjectionMatrix = MainCamera.get()->GetViewProjectionMatrix();
+		auto viewProjectionMatrix = MainCamera->GetViewProjectionMatrix();
+		TestPixelShader->UpdateResourceData("MyConstantBuffer1", &viewProjectionMatrix);
 
-		auto testModelWorldMatrix = TestModelTransform.GetMatrix();
-		
 		uint32_t numLights = Lights.size();
 
-		//pass params to shader
+		auto testModelWorldMatrix = TestModelTransform.GetMatrix();
+		TestPixelShader->UpdateResourceData("MyConstantBuffer2", &testModelWorldMatrix);
 
 		sceneData->Renderer->Draw(TestModel, TestPixelShader);
 	}

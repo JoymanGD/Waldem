@@ -148,6 +148,7 @@
   <ItemGroup>
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12Buffer.h" />
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12CommandList.h" />
+    <ClInclude Include="src\Platform\Graphics\DirectX\DX12Helper.h" />
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12PixelShader.h" />
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12Renderer.h" />
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12Texture.h" />

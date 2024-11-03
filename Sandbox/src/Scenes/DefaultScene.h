@@ -16,7 +16,7 @@ namespace Sandbox
     private:
         void CreateLights();
         
-        std::unique_ptr<Waldem::Camera> MainCamera;
+        Waldem::Camera* MainCamera;
         Waldem::Model* TestModel;
         Waldem::PixelShader* TestPixelShader;
         Waldem::Transform TestModelTransform;

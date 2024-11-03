@@ -69,7 +69,6 @@ namespace Waldem
 	void Application::Run()
 	{
 		auto lastFrameTime = std::chrono::high_resolution_clock::now();
-		uint32_t renderingFrame = 0;
 
 		while (IsRunning)
 		{
@@ -79,7 +78,7 @@ namespace Waldem
 
 			CurrentScene->UpdateInternal(deltaTime.count());
 
-			CurrentRenderer.Begin(renderingFrame);
+			CurrentRenderer.Begin();
 			SceneData sceneData = { &CurrentRenderer };
 			CurrentScene->DrawInternal(&sceneData);
 			CurrentRenderer.End();
@@ -98,9 +97,6 @@ namespace Waldem
 			// ImGuiLayer->End();
 
 			Window->OnUpdate();
-
-			renderingFrame++;
-			renderingFrame %= SWAPCHAIN_SIZE;
 		}
 	}
 
