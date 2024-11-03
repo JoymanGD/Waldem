@@ -16,7 +16,7 @@ namespace Waldem
         void End() override;
         void Present() override;
         D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentRenderTarget() const { return CurrentRenderTarget; }
-        PixelShader* LoadShader(std::string shaderName) override;
+        PixelShader* LoadShader(std::string shaderName, std::vector<ResourceDesc> resources) override;
         Texture2D* CreateTexture(std::string name, int width, int height, int channels, uint8_t* data = nullptr) override;
         VertexBuffer* CreateVertexBuffer(void* data, uint32_t size) override;
         IndexBuffer* CreateIndexBuffer(void* data, uint32_t size) override;
@@ -39,5 +39,6 @@ namespace Waldem
         uint32_t RTVDescriptorSize;
         ID3D12Resource* RenderTargets[SWAPCHAIN_SIZE];
         D3D12_CPU_DESCRIPTOR_HANDLE CurrentRenderTarget;
+        ID3D12Debug* DebugController;
     };
 }

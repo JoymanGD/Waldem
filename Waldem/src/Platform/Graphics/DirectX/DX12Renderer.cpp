@@ -2,6 +2,7 @@
 #include "DX12Renderer.h"
 
 #include "DX12Buffer.h"
+#include "DX12Helper.h"
 #include "DX12PixelShader.h"
 #include "DX12Texture.h"
 
@@ -9,6 +10,11 @@ namespace Waldem
 {
     void DX12Renderer::Initialize(Window* window)
     {
+        if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&DebugController))))
+        {
+            DebugController->EnableDebugLayer();
+        }
+
         Viewport.Width = window->GetWidth();
         Viewport.Height = window->GetHeight();
         
@@ -124,6 +130,7 @@ namespace Waldem
         }
 
         cmd->Execute(CommandQueue);
+        cmd->WaitForCompletion();
     }
 
     void DX12Renderer::Present()
@@ -132,16 +139,17 @@ namespace Waldem
 
         if(FAILED(h))
         {
-            throw std::runtime_error("Failed to present SwapChain");
+            DX12Helper::PrintHResultError(h);
+            DX12Helper::PrintDeviceRemovedReason(Device);
         }
 
         FrameIndex ++;
         FrameIndex %= SWAPCHAIN_SIZE;
     }
 
-    PixelShader* DX12Renderer::LoadShader(std::string shaderName)
+    PixelShader* DX12Renderer::LoadShader(std::string shaderName, std::vector<ResourceDesc> resources)
     {
-        return new DX12PixelShader(Device, shaderName);
+        return new DX12PixelShader(shaderName, Device, WorldCommandList.first, resources);
     }
 
     Texture2D* DX12Renderer::CreateTexture(std::string name, int width, int height, int channels, uint8_t* data)

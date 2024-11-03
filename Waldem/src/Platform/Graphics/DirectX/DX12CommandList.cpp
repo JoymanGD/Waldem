@@ -2,6 +2,7 @@
 #include "DX12CommandList.h"
 
 #include "DX12Buffer.h"
+#include "DX12Helper.h"
 #include "DX12PixelShader.h"
 
 namespace Waldem
@@ -70,8 +71,13 @@ namespace Waldem
         auto& indexBufferView = ((DX12IndexBuffer*)mesh->IB)->GetBufferView();
         auto& vertexBufferView = ((DX12VertexBuffer*)mesh->VB)->GetBufferView();
         auto pipeline = ((DX12PixelShader*)shader)->GetPipeline();
+        auto rootSignature = ((DX12PixelShader*)shader)->GetRootSignature();
+        auto resourcesHeap = ((DX12PixelShader*)shader)->GetResourcesHeap();
 
         commandList->SetPipelineState(pipeline);
+        commandList->SetGraphicsRootSignature(rootSignature);
+        commandList->SetDescriptorHeaps(1, &resourcesHeap);
+        commandList->SetGraphicsRootDescriptorTable(0, resourcesHeap->GetGPUDescriptorHandleForHeapStart());
         commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
         commandList->IASetIndexBuffer(&indexBufferView);
@@ -100,7 +106,7 @@ namespace Waldem
         
         if (FAILED(hr))
         {
-            throw std::runtime_error("Failed to reset command list!");
+            DX12Helper::PrintHResultError(hr);
         }
     }
 
