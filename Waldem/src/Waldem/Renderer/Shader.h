@@ -27,10 +27,11 @@ namespace Waldem
     {
         std::string Name;
         ResourceType Type;
-        void* Data;
-        uint32_t Stride;
-        uint32_t Size;
-        uint32_t Slot;
+        uint32_t NumResources = 1;
+        void* Data = nullptr;
+        uint32_t Stride = 0;
+        uint32_t Size = 0;
+        uint32_t Slot = 0;
     };
 
     struct SamplerData

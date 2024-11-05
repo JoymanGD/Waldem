@@ -24,9 +24,9 @@ namespace Waldem
         void Execute(void* commandQueue);
         void WaitForCompletion();
         void ResourceBarrier(uint32_t count, D3D12_RESOURCE_BARRIER* barrier);
+        void Reset();
 
     private:
-        void Reset();
         
         void Close();
 

@@ -15,6 +15,11 @@ namespace Waldem
             DebugController->EnableDebugLayer();
         }
 
+        if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&DebugController1))))
+        {
+            DebugController1->SetEnableGPUBasedValidation(TRUE);
+        }
+
         Viewport.Width = window->GetWidth();
         Viewport.Height = window->GetHeight();
         
@@ -29,6 +34,20 @@ namespace Waldem
         }
 
         h = D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&Device));
+
+        //Break on any D3D12 error
+        if (SUCCEEDED(Device->QueryInterface(IID_PPV_ARGS(&InfoQueue))))
+        {
+            InfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, TRUE);
+            InfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, TRUE);
+
+            D3D12_MESSAGE_SEVERITY severities[] = { D3D12_MESSAGE_SEVERITY_INFO };
+            D3D12_INFO_QUEUE_FILTER filter = {};
+            filter.DenyList.NumSeverities = _countof(severities);
+            filter.DenyList.pSeverityList = severities;
+
+            InfoQueue->PushStorageFilter(&filter);
+        }
 
         if(FAILED(h))
         {
@@ -86,7 +105,6 @@ namespace Waldem
             {
                 throw std::runtime_error("Failed to get D3D12 SwapChain buffer");
             }
-            
             Device->CreateRenderTargetView(RenderTargets[i], nullptr, rtvHandle);
             rtvHandle.ptr += RTVDescriptorSize;
         }
@@ -97,7 +115,9 @@ namespace Waldem
     void DX12Renderer::Begin()
     {
         auto& cmd = WorldCommandList.first;
-        
+
+        cmd->Reset();
+
         D3D12_RESOURCE_BARRIER barrier = {};
         barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
         barrier.Transition.pResource = RenderTargets[FrameIndex];
@@ -121,6 +141,14 @@ namespace Waldem
     void DX12Renderer::End()
     {
         auto& cmd = WorldCommandList.first;
+
+        D3D12_RESOURCE_BARRIER barrier = {};
+        barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+        barrier.Transition.pResource = RenderTargets[FrameIndex];
+        barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+        barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+        barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+        cmd->ResourceBarrier(1, &barrier);
         
         if(WorldCommandList.second)
         {
@@ -130,6 +158,7 @@ namespace Waldem
         }
 
         cmd->Execute(CommandQueue);
+        
         cmd->WaitForCompletion();
     }
 

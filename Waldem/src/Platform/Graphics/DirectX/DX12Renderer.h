@@ -40,5 +40,7 @@ namespace Waldem
         ID3D12Resource* RenderTargets[SWAPCHAIN_SIZE];
         D3D12_CPU_DESCRIPTOR_HANDLE CurrentRenderTarget;
         ID3D12Debug* DebugController;
+        ID3D12Debug1* DebugController1;
+        ID3D12InfoQueue* InfoQueue;
     };
 }
