@@ -7,6 +7,12 @@
 
 namespace Sandbox
 {
+    struct TestStructData
+    {
+        Waldem::Vector3 TestColor;
+        float Intensity;
+    };
+    
     class DefaultScene : public Waldem::Scene
     {
     protected:

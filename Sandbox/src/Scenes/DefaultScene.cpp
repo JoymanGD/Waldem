@@ -29,9 +29,11 @@ namespace Sandbox
 		Waldem::Matrix4 viewProjectionMatrix = MainCamera->GetViewProjectionMatrix();
 		Waldem::Matrix4 testModelWorldMatrix = TestModelTransform.GetMatrix();
 		Waldem::Vector3 testColor = { 1, 0, 0 };
-		resources.push_back({ "MyConstantBuffer1", Waldem::ResourceType::ConstantBuffer, &viewProjectionMatrix, 0, sizeof(Waldem::Matrix4), 0 });
-		resources.push_back({ "MyConstantBuffer2", Waldem::ResourceType::ConstantBuffer, &testModelWorldMatrix, 0, sizeof(Waldem::Matrix4), 1 });
-		// resources.push_back({ "TestBuffer", Waldem::ResourceType::Buffer, &testColor, sizeof(Waldem::Vector3), sizeof(Waldem::Vector3), 0 }); TODO: go on from this place
+		TestStructData testStructData = { { 0, 1, 0 }, .9f };
+		resources.push_back({ "MyConstantBuffer1", Waldem::ResourceType::ConstantBuffer, 1, &viewProjectionMatrix, 0, sizeof(Waldem::Matrix4), 0 });
+		resources.push_back({ "MyConstantBuffer2", Waldem::ResourceType::ConstantBuffer, 1, &testModelWorldMatrix, 0, sizeof(Waldem::Matrix4), 1 });
+		resources.push_back({ "TestBuffer", Waldem::ResourceType::Buffer, 1, &testColor,sizeof(Waldem::Vector3), sizeof(Waldem::Vector3), 0 });
+		resources.push_back({ "TestBuffer2", Waldem::ResourceType::Buffer, 1, &testStructData,sizeof(TestStructData), sizeof(TestStructData), 1 });
 		TestPixelShader = sceneData->Renderer->LoadShader("Default", resources);
 
 		CreateLights();

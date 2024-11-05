@@ -51,8 +51,6 @@ namespace Waldem
 
     void DX12CommandList::Begin(D3D12_VIEWPORT* viewport, D3D12_RECT* scissor, D3D12_CPU_DESCRIPTOR_HANDLE renderTarget)
     {
-        Reset();
-
         //record rendering commands
         commandList->RSSetViewports(1, viewport);
         commandList->RSSetScissorRects(1, scissor);

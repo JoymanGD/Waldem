@@ -19,7 +19,7 @@ namespace Waldem
             for (uint32_t i = 0; i < resources.size(); ++i)
             {
                 D3D12_DESCRIPTOR_RANGE range = {};
-                range.NumDescriptors = 1;
+                range.NumDescriptors = resources[i].NumResources;
                 range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
                 range.RegisterSpace = 0;
                 range.RangeType = DX12Helper::ResourceTypeToRangeType(resources[i].Type);
@@ -183,75 +183,127 @@ namespace Waldem
         
         for (auto& resourceDesc : resourceDescs)
         {
-            ID3D12Resource* resourceBuffer;
-            uint32_t size = resourceDesc.Size;
-
-            if(resourceDesc.Type == ConstantBuffer)
+            for (uint32_t i = 0; i < resourceDesc.NumResources; ++i)
             {
-                size = (size + 255) & ~255; //align to 256 bytes
-            }
-            
-            D3D12_RESOURCE_DESC bufferDesc = {};
-            bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-            bufferDesc.Alignment = 0;
-            bufferDesc.Width = size;
-            bufferDesc.Height = 1;
-            bufferDesc.DepthOrArraySize = 1;
-            bufferDesc.MipLevels = 1;
-            bufferDesc.SampleDesc.Count = 1;
-            bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-            bufferDesc.Format = DXGI_FORMAT_UNKNOWN;
-            bufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+                ID3D12Resource* resourceBuffer;
+                uint32_t size = resourceDesc.Size;
 
-            Device->CreateCommittedResource(
-                &heapProps,
-                D3D12_HEAP_FLAG_NONE,
-                &bufferDesc,
-                D3D12_RESOURCE_STATE_GENERIC_READ,
-                nullptr,
-                IID_PPV_ARGS(&resourceBuffer));
+                D3D12_RESOURCE_DESC bufferDesc = {};
+                
+                switch (resourceDesc.Type)
+                {
+                case ConstantBuffer:
+                    {
+                        size = (size + 255) & ~255; //align to 256 bytes
+                        bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+                        bufferDesc.Alignment = 0;
+                        bufferDesc.Width = size;
+                        bufferDesc.Height = 1;
+                        bufferDesc.DepthOrArraySize = 1;
+                        bufferDesc.MipLevels = 1;
+                        bufferDesc.SampleDesc.Count = 1;
+                        bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+                        bufferDesc.Format = DXGI_FORMAT_UNKNOWN;
+                        bufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
-            Resources[resourceDesc.Name] = new ResourceData{ resourceBuffer, resourceDesc };
-            
-            switch (resourceDesc.Type)
-            {
-            case ConstantBuffer:
-                {
-                    D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
-                    cbvDesc.BufferLocation = resourceBuffer->GetGPUVirtualAddress();
-                    cbvDesc.SizeInBytes = size;
-                    Device->CreateConstantBufferView(&cbvDesc, handle);
-                    break;
-                }
-            case Buffer:
-                {
-                    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-                    srvDesc.Format = DXGI_FORMAT_UNKNOWN;
-                    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-                    srvDesc.Buffer.FirstElement = 0;
-                    srvDesc.Buffer.NumElements = resourceDesc.Size / resourceDesc.Stride;
-                    srvDesc.Buffer.StructureByteStride = resourceDesc.Stride;
-                    srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-                    Device->CreateShaderResourceView(resourceBuffer, &srvDesc, handle);
-                    break;
-                }
-            default: ;
-            }
+                        Device->CreateCommittedResource(
+                            &heapProps,
+                            D3D12_HEAP_FLAG_NONE,
+                            &bufferDesc,
+                            D3D12_RESOURCE_STATE_GENERIC_READ,
+                            nullptr,
+                            IID_PPV_ARGS(&resourceBuffer));
+                        
+                        D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+                        cbvDesc.BufferLocation = resourceBuffer->GetGPUVirtualAddress();
+                        cbvDesc.SizeInBytes = size;
+                        Device->CreateConstantBufferView(&cbvDesc, handle);
+                        break;
+                    }
+                case Buffer:
+                    {
+                        bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+                        bufferDesc.Alignment = 0;
+                        bufferDesc.Width = size;
+                        bufferDesc.Height = 1;
+                        bufferDesc.DepthOrArraySize = 1;
+                        bufferDesc.MipLevels = 1;
+                        bufferDesc.SampleDesc.Count = 1;
+                        bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+                        bufferDesc.Format = DXGI_FORMAT_UNKNOWN;
+                        bufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
-            if(resourceDesc.Data)
-            {
-                //map and copy data
-                UINT8* pMappedData;
-                hr = resourceBuffer->Map(0, nullptr, reinterpret_cast<void**>(&pMappedData));
-                if(FAILED(hr))
-                {
-                    DX12Helper::PrintHResultError(hr);
+                        Device->CreateCommittedResource(
+                            &heapProps,
+                            D3D12_HEAP_FLAG_NONE,
+                            &bufferDesc,
+                            D3D12_RESOURCE_STATE_GENERIC_READ,
+                            nullptr,
+                            IID_PPV_ARGS(&resourceBuffer));
+                        
+                        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+                        srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+                        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+                        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+                        srvDesc.Buffer.FirstElement = 0;
+                        srvDesc.Buffer.NumElements = resourceDesc.Size / resourceDesc.Stride;
+                        srvDesc.Buffer.StructureByteStride = resourceDesc.Stride;
+                        srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+                        Device->CreateShaderResourceView(resourceBuffer, &srvDesc, handle);
+                        break;
+                    }
+                case Texture: // TODO: go on from here
+                    {
+                        bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+                        bufferDesc.Alignment = 0;
+                        bufferDesc.Width = size;
+                        bufferDesc.Height = 1;
+                        bufferDesc.DepthOrArraySize = 1;
+                        bufferDesc.MipLevels = 1;
+                        bufferDesc.SampleDesc.Count = 1;
+                        bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+                        bufferDesc.Format = DXGI_FORMAT_UNKNOWN;
+                        bufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+                        Device->CreateCommittedResource(
+                            &heapProps,
+                            D3D12_HEAP_FLAG_NONE,
+                            &bufferDesc,
+                            D3D12_RESOURCE_STATE_GENERIC_READ,
+                            nullptr,
+                            IID_PPV_ARGS(&resourceBuffer));
+                        
+                        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+                        srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+                        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+                        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+                        srvDesc.Buffer.FirstElement = 0;
+                        srvDesc.Buffer.NumElements = resourceDesc.Size / resourceDesc.Stride;
+                        srvDesc.Buffer.StructureByteStride = resourceDesc.Stride;
+                        srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+                        Device->CreateShaderResourceView(resourceBuffer, &srvDesc, handle);
+                        break;
+                    }
+                default: ;
                 }
-                memcpy(pMappedData, resourceDesc.Data, resourceDesc.Size);
-                resourceBuffer->Unmap(0, nullptr);
+
+                Resources[resourceDesc.Name] = new ResourceData{ resourceBuffer, resourceDesc };
+
+                if(resourceDesc.Data)
+                {
+                    //map and copy data
+                    UINT8* pMappedData;
+                    hr = resourceBuffer->Map(0, nullptr, reinterpret_cast<void**>(&pMappedData));
+                    if(FAILED(hr))
+                    {
+                        DX12Helper::PrintHResultError(hr);
+                    }
+                    memcpy(pMappedData, resourceDesc.Data, resourceDesc.Size);
+                    resourceBuffer->Unmap(0, nullptr);
+                }
+                
+                handle.ptr += descriptorSize;
             }
-            
-            handle.ptr += descriptorSize;
         }
     }
 
