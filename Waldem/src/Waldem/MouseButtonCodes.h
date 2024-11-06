@@ -1,16 +1,16 @@
 #pragma once
+#include <SDL/include/SDL_mouse.h>
 
-//from glfw3.h
+//from SDL_mouse.h
 
-#define WD_MOUSE_BUTTON_1         0
-#define WD_MOUSE_BUTTON_2         1
-#define WD_MOUSE_BUTTON_3         2
-#define WD_MOUSE_BUTTON_4         3
-#define WD_MOUSE_BUTTON_5         4
-#define WD_MOUSE_BUTTON_6         5
-#define WD_MOUSE_BUTTON_7         6
-#define WD_MOUSE_BUTTON_8         7
-#define WD_MOUSE_BUTTON_LAST      WD_MOUSE_BUTTON_8
-#define WD_MOUSE_BUTTON_LEFT      WD_MOUSE_BUTTON_1
-#define WD_MOUSE_BUTTON_RIGHT     WD_MOUSE_BUTTON_2
-#define WD_MOUSE_BUTTON_MIDDLE    WD_MOUSE_BUTTON_3
+#define WD_MOUSE_BUTTON(X)       (1 << ((X)-1))
+#define WD_MOUSE_BUTTON_LEFT     1
+#define WD_MOUSE_BUTTON_MIDDLE   2
+#define WD_MOUSE_BUTTON_RIGHT    3
+#define WD_MOUSE_BUTTON_X1       4
+#define WD_MOUSE_BUTTON_X2       5
+#define WD_MOUSE_BUTTON_LMASK    SDL_BUTTON(SDL_BUTTON_LEFT)
+#define WD_MOUSE_BUTTON_MMASK    SDL_BUTTON(SDL_BUTTON_MIDDLE)
+#define WD_MOUSE_BUTTON_RMASK    SDL_BUTTON(SDL_BUTTON_RIGHT)
+#define WD_MOUSE_BUTTON_X1MASK   SDL_BUTTON(SDL_BUTTON_X1)
+#define WD_MOUSE_BUTTON_X2MASK   SDL_BUTTON(SDL_BUTTON_X2)

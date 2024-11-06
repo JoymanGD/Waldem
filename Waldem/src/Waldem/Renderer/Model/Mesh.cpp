@@ -1,24 +1,17 @@
 #include "wdpch.h"
 #include "Mesh.h"
 
+#include "Waldem/Application.h"
+
 namespace Waldem
 {
 	Mesh::Mesh(void* vertexBufferData, uint32_t vertexBufferDataSize, uint32_t* indices, uint32_t indicesAmount, const BufferLayout& layout, Material material)
 	{
-		VB = VertexBuffer::Create(vertexBufferData, vertexBufferDataSize);
-		VB->SetLayout(layout);
-		IB = IndexBuffer::Create(indices, indicesAmount);
+		auto& renderer = Application::GetRenderer();
+		VB = renderer.CreateVertexBuffer(vertexBufferData, vertexBufferDataSize);
+		IB = renderer.CreateIndexBuffer(indices, indicesAmount);
 		IB->SetIndices(indices);
-	    VA = VertexArray::Create();
-
-		VA->SetIndexBuffer(IB);
-		VA->AddVertexBuffer(VB);
 
 		MeshMaterial = material;
-	}
-
-	void Mesh::BindResourcesToPipeline(Pipeline* pipeline)
-	{
-		MeshMaterial.BindTexturesToShader(pipeline->Shader);
 	}
 }
