@@ -8,6 +8,7 @@
 #include "Waldem/MouseButtonCodes.h"
 #include "Waldem/Import/ModelImporter.h"
 #include "Waldem/Renderer/Renderer.h"
+#include "Waldem/Renderer/Resource.h"
 #include "Waldem/World/Camera.h"
 
 namespace Sandbox
@@ -25,15 +26,26 @@ namespace Sandbox
 		
 		MainCamera = new Waldem::Camera(70.0f , screenWidth / screenHeight, .01f, 10000, { 0, 0, 0 }, 100.0f, 1.0f);
 		
-		std::vector<Waldem::ResourceDesc> resources;
+		std::vector<Waldem::Resource> resources;
 		Waldem::Matrix4 viewProjectionMatrix = MainCamera->GetViewProjectionMatrix();
 		Waldem::Matrix4 testModelWorldMatrix = TestModelTransform.GetMatrix();
 		Waldem::Vector3 testColor = { 1, 0, 0 };
 		TestStructData testStructData = { { 0, 1, 0 }, .9f };
-		resources.push_back({ "MyConstantBuffer1", Waldem::ResourceType::ConstantBuffer, 1, &viewProjectionMatrix, 0, sizeof(Waldem::Matrix4), 0 });
-		resources.push_back({ "MyConstantBuffer2", Waldem::ResourceType::ConstantBuffer, 1, &testModelWorldMatrix, 0, sizeof(Waldem::Matrix4), 1 });
-		resources.push_back({ "TestBuffer", Waldem::ResourceType::Buffer, 1, &testColor,sizeof(Waldem::Vector3), sizeof(Waldem::Vector3), 0 });
-		resources.push_back({ "TestBuffer2", Waldem::ResourceType::Buffer, 1, &testStructData,sizeof(TestStructData), sizeof(TestStructData), 1 });
+		resources.push_back(Waldem::Resource( "MyConstantBuffer1", Waldem::ResourceType::ConstantBuffer, 1, &viewProjectionMatrix, 0, sizeof(Waldem::Matrix4), 0));
+		resources.push_back(Waldem::Resource( "MyConstantBuffer2", Waldem::ResourceType::ConstantBuffer, 1, &testModelWorldMatrix, 0, sizeof(Waldem::Matrix4), 1));
+		resources.push_back(Waldem::Resource( "TestBuffer", Waldem::ResourceType::Buffer, 1, &testColor,sizeof(Waldem::Vector3), sizeof(Waldem::Vector3), 0));
+		resources.push_back(Waldem::Resource( "TestBuffer2", Waldem::ResourceType::Buffer, 1, &testStructData,sizeof(TestStructData), sizeof(TestStructData), 1));
+
+		auto meshes = TestModel->GetMeshes();
+		uint32_t textureIndex = 0;
+		uint32_t textureSlot = 2;
+		for (auto mesh : meshes)
+		{
+			resources.push_back(Waldem::Resource(std::string("TestTexture") + std::to_string(textureIndex), mesh->MeshMaterial.GetDiffuseTexture(), textureSlot));
+			textureSlot++;
+			textureIndex++;
+		}
+		
 		TestPixelShader = sceneData->Renderer->LoadShader("Default", resources);
 
 		CreateLights();

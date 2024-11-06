@@ -88,5 +88,57 @@ namespace Waldem
 
             return (D3D12_DESCRIPTOR_RANGE_TYPE)0;
         }
+
+        static void UpdateSubresourcesManual(
+            ID3D12Device* device,
+            ID3D12GraphicsCommandList* commandList,
+            ID3D12Resource* destinationResource,
+            ID3D12Resource* intermediateResource,
+            uint64_t intermediateOffset,
+            uint32_t firstSubresource,
+            uint32_t numSubresources,
+            D3D12_SUBRESOURCE_DATA* subresourceData)
+        {
+            D3D12_RESOURCE_DESC resourceDesc = destinationResource->GetDesc();
+
+            std::vector<D3D12_PLACED_SUBRESOURCE_FOOTPRINT> layouts(numSubresources);
+            std::vector<uint64_t> rowSizesInBytes(numSubresources);
+            std::vector<uint32_t> numRows(numSubresources);
+            uint64_t requiredSize = 0;
+            device->GetCopyableFootprints(&resourceDesc, firstSubresource, numSubresources, intermediateOffset,
+                                          layouts.data(), numRows.data(), rowSizesInBytes.data(), &requiredSize);
+
+            uint8_t* pData;
+            intermediateResource->Map(0, nullptr, reinterpret_cast<void**>(&pData));
+            for (uint32_t i = 0; i < numSubresources; ++i)
+            {
+                uint8_t* pDestSlice = pData + layouts[i].Offset;
+                
+                for (uint32_t y = 0; y < numRows[i]; ++y)
+                {
+                    memcpy(
+                        pDestSlice + y * layouts[i].Footprint.RowPitch,
+                        reinterpret_cast<const uint8_t*>(subresourceData[i].pData) + y * subresourceData[i].RowPitch,
+                        rowSizesInBytes[i]
+                    );
+                }
+            }
+            intermediateResource->Unmap(0, nullptr);
+
+            for (uint32_t i = 0; i < numSubresources; ++i)
+            {
+                D3D12_TEXTURE_COPY_LOCATION destLocation = {};
+                destLocation.pResource = destinationResource;
+                destLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+                destLocation.SubresourceIndex = i;
+
+                D3D12_TEXTURE_COPY_LOCATION srcLocation = {};
+                srcLocation.pResource = intermediateResource;
+                srcLocation.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+                srcLocation.PlacedFootprint = layouts[i];
+
+                commandList->CopyTextureRegion(&destLocation, 0, 0, 0, &srcLocation, nullptr);
+            }
+        }
     };
 }

@@ -74,7 +74,11 @@ namespace Waldem
 
         commandList->SetPipelineState(pipeline);
         commandList->SetGraphicsRootSignature(rootSignature);
-        commandList->SetDescriptorHeaps(1, &resourcesHeap);
+        // auto samplersHeap = ((DX12PixelShader*)shader)->GetSamplersHeap();
+        // ID3D12DescriptorHeap* heaps[] = { resourcesHeap, samplersHeap };
+        // commandList->SetDescriptorHeaps(2, heaps);
+        ID3D12DescriptorHeap* heaps[] = { resourcesHeap };
+        commandList->SetDescriptorHeaps(1, heaps);
         commandList->SetGraphicsRootDescriptorTable(0, resourcesHeap->GetGPUDescriptorHandleForHeapStart());
         commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
@@ -106,6 +110,11 @@ namespace Waldem
         {
             DX12Helper::PrintHResultError(hr);
         }
+    }
+
+    void DX12CommandList::CopyTextureRegion(const D3D12_TEXTURE_COPY_LOCATION* dst, uint32_t dstX, uint32_t dstY, uint32_t dstZ, const D3D12_TEXTURE_COPY_LOCATION* src, const D3D12_BOX* srcBox)
+    {
+        commandList->CopyTextureRegion(dst, dstX, dstY, dstZ, src, srcBox);
     }
 
     void DX12CommandList::Execute(void* commandQueue)

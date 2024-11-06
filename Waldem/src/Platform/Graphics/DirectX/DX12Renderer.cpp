@@ -176,14 +176,15 @@ namespace Waldem
         FrameIndex %= SWAPCHAIN_SIZE;
     }
 
-    PixelShader* DX12Renderer::LoadShader(std::string shaderName, std::vector<ResourceDesc> resources)
+    PixelShader* DX12Renderer::LoadShader(std::string shaderName, std::vector<Resource> resources)
     {
         return new DX12PixelShader(shaderName, Device, WorldCommandList.first, resources);
     }
 
     Texture2D* DX12Renderer::CreateTexture(std::string name, int width, int height, int channels, uint8_t* data)
     {
-        return new DX12Texture(Device, name, width, height, channels, data);
+        Texture2D* texture = new DX12Texture(name, Device, WorldCommandList.first, width, height, channels, data);
+        return texture;
     }
 
     VertexBuffer* DX12Renderer::CreateVertexBuffer(void* data, uint32_t size)

@@ -1,6 +1,5 @@
 #include "wdpch.h"
 #include "Renderer.h"
-
 #include "Platform/Graphics/DirectX/DX12PixelShader.h"
 #include "Platform/Graphics/DirectX/DX12Renderer.h"
 
@@ -54,14 +53,15 @@ namespace Waldem
         }
     }
 
-    PixelShader* Renderer::LoadShader(std::string shaderName, std::vector<ResourceDesc> resources)
+    PixelShader* Renderer::LoadShader(std::string shaderName, std::vector<Resource> resources)
     {
         return PlatformRenderer->LoadShader(shaderName, resources);
     }
 
     Texture2D* Renderer::CreateTexture(std::string name, int width, int height, int channels, uint8_t* data)
     {
-        return PlatformRenderer->CreateTexture(name, width, height, channels, data);
+        Texture2D* texture = PlatformRenderer->CreateTexture(name, width, height, channels, data);
+        return texture;
     }
 
     VertexBuffer* Renderer::CreateVertexBuffer(void* data, uint32_t size)

@@ -29,4 +29,14 @@ namespace Waldem
         D3D12_INDEX_BUFFER_VIEW BufferView;
         uint32_t Count;
     };
+    
+    class WALDEM_API DX12StorageBuffer : public StorageBuffer
+    {
+    public:
+        DX12StorageBuffer(ID3D12Device* device, void* data, uint32_t count);
+        void* GetPlatformResource() const override { return BufferResource; }
+
+    private:
+        ID3D12Resource* BufferResource;
+    };
 }

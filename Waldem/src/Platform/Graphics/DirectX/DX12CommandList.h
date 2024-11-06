@@ -25,6 +25,7 @@ namespace Waldem
         void WaitForCompletion();
         void ResourceBarrier(uint32_t count, D3D12_RESOURCE_BARRIER* barrier);
         void Reset();
+        void CopyTextureRegion(const D3D12_TEXTURE_COPY_LOCATION* dst, uint32_t dstX, uint32_t dstY, uint32_t dstZ, const D3D12_TEXTURE_COPY_LOCATION* src, const D3D12_BOX* srcBox);
 
     private:
         

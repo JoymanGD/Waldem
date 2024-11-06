@@ -1,5 +1,6 @@
 #pragma once
 #include "Waldem/Renderer/Texture.h"
+#include "DX12CommandList.h"
 #include <d3d12.h>
 
 namespace Waldem
@@ -9,8 +10,9 @@ namespace Waldem
     public:
         std::string GetName() override { return Name; }
 
-        DX12Texture(ID3D12Device* device, std::string name, int width, int height, int channels, uint8_t* data);
-        
+        DX12Texture(std::string name, ID3D12Device* device, DX12CommandList* cmdList, int width, int height, int channels, uint8_t* data);
+        void* GetPlatformResource() override { return Resource; }
+
     private:
         ID3D12Resource* Resource;
         std::string Name;

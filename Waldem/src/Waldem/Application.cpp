@@ -28,8 +28,12 @@ namespace Waldem
 	
 	void Application::OpenScene(Scene* scene)
 	{
+		CurrentRenderer.Begin();
+		
 		SceneData sceneData = { &CurrentRenderer, Window.get() };
 		scene->Initialize(&sceneData);
+		
+		CurrentRenderer.End();
         
 		CurrentScene = scene;
 	}

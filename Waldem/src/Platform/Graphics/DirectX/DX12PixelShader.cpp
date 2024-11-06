@@ -7,7 +7,7 @@
 
 namespace Waldem
 {
-    DX12PixelShader::DX12PixelShader(const std::string& shaderName, ID3D12Device* device, DX12CommandList* cmdList, std::vector<ResourceDesc> resources)
+    DX12PixelShader::DX12PixelShader(const std::string& shaderName, ID3D12Device* device, DX12CommandList* cmdList, std::vector<Resource> resources)
     {
         Device = device;
         CmdList = cmdList;
@@ -34,11 +34,26 @@ namespace Waldem
             rootParams[0].DescriptorTable.pDescriptorRanges = ranges.data();
             rootParams[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
             
+            D3D12_STATIC_SAMPLER_DESC staticSampler = {};
+            staticSampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+            staticSampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+            staticSampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+            staticSampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+            staticSampler.MipLODBias = 0.0f;
+            staticSampler.MaxAnisotropy = 0;
+            staticSampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+            staticSampler.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE;
+            staticSampler.MinLOD = 0.0f;
+            staticSampler.MaxLOD = D3D12_FLOAT32_MAX;
+            staticSampler.ShaderRegister = 0; //matches register(s0) in the shader
+            staticSampler.RegisterSpace = 0;
+            staticSampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+            
             D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
             rootSignatureDesc.NumParameters = _countof(rootParams);
             rootSignatureDesc.pParameters = rootParams;
-            rootSignatureDesc.NumStaticSamplers = 0;
-            rootSignatureDesc.pStaticSamplers = nullptr;
+            rootSignatureDesc.NumStaticSamplers = 1;
+            rootSignatureDesc.pStaticSamplers = &staticSampler;
             rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
             
             ID3DBlob* signature;
@@ -158,7 +173,7 @@ namespace Waldem
         return true;
     }
 
-    void DX12PixelShader::SetResources(std::vector<ResourceDesc> resourceDescs)
+    void DX12PixelShader::SetResources(std::vector<Resource> resourceDescs)
     {
         D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
         heapDesc.NumDescriptors = (uint32_t)resourceDescs.size();
@@ -174,26 +189,47 @@ namespace Waldem
         UINT descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
         D3D12_CPU_DESCRIPTOR_HANDLE handle = ResourcesHeap->GetCPUDescriptorHandleForHeapStart();
 
+        D3D12_DESCRIPTOR_HEAP_DESC samplerHeapDesc = {};
+        samplerHeapDesc.NumDescriptors = 1;
+        samplerHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
+        samplerHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+
+        hr = Device->CreateDescriptorHeap(&samplerHeapDesc, IID_PPV_ARGS(&SamplersHeap));
+        if(FAILED(hr))
+        {
+            DX12Helper::PrintHResultError(hr);
+        }
+        
+        // D3D12_CPU_DESCRIPTOR_HANDLE samplerHandle = SamplersHeap->GetCPUDescriptorHandleForHeapStart();
+        
         D3D12_HEAP_PROPERTIES heapProps = {};
         heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
         heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
         heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
         heapProps.CreationNodeMask = 1;
         heapProps.VisibleNodeMask = 1;
+
+        bool HasSampler = false;
         
         for (auto& resourceDesc : resourceDescs)
         {
             for (uint32_t i = 0; i < resourceDesc.NumResources; ++i)
             {
                 ID3D12Resource* resourceBuffer;
-                uint32_t size = resourceDesc.Size;
 
-                D3D12_RESOURCE_DESC bufferDesc = {};
-                
                 switch (resourceDesc.Type)
                 {
+                case Sampler:
+                    {
+                        HasSampler = true;
+                        break;
+                    }
                 case ConstantBuffer:
                     {
+                        D3D12_RESOURCE_DESC bufferDesc = {};
+                        
+                        uint32_t size = (uint32_t)resourceDesc.Size.x;
+                        
                         size = (size + 255) & ~255; //align to 256 bytes
                         bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
                         bufferDesc.Alignment = 0;
@@ -222,70 +258,107 @@ namespace Waldem
                     }
                 case Buffer:
                     {
-                        bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-                        bufferDesc.Alignment = 0;
-                        bufferDesc.Width = size;
-                        bufferDesc.Height = 1;
-                        bufferDesc.DepthOrArraySize = 1;
-                        bufferDesc.MipLevels = 1;
-                        bufferDesc.SampleDesc.Count = 1;
-                        bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-                        bufferDesc.Format = DXGI_FORMAT_UNKNOWN;
-                        bufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+                        if(resourceDesc.Texture)
+                        {
+                            resourceBuffer = (ID3D12Resource*)resourceDesc.Buffer->GetPlatformResource();
+                        }
+                        else
+                        {
+                            D3D12_RESOURCE_DESC bufferDesc = {};
+                            
+                            uint32_t size = (uint32_t)resourceDesc.Size.x;
+                            
+                            bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+                            bufferDesc.Alignment = 0;
+                            bufferDesc.Width = size;
+                            bufferDesc.Height = 1;
+                            bufferDesc.DepthOrArraySize = 1;
+                            bufferDesc.MipLevels = 1;
+                            bufferDesc.SampleDesc.Count = 1;
+                            bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+                            bufferDesc.Format = DXGI_FORMAT_UNKNOWN;
+                            bufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
-                        Device->CreateCommittedResource(
-                            &heapProps,
-                            D3D12_HEAP_FLAG_NONE,
-                            &bufferDesc,
-                            D3D12_RESOURCE_STATE_GENERIC_READ,
-                            nullptr,
-                            IID_PPV_ARGS(&resourceBuffer));
+                            Device->CreateCommittedResource(
+                                &heapProps,
+                                D3D12_HEAP_FLAG_NONE,
+                                &bufferDesc,
+                                D3D12_RESOURCE_STATE_GENERIC_READ,
+                                nullptr,
+                                IID_PPV_ARGS(&resourceBuffer));
+                        }
                         
                         D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
                         srvDesc.Format = DXGI_FORMAT_UNKNOWN;
                         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
                         srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
                         srvDesc.Buffer.FirstElement = 0;
-                        srvDesc.Buffer.NumElements = resourceDesc.Size / resourceDesc.Stride;
+                        srvDesc.Buffer.NumElements = (uint32_t)resourceDesc.Size.x / resourceDesc.Stride;
                         srvDesc.Buffer.StructureByteStride = resourceDesc.Stride;
                         srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
                         Device->CreateShaderResourceView(resourceBuffer, &srvDesc, handle);
+                        
                         break;
                     }
-                case Texture: // TODO: go on from here
+                case Texture:
                     {
-                        bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-                        bufferDesc.Alignment = 0;
-                        bufferDesc.Width = size;
-                        bufferDesc.Height = 1;
-                        bufferDesc.DepthOrArraySize = 1;
-                        bufferDesc.MipLevels = 1;
-                        bufferDesc.SampleDesc.Count = 1;
-                        bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-                        bufferDesc.Format = DXGI_FORMAT_UNKNOWN;
-                        bufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+                        if(resourceDesc.Texture)
+                        {
+                            resourceBuffer = (ID3D12Resource*)resourceDesc.Texture->GetPlatformResource();
+                        }
+                        else
+                        {
+                            D3D12_RESOURCE_DESC bufferDesc = {};
+                            
+                            bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+                            bufferDesc.Alignment = 0;
+                            bufferDesc.Width = (uint32_t)resourceDesc.Size.x;
+                            bufferDesc.Height = (uint32_t)resourceDesc.Size.y;
+                            bufferDesc.DepthOrArraySize = 1;
+                            bufferDesc.MipLevels = 1;
+                            bufferDesc.SampleDesc.Count = 1;
+                            bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+                            bufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UINT;
+                            bufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
-                        Device->CreateCommittedResource(
-                            &heapProps,
-                            D3D12_HEAP_FLAG_NONE,
-                            &bufferDesc,
-                            D3D12_RESOURCE_STATE_GENERIC_READ,
-                            nullptr,
-                            IID_PPV_ARGS(&resourceBuffer));
+                            Device->CreateCommittedResource(
+                                &heapProps,
+                                D3D12_HEAP_FLAG_NONE,
+                                &bufferDesc,
+                                D3D12_RESOURCE_STATE_GENERIC_READ,
+                                nullptr,
+                                IID_PPV_ARGS(&resourceBuffer));
+                        }
                         
                         D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-                        srvDesc.Format = DXGI_FORMAT_UNKNOWN;
-                        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+                        srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UINT;
+                        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
                         srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-                        srvDesc.Buffer.FirstElement = 0;
-                        srvDesc.Buffer.NumElements = resourceDesc.Size / resourceDesc.Stride;
-                        srvDesc.Buffer.StructureByteStride = resourceDesc.Stride;
-                        srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+                        srvDesc.Texture2D.MipLevels = 1;
+                        srvDesc.Texture2D.MostDetailedMip = 0;
                         Device->CreateShaderResourceView(resourceBuffer, &srvDesc, handle);
+                        
                         break;
                     }
-                default: ;
+                default:
+                    break;
                 }
+
+                // if(!HasSampler)
+                // {
+                //     D3D12_SAMPLER_DESC samplerDesc = {};
+                //     samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+                //     samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+                //     samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+                //     samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+                //     samplerDesc.MipLODBias = 0.0f;
+                //     samplerDesc.MaxAnisotropy = 1;
+                //     samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+                //     samplerDesc.MinLOD = 0.0f;
+                //     samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
+                //
+                //     Device->CreateSampler(&samplerDesc, samplerHandle);
+                // }
 
                 Resources[resourceDesc.Name] = new ResourceData{ resourceBuffer, resourceDesc };
 
@@ -298,7 +371,7 @@ namespace Waldem
                     {
                         DX12Helper::PrintHResultError(hr);
                     }
-                    memcpy(pMappedData, resourceDesc.Data, resourceDesc.Size);
+                    memcpy(pMappedData, resourceDesc.Data, (uint32_t)(resourceDesc.Size.x * resourceDesc.Size.y));
                     resourceBuffer->Unmap(0, nullptr);
                 }
                 
@@ -327,13 +400,13 @@ namespace Waldem
             {
                 //map and copy data
                 UINT8* pMappedData;
-                HRESULT hr = resourceData->Resource->Map(0, nullptr, reinterpret_cast<void**>(&pMappedData));
+                HRESULT hr = resourceData->DX12Resource->Map(0, nullptr, reinterpret_cast<void**>(&pMappedData));
                 if(FAILED(hr))
                 {
                     DX12Helper::PrintHResultError(hr);
                 }
-                memcpy(pMappedData, data, resourceData->Desc.Size);
-                resourceData->Resource->Unmap(0, nullptr);
+                memcpy(pMappedData, data, resourceData->Desc.Size.x * resourceData->Desc.Size.y);
+                resourceData->DX12Resource->Unmap(0, nullptr);
             }
         }
     }
