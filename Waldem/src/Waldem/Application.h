@@ -22,9 +22,11 @@ namespace Waldem
 		void PushOverlay(Layer* overlay);
 		Window& GetWindow() { return *Window; }
 		void OpenScene(Scene* scene);
-	
+
 		//Singleton
 		static Application* Instance;
+
+		static Renderer& GetRenderer() { return Instance->CurrentRenderer; }
 	private:
 		bool OnWindowClose(WindowCloseEvent& e);
 		

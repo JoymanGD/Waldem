@@ -1,7 +1,10 @@
 #include "wdpch.h"
 #include "WindowsInput.h"
+
+#include <SDL_keyboard.h>
+#include <SDL_mouse.h>
+
 #include "Waldem/Application.h"
-#include <GLFW/glfw3.h>
 
 namespace Waldem
 {
@@ -9,30 +12,25 @@ namespace Waldem
     
     bool WindowsInput::IsKeyPressedImpl(int keycode)
     {
-        auto window = static_cast<GLFWwindow*>(Application::Instance->GetWindow().GetNativeWindow());
-
-        auto state = glfwGetKey(window, keycode);
-
-        return state == GLFW_PRESS || state == GLFW_REPEAT;
+        const uint8_t* state = SDL_GetKeyboardState(NULL);
+        
+        return state[SDL_GetScancodeFromKey(keycode)] != 0;
     }
 
     bool WindowsInput::IsMouseButtonPressedImpl(int button)
     {
-        auto window = static_cast<GLFWwindow*>(Application::Instance->GetWindow().GetNativeWindow());
-
-        auto state = glfwGetMouseButton(window, button);
-
-        return state == GLFW_PRESS;
+        int x, y;
+        Uint32 mouseState = SDL_GetMouseState(&x, &y);
+        
+        return (mouseState & SDL_BUTTON(button)) != 0;
     }
 
     std::pair<float, float> WindowsInput::GetMousePosImpl()
     {
-        auto window = static_cast<GLFWwindow*>(Application::Instance->GetWindow().GetNativeWindow());
+        int x, y;
+        SDL_GetMouseState(&x, &y);
 
-        double xPos, yPos;
-        glfwGetCursorPos(window, &xPos, &yPos);
-
-        return std::pair((float)xPos, (float)yPos);
+        return std::pair((float)x, (float)y);
     }
 
     float WindowsInput::GetMouseXImpl()

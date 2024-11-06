@@ -1,8 +1,8 @@
 #include "wdpch.h"
 #include "Renderer.h"
 
-#include "Platform/Graphics/DirectX/DirectXRenderer.h"
-#include "Platform/Graphics/OpenGL/OpenGLRenderer.h"
+#include "Platform/Graphics/DirectX/DX12PixelShader.h"
+#include "Platform/Graphics/DirectX/DX12Renderer.h"
 
 namespace Waldem
 {
@@ -14,53 +14,63 @@ namespace Waldem
         {
         case RendererAPI::None:
             break;
-        case RendererAPI::OpenGL:
-            CurrentRenderer = (IRenderer*)new OpenGLRenderer();
-            break;
         case RendererAPI::DirectX: 
-            CurrentRenderer = (IRenderer*)new DirectXRenderer();
+            PlatformRenderer = (IRenderer*)new DX12Renderer();
             break;
         case RendererAPI::Vulkan:
-            break;
+            throw std::runtime_error("Vulkan is not supported yet!");
         }
 
-        CurrentRenderer->Initialize(window);
+        PlatformRenderer->Initialize(window);
     }
 
-    void Renderer::Clear()
+    void Renderer::Begin()
     {
-        CurrentRenderer->Clear(ClearColor);
+        PlatformRenderer->Begin();
     }
 
-    void Renderer::DrawMesh(Mesh* mesh)
+    void Renderer::End()
     {
-        mesh->VA->Bind();
-        mesh->MeshMaterial.Bind();
-        CurrentRenderer->Render(mesh->VA->GetIndexBuffer()->GetCount());
-        mesh->MeshMaterial.Unbind();
-        mesh->VA->Unbind();
+        PlatformRenderer->End();
     }
 
-    void Renderer::DrawMesh(Pipeline* pipeline, Mesh* mesh)
+    void Renderer::Present()
     {
-        pipeline->Bind();
-
-        DrawMesh(mesh);
-        
-        pipeline->Unbind();
+        PlatformRenderer->Present();
     }
 
-    void Renderer::DrawModel(Pipeline* pipeline, Model* model)
+    void Renderer::Draw(Mesh* mesh, PixelShader* pixelShader)
     {
-        pipeline->Bind();
+        PlatformRenderer->Draw(mesh, pixelShader);
+    }
 
+    void Renderer::Draw(Model* model, PixelShader* pixelShader)
+    {
         auto meshes = model->GetMeshes();
         
         for (auto mesh : meshes)
         {
-            DrawMesh(mesh);
+            Draw(mesh, pixelShader);
         }
-        
-        pipeline->Unbind();
+    }
+
+    PixelShader* Renderer::LoadShader(std::string shaderName, std::vector<ResourceDesc> resources)
+    {
+        return PlatformRenderer->LoadShader(shaderName, resources);
+    }
+
+    Texture2D* Renderer::CreateTexture(std::string name, int width, int height, int channels, uint8_t* data)
+    {
+        return PlatformRenderer->CreateTexture(name, width, height, channels, data);
+    }
+
+    VertexBuffer* Renderer::CreateVertexBuffer(void* data, uint32_t size)
+    {
+        return PlatformRenderer->CreateVertexBuffer(data, size);
+    }
+
+    IndexBuffer* Renderer::CreateIndexBuffer(void* data, uint32_t count)
+    {
+        return PlatformRenderer->CreateIndexBuffer(data, count);
     }
 }

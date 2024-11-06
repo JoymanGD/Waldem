@@ -1,17 +1,17 @@
 #pragma once
-#include "Pipeline.h"
 #include "Model/Mesh.h"
 #include "Model/Model.h"
 #include "Waldem/Window.h"
+
+#define SWAPCHAIN_SIZE 2
 
 namespace Waldem
 {
     enum class RendererAPI
     {
         None = 0,
-        OpenGL = 1,
-        DirectX = 2,
-        Vulkan = 3,
+        DirectX = 1,
+        Vulkan = 2,
     };
 
     class IRenderer
@@ -19,8 +19,14 @@ namespace Waldem
     public:
         virtual ~IRenderer() = default;
         virtual void Initialize(Window* window) = 0;
-        virtual void Clear(Vector4 clearColor) = 0;
-        virtual void Render(uint32_t indexCount) = 0;
+        virtual void Begin() = 0;
+        virtual void End() = 0;
+        virtual void Present() = 0;
+        virtual void Draw(Mesh* mesh, PixelShader* pixelShader) = 0;
+        virtual PixelShader* LoadShader(std::string shaderName, std::vector<ResourceDesc> resources) = 0;
+        virtual Texture2D* CreateTexture(std::string name, int width, int height, int channels, uint8_t* data = nullptr) = 0;
+        virtual VertexBuffer* CreateVertexBuffer(void* data, uint32_t size) = 0;
+        virtual IndexBuffer* CreateIndexBuffer(void* data, uint32_t count) = 0;
     };
 
     class Renderer
@@ -29,19 +35,21 @@ namespace Waldem
         Renderer() = default;
 
         void Initialize(Window* window);
-        void Clear();
-        void DrawMesh(Mesh* mesh);
-        void DrawMesh(Pipeline* pipeline, Mesh* mesh);
-        void DrawModel(Pipeline* pipeline, Model* model);
-        
-        void CreateStorageBuffer(void* data, size_t size)
-        {
-            StorageBuffer::Create(data, size);
-        }
-        
+
+        void Begin();
+        void End();
+        void Present();
+
+        void Draw(Mesh* mesh, PixelShader* pixelShader);
+        void Draw(Model* model, PixelShader* pixelShader);
+        PixelShader* LoadShader(std::string shaderName, std::vector<ResourceDesc> resources);
+        Texture2D* CreateTexture(std::string name, int width, int height, int channels, uint8_t* data = nullptr);
+        VertexBuffer* CreateVertexBuffer(void* data, uint32_t size);
+        IndexBuffer* CreateIndexBuffer(void* data, uint32_t count);
+
         static RendererAPI RAPI;
+        
     private:
-        IRenderer* CurrentRenderer;
-        Vector4 ClearColor = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
+        IRenderer* PlatformRenderer;
     };
 }

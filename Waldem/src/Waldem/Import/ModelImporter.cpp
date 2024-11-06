@@ -6,6 +6,8 @@
 #include <filesystem>
 #include <fstream>
 
+#include "Waldem/Application.h"
+
 namespace Waldem
 {
     Model* ModelImporter::Import(std::string& path, bool relative)
@@ -58,7 +60,7 @@ namespace Waldem
 
                 auto material = assimpModel->mMaterials[i];
 
-                uint8_t const* image_data = nullptr;
+                uint8_t* image_data = nullptr;
 
                 int width = 0;
                 int height = 0;
@@ -92,7 +94,7 @@ namespace Waldem
                     image_data = (uint8_t*)&fakeData;
                 }
 
-                Texture2D* texture = Texture2D::Create("DiffuseTexture", width, height, componentsCount, image_data, 0);
+                Texture2D* texture = Application::GetRenderer().CreateTexture("DiffuseTexture", width, height, componentsCount, image_data);
                 Material mat(texture);
 
                 auto vertexBufferSize = vertexData.size() * sizeof(Vertex);

@@ -5,6 +5,8 @@
 
 namespace Waldem
 {
+	using EventCallbackFn = std::function<void(Event&)>;
+	
 	struct WindowProps
 	{
 		std::string Title;
@@ -17,11 +19,9 @@ namespace Waldem
 			: Title(title), Width(width), Height(height) {}
 	};
 	
-	//Interface representing a desktop system based Window
 	class WALDEM_API Window
 	{
 	public:
-		using EventCallbackFn = std::function<void(Event&)>;
 
 		virtual ~Window() {}
 
@@ -31,7 +31,6 @@ namespace Waldem
 		virtual float GetHeight() const = 0;
 		virtual std::array<float, 2> GetSize() const { return { GetWidth(), GetHeight() }; }
 
-		//Window attributes
 		virtual void SetEventCallback(const EventCallbackFn& callback) = 0;
 		virtual void SetVSync(bool enabled) = 0;
 		virtual bool IsVSync() const = 0;

@@ -3,10 +3,10 @@
 
 namespace Waldem
 {
-    void Scene::DrawInternal(Renderer* renderer)
+    void Scene::DrawInternal(SceneData* sceneData)
     {
         if(PreDraw) PreDraw();
-        Draw(renderer);
+        Draw(sceneData);
         if(PostDraw) PostDraw();
     }
 

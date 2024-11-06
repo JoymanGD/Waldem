@@ -12,21 +12,29 @@
 
 namespace Sandbox
 {
-	void DefaultScene::Initialize()
+	void DefaultScene::Initialize(Waldem::SceneData* sceneData)
 	{
-		RasterPipeline = new Waldem::Pipeline("RasterPipeline", "Default", true, true, true);
-		
 		Waldem::ModelImporter importer;
 		std::string path = "Content/Models/Sponza/Sponza.gltf";
 		TestModel = importer.Import(path, true);
-		TestModel->Initialize(RasterPipeline);
 		TestModelTransform.Reset();
-		TestModelTransform.SetPosition(0, 0, 4);
+		TestModelTransform.SetPosition(0, 0, 20);
 		
-		float screenWidth = Waldem::Application::Instance->GetWindow().GetWidth();
-		float screenHeight = Waldem::Application::Instance->GetWindow().GetHeight();
+		float screenWidth = sceneData->Window->GetWidth();
+		float screenHeight = sceneData->Window->GetHeight();
 		
-		MainCamera.reset(new Waldem::Camera(70.0f , screenWidth / screenHeight, .01f, 10000, { 0, 0, 0 }, 100.0f, 1.0f));
+		MainCamera = new Waldem::Camera(70.0f , screenWidth / screenHeight, .01f, 10000, { 0, 0, 0 }, 100.0f, 1.0f);
+		
+		std::vector<Waldem::ResourceDesc> resources;
+		Waldem::Matrix4 viewProjectionMatrix = MainCamera->GetViewProjectionMatrix();
+		Waldem::Matrix4 testModelWorldMatrix = TestModelTransform.GetMatrix();
+		Waldem::Vector3 testColor = { 1, 0, 0 };
+		TestStructData testStructData = { { 0, 1, 0 }, .9f };
+		resources.push_back({ "MyConstantBuffer1", Waldem::ResourceType::ConstantBuffer, 1, &viewProjectionMatrix, 0, sizeof(Waldem::Matrix4), 0 });
+		resources.push_back({ "MyConstantBuffer2", Waldem::ResourceType::ConstantBuffer, 1, &testModelWorldMatrix, 0, sizeof(Waldem::Matrix4), 1 });
+		resources.push_back({ "TestBuffer", Waldem::ResourceType::Buffer, 1, &testColor,sizeof(Waldem::Vector3), sizeof(Waldem::Vector3), 0 });
+		resources.push_back({ "TestBuffer2", Waldem::ResourceType::Buffer, 1, &testStructData,sizeof(TestStructData), sizeof(TestStructData), 1 });
+		TestPixelShader = sceneData->Renderer->LoadShader("Default", resources);
 
 		CreateLights();
 	}
@@ -46,35 +54,35 @@ namespace Sandbox
 
 	void DefaultScene::Update(float deltaTime)
 	{
-		if(Waldem::Input::IsKeyPressed(WD_KEY_W))
+		if(Waldem::Input::IsKeyPressed(W))
 		{
-			float movementSpeed = deltaTime * MainCamera.get()->MovementSpeed;
-			MainCamera.get()->Move({ 0, 0, 0.1f * movementSpeed });
+			float movementSpeed = deltaTime * MainCamera->MovementSpeed;
+			MainCamera->Move({ 0, 0, 0.1f * movementSpeed });
 		}
-		if(Waldem::Input::IsKeyPressed(WD_KEY_S))
+		if(Waldem::Input::IsKeyPressed(S))
 		{
-			float movementSpeed = deltaTime * MainCamera.get()->MovementSpeed;
-			MainCamera.get()->Move({ 0, 0, -0.1f * movementSpeed });
+			float movementSpeed = deltaTime * MainCamera->MovementSpeed;
+			MainCamera->Move({ 0, 0, -0.1f * movementSpeed });
 		}
-		if(Waldem::Input::IsKeyPressed(WD_KEY_A))
+		if(Waldem::Input::IsKeyPressed(A))
 		{
-			float movementSpeed = deltaTime * MainCamera.get()->MovementSpeed;
-			MainCamera.get()->Move({ -0.1f * movementSpeed, 0, 0 });
+			float movementSpeed = deltaTime * MainCamera->MovementSpeed;
+			MainCamera->Move({ -0.1f * movementSpeed, 0, 0 });
 		}
-		if(Waldem::Input::IsKeyPressed(WD_KEY_D))
+		if(Waldem::Input::IsKeyPressed(D))
 		{
-			float movementSpeed = deltaTime * MainCamera.get()->MovementSpeed;
-			MainCamera.get()->Move({ 0.1f * movementSpeed, 0, 0 });
+			float movementSpeed = deltaTime * MainCamera->MovementSpeed;
+			MainCamera->Move({ 0.1f * movementSpeed, 0, 0 });
 		}
-		if(Waldem::Input::IsKeyPressed(WD_KEY_E))
+		if(Waldem::Input::IsKeyPressed(E))
 		{
-			float movementSpeed = deltaTime * MainCamera.get()->MovementSpeed;
-			MainCamera.get()->Move({ 0, 0.1f * movementSpeed, 0 });
+			float movementSpeed = deltaTime * MainCamera->MovementSpeed;
+			MainCamera->Move({ 0, 0.1f * movementSpeed, 0 });
 		}
-		if(Waldem::Input::IsKeyPressed(WD_KEY_Q))
+		if(Waldem::Input::IsKeyPressed(Q))
 		{
-			float movementSpeed = deltaTime * MainCamera.get()->MovementSpeed;
-			MainCamera.get()->Move({ 0, -0.1f * movementSpeed, 0 });
+			float movementSpeed = deltaTime * MainCamera->MovementSpeed;
+			MainCamera->Move({ 0, -0.1f * movementSpeed, 0 });
 		}
 		static float lastMouseX = 0;
 		static float lastMouseY = 0;
@@ -86,25 +94,23 @@ namespace Sandbox
 			float deltaX = (mouseX - lastMouseX) * deltaTime;
 			float deltaY = (mouseY - lastMouseY) * deltaTime;
 
-			MainCamera.get()->Rotate(deltaX, deltaY, 0);
+			MainCamera->Rotate(deltaX, deltaY, 0);
 		}
 
 		lastMouseX = mouseX;
 		lastMouseY = mouseY;
 	}
 
-	void DefaultScene::Draw(Waldem::Renderer* renderer)
+	void DefaultScene::Draw(Waldem::SceneData* sceneData)
 	{
-		auto viewProjectionMatrix = MainCamera.get()->GetViewProjectionMatrix();
-		RasterPipeline->SetShaderParam(Waldem::ShaderParamType::MAT4, "viewProjection", &viewProjectionMatrix);
+		auto viewProjectionMatrix = MainCamera->GetViewProjectionMatrix();
+		TestPixelShader->UpdateResourceData("MyConstantBuffer1", &viewProjectionMatrix);
+
+		uint32_t numLights = Lights.size();
 
 		auto testModelWorldMatrix = TestModelTransform.GetMatrix();
-		
-		RasterPipeline->SetShaderParam(Waldem::ShaderParamType::MAT4, "world", &testModelWorldMatrix);
-		uint32_t numLights = Lights.size();
-		RasterPipeline->SetShaderParam(Waldem::ShaderParamType::UINT, "NumLights", &numLights);
-		RasterPipeline->SetShaderBufferParam("Lights", Lights.data(), Lights.size() * sizeof(Waldem::Light), 0);
+		TestPixelShader->UpdateResourceData("MyConstantBuffer2", &testModelWorldMatrix);
 
-		renderer->DrawModel(RasterPipeline, TestModel);
+		sceneData->Renderer->Draw(TestModel, TestPixelShader);
 	}
 }
