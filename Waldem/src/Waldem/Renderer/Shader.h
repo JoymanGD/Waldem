@@ -23,17 +23,6 @@ namespace Waldem
         Sampler = 7
     };
 
-    struct ResourceDesc
-    {
-        std::string Name;
-        ResourceType Type;
-        uint32_t NumResources = 1;
-        void* Data = nullptr;
-        uint32_t Stride = 0;
-        uint32_t Size = 0;
-        uint32_t Slot = 0;
-    };
-
     struct SamplerData
     {
         void* Data;

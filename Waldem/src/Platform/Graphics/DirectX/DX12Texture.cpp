@@ -3,7 +3,7 @@
 
 namespace Waldem
 {
-    DX12Texture::DX12Texture(ID3D12Device* device, std::string name, int width, int height, int channels, uint8_t* data)
+    DX12Texture::DX12Texture(std::string name, ID3D12Device* device, DX12CommandList* cmdList, int width, int height, int channels, uint8_t* data)
     {
         Name = name;
         
@@ -15,7 +15,7 @@ namespace Waldem
         textureDesc.MipLevels = 1;
         textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
         textureDesc.SampleDesc.Count = 1;
-        textureDesc.SampleDesc.Quality = 0;
+        textureDesc.SampleDesc.Quality = 1;
         textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
         textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
@@ -35,11 +35,15 @@ namespace Waldem
             nullptr,
             IID_PPV_ARGS(&Resource));
 
+        std::wstring widestr = std::wstring(name.begin(), name.end());
+        Resource->SetName(widestr.c_str());
+
         if(data)
         {
             D3D12_HEAP_PROPERTIES uploadHeapProps = { D3D12_HEAP_TYPE_UPLOAD };
             UINT64 uploadBufferSize;
-            device->GetCopyableFootprints(&textureDesc, 0, 1, 0, nullptr, nullptr, nullptr, &uploadBufferSize);
+            D3D12_PLACED_SUBRESOURCE_FOOTPRINT layout;
+            device->GetCopyableFootprints(&textureDesc, 0, 1, 0, &layout, nullptr, nullptr, &uploadBufferSize);
 
             D3D12_RESOURCE_DESC uploadBufferDesc = {};
             uploadBufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
@@ -66,8 +70,26 @@ namespace Waldem
             }
 
             textureUploadHeap->Unmap(0, nullptr);
+            
+            D3D12_TEXTURE_COPY_LOCATION destLocation = {};
+            destLocation.pResource = Resource;
+            destLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+            destLocation.SubresourceIndex = 0;
+
+            D3D12_TEXTURE_COPY_LOCATION srcLocation = {};
+            srcLocation.pResource = textureUploadHeap;
+            srcLocation.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+            srcLocation.PlacedFootprint = layout;
+
+            cmdList->CopyTextureRegion(&destLocation, 0, 0, 0, &srcLocation, nullptr);
         }
 
-        //TODO: transition resource to shader resource state
+        D3D12_RESOURCE_BARRIER barrier = {};
+        barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+        barrier.Transition.pResource = Resource;
+        barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+        barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+        barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+        cmdList->ResourceBarrier(1, &barrier);
     }
 }

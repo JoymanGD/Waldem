@@ -12,6 +12,8 @@ namespace Waldem
         {
             DiffuseTexture = diffuseTexture;
         }
+
+        Texture2D* GetDiffuseTexture() { return DiffuseTexture; }
         
     private:
         Texture2D* DiffuseTexture;

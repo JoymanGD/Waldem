@@ -178,6 +178,7 @@
     <ClInclude Include="src\Waldem\Renderer\Model\Model.h" />
     <ClInclude Include="src\Waldem\Renderer\Model\Transform.h" />
     <ClInclude Include="src\Waldem\Renderer\Renderer.h" />
+    <ClInclude Include="src\Waldem\Renderer\Resource.h" />
     <ClInclude Include="src\Waldem\Renderer\Resources\ResourceManager.h" />
     <ClInclude Include="src\Waldem\Renderer\Shader.h" />
     <ClInclude Include="src\Waldem\Renderer\Texture.h" />
@@ -625,8 +626,8 @@
     <ClCompile Include="src\Waldem\Renderer\Model\Mesh.cpp" />
     <ClCompile Include="src\Waldem\Renderer\Model\Transform.cpp" />
     <ClCompile Include="src\Waldem\Renderer\Renderer.cpp" />
+    <ClCompile Include="src\Waldem\Renderer\Resource.cpp" />
     <ClCompile Include="src\Waldem\Renderer\Resources\ResourceManager.cpp" />
-    <ClCompile Include="src\Waldem\Renderer\Shader.cpp" />
     <ClCompile Include="src\Waldem\Renderer\Texture.cpp" />
     <ClCompile Include="src\Waldem\SceneManagement\Scene.cpp" />
     <ClCompile Include="src\Waldem\World\Camera.cpp" />

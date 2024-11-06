@@ -2,6 +2,7 @@
 #include <d3d12.h>
 #include <d3dcommon.h>
 #include "DX12CommandList.h"
+#include "Waldem/Renderer/Resource.h"
 #include "Waldem/Renderer/Shader.h"
 
 #define MAX_CBV_PER_ROOT_SIGNATURE 14
@@ -13,23 +14,24 @@ namespace Waldem
 {
     struct ResourceData
     {
-        ID3D12Resource* Resource;
-        ResourceDesc Desc;
+        ID3D12Resource* DX12Resource;
+        Resource Desc;
     };
     
     class WALDEM_API DX12PixelShader : public PixelShader
     {
     public:
-        DX12PixelShader(const std::string& shaderName, ID3D12Device* device, DX12CommandList* cmdList, std::vector<ResourceDesc> resources);
+        DX12PixelShader(const std::string& shaderName, ID3D12Device* device, DX12CommandList* cmdList, std::vector<Resource> resources);
         ~DX12PixelShader() override;
 
         ID3D12PipelineState* GetPipeline() const { return PipelineState; }
         ID3D12RootSignature* GetRootSignature() const { return RootSignature; }
         ID3D12DescriptorHeap* GetResourcesHeap() const { return ResourcesHeap; }
+        ID3D12DescriptorHeap* GetSamplersHeap() const { return SamplersHeap; }
 
     private:
         bool CompileFromFile(const std::string& filepath);
-        void SetResources(std::vector<ResourceDesc> resourceDescs);
+        void SetResources(std::vector<Resource> resourceDescs);
         void SetSamplers(std::vector<SamplerData> samplers) override;
 
     public:

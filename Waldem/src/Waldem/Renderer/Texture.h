@@ -7,5 +7,6 @@ namespace Waldem
     public:
         virtual ~Texture2D() {}
         virtual std::string GetName() = 0;
+        virtual void* GetPlatformResource() = 0;
     };
 }
