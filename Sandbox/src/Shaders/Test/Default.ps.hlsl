@@ -1,5 +1,15 @@
 #include "Core.hlsl"
 
+struct Light
+{
+    float3 Position;
+    uint Type;
+    float3 Direction;
+    float Intensity;
+    float3 Color;
+    float Range;
+};
+
 struct PS_INPUT
 {
     float4 Position : SV_POSITION;
@@ -8,15 +18,10 @@ struct PS_INPUT
     uint MeshId : MESH_ID;
 };
 
-struct TestStruct
-{
-    float3 Color;
-    float Intensity;
-};
-
 SamplerState myStaticSampler : register(s0);
 
-Texture2D DiffuseTextures[MAX_TEXTURES] : register(t2);
+StructuredBuffer<Light> Lights : register(t0);
+Texture2D DiffuseTextures[MAX_TEXTURES] : register(t1);
 
 float4 main(PS_INPUT input) : SV_TARGET
 {
@@ -24,6 +29,10 @@ float4 main(PS_INPUT input) : SV_TARGET
 
     if(color.a < 0.1f)
         discard;
+
+    Light light = Lights[0];
+
+    float3 resultColor = color.rgb + light.Color * light.Intensity * saturate(dot(input.Normal, -light.Direction));
     
-    return float4(color.rgb, 1.0f);
+    return float4(resultColor, 1.0f);
 }

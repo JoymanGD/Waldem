@@ -13,6 +13,8 @@ namespace Sandbox
 {
 	void DefaultScene::Initialize(Waldem::SceneData* sceneData)
 	{
+		CreateLights();
+
 		Waldem::ModelImporter importer;
 		std::string path = "Content/Models/Sponza/Sponza.gltf";
 		TestModel = importer.Import(path, true);
@@ -22,16 +24,17 @@ namespace Sandbox
 		float screenWidth = sceneData->Window->GetWidth();
 		float screenHeight = sceneData->Window->GetHeight();
 		
-		MainCamera = new Waldem::Camera(70.0f , screenWidth / screenHeight, .01f, 10000, { 0, 0, 0 }, 100.0f, 1.0f);
+		MainCamera = new Waldem::Camera(70.0f , screenWidth / screenHeight, .01f, 10000, { 0, 0, 0 }, 100.0f, 30.0f);
 		
 		std::vector<Waldem::Resource> resources;
 		Waldem::Matrix4 matrices[2]  = { MainCamera->GetViewProjectionMatrix(), TestModelTransform.GetMatrix() };
-		resources.push_back(Waldem::Resource("MyConstantBuffer", Waldem::ResourceType::ConstantBuffer, 1, matrices, sizeof(Waldem::Matrix4), 2 * sizeof(Waldem::Matrix4), 0));
-		resources.push_back(Waldem::Resource("TestTextures", TestModel->GetTextures(), 2));
+		resources.push_back(Waldem::Resource("MyConstantBuffer", Waldem::ResourceType::ConstantBuffer, matrices, sizeof(Waldem::Matrix4), 2 * sizeof(Waldem::Matrix4), 0));
+		resources.push_back(Waldem::Resource("LightsBuffer", Waldem::ResourceType::Buffer, Lights.data(), sizeof(Waldem::Light), (uint32_t)Lights.size() * sizeof(Waldem::Light), 0));
+		resources.push_back(Waldem::Resource("TestTextures", TestModel->GetTextures(), 1));
 		
 		TestPixelShader = sceneData->Renderer->LoadShader("Default", resources);
 
-		CreateLights();
+		ConstantBuffer = { MainCamera->GetViewProjectionMatrix(), TestModelTransform.GetMatrix(), (uint32_t)Lights.size() };
 	}
 
 	void DefaultScene::CreateLights()
@@ -41,7 +44,7 @@ namespace Sandbox
 		dirLight.Intensity = 1.0f;
 		dirLight.Position = { 0, 0, 0 };
 		dirLight.Type = Waldem::LightType::Directional;
-		dirLight.Direciton = { 0.33f, -1, 0.33f };
+		dirLight.Direction = { 0.33f, -1, 0.33f };
 		dirLight.Range = 100.0f;
 
 		Lights.push_back(dirLight);
@@ -84,7 +87,7 @@ namespace Sandbox
 
 		auto [mouseX, mouseY] = Waldem::Input::GetMousePos();
 
-		if (Waldem::Input::IsMouseButtonPressed(WD_MOUSE_BUTTON_RIGHT))
+		if (Waldem::Input::IsMouseButtonPressed(WD_MOUSE_BUTTON_LEFT))
 		{
 			float deltaX = (mouseX - lastMouseX) * deltaTime;
 			float deltaY = (mouseY - lastMouseY) * deltaTime;

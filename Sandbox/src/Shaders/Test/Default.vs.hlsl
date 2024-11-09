@@ -18,6 +18,7 @@ cbuffer MyConstantBuffer : register(b0)
 {
     matrix vp;
     matrix world;
+    uint lightsAmount;
 };
 
 PS_INPUT main(VS_INPUT input)

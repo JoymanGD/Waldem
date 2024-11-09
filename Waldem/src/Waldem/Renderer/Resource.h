@@ -18,22 +18,22 @@ namespace Waldem
         std::vector<Texture2D*> Textures;
         std::vector<StorageBuffer*> Buffers;
 
-        Resource(std::string name, ResourceType type, uint32_t numResources, void* data, uint32_t stride, Vector2 size, uint32_t slot)
+        Resource(std::string name, ResourceType type, void* data, uint32_t stride, Vector2 size, uint32_t slot)
         {
             Name = name;
             Type = type;
-            NumResources = numResources;
+            NumResources = 1;
             Data = data;
             Stride = stride;
             Size = size;
             Slot = slot;
         }
         
-        Resource(std::string name, ResourceType type, uint32_t numResources, void* data, uint32_t stride, float size, uint32_t slot)
+        Resource(std::string name, ResourceType type, void* data, uint32_t stride, float size, uint32_t slot)
         {
             Name = name;
             Type = type;
-            NumResources = numResources;
+            NumResources = 1;
             Data = data;
             Stride = stride;
             Size = Vector2(size, 1);

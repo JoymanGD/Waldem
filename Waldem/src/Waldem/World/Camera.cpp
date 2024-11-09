@@ -11,7 +11,7 @@ namespace Waldem
         WorldTransform = Transform(position);
         ProjectionMatrix = glm::perspective(fov * glm::pi<float>() / 180.0f, aspectRatio, nearClip, farClip);
         MovementSpeed = movementSpeed;
-        RotationSpeed = rotationSpeed;
+        RotationSpeed = rotationSpeed / ROTATION_COEF;
     }
 
     Matrix4 Camera::GetViewProjectionMatrix()

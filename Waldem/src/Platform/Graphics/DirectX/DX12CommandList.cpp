@@ -66,7 +66,7 @@ namespace Waldem
         Close();
     }
 
-    void DX12CommandList::AddDrawCommand(Mesh* mesh, PixelShader* shader, uint32_t meshID)
+    void DX12CommandList::AddDrawCommand(Mesh* mesh, PixelShader* shader)
     {
         auto dxShader = (DX12PixelShader*)shader;
         auto& indexBufferView = ((DX12IndexBuffer*)mesh->IB)->GetBufferView();

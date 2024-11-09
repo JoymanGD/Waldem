@@ -14,7 +14,7 @@ namespace Waldem
         void Begin(D3D12_VIEWPORT* viewport, D3D12_RECT* scissor, D3D12_CPU_DESCRIPTOR_HANDLE renderTargetHandle, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandle);
         void End();
 
-        void AddDrawCommand(Mesh* mesh, PixelShader* shader, uint32_t meshID);
+        void AddDrawCommand(Mesh* mesh, PixelShader* shader);
         void Clear(D3D12_CPU_DESCRIPTOR_HANDLE renderTarget, D3D12_CPU_DESCRIPTOR_HANDLE depthStencil, Vector3 clearColor);
 
         void* GetNativeCommandList() const { return CommandList; }

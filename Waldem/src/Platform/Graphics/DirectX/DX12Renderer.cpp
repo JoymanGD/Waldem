@@ -248,10 +248,10 @@ namespace Waldem
         return new DX12IndexBuffer(Device, data, count);
     }
 
-    void DX12Renderer::Draw(Mesh* mesh, PixelShader* pixelShader, uint32_t meshID)
+    void DX12Renderer::Draw(Mesh* mesh, PixelShader* pixelShader)
     {
         auto& cmd = WorldCommandList.first;
 
-        cmd->AddDrawCommand(mesh, pixelShader, meshID);
+        cmd->AddDrawCommand(mesh, pixelShader);
     }
 }

@@ -13,7 +13,7 @@ namespace Waldem
     {
         Vector3 Position;
         LightType Type;
-        Vector3 Direciton;
+        Vector3 Direction;
         float Intensity;
         Vector3 Color;
         float Range;
