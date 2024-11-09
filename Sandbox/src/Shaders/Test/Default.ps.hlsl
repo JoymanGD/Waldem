@@ -27,13 +27,15 @@ Texture2D DiffuseTextures[MAX_TEXTURES] : register(t2);
 float4 main(PS_INPUT input) : SV_TARGET
 {
     float4 color = DiffuseTextures[input.MeshId].Sample(myStaticSampler, input.UV);
+    float shadowmap = Shadowmap.Sample(myStaticSampler, input.UV).r;
 
     if(color.a < 0.1f)
         discard;
-
+    
     Light light = Lights[0];
 
     float3 resultColor = color.rgb + light.Color * light.Intensity * saturate(dot(input.Normal, -light.Direction));
+    resultColor *= shadowmap;
     
     return float4(resultColor, 1.0f);
 }
