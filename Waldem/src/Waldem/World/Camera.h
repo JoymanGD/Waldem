@@ -5,6 +5,7 @@
 
 namespace Waldem
 {
+    
     class WALDEM_API Camera
     {
     public:
@@ -24,5 +25,7 @@ namespace Waldem
         Transform WorldTransform;
         glm::mat4 ProjectionMatrix;
         glm::mat4 ViewProjectionMatrix;
+        
+        const float ROTATION_COEF = 100.0f;
     };
 }

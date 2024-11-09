@@ -11,7 +11,7 @@ namespace Waldem
     public:
         ~DX12Renderer() override = default;
         void Initialize(Window* window) override;
-        void Draw(Mesh* mesh, PixelShader* pixelShader, uint32_t meshID) override;
+        void Draw(Mesh* mesh, PixelShader* pixelShader) override;
         void Begin() override;
         void End() override;
         void Present() override;

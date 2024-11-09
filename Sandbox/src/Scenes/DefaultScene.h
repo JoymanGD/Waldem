@@ -8,10 +8,11 @@
 
 namespace Sandbox
 {
-    struct TestStructData
+    struct SceneConstantBuffer
     {
-        Waldem::Vector3 TestColor;
-        float Intensity;
+        Waldem::Matrix4 ViewProjectionMatrix;
+        Waldem::Matrix4 ModelMatrix;
+        uint32_t LightCount;
     };
     
     class DefaultScene : public Waldem::Scene
@@ -28,5 +29,6 @@ namespace Sandbox
         Waldem::PixelShader* TestPixelShader;
         Waldem::Transform TestModelTransform;
         std::vector<Waldem::Light> Lights;
+        SceneConstantBuffer ConstantBuffer;
     };
 }
