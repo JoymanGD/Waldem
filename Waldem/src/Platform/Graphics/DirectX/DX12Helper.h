@@ -7,7 +7,7 @@ namespace Waldem
     class WALDEM_API DX12Helper
     {
     public:
-        static std::string MBFromW(LPCWSTR pwsz, UINT cp)
+        static String MBFromW(LPCWSTR pwsz, UINT cp)
         {
             int cch = WideCharToMultiByte(cp, 0, pwsz, -1, 0, 0, NULL, NULL);
 
@@ -15,7 +15,7 @@ namespace Waldem
 
             WideCharToMultiByte(cp, 0, pwsz, -1, psz, cch, NULL, NULL);
 
-            std::string st(psz);
+            String st(psz);
             delete[] psz;
 
             return st;
@@ -38,7 +38,7 @@ namespace Waldem
         {
             HRESULT reason = device->GetDeviceRemovedReason();
 
-            std::string errorStr = "";
+            String errorStr = "";
 
             switch (reason)
             {
@@ -72,17 +72,17 @@ namespace Waldem
         {
             switch (resourceType)
             {
-            case ConstantBuffer:
+            case RTYPE_ConstantBuffer:
                 return D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-            case Buffer:
-            case BufferRaw:
-            case Texture:
+            case RTYPE_Buffer:
+            case RTYPE_BufferRaw:
+            case RTYPE_Texture:
                 return D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-            case RWBuffer:
-            case RWBufferRaw:
-            case RWTexture:
+            case RTYPE_RWBuffer:
+            case RTYPE_RWBufferRaw:
+            case RTYPE_RWTexture:
                 return D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
-            case Sampler:
+            case RTYPE_Sampler:
                 return D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
             }
 

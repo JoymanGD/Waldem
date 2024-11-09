@@ -5,6 +5,7 @@
 #include "DX12Buffer.h"
 #include "DX12Helper.h"
 #include "DX12PixelShader.h"
+#include "DX12RenderTarget.h"
 #include "DX12Texture.h"
 
 namespace Waldem
@@ -227,15 +228,21 @@ namespace Waldem
         FrameIndex %= SWAPCHAIN_SIZE;
     }
 
-    PixelShader* DX12Renderer::LoadShader(std::string shaderName, std::vector<Resource> resources)
+    PixelShader* DX12Renderer::LoadShader(String shaderName, std::vector<Resource> resources, RenderTarget* renderTarget)
     {
-        return new DX12PixelShader(shaderName, Device, WorldCommandList.first, resources);
+        return new DX12PixelShader(shaderName, Device, WorldCommandList.first, resources, renderTarget);
     }
 
-    Texture2D* DX12Renderer::CreateTexture(std::string name, int width, int height, int channels, uint8_t* data)
+    Texture2D* DX12Renderer::CreateTexture(String name, int width, int height, TextureFormat format, uint8_t* data)
     {
-        Texture2D* texture = new DX12Texture(name, Device, WorldCommandList.first, width, height, channels, data);
+        Texture2D* texture = new DX12Texture(name, Device, WorldCommandList.first, width, height, format, data);
         return texture;
+    }
+
+    RenderTarget* DX12Renderer::CreateRenderTarget(String name, int width, int height, TextureFormat format)
+    {
+        DX12RenderTarget* renderTarget = new DX12RenderTarget(name, Device, WorldCommandList.first, width, height, format);
+        return renderTarget;
     }
 
     VertexBuffer* DX12Renderer::CreateVertexBuffer(void* data, uint32_t size)

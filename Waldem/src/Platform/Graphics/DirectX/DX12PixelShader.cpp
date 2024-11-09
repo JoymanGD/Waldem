@@ -9,12 +9,13 @@ namespace Waldem
 #define MAX_TEXTURES 1024
 #define MAX_BUFFERS 128
     
-    DX12PixelShader::DX12PixelShader(const std::string& shaderName, ID3D12Device* device, DX12CommandList* cmdList, std::vector<Resource> resources)
+    DX12PixelShader::DX12PixelShader(const String& name, ID3D12Device* device, DX12CommandList* cmdList, std::vector<Resource> resources, Waldem::RenderTarget* renderTarget)
+        : PixelShader(name, renderTarget), Device(device), CmdList(cmdList)
     {
         Device = device;
         CmdList = cmdList;
 
-        if(CompileFromFile(shaderName))
+        if(CompileFromFile(name))
         {
             for (uint32_t i = 0; i < resources.size(); ++i)
             {
@@ -24,11 +25,11 @@ namespace Waldem
 
                 if(resources[i].NumResources > 1)
                 {
-                    if(resources[i].Type == Texture)
+                    if(resources[i].Type == RTYPE_Texture)
                     {
                         numDescriptors = MAX_TEXTURES;
                     }
-                    else if(resources[i].Type == Buffer)
+                    else if(resources[i].Type == RTYPE_Buffer)
                     {
                         numDescriptors = MAX_BUFFERS;
                     }
@@ -86,21 +87,30 @@ namespace Waldem
             // Pipeline state
             D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
             psoDesc.pRootSignature = RootSignature;
-            psoDesc.VS = { VertexShader->GetBufferPointer(), VertexShader->GetBufferSize() };
-            psoDesc.PS = { PixelShader->GetBufferPointer(), PixelShader->GetBufferSize() };
+            psoDesc.VS = { VertexShaderBlob->GetBufferPointer(), VertexShaderBlob->GetBufferSize() };
+            psoDesc.PS = { PixelShaderBlob->GetBufferPointer(), PixelShaderBlob->GetBufferSize() };
             psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
             psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
             psoDesc.RasterizerState.FrontCounterClockwise = FALSE;
             psoDesc.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-            psoDesc.DepthStencilState.DepthEnable = TRUE;
             psoDesc.DepthStencilState.StencilEnable = FALSE;
             psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
             psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
-            psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+            psoDesc.DepthStencilState.DepthEnable = TRUE;
+
+            if(renderTarget)
+            {
+                psoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN;
+            }
+            else
+            {
+                psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+            }
+            
             psoDesc.SampleMask = UINT_MAX;
             psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
             psoDesc.NumRenderTargets = 1;
-            psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+            psoDesc.RTVFormats[0] = renderTarget ? (DXGI_FORMAT)renderTarget->GetFormat() : DXGI_FORMAT_R8G8B8A8_UNORM;
             psoDesc.SampleDesc.Count = 1;
             D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
                 { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
@@ -124,9 +134,9 @@ namespace Waldem
     {
     }
 
-    bool DX12PixelShader::CompileFromFile(const std::string& shaderName)
+    bool DX12PixelShader::CompileFromFile(const String& shaderName)
     {
-        std::string entryPoint = "main"; //TODO: make this configurable?
+        String entryPoint = "main"; //TODO: make this configurable?
         
         auto currentPath = GetCurrentFolder();
         
@@ -142,7 +152,7 @@ namespace Waldem
         std::wstring baseName = wShaderName.substr(lastSlash + 1);
         
         std::wstring shaderPath = pathToShaders + baseName + L".vs.hlsl";
-        std::string target = "vs_5_1";
+        String target = "vs_5_1";
 
         //vertex shader
         HRESULT hr = D3DCompileFromFile(
@@ -153,7 +163,7 @@ namespace Waldem
             target.c_str(), // Target profile (e.g., "vs_5_0" for vertex shader, "ps_5_0" for pixel shader)
             D3DCOMPILE_DEBUG, // Compile flags
             0,
-            &VertexShader, // Output shader bytecode
+            &VertexShaderBlob, // Output shader bytecode
             &ErrorBlob); // Output error messages
 
         if(FAILED(hr))
@@ -178,7 +188,7 @@ namespace Waldem
             target.c_str(), // Target profile (e.g., "vs_5_0" for vertex shader, "ps_5_0" for pixel shader)
             D3DCOMPILE_DEBUG, // Compile flags
             0,
-            &PixelShader, // Output shader bytecode
+            &PixelShaderBlob, // Output shader bytecode
             &ErrorBlob); // Output error messages
 
         if(FAILED(hr))
@@ -209,7 +219,6 @@ namespace Waldem
 
         UINT descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
         D3D12_CPU_DESCRIPTOR_HANDLE handle = ResourcesHeap->GetCPUDescriptorHandleForHeapStart();
-
         // D3D12_DESCRIPTOR_HEAP_DESC samplerHeapDesc = {};
         // samplerHeapDesc.NumDescriptors = 1;
         // samplerHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
@@ -240,12 +249,12 @@ namespace Waldem
 
                 switch (resourceDesc.Type)
                 {
-                case Sampler:
+                case RTYPE_Sampler:
                     {
                         HasSampler = true;
                         break;
                     }
-                case ConstantBuffer:
+                case RTYPE_ConstantBuffer:
                     {
                         D3D12_RESOURCE_DESC bufferDesc = {};
                         
@@ -277,7 +286,7 @@ namespace Waldem
                         Device->CreateConstantBufferView(&cbvDesc, handle);
                         break;
                     }
-                case Buffer:
+                case RTYPE_Buffer:
                     {
                         if(resourceDesc.Buffers.size() != 0)
                         {
@@ -321,7 +330,7 @@ namespace Waldem
                         
                         break;
                     }
-                case Texture:
+                case RTYPE_Texture:
                     {
                         if(resourceDesc.Textures.size() != 0)
                         {
@@ -360,6 +369,11 @@ namespace Waldem
                         srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
                         Device->CreateShaderResourceView(resourceBuffer, &srvDesc, handle);
                         
+                        break;
+                    }
+                case RTYPE_RenderTarget:
+                    {
+                        resourceBuffer = (ID3D12Resource*)resourceDesc.RT->GetPlatformResource();
                         break;
                     }
                 default:
@@ -412,7 +426,7 @@ namespace Waldem
         Device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&SamplersHeap));
     }
 
-    void DX12PixelShader::UpdateResourceData(std::string name, void* data)
+    void DX12PixelShader::UpdateResourceData(String name, void* data)
     {
         if(data)
         {

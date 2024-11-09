@@ -3,7 +3,7 @@
 
 namespace Waldem
 {
-    Layer::Layer(const std::string& debugName) : DebugName(debugName)
+    Layer::Layer(const String& debugName) : DebugName(debugName)
     {
     }
 

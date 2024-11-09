@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include "RenderTarget.h"
 
 namespace Waldem
 {
@@ -12,14 +13,15 @@ namespace Waldem
     
     enum ResourceType
     {
-        ConstantBuffer = 0,
-        Buffer = 1,
-        BufferRaw = 2,
-        RWBuffer = 3,
-        RWBufferRaw = 4,
-        Texture = 5,
-        RWTexture = 6,
-        Sampler = 7
+        RTYPE_ConstantBuffer = 0,
+        RTYPE_Buffer = 1,
+        RTYPE_BufferRaw = 2,
+        RTYPE_RWBuffer = 3,
+        RTYPE_RWBufferRaw = 4,
+        RTYPE_Texture = 5,
+        RTYPE_RWTexture = 6,
+        RTYPE_Sampler = 7,
+        RTYPE_RenderTarget = 8,
     };
 
     struct SamplerData
@@ -31,8 +33,13 @@ namespace Waldem
     class WALDEM_API PixelShader
     {
     public:
+        PixelShader(const String& name, RenderTarget* renderTarget = nullptr) : Name(name), RenderTarget(renderTarget) {}
         virtual ~PixelShader() {}
         virtual void SetSamplers(std::vector<SamplerData> samplers) = 0;
-        virtual void UpdateResourceData(std::string name, void* data) = 0;
+        virtual void UpdateResourceData(String name, void* data) = 0;
+        
+        RenderTarget* RenderTarget;
+    protected:
+        String Name;
     };
 }

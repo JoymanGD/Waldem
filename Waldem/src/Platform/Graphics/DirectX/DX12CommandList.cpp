@@ -4,6 +4,7 @@
 #include "DX12Buffer.h"
 #include "DX12Helper.h"
 #include "DX12PixelShader.h"
+#include "DX12RenderTarget.h"
 
 namespace Waldem
 {
@@ -59,6 +60,9 @@ namespace Waldem
 
         //set render target
         CommandList->OMSetRenderTargets(1, &renderTargetHandle, FALSE, &depthStencilHandle);
+
+        CurrentRenderTargetHandle = renderTargetHandle;
+        CurrentDepthStencilHandle = depthStencilHandle;
     }
 
     void DX12CommandList::End()
@@ -75,6 +79,14 @@ namespace Waldem
         auto rootSignature = dxShader->GetRootSignature();
         auto resourcesHeap = dxShader->GetResourcesHeap();
         auto rootParams = dxShader->GetRootParams();
+
+        //If shader does have its own render target, set it
+        if(shader->RenderTarget)
+        {
+            D3D12_CPU_DESCRIPTOR_HANDLE renderTargetHandle = ((DX12RenderTarget*)shader->RenderTarget)->GetRenderTargetHandle();
+
+            CommandList->OMSetRenderTargets(1, &renderTargetHandle, FALSE, nullptr);
+        }
         
         CommandList->SetPipelineState(pipeline);
         CommandList->SetGraphicsRootSignature(rootSignature);
@@ -98,6 +110,23 @@ namespace Waldem
         CommandList->IASetIndexBuffer(&indexBufferView);
 
         CommandList->DrawIndexedInstanced(mesh->IB->GetCount(), 1, 0, 0, 0);
+
+        //Set previous render target back
+        if(shader->RenderTarget)
+        {
+            D3D12_TEXTURE_COPY_LOCATION srcLocation = {};
+            srcLocation.pResource = (ID3D12Resource*)shader->RenderTarget->GetPlatformResource();
+            srcLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+            srcLocation.SubresourceIndex = 0;
+
+            D3D12_TEXTURE_COPY_LOCATION dstLocation = {};
+            dstLocation.pResource = ;
+            dstLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+            dstLocation.SubresourceIndex = 0;
+            
+            CommandList->CopyTextureRegion(&dstLocation, 0,0,0, &srcLocation, nullptr);
+            CommandList->OMSetRenderTargets(1, &CurrentRenderTargetHandle, FALSE, &CurrentDepthStencilHandle);
+        }
     }
 
     void DX12CommandList::Clear(D3D12_CPU_DESCRIPTOR_HANDLE renderTarget, D3D12_CPU_DESCRIPTOR_HANDLE depthStencil, Vector3 clearColor)

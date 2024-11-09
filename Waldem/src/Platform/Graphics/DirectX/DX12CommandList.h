@@ -39,5 +39,7 @@ namespace Waldem
         ID3D12Fence* Fence;
         HANDLE FenceEvent;
         UINT64 FenceValue;
+        D3D12_CPU_DESCRIPTOR_HANDLE CurrentRenderTargetHandle;
+        D3D12_CPU_DESCRIPTOR_HANDLE CurrentDepthStencilHandle;
     };
 }

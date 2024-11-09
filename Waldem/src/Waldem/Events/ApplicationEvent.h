@@ -13,7 +13,7 @@ namespace Waldem
         inline float GetHeight() const { return Height; }
         inline std::array<float, 2> GetSize() const { return { Width, Height }; }
 
-        std::string ToString() const override
+        String ToString() const override
         {
             std::stringstream ss;
             ss << "WindowResizeEvent: " << Width << ", " << Height;

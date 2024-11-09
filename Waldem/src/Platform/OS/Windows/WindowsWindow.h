@@ -7,7 +7,7 @@ namespace Waldem
 {
     struct WindowData
     {
-        std::string Title;
+        String Title;
         float Width, Height;
         bool VSync;
 

@@ -53,10 +53,10 @@ namespace Waldem
     public:
         virtual ~ModelImporter() override = default;
 
-        virtual Model* Import(std::string& path, bool relative = true) override;
+        virtual Model* Import(String& path, bool relative = true) override;
 
     protected:
-        const aiScene* ImportInternal(std::string& path, ModelImportFlags importFlags = ModelImportFlags::None, bool relative = true);
+        const aiScene* ImportInternal(String& path, ModelImportFlags importFlags = ModelImportFlags::None, bool relative = true);
         
         Assimp::Importer AssimpImporter;
     };

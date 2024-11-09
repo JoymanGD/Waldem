@@ -1,5 +1,6 @@
 #pragma once
 #include "glm/vec3.hpp"
+#include "Waldem/Renderer/RenderTarget.h"
 
 namespace Waldem
 {
@@ -9,7 +10,7 @@ namespace Waldem
         Point = 1,
     };
     
-    struct Light
+    struct LightData
     {
         Vector3 Position;
         LightType Type;
@@ -17,5 +18,11 @@ namespace Waldem
         float Intensity;
         Vector3 Color;
         float Range;
+    };
+    
+    struct Light
+    {
+        LightData Data;
+        RenderTarget* Shadowmap;
     };
 }

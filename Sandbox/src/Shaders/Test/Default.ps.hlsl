@@ -21,7 +21,8 @@ struct PS_INPUT
 SamplerState myStaticSampler : register(s0);
 
 StructuredBuffer<Light> Lights : register(t0);
-Texture2D DiffuseTextures[MAX_TEXTURES] : register(t1);
+Texture2D Shadowmap : register(t1);
+Texture2D DiffuseTextures[MAX_TEXTURES] : register(t2);
 
 float4 main(PS_INPUT input) : SV_TARGET
 {

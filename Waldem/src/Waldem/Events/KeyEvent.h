@@ -23,7 +23,7 @@ namespace Waldem
 
         inline int GetRepeatCount() const { return RepeatCount; }
 
-        std::string ToString() const override
+        String ToString() const override
         {
             std::stringstream ss;
             ss << "KeyPressedEvent: " << KeyCode << " (" << RepeatCount << " repeats)";
@@ -40,7 +40,7 @@ namespace Waldem
     public:
         KeyReleasedEvent(int keycode) : KeyEvent(keycode) {}
 
-        std::string ToString() const override
+        String ToString() const override
         {
             std::stringstream ss;
             ss << "KeyReleasedEvent: " << KeyCode;
@@ -55,7 +55,7 @@ namespace Waldem
     public:
         KeyTypedEvent(int keycode) : KeyEvent(keycode) {}
 
-        std::string ToString() const override
+        String ToString() const override
         {
             std::stringstream ss;
             ss << "KeyTypedEvent: " << KeyCode;
