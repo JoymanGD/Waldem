@@ -35,7 +35,7 @@ namespace Waldem
             &heapProperties,
             D3D12_HEAP_FLAG_NONE,
             &textureDesc,
-            D3D12_RESOURCE_STATE_RENDER_TARGET,
+            D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE,
             nullptr,
             IID_PPV_ARGS(&Resource));
 

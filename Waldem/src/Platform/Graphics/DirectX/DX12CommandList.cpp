@@ -85,6 +85,14 @@ namespace Waldem
         {
             D3D12_CPU_DESCRIPTOR_HANDLE renderTargetHandle = ((DX12RenderTarget*)shader->RenderTarget)->GetRenderTargetHandle();
 
+            D3D12_RESOURCE_BARRIER barrier = {};
+            barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+            barrier.Transition.pResource = (ID3D12Resource*)shader->RenderTarget->GetPlatformResource();
+            barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
+            barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+            barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+            CommandList->ResourceBarrier(1, &barrier);
+            
             CommandList->OMSetRenderTargets(1, &renderTargetHandle, FALSE, nullptr);
         }
         
@@ -114,17 +122,6 @@ namespace Waldem
         //Set previous render target back
         if(shader->RenderTarget)
         {
-            D3D12_TEXTURE_COPY_LOCATION srcLocation = {};
-            srcLocation.pResource = (ID3D12Resource*)shader->RenderTarget->GetPlatformResource();
-            srcLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
-            srcLocation.SubresourceIndex = 0;
-
-            D3D12_TEXTURE_COPY_LOCATION dstLocation = {};
-            dstLocation.pResource = ;
-            dstLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
-            dstLocation.SubresourceIndex = 0;
-            
-            CommandList->CopyTextureRegion(&dstLocation, 0,0,0, &srcLocation, nullptr);
             CommandList->OMSetRenderTargets(1, &CurrentRenderTargetHandle, FALSE, &CurrentDepthStencilHandle);
         }
     }

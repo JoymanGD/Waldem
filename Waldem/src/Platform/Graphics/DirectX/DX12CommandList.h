@@ -34,6 +34,7 @@ namespace Waldem
         void Close();
 
         ID3D12Device* Device;
+        ID3D12Resource* CurrentRenderTarget;
         ID3D12GraphicsCommandList* CommandList;
         ID3D12CommandAllocator* CommandAllocator;
         ID3D12Fence* Fence;
