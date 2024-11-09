@@ -1,7 +1,7 @@
 #pragma once
 
 namespace Waldem
-{
+{    
     class Texture2D
     {
     public:

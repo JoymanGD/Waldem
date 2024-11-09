@@ -1,10 +1,13 @@
 #include "wdpch.h"
 #include "DX12Texture.h"
+#include "DX12Helper.h"
 
 namespace Waldem
 {
     DX12Texture::DX12Texture(std::string name, ID3D12Device* device, DX12CommandList* cmdList, int width, int height, int channels, uint8_t* data)
     {
+        HRESULT hr;
+
         Name = name;
         
         D3D12_RESOURCE_DESC textureDesc = {};
@@ -15,7 +18,7 @@ namespace Waldem
         textureDesc.MipLevels = 1;
         textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
         textureDesc.SampleDesc.Count = 1;
-        textureDesc.SampleDesc.Quality = 1;
+        textureDesc.SampleDesc.Quality = 0;
         textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
         textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
@@ -27,7 +30,7 @@ namespace Waldem
         heapProperties.CreationNodeMask = 1;
         heapProperties.VisibleNodeMask = 1;
         
-        device->CreateCommittedResource(
+        hr = device->CreateCommittedResource(
             &heapProperties,
             D3D12_HEAP_FLAG_NONE,
             &textureDesc,
@@ -35,15 +38,26 @@ namespace Waldem
             nullptr,
             IID_PPV_ARGS(&Resource));
 
+        if(FAILED(hr))
+        {
+            DX12Helper::PrintHResultError(hr);
+        }
+
         std::wstring widestr = std::wstring(name.begin(), name.end());
         Resource->SetName(widestr.c_str());
 
         if(data)
         {
-            D3D12_HEAP_PROPERTIES uploadHeapProps = { D3D12_HEAP_TYPE_UPLOAD };
+            D3D12_HEAP_PROPERTIES uploadHeapProps = {};
+            uploadHeapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+            uploadHeapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+            uploadHeapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+            uploadHeapProps.CreationNodeMask = 1;
+            uploadHeapProps.VisibleNodeMask = 1;
+            
             UINT64 uploadBufferSize;
             D3D12_PLACED_SUBRESOURCE_FOOTPRINT layout;
-            device->GetCopyableFootprints(&textureDesc, 0, 1, 0, &layout, nullptr, nullptr, &uploadBufferSize);
+            device->GetCopyableFootprints(&textureDesc, 0, 1, 0, nullptr, nullptr, nullptr, &uploadBufferSize);
 
             D3D12_RESOURCE_DESC uploadBufferDesc = {};
             uploadBufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
@@ -57,38 +71,26 @@ namespace Waldem
             uploadBufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
             
             ID3D12Resource* textureUploadHeap;
-            device->CreateCommittedResource(&uploadHeapProps, D3D12_HEAP_FLAG_NONE, &uploadBufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&textureUploadHeap));
-
-            void* mappedData;
-            D3D12_RANGE readRange = {};
-            textureUploadHeap->Map(0, &readRange, &mappedData);
-
-            UINT8* destData = reinterpret_cast<uint8_t*>(mappedData);
-            for (UINT row = 0; row < height; ++row)
+            hr = device->CreateCommittedResource(&uploadHeapProps, D3D12_HEAP_FLAG_NONE, &uploadBufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&textureUploadHeap));
+            
+            if(FAILED(hr))
             {
-                memcpy(destData + row * (width * channels), data + row * (width * channels), width * channels);
+                DX12Helper::PrintHResultError(hr);
             }
 
-            textureUploadHeap->Unmap(0, nullptr);
-            
-            D3D12_TEXTURE_COPY_LOCATION destLocation = {};
-            destLocation.pResource = Resource;
-            destLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
-            destLocation.SubresourceIndex = 0;
+            D3D12_SUBRESOURCE_DATA subResourceData;
+            subResourceData.pData = data;
+            subResourceData.RowPitch = uploadBufferSize / height;
+            subResourceData.SlicePitch = uploadBufferSize;
 
-            D3D12_TEXTURE_COPY_LOCATION srcLocation = {};
-            srcLocation.pResource = textureUploadHeap;
-            srcLocation.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
-            srcLocation.PlacedFootprint = layout;
-
-            cmdList->CopyTextureRegion(&destLocation, 0, 0, 0, &srcLocation, nullptr);
+            cmdList->UpdateSubresoures(Resource, textureUploadHeap, 1, &subResourceData);
         }
 
         D3D12_RESOURCE_BARRIER barrier = {};
         barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
         barrier.Transition.pResource = Resource;
         barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
-        barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+        barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COMMON;
         barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
         cmdList->ResourceBarrier(1, &barrier);
     }

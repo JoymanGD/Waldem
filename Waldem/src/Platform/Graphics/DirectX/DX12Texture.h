@@ -1,5 +1,4 @@
 #pragma once
-#include "Waldem/Renderer/Texture.h"
 #include "DX12CommandList.h"
 #include <d3d12.h>
 

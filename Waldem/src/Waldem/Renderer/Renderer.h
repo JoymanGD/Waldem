@@ -23,7 +23,7 @@ namespace Waldem
         virtual void Begin() = 0;
         virtual void End() = 0;
         virtual void Present() = 0;
-        virtual void Draw(Mesh* mesh, PixelShader* pixelShader) = 0;
+        virtual void Draw(Mesh* mesh, PixelShader* pixelShader, uint32_t meshID) = 0;
         virtual PixelShader* LoadShader(std::string shaderName, std::vector<Resource> resources) = 0;
         virtual Texture2D* CreateTexture(std::string name, int width, int height, int channels, uint8_t* data = nullptr) = 0;
         virtual VertexBuffer* CreateVertexBuffer(void* data, uint32_t size) = 0;
@@ -41,7 +41,7 @@ namespace Waldem
         void End();
         void Present();
 
-        void Draw(Mesh* mesh, PixelShader* pixelShader);
+        void Draw(Mesh* mesh, PixelShader* pixelShader, uint32_t meshID);
         void Draw(Model* model, PixelShader* pixelShader);
         PixelShader* LoadShader(std::string shaderName, std::vector<Resource> resources);
         Texture2D* CreateTexture(std::string name, int width, int height, int channels, uint8_t* data = nullptr);

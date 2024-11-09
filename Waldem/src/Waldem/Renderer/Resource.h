@@ -15,8 +15,8 @@ namespace Waldem
         uint32_t Stride = 0;
         Vector2 Size;
         uint32_t Slot = 0;
-        Texture2D* Texture = nullptr;
-        StorageBuffer* Buffer = nullptr;
+        std::vector<Texture2D*> Textures;
+        std::vector<StorageBuffer*> Buffers;
 
         Resource(std::string name, ResourceType type, uint32_t numResources, void* data, uint32_t stride, Vector2 size, uint32_t slot)
         {
@@ -40,21 +40,21 @@ namespace Waldem
             Slot = slot;
         }
         
-        Resource(std::string name, Texture2D* texture, uint32_t slot)
+        Resource(std::string name, std::vector<Texture2D*> textures, uint32_t slot)
         {
             Name = name;
             Type = ResourceType::Texture;
-            Texture = texture;
-            NumResources = 1;
+            Textures = textures;
+            NumResources = textures.size();
             Slot = slot;
         }
         
-        Resource(std::string name, StorageBuffer* buffer, uint32_t slot)
+        Resource(std::string name, std::vector<StorageBuffer*> buffers, uint32_t slot)
         {
             Name = name;
             Type = ResourceType::Buffer;
-            Buffer = buffer;
-            NumResources = 1;
+            Buffers = buffers;
+            NumResources = buffers.size();
             Slot = slot;
         }
     };

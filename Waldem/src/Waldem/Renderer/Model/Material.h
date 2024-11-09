@@ -1,6 +1,5 @@
 #pragma once
-#include "../Texture.h"
-#include "Waldem/Renderer/Shader.h"
+#include "Waldem/Renderer/Texture.h"
 
 namespace Waldem
 {

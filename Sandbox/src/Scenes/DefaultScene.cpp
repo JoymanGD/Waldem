@@ -1,7 +1,5 @@
 #include <wdpch.h>
 #include "DefaultScene.h"
-
-#include "glm/gtc/type_ptr.inl"
 #include "Waldem/Application.h"
 #include "Waldem/Input.h"
 #include "Waldem/KeyCodes.h"
@@ -27,24 +25,9 @@ namespace Sandbox
 		MainCamera = new Waldem::Camera(70.0f , screenWidth / screenHeight, .01f, 10000, { 0, 0, 0 }, 100.0f, 1.0f);
 		
 		std::vector<Waldem::Resource> resources;
-		Waldem::Matrix4 viewProjectionMatrix = MainCamera->GetViewProjectionMatrix();
-		Waldem::Matrix4 testModelWorldMatrix = TestModelTransform.GetMatrix();
-		Waldem::Vector3 testColor = { 1, 0, 0 };
-		TestStructData testStructData = { { 0, 1, 0 }, .9f };
-		resources.push_back(Waldem::Resource( "MyConstantBuffer1", Waldem::ResourceType::ConstantBuffer, 1, &viewProjectionMatrix, 0, sizeof(Waldem::Matrix4), 0));
-		resources.push_back(Waldem::Resource( "MyConstantBuffer2", Waldem::ResourceType::ConstantBuffer, 1, &testModelWorldMatrix, 0, sizeof(Waldem::Matrix4), 1));
-		resources.push_back(Waldem::Resource( "TestBuffer", Waldem::ResourceType::Buffer, 1, &testColor,sizeof(Waldem::Vector3), sizeof(Waldem::Vector3), 0));
-		resources.push_back(Waldem::Resource( "TestBuffer2", Waldem::ResourceType::Buffer, 1, &testStructData,sizeof(TestStructData), sizeof(TestStructData), 1));
-
-		auto meshes = TestModel->GetMeshes();
-		uint32_t textureIndex = 0;
-		uint32_t textureSlot = 2;
-		for (auto mesh : meshes)
-		{
-			resources.push_back(Waldem::Resource(std::string("TestTexture") + std::to_string(textureIndex), mesh->MeshMaterial.GetDiffuseTexture(), textureSlot));
-			textureSlot++;
-			textureIndex++;
-		}
+		Waldem::Matrix4 matrices[2]  = { MainCamera->GetViewProjectionMatrix(), TestModelTransform.GetMatrix() };
+		resources.push_back(Waldem::Resource("MyConstantBuffer", Waldem::ResourceType::ConstantBuffer, 1, matrices, sizeof(Waldem::Matrix4), 2 * sizeof(Waldem::Matrix4), 0));
+		resources.push_back(Waldem::Resource("TestTextures", TestModel->GetTextures(), 2));
 		
 		TestPixelShader = sceneData->Renderer->LoadShader("Default", resources);
 
@@ -116,12 +99,9 @@ namespace Sandbox
 	void DefaultScene::Draw(Waldem::SceneData* sceneData)
 	{
 		auto viewProjectionMatrix = MainCamera->GetViewProjectionMatrix();
-		TestPixelShader->UpdateResourceData("MyConstantBuffer1", &viewProjectionMatrix);
-
-		uint32_t numLights = Lights.size();
-
 		auto testModelWorldMatrix = TestModelTransform.GetMatrix();
-		TestPixelShader->UpdateResourceData("MyConstantBuffer2", &testModelWorldMatrix);
+		Waldem::Matrix4 matrices[2] = { viewProjectionMatrix, testModelWorldMatrix };
+		TestPixelShader->UpdateResourceData("MyConstantBuffer", matrices);
 
 		sceneData->Renderer->Draw(TestModel, TestPixelShader);
 	}

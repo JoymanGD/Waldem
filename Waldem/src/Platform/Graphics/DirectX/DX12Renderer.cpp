@@ -1,6 +1,7 @@
 #include "wdpch.h"
 #include "DX12Renderer.h"
 
+#include "D3DX12.h"
 #include "DX12Buffer.h"
 #include "DX12Helper.h"
 #include "DX12PixelShader.h"
@@ -109,6 +110,56 @@ namespace Waldem
             rtvHandle.ptr += RTVDescriptorSize;
         }
 
+        //Create Depth Stencil Buffer
+        D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
+        dsvHeapDesc.NumDescriptors = 1;
+        dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+        h = Device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&DSVHeap));
+
+        if(FAILED(h))
+        {
+            throw std::runtime_error("Failed to create D3D12 DSV Heap");
+        }
+        
+        D3D12_RESOURCE_DESC depthBufferDesc = {};
+        depthBufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+        depthBufferDesc.Width = window->GetWidth();
+        depthBufferDesc.Height = window->GetHeight();
+        depthBufferDesc.DepthOrArraySize = 1;
+        depthBufferDesc.MipLevels = 1;
+        depthBufferDesc.Format = DXGI_FORMAT_D32_FLOAT;
+        depthBufferDesc.SampleDesc.Count = 1;
+        depthBufferDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+        D3D12_HEAP_PROPERTIES heapProperties = {};
+        heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
+        heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+        heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+        heapProperties.CreationNodeMask = 1;
+        heapProperties.VisibleNodeMask = 1;
+
+        D3D12_CLEAR_VALUE clearValue = {};
+        clearValue.Format = DXGI_FORMAT_D32_FLOAT;
+        clearValue.DepthStencil.Depth = 1.0f;
+        clearValue.DepthStencil.Stencil = 0;
+
+        Device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &depthBufferDesc,
+            D3D12_RESOURCE_STATE_DEPTH_WRITE,
+            &clearValue,
+            IID_PPV_ARGS(&DepthStencilBuffer)
+        );
+
+        D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+        dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
+        dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+        dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
+
+        DSVHandle = DSVHeap->GetCPUDescriptorHandleForHeapStart();
+        Device->CreateDepthStencilView(DepthStencilBuffer, &dsvDesc, DSVHandle);
+
         WorldCommandList.first = new DX12CommandList(Device, D3D12_COMMAND_LIST_TYPE_DIRECT);
     }
 
@@ -126,13 +177,13 @@ namespace Waldem
         barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
         cmd->ResourceBarrier(1, &barrier);
 
-        CurrentRenderTarget = RTVHeap->GetCPUDescriptorHandleForHeapStart();
-        CurrentRenderTarget.ptr += FrameIndex * RTVDescriptorSize;
+        CurrentRenderTargetHandle = RTVHeap->GetCPUDescriptorHandleForHeapStart();
+        CurrentRenderTargetHandle.ptr += FrameIndex * RTVDescriptorSize;
         
         if(!WorldCommandList.second)
         {
-            cmd->Clear(CurrentRenderTarget, { 0.0f, 0.0f, 0.0f });
-            cmd->Begin(&Viewport, &ScissorRect, CurrentRenderTarget);
+            cmd->Clear(CurrentRenderTargetHandle, DSVHandle, { 0.0f, 0.0f, 0.0f });
+            cmd->Begin(&Viewport, &ScissorRect, CurrentRenderTargetHandle, DSVHandle);
             
             WorldCommandList.second = true;
         }
@@ -197,10 +248,10 @@ namespace Waldem
         return new DX12IndexBuffer(Device, data, count);
     }
 
-    void DX12Renderer::Draw(Mesh* mesh, PixelShader* pixelShader)
+    void DX12Renderer::Draw(Mesh* mesh, PixelShader* pixelShader, uint32_t meshID)
     {
         auto& cmd = WorldCommandList.first;
 
-        cmd->AddDrawCommand(mesh, pixelShader);
+        cmd->AddDrawCommand(mesh, pixelShader, meshID);
     }
 }

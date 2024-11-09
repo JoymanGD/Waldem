@@ -4,6 +4,7 @@
 #include "Waldem/Renderer/Model/Model.h"
 #include "Waldem/SceneManagement/Scene.h"
 #include "Waldem/World/Camera.h"
+#include "Waldem/Renderer/Shader.h"
 
 namespace Sandbox
 {
