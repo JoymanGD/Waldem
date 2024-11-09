@@ -8,6 +8,6 @@ namespace Waldem
     public:
         virtual ~IImporter() = default;
         
-        virtual T* Import(std::string& path, bool relative = true) = 0;
+        virtual T* Import(String& path, bool relative = true) = 0;
     };
 }

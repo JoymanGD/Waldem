@@ -55,15 +55,21 @@ namespace Waldem
         }
     }
 
-    PixelShader* Renderer::LoadShader(std::string shaderName, std::vector<Resource> resources)
+    PixelShader* Renderer::LoadShader(String shaderName, std::vector<Resource> resources, RenderTarget* renderTarget)
     {
-        return PlatformRenderer->LoadShader(shaderName, resources);
+        return PlatformRenderer->LoadShader(shaderName, resources, renderTarget);
     }
 
-    Texture2D* Renderer::CreateTexture(std::string name, int width, int height, int channels, uint8_t* data)
+    Texture2D* Renderer::CreateTexture(String name, int width, int height, TextureFormat format, uint8_t* data)
     {
-        Texture2D* texture = PlatformRenderer->CreateTexture(name, width, height, channels, data);
+        Texture2D* texture = PlatformRenderer->CreateTexture(name, width, height, format, data);
         return texture;
+    }
+
+    RenderTarget* Renderer::CreateRenderTarget(String name, int width, int height, TextureFormat format)
+    {
+        RenderTarget* renderTarget = PlatformRenderer->CreateRenderTarget(name, width, height, format);
+        return renderTarget;
     }
 
     VertexBuffer* Renderer::CreateVertexBuffer(void* data, uint32_t size)

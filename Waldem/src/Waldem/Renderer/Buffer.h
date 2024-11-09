@@ -44,13 +44,13 @@ namespace Waldem
     struct BufferElement
     {
         ShaderDataType Type;
-        std::string Name;
+        String Name;
         uint32_t Size;
         uint32_t Offset;
         bool Normalized;
 
         BufferElement() {}
-        BufferElement(ShaderDataType type, const std::string& name, bool normalized) : Type(type), Name(name), Size(ShaderDataTypeSize(type)), Offset(0), Normalized(normalized)
+        BufferElement(ShaderDataType type, const String& name, bool normalized) : Type(type), Name(name), Size(ShaderDataTypeSize(type)), Offset(0), Normalized(normalized)
         {
         }
 

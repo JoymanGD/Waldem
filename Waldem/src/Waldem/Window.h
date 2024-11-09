@@ -9,11 +9,11 @@ namespace Waldem
 	
 	struct WindowProps
 	{
-		std::string Title;
+		String Title;
 		float Width;
 		float Height;
 
-		WindowProps(const std::string& title = "Waldem Engine",
+		WindowProps(const String& title = "Waldem Engine",
 					float width = 1280,
 					float height = 720)
 			: Title(title), Width(width), Height(height) {}

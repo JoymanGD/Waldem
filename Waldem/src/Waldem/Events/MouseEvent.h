@@ -12,7 +12,7 @@ namespace Waldem
         inline float GetX() const { return MouseX; }
         inline float GetY() const { return MouseY; }
 
-        std::string ToString() const override
+        String ToString() const override
         {
             std::stringstream ss;
             ss << "MouseMovedEvent: " << MouseX << ", " << MouseY;
@@ -33,7 +33,7 @@ namespace Waldem
         inline float GetXOffset() const { return XOffset; }
         inline float GetYOffset() const { return YOffset; }
 
-        std::string ToString() const override
+        String ToString() const override
         {
             std::stringstream ss;
             ss << "MouseScrolledEvent: " << XOffset << ", " << YOffset;
@@ -63,7 +63,7 @@ namespace Waldem
     public:
         MouseButtonPressedEvent(int button) : MouseButtonEvent(button) {}
 
-        std::string ToString() const override
+        String ToString() const override
         {
             std::stringstream ss;
             ss << "MouseButtonPressedEvent: " << Button;
@@ -78,7 +78,7 @@ namespace Waldem
     public:
         MouseButtonReleasedEvent(int button) : MouseButtonEvent(button) {}
 
-        std::string ToString() const override
+        String ToString() const override
         {
             std::stringstream ss;
             ss << "MouseButtonReleasedEvent: " << Button;

@@ -8,7 +8,7 @@ namespace Waldem
     class WALDEM_API Layer
     {
     public:
-        Layer(const std::string& name = "Layer");
+        Layer(const String& name = "Layer");
         virtual ~Layer();
 
         virtual void Begin() {}
@@ -19,8 +19,8 @@ namespace Waldem
         virtual void OnEvent(Event& event) {}
         virtual void OnUIRender() {}
 
-        inline const std::string& GetName() const { return DebugName; }
+        inline const String& GetName() const { return DebugName; }
     protected:
-        std::string DebugName;
+        String DebugName;
     };
 }

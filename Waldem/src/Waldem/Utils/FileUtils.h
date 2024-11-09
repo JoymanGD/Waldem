@@ -2,13 +2,13 @@
 
 namespace Waldem
 {
-    inline std::string GetCurrentFolder()
+    inline String GetCurrentFolder()
     {
         char buffer[MAX_PATH];
         GetModuleFileNameA(NULL, buffer, MAX_PATH);
-        auto currentPath = std::string(buffer);
+        auto currentPath = String(buffer);
         size_t pos = currentPath.find_last_of("\\/");
-        if (pos != std::string::npos)
+        if (pos != String::npos)
         {
             currentPath = currentPath.substr(0, pos);
         }

@@ -10,7 +10,7 @@
 
 namespace Waldem
 {
-    Model* ModelImporter::Import(std::string& path, bool relative)
+    Model* ModelImporter::Import(String& path, bool relative)
     {
         Model* result = new Model();
 
@@ -96,10 +96,21 @@ namespace Waldem
                     image_data = (uint8_t*)&fakeData;
                 }
 
-                Texture2D* texture = Application::GetRenderer().CreateTexture("DiffuseTexture", width, height, componentsCount, image_data);
+                TextureFormat format;
+                
+                if(componentsCount == 3)
+                {
+                    format = TextureFormat::TEXTURE_FORMAT_R32G32B32_FLOAT; //TODO: check if its workable
+                }
+                else
+                {
+                    format = TextureFormat::TEXTURE_FORMAT_R8G8B8A8_UNORM;
+                }
+
+                Texture2D* texture = Application::GetRenderer().CreateTexture("DiffuseTexture", width, height, format, image_data);
                 Material mat(texture);
 
-                auto vertexBufferSize = vertexData.size() * sizeof(Vertex);
+                uint32_t vertexBufferSize = vertexData.size() * sizeof(Vertex);
 
                 Mesh* mesh = new Mesh(vertexData.data(), vertexBufferSize, indices.data(), indices.size(), bufferLayout, mat);
 
@@ -114,7 +125,7 @@ namespace Waldem
         return result;
     }
 
-    const aiScene* ModelImporter::ImportInternal(std::string& path, ModelImportFlags importFlags, bool relative)
+    const aiScene* ModelImporter::ImportInternal(String& path, ModelImportFlags importFlags, bool relative)
     {
         if(relative)
         {

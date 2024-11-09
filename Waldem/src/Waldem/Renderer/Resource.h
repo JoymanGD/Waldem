@@ -8,7 +8,7 @@ namespace Waldem
     class WALDEM_API Resource
     {
     public:
-        std::string Name;
+        String Name;
         ResourceType Type;
         uint32_t NumResources = 1;
         void* Data = nullptr;
@@ -17,8 +17,9 @@ namespace Waldem
         uint32_t Slot = 0;
         std::vector<Texture2D*> Textures;
         std::vector<StorageBuffer*> Buffers;
+        RenderTarget* RT = nullptr;
 
-        Resource(std::string name, ResourceType type, void* data, uint32_t stride, Vector2 size, uint32_t slot)
+        Resource(String name, ResourceType type, void* data, uint32_t stride, Vector2 size, uint32_t slot)
         {
             Name = name;
             Type = type;
@@ -29,7 +30,7 @@ namespace Waldem
             Slot = slot;
         }
         
-        Resource(std::string name, ResourceType type, void* data, uint32_t stride, float size, uint32_t slot)
+        Resource(String name, ResourceType type, void* data, uint32_t stride, float size, uint32_t slot)
         {
             Name = name;
             Type = type;
@@ -40,21 +41,30 @@ namespace Waldem
             Slot = slot;
         }
         
-        Resource(std::string name, std::vector<Texture2D*> textures, uint32_t slot)
+        Resource(String name, std::vector<Texture2D*> textures, uint32_t slot)
         {
             Name = name;
-            Type = ResourceType::Texture;
+            Type = RTYPE_Texture;
             Textures = textures;
             NumResources = textures.size();
             Slot = slot;
         }
         
-        Resource(std::string name, std::vector<StorageBuffer*> buffers, uint32_t slot)
+        Resource(String name, std::vector<StorageBuffer*> buffers, uint32_t slot)
         {
             Name = name;
-            Type = ResourceType::Buffer;
+            Type = RTYPE_Buffer;
             Buffers = buffers;
             NumResources = buffers.size();
+            Slot = slot;
+        }
+        
+        Resource(String name, RenderTarget* renderTarget, uint32_t slot)
+        {
+            Name = name;
+            Type = RTYPE_RenderTarget;
+            RT = renderTarget;
+            NumResources = 1;
             Slot = slot;
         }
     };

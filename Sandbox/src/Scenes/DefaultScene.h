@@ -22,12 +22,15 @@ namespace Sandbox
         void Draw(Waldem::SceneData* sceneData) override;
         void Initialize(Waldem::SceneData* sceneData) override;
     private:
-        void CreateLights();
+        void CreateLights(Waldem::Renderer* Renderer);
+        std::vector<Waldem::LightData> GetLightsData();
         
         Waldem::Camera* MainCamera;
         Waldem::Model* TestModel;
         Waldem::PixelShader* TestPixelShader;
         Waldem::Transform TestModelTransform;
+        Waldem::Transform TestDirLightTransform;
+        Waldem::PixelShader* TestShadowmapShader;
         std::vector<Waldem::Light> Lights;
         SceneConstantBuffer ConstantBuffer;
     };
