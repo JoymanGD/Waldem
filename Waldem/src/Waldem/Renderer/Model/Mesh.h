@@ -10,6 +10,7 @@ namespace Waldem
         Vector3 Position;
         Vector3 Normal;
         Vector2 UV;
+        uint32_t MeshId;
     };
     
     class WALDEM_API Mesh

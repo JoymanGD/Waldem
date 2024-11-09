@@ -1,5 +1,4 @@
 #pragma once
-#include <map>
 #include <string>
 
 namespace Waldem
@@ -29,7 +28,7 @@ namespace Waldem
         uint32_t Size;
     };
 
-    class PixelShader
+    class WALDEM_API PixelShader
     {
     public:
         virtual ~PixelShader() {}

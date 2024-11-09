@@ -31,11 +31,13 @@ namespace Waldem
 
     private:
         bool CompileFromFile(const std::string& filepath);
-        void SetResources(std::vector<Resource> resourceDescs);
+        void SetResources(std::vector<Resource> resourceDescs, uint32_t numDescriptors);
         void SetSamplers(std::vector<SamplerData> samplers) override;
 
     public:
         void UpdateResourceData(std::string name, void* data) override;
+        std::vector<D3D12_ROOT_PARAMETER> GetRootParams() const { return RootParams; }
+        uint32_t GetInitializedDescriptorsAmount() const { return InitializedDescriptorsAmount; }
 
     private:
         ID3DBlob* VertexShader;
@@ -47,7 +49,9 @@ namespace Waldem
         ID3D12DescriptorHeap* SamplersHeap;
         ID3D12Device* Device;
         DX12CommandList* CmdList;
+        std::vector<D3D12_ROOT_PARAMETER> RootParams;
 
         std::unordered_map<std::string, ResourceData*> Resources;
+        uint32_t InitializedDescriptorsAmount = 0;
     };
 }

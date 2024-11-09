@@ -99,6 +99,10 @@ IF EXIST $(SolutionDir)Waldem\vendor\SDL\lib\SDL2.dll\ (xcopy /Q /E /Y /I $(Solu
 IF EXIST $(SolutionDir)Waldem\vendor\assimp\lib\assimp-vc142-mt.dll\ (xcopy /Q /E /Y /I $(SolutionDir)Waldem\vendor\assimp\lib\assimp-vc142-mt.dll ..\bin\Debug\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)Waldem\vendor\assimp\lib\assimp-vc142-mt.dll ..\bin\Debug\Sandbox &gt; nul)
 xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Debug\Sandbox\Content</Command>
     </PostBuildEvent>
+    <FxCompile>
+      <ShaderModel>5.1</ShaderModel>
+      <AdditionalOptions></AdditionalOptions>
+    </FxCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -168,17 +172,20 @@ xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Dist\Sandbox\Conte
   <ItemGroup>
     <ClCompile Include="src\SandboxApp.cpp" />
     <ClCompile Include="src\Scenes\DefaultScene.cpp" />
+    <ClCompile Include="src\Shaders\Test\Core.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="src\Shaders\Test\Default.ps.hlsl">
       <ShaderType>Pixel</ShaderType>
       <ShaderModel>5.0</ShaderModel>
       <EntryPointName>main</EntryPointName>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.1</ShaderModel>
     </FxCompile>
     <FxCompile Include="src\Shaders\Test\Default.vs.hlsl">
       <ShaderType>Vertex</ShaderType>
       <ShaderModel>5.0</ShaderModel>
       <EntryPointName>main</EntryPointName>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.1</ShaderModel>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

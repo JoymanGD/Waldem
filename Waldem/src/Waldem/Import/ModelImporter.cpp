@@ -18,6 +18,7 @@ namespace Waldem
             { ShaderDataType::Float3, "Position", false },
             { ShaderDataType::Float3, "Normal", false },
             { ShaderDataType::Float2, "UV", true },
+            { ShaderDataType::Int, "MeshId", true },
         };
         
         auto assimpModel = ImportInternal(path, ModelImportFlags::CalcTangentSpace | ModelImportFlags::Triangulate | ModelImportFlags::PreTransformVertices | ModelImportFlags::FlipUVs, relative);
@@ -45,6 +46,7 @@ namespace Waldem
                     Vertex vertex = {};
                     vertex.Position = Vector3(assimpMesh->mVertices[j].x, assimpMesh->mVertices[j].y, assimpMesh->mVertices[j].z);
                     vertex.Normal = Vector3(assimpMesh->mNormals[j].x, assimpMesh->mNormals[j].y, assimpMesh->mNormals[j].z);
+                    vertex.MeshId = i;
 
                     if(assimpMesh->HasTextureCoords(0))
                     {
@@ -73,7 +75,7 @@ namespace Waldem
                     //texture is embedded
                     if (const aiTexture* assimpTexture = assimpModel->GetEmbeddedTexture(texturePath.C_Str()))
                     {
-                        image_data = stbi_load_from_memory((uint8_t const*)assimpTexture->pcData, assimpTexture->mWidth, &width, &height, &componentsCount, 0);
+                        image_data = stbi_load_from_memory((uint8_t const*)assimpTexture->pcData, assimpTexture->mWidth, &width, &height, &componentsCount, 4);
                     }
                     //texture is external
                     else
@@ -81,7 +83,7 @@ namespace Waldem
                         std::filesystem::path pathObj(path);
                         std::filesystem::path parentPath = pathObj.parent_path();
                         auto externalTexturePath = parentPath.append(texturePath.C_Str());
-                        image_data = stbi_load(externalTexturePath.string().c_str(), &width, &height, &componentsCount, 0);
+                        image_data = stbi_load(externalTexturePath.string().c_str(), &width, &height, &componentsCount, 4);
                     }
                 }
                 else

@@ -1,8 +1,11 @@
+#include "Core.hlsl"
+
 struct PS_INPUT
 {
     float4 Position : SV_POSITION;
-    float3 Normal   : NORMAL;
-    float2 UV       : TEXCOORD;
+    float3 Normal : NORMAL;
+    float2 UV : TEXCOORD;
+    uint MeshId : MESH_ID;
 };
 
 struct TestStruct
@@ -13,15 +16,14 @@ struct TestStruct
 
 SamplerState myStaticSampler : register(s0);
 
-Buffer<float3> TestBuffer : register(t0);
-Buffer<TestStruct> TestBuffer2 : register(t1);
-Texture2D DiffuseTextures[1024] : register(t2);
+Texture2D DiffuseTextures[MAX_TEXTURES] : register(t2);
 
 float4 main(PS_INPUT input) : SV_TARGET
 {
-    //float3 color = float3(input.UV, 0.5);
-    float3 color = TestBuffer[0];
-    color += TestBuffer2[0].Color * TestBuffer2[0].Intensity;
-    color = DiffuseTextures[0].SampleLevel(myStaticSampler, input.UV, 0).xyz;
-    return float4(color, 1.0);
+    float4 color = DiffuseTextures[input.MeshId].Sample(myStaticSampler, input.UV);
+
+    if(color.a < 0.1f)
+        discard;
+    
+    return float4(color.rgb, 1.0f);
 }

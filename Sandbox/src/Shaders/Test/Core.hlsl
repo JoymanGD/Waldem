@@ -1,0 +1,2 @@
+#define MAX_TEXTURES 1024
+#define MAX_BUFFERS 128

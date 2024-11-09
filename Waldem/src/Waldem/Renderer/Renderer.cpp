@@ -38,18 +38,20 @@ namespace Waldem
         PlatformRenderer->Present();
     }
 
-    void Renderer::Draw(Mesh* mesh, PixelShader* pixelShader)
+    void Renderer::Draw(Mesh* mesh, PixelShader* pixelShader, uint32_t meshID)
     {
-        PlatformRenderer->Draw(mesh, pixelShader);
+        PlatformRenderer->Draw(mesh, pixelShader, meshID);
     }
 
     void Renderer::Draw(Model* model, PixelShader* pixelShader)
     {
         auto meshes = model->GetMeshes();
-        
-        for (auto mesh : meshes)
+
+        for (uint32_t i = 0; i < meshes.size(); ++i)
         {
-            Draw(mesh, pixelShader);
+            auto mesh = meshes[i];
+            
+            Draw(mesh, pixelShader, i);
         }
     }
 
