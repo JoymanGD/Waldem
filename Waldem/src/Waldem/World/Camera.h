@@ -9,6 +9,8 @@ namespace Waldem
     class WALDEM_API Camera
     {
     public:
+        Transform WorldTransform;
+        
         float MovementSpeed = 1.0f;
         float RotationSpeed = 1.0f;
 
@@ -22,7 +24,6 @@ namespace Waldem
         void Rotate(float yaw, float pitch, float roll);
 
     private:
-        Transform WorldTransform;
         glm::mat4 ProjectionMatrix;
         glm::mat4 ViewProjectionMatrix;
         

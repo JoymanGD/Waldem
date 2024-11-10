@@ -18,6 +18,7 @@ namespace Waldem
         float Intensity;
         Vector3 Color;
         float Range;
+        Matrix4 ViewProjection;
     };
     
     struct Light

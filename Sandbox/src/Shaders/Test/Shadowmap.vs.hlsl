@@ -21,7 +21,7 @@ PS_INPUT main(VS_INPUT input)
 {
     PS_INPUT output;
     
-    output.Position = mul(world, input.Position);
+    output.Position = mul(world, float4(input.Position, 1));
     output.Position = mul(viewProj, output.Position);
 
     return output;

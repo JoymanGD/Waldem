@@ -11,6 +11,8 @@ namespace Waldem
         virtual String GetName() { return Name; }
         virtual void* GetPlatformResource() = 0;
         TextureFormat GetFormat() { return Format; }
+        int GetWidth() { return Width; }
+        int GetHeight() { return Height; }
     protected:
         String Name;
         int Width;

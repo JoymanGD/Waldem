@@ -28,6 +28,8 @@ namespace Waldem
         void SetPosition(float x, float y, float z);
         void Translate(Vector3 translation);
         void Rotate(Quaternion rotation);
+        void SetEuler(Vector3 euler);
+        void SetEuler(float eulerX, float eulerY, float eulerZ);
         void SetRotation(Quaternion newRotation);
         void Scale(Vector3 scale);
         void SetMatrix(Matrix4 matrix);

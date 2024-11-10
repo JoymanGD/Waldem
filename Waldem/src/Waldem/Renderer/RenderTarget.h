@@ -8,5 +8,8 @@ namespace Waldem
     public:
         RenderTarget(String name, int width, int height, TextureFormat format) : Texture2D(name, width, height, format) {}
         virtual ~RenderTarget() {}
+        bool IsDepthStencilBuffer() const { return IsDepthStencil; }
+    protected:
+        bool IsDepthStencil = false;
     };
 }

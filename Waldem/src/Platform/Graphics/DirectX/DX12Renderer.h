@@ -11,13 +11,14 @@ namespace Waldem
     public:
         ~DX12Renderer() override = default;
         void Initialize(Window* window) override;
+        void Draw(Model* model, PixelShader* pixelShader) override;
         void Draw(Mesh* mesh, PixelShader* pixelShader) override;
         void Begin() override;
         void End() override;
         void Present() override;
         D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentRenderTargetHandle() const { return CurrentRenderTargetHandle; }
         D3D12_CPU_DESCRIPTOR_HANDLE GetDepthStencilHandle() const { return DSVHandle; }
-        PixelShader* LoadShader(String shaderName, std::vector<Resource> resources, RenderTarget* renderTarget = nullptr) override;
+        PixelShader* LoadPixelShader(String shaderName, std::vector<Resource> resources, RenderTarget* renderTarget = nullptr) override;
         Texture2D* CreateTexture(String name, int width, int height, TextureFormat format, uint8_t* data = nullptr) override;
         RenderTarget* CreateRenderTarget(String name, int width, int height, TextureFormat format) override;
         VertexBuffer* CreateVertexBuffer(void* data, uint32_t size) override;

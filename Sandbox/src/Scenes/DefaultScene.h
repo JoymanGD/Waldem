@@ -32,6 +32,5 @@ namespace Sandbox
         Waldem::Transform TestDirLightTransform;
         Waldem::PixelShader* TestShadowmapShader;
         std::vector<Waldem::Light> Lights;
-        SceneConstantBuffer ConstantBuffer;
     };
 }

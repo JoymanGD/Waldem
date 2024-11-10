@@ -54,9 +54,11 @@ namespace Waldem
 
     void DX12CommandList::Begin(D3D12_VIEWPORT* viewport, D3D12_RECT* scissor, D3D12_CPU_DESCRIPTOR_HANDLE renderTargetHandle, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandle)
     {
-        //record rendering commands
         CommandList->RSSetViewports(1, viewport);
         CommandList->RSSetScissorRects(1, scissor);
+
+        CurrentViewport = *viewport;
+        CurrentScissorRect = *scissor;
 
         //set render target
         CommandList->OMSetRenderTargets(1, &renderTargetHandle, FALSE, &depthStencilHandle);
@@ -70,11 +72,9 @@ namespace Waldem
         Close();
     }
 
-    void DX12CommandList::AddDrawCommand(Mesh* mesh, PixelShader* shader)
+    void DX12CommandList::AddDrawCommand(Model* model, PixelShader* shader)
     {
         auto dxShader = (DX12PixelShader*)shader;
-        auto& indexBufferView = ((DX12IndexBuffer*)mesh->IB)->GetBufferView();
-        auto& vertexBufferView = ((DX12VertexBuffer*)mesh->VB)->GetBufferView();
         auto pipeline = dxShader->GetPipeline();
         auto rootSignature = dxShader->GetRootSignature();
         auto resourcesHeap = dxShader->GetResourcesHeap();
@@ -85,15 +85,44 @@ namespace Waldem
         {
             D3D12_CPU_DESCRIPTOR_HANDLE renderTargetHandle = ((DX12RenderTarget*)shader->RenderTarget)->GetRenderTargetHandle();
 
-            D3D12_RESOURCE_BARRIER barrier = {};
-            barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-            barrier.Transition.pResource = (ID3D12Resource*)shader->RenderTarget->GetPlatformResource();
-            barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
-            barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-            barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-            CommandList->ResourceBarrier(1, &barrier);
+            D3D12_VIEWPORT Viewport = {};
+            D3D12_RECT ScissorRect = {};
             
-            CommandList->OMSetRenderTargets(1, &renderTargetHandle, FALSE, nullptr);
+            Viewport.Width = shader->RenderTarget->GetWidth();
+            Viewport.Height = shader->RenderTarget->GetHeight();
+            ScissorRect.right = shader->RenderTarget->GetWidth();
+            ScissorRect.bottom = shader->RenderTarget->GetHeight();
+            
+            CommandList->RSSetViewports(1, &Viewport);
+            CommandList->RSSetScissorRects(1, &ScissorRect);
+
+            if(shader->RenderTarget->IsDepthStencilBuffer())
+            {
+                D3D12_RESOURCE_BARRIER barrier = {};
+                barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+                barrier.Transition.pResource = (ID3D12Resource*)shader->RenderTarget->GetPlatformResource();
+                barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
+                barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+                barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+                CommandList->ResourceBarrier(1, &barrier);
+                
+                CommandList->OMSetRenderTargets(0, nullptr, FALSE, &renderTargetHandle);
+		        CommandList->ClearDepthStencilView(renderTargetHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+            }
+            else
+            {
+                D3D12_RESOURCE_BARRIER barrier = {};
+                barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+                barrier.Transition.pResource = (ID3D12Resource*)shader->RenderTarget->GetPlatformResource();
+                barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
+                barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+                barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+                CommandList->ResourceBarrier(1, &barrier);
+
+                CommandList->OMSetRenderTargets(1, &renderTargetHandle, FALSE, nullptr);
+                const float clearColorFloat[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+		        CommandList->ClearRenderTargetView(renderTargetHandle, clearColorFloat, 0, 0);
+            }
         }
         
         CommandList->SetPipelineState(pipeline);
@@ -114,14 +143,158 @@ namespace Waldem
         }
         
         CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+        //Draw meshes
+        auto meshes = model->GetMeshes();
+
+        for (auto mesh : meshes)
+        {
+            auto& indexBufferView = ((DX12IndexBuffer*)mesh->IB)->GetBufferView();
+            auto& vertexBufferView = ((DX12VertexBuffer*)mesh->VB)->GetBufferView();
+            uint32_t indexCountPerInstance = mesh->IB->GetCount();
+            CommandList->IASetVertexBuffers(0, 1, &vertexBufferView);
+            CommandList->IASetIndexBuffer(&indexBufferView);
+            CommandList->DrawIndexedInstanced(mesh->IB->GetCount(), 1, 0, 0, 0);
+        }
+
+        //Set previous render target back
+        if(shader->RenderTarget)
+        {
+            CommandList->RSSetViewports(1, &CurrentViewport);
+            CommandList->RSSetScissorRects(1, &CurrentScissorRect);
+            
+            if(shader->RenderTarget->IsDepthStencilBuffer())
+            {
+                D3D12_RESOURCE_BARRIER barrier = {};
+                barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+                barrier.Transition.pResource = (ID3D12Resource*)shader->RenderTarget->GetPlatformResource();
+                barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+                barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
+                barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+                CommandList->ResourceBarrier(1, &barrier);
+            }
+            else
+            {
+                D3D12_RESOURCE_BARRIER barrier = {};
+                barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+                barrier.Transition.pResource = (ID3D12Resource*)shader->RenderTarget->GetPlatformResource();
+                barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+                barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
+                barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+                CommandList->ResourceBarrier(1, &barrier);
+            }
+
+            CommandList->OMSetRenderTargets(1, &CurrentRenderTargetHandle, FALSE, &CurrentDepthStencilHandle);
+        }
+    }
+
+    void DX12CommandList::AddDrawCommand(Mesh* mesh, PixelShader* shader)
+    {
+        auto dxShader = (DX12PixelShader*)shader;
+        auto pipeline = dxShader->GetPipeline();
+        auto rootSignature = dxShader->GetRootSignature();
+        auto resourcesHeap = dxShader->GetResourcesHeap();
+        auto rootParams = dxShader->GetRootParams();
+
+        //If shader does have its own render target, set it
+        if(shader->RenderTarget)
+        {
+            D3D12_CPU_DESCRIPTOR_HANDLE renderTargetHandle = ((DX12RenderTarget*)shader->RenderTarget)->GetRenderTargetHandle();
+
+            D3D12_VIEWPORT Viewport = {};
+            D3D12_RECT ScissorRect = {};
+            
+            Viewport.Width = shader->RenderTarget->GetWidth();
+            Viewport.Height = shader->RenderTarget->GetHeight();
+            ScissorRect.right = shader->RenderTarget->GetWidth();
+            ScissorRect.bottom = shader->RenderTarget->GetHeight();
+            
+            CommandList->RSSetViewports(1, &Viewport);
+            CommandList->RSSetScissorRects(1, &ScissorRect);
+
+            if(shader->RenderTarget->IsDepthStencilBuffer())
+            {
+                D3D12_RESOURCE_BARRIER barrier = {};
+                barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+                barrier.Transition.pResource = (ID3D12Resource*)shader->RenderTarget->GetPlatformResource();
+                barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
+                barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+                barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+                CommandList->ResourceBarrier(1, &barrier);
+                
+                CommandList->OMSetRenderTargets(0, nullptr, FALSE, &renderTargetHandle);
+		        CommandList->ClearDepthStencilView(renderTargetHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+            }
+            else
+            {
+                D3D12_RESOURCE_BARRIER barrier = {};
+                barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+                barrier.Transition.pResource = (ID3D12Resource*)shader->RenderTarget->GetPlatformResource();
+                barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
+                barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+                barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+                CommandList->ResourceBarrier(1, &barrier);
+
+                CommandList->OMSetRenderTargets(1, &renderTargetHandle, FALSE, nullptr);
+                const float clearColorFloat[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+		        CommandList->ClearRenderTargetView(renderTargetHandle, clearColorFloat, 0, 0);
+            }
+        }
+        
+        CommandList->SetPipelineState(pipeline);
+        CommandList->SetGraphicsRootSignature(rootSignature);
+        // auto samplersHeap = ((DX12PixelShader*)shader)->GetSamplersHeap();
+        // ID3D12DescriptorHeap* heaps[] = { resourcesHeap, samplersHeap };
+        // commandList->SetDescriptorHeaps(2, heaps);
+        ID3D12DescriptorHeap* heaps[] = { resourcesHeap };
+        CommandList->SetDescriptorHeaps(1, heaps);
+        
+        UINT descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        D3D12_GPU_DESCRIPTOR_HANDLE handle = resourcesHeap->GetGPUDescriptorHandleForHeapStart();
+
+        for (uint32_t i = 0; i < rootParams.size(); ++i)
+        {
+            CommandList->SetGraphicsRootDescriptorTable(i, handle);
+            handle.ptr += descriptorSize;
+        }
+        
+        CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+        //Draw mesh
+        auto& indexBufferView = ((DX12IndexBuffer*)mesh->IB)->GetBufferView();
+        auto& vertexBufferView = ((DX12VertexBuffer*)mesh->VB)->GetBufferView();
+        uint32_t indexCountPerInstance = mesh->IB->GetCount();
         CommandList->IASetVertexBuffers(0, 1, &vertexBufferView);
         CommandList->IASetIndexBuffer(&indexBufferView);
-
         CommandList->DrawIndexedInstanced(mesh->IB->GetCount(), 1, 0, 0, 0);
 
         //Set previous render target back
         if(shader->RenderTarget)
         {
+            CommandList->RSSetViewports(1, &CurrentViewport);
+            CommandList->RSSetScissorRects(1, &CurrentScissorRect);
+            
+            if(shader->RenderTarget->IsDepthStencilBuffer())
+            {
+                D3D12_RESOURCE_BARRIER barrier = {};
+                barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+                barrier.Transition.pResource = (ID3D12Resource*)shader->RenderTarget->GetPlatformResource();
+                barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+                barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
+                barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+                CommandList->ResourceBarrier(1, &barrier);
+            }
+            else
+            {
+                D3D12_RESOURCE_BARRIER barrier = {};
+                barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+                barrier.Transition.pResource = (ID3D12Resource*)shader->RenderTarget->GetPlatformResource();
+                barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+                barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
+                barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+                CommandList->ResourceBarrier(1, &barrier);
+            }
+
             CommandList->OMSetRenderTargets(1, &CurrentRenderTargetHandle, FALSE, &CurrentDepthStencilHandle);
         }
     }
