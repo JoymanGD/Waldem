@@ -90,6 +90,9 @@ namespace Waldem
             
             Viewport.Width = shader->RenderTarget->GetWidth();
             Viewport.Height = shader->RenderTarget->GetHeight();
+            Viewport.MinDepth = 0;
+            Viewport.MaxDepth = 1;
+            
             ScissorRect.right = shader->RenderTarget->GetWidth();
             ScissorRect.bottom = shader->RenderTarget->GetHeight();
             

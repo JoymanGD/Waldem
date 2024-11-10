@@ -61,6 +61,13 @@ namespace Waldem
         CompileMatrix();
     }
 
+    void Transform::Rotate(float yaw, float pitch, float roll)
+    {
+        Quaternion rotation = Quaternion(Vector3(pitch, yaw, roll));
+
+        Rotate(rotation);
+    }
+
     void Transform::SetEuler(Vector3 euler)
     {
         euler = radians(euler);
