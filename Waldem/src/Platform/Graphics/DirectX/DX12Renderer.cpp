@@ -164,6 +164,20 @@ namespace Waldem
         WorldCommandList.first = new DX12CommandList(Device, D3D12_COMMAND_LIST_TYPE_DIRECT);
     }
 
+    void DX12Renderer::Draw(Model* model, PixelShader* pixelShader)
+    {
+        auto& cmd = WorldCommandList.first;
+
+        cmd->AddDrawCommand(model, pixelShader);
+    }
+
+    void DX12Renderer::Draw(Mesh* mesh, PixelShader* pixelShader)
+    {
+        auto& cmd = WorldCommandList.first;
+
+        cmd->AddDrawCommand(mesh, pixelShader);
+    }
+
     void DX12Renderer::Begin()
     {
         auto& cmd = WorldCommandList.first;
@@ -228,7 +242,7 @@ namespace Waldem
         FrameIndex %= SWAPCHAIN_SIZE;
     }
 
-    PixelShader* DX12Renderer::LoadShader(String shaderName, std::vector<Resource> resources, RenderTarget* renderTarget)
+    PixelShader* DX12Renderer::LoadPixelShader(String shaderName, std::vector<Resource> resources, RenderTarget* renderTarget)
     {
         return new DX12PixelShader(shaderName, Device, WorldCommandList.first, resources, renderTarget);
     }
@@ -253,12 +267,5 @@ namespace Waldem
     IndexBuffer* DX12Renderer::CreateIndexBuffer(void* data, uint32_t count)
     {
         return new DX12IndexBuffer(Device, data, count);
-    }
-
-    void DX12Renderer::Draw(Mesh* mesh, PixelShader* pixelShader)
-    {
-        auto& cmd = WorldCommandList.first;
-
-        cmd->AddDrawCommand(mesh, pixelShader);
     }
 }

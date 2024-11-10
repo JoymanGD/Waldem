@@ -9,6 +9,7 @@ struct VS_INPUT
 struct PS_INPUT
 {
     float4 Position : SV_POSITION;
+    float4 WorldPosition : POSITION;
     float3 Normal : NORMAL;
     float2 UV : TEXCOORD;
     uint MeshId : MESH_ID;
@@ -16,17 +17,16 @@ struct PS_INPUT
 
 cbuffer MyConstantBuffer : register(b0)
 {
-    matrix vp;
     matrix world;
-    uint lightsAmount;
+    matrix vp;
 };
 
 PS_INPUT main(VS_INPUT input)
 {
     PS_INPUT output;
 
-    float4 position = mul(world, float4(input.Position, 1));
-    output.Position = mul(vp, position);
+    output.WorldPosition = mul(world, float4(input.Position, 1));
+    output.Position = mul(vp, output.WorldPosition);
     output.Normal = input.Normal;
     output.UV = input.UV;
     output.MeshId = input.MeshId;

@@ -21,9 +21,6 @@ namespace Sandbox
 		TestModelTransform.Reset();
 		TestModelTransform.SetPosition(0, 0, 0);
 		
-		TestDirLightTransform.Reset();
-		TestDirLightTransform.SetPosition(0, 0, 0);
-		
 		float screenWidth = sceneData->Window->GetWidth();
 		float screenHeight = sceneData->Window->GetHeight();
 		
@@ -31,35 +28,39 @@ namespace Sandbox
 		
 		std::vector<Waldem::Resource> resources;
 
-		Waldem::Matrix4 viewProjection = glm::perspective(70 * glm::pi<float>() / 180.0f, 1.0f, .01f, 10000.0f);
-		// Waldem::Matrix4 viewProjection = glm::ortho(-30.0f, 30.0f, -30.0f, 30.0f, 0.01f, 10000.0f);
-		
-		Waldem::Matrix4 cbv[2] = { TestDirLightTransform.GetMatrix(), viewProjection };
+		// Waldem::Matrix4 projection = glm::perspective(70 * glm::pi<float>() / 180.0f, 1.0f, .01f, 10000.0f);
+		// Waldem::Matrix4 ZFlipMatrix = glm::scale(Waldem::Matrix4(1.0f), Waldem::Vector3(1.0f, 1.0f, -1.0f));
+		Waldem::Matrix4 cbv[2] = { TestModelTransform.GetMatrix(), Lights[0].Data.ViewProjection };
 		resources.push_back(Waldem::Resource("MyConstantBuffer", Waldem::ResourceType::RTYPE_ConstantBuffer, cbv, sizeof(Waldem::Matrix4), 2 * sizeof(Waldem::Matrix4), 0));
-		TestShadowmapShader = sceneData->Renderer->LoadShader("Shadowmap", resources, Lights[0].Shadowmap);
+		TestShadowmapShader = sceneData->Renderer->LoadPixelShader("Shadowmap", resources, Lights[0].Shadowmap);
 
 		resources.clear();
-		Waldem::Matrix4 matrices[2]  = { MainCamera->GetViewProjectionMatrix(), TestModelTransform.GetMatrix() };
+		Waldem::Matrix4 matrices[2]  = { TestModelTransform.GetMatrix(), MainCamera->GetViewProjectionMatrix() };
 		resources.push_back(Waldem::Resource("MyConstantBuffer", Waldem::ResourceType::RTYPE_ConstantBuffer, matrices, sizeof(Waldem::Matrix4), 2 * sizeof(Waldem::Matrix4), 0));
-		resources.push_back(Waldem::Resource("LightsBuffer", Waldem::ResourceType::RTYPE_Buffer, GetLightsData().data(), sizeof(Waldem::LightData), (uint32_t)Lights.size() * sizeof(Waldem::LightData), 0));
+		auto allLightsData = GetLightsData();
+		resources.push_back(Waldem::Resource("LightsBuffer", Waldem::ResourceType::RTYPE_Buffer, allLightsData.data(), sizeof(Waldem::LightData), (uint32_t)Lights.size() * sizeof(Waldem::LightData), 0));
 		resources.push_back(Waldem::Resource("Shadowmap", Lights[0].Shadowmap, 1));
 		resources.push_back(Waldem::Resource("TestTextures", TestModel->GetTextures(), 2));
 		
-		TestPixelShader = sceneData->Renderer->LoadShader("Default", resources);
-
-		ConstantBuffer = { MainCamera->GetViewProjectionMatrix(), TestModelTransform.GetMatrix(), (uint32_t)Lights.size() };
+		TestPixelShader = sceneData->Renderer->LoadPixelShader("Default", resources);
 	}
 
 	void DefaultScene::CreateLights(Waldem::Renderer* Renderer)
 	{
+		TestDirLightTransform.Reset();
+		TestDirLightTransform.SetPosition(0, 200, 0);
+		TestDirLightTransform.SetEuler(-90, 0, 0);
+		
 		Waldem::Light dirLight;
 		dirLight.Data.Color = { .03f, .2f, .3f };
 		dirLight.Data.Intensity = 1.0f;
-		dirLight.Data.Position = { 0, 0, 0 };
+		dirLight.Data.Position = TestDirLightTransform.GetPosition();
 		dirLight.Data.Type = Waldem::LightType::Directional;
-		dirLight.Data.Direction = normalize(Waldem::Vector3(0, -1, 0));
+		dirLight.Data.Direction = TestDirLightTransform.GetForwardVector();
 		dirLight.Data.Range = 100.0f;
-		dirLight.Shadowmap = Renderer->CreateRenderTarget("ShadowmapRT", 1024, 1024, Waldem::TextureFormat::TEXTURE_FORMAT_R32_FLOAT);
+		dirLight.Data.ViewProjection = glm::orthoZO(-45.0f, 45.0f, -45.0f, 45.0f, -1.0f, 1000.0f) * TestDirLightTransform.Inverse();
+		//dirLight.Data.ViewProjection = glm::perspectiveZO(70 * glm::pi<float>() / 180.0f, 1.0f, .01f, 10000.0f) * TestDirLightTransform.Inverse();
+		dirLight.Shadowmap = Renderer->CreateRenderTarget("ShadowmapRT", 1024, 1024, Waldem::TextureFormat::TEXTURE_FORMAT_D32_FLOAT);
 
 		Lights.push_back(dirLight);
 	}
@@ -131,7 +132,7 @@ namespace Sandbox
 
 		auto viewProjectionMatrix = MainCamera->GetViewProjectionMatrix();
 		auto testModelWorldMatrix = TestModelTransform.GetMatrix();
-		Waldem::Matrix4 matrices[2] = { viewProjectionMatrix, testModelWorldMatrix };
+		Waldem::Matrix4 matrices[2] = { testModelWorldMatrix, viewProjectionMatrix };
 		TestPixelShader->UpdateResourceData("MyConstantBuffer", matrices);
 
 		sceneData->Renderer->Draw(TestModel, TestPixelShader);

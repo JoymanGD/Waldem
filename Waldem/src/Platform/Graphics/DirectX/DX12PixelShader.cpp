@@ -97,27 +97,20 @@ namespace Waldem
             psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
             psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
             psoDesc.DepthStencilState.DepthEnable = TRUE;
-
-            if(renderTarget)
-            {
-                psoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN;
-            }
-            else
-            {
-                psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
-            }
-            
+            psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
             psoDesc.SampleMask = UINT_MAX;
             psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
             psoDesc.NumRenderTargets = 1;
             psoDesc.RTVFormats[0] = renderTarget ? (DXGI_FORMAT)renderTarget->GetFormat() : DXGI_FORMAT_R8G8B8A8_UNORM;
             psoDesc.SampleDesc.Count = 1;
+            
             D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
                 { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
                 { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
                 { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
                 { "MESH_ID", 0, DXGI_FORMAT_R16_UINT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
             };
+            
             psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
             hr = Device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&PipelineState));
 
@@ -247,6 +240,8 @@ namespace Waldem
             {
                 ID3D12Resource* resourceBuffer;
 
+                uint32_t size;
+
                 switch (resourceDesc.Type)
                 {
                 case RTYPE_Sampler:
@@ -258,7 +253,7 @@ namespace Waldem
                     {
                         D3D12_RESOURCE_DESC bufferDesc = {};
                         
-                        uint32_t size = (uint32_t)resourceDesc.Size.x;
+                        size = (uint32_t)resourceDesc.Size.x;
                         
                         size = (size + 255) & ~255; //align to 256 bytes
                         bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
@@ -288,6 +283,8 @@ namespace Waldem
                     }
                 case RTYPE_Buffer:
                     {
+                        size = (uint32_t)resourceDesc.Size.x;
+                            
                         if(resourceDesc.Buffers.size() != 0)
                         {
                             resourceBuffer = (ID3D12Resource*)resourceDesc.Buffers[i]->GetPlatformResource();
@@ -295,8 +292,6 @@ namespace Waldem
                         else
                         {
                             D3D12_RESOURCE_DESC bufferDesc = {};
-                            
-                            uint32_t size = (uint32_t)resourceDesc.Size.x;
                             
                             bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
                             bufferDesc.Alignment = 0;
@@ -332,6 +327,8 @@ namespace Waldem
                     }
                 case RTYPE_Texture:
                     {
+                        size = resourceDesc.Size.x * resourceDesc.Size.y;
+                        
                         if(resourceDesc.Textures.size() != 0)
                         {
                             resourceBuffer = (ID3D12Resource*)resourceDesc.Textures[i]->GetPlatformResource();
@@ -373,10 +370,20 @@ namespace Waldem
                     }
                 case RTYPE_RenderTarget:
                     {
+                        size = resourceDesc.Size.x * resourceDesc.Size.y;
+                        
                         resourceBuffer = (ID3D12Resource*)resourceDesc.RT->GetPlatformResource();
                         
                         D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-                        srvDesc.Format = (DXGI_FORMAT)resourceDesc.RT->GetFormat();
+                        if(resourceDesc.RT->IsDepthStencilBuffer())
+                        {
+                            srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+                        }
+                        else
+                        {
+                            srvDesc.Format = (DXGI_FORMAT)resourceDesc.RT->GetFormat();
+                        }
+                            
                         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
                         srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
                         srvDesc.Texture2D.MipLevels = 1;
@@ -417,7 +424,7 @@ namespace Waldem
                     {
                         DX12Helper::PrintHResultError(hr);
                     }
-                    memcpy(pMappedData, resourceDesc.Data, (uint32_t)(resourceDesc.Size.x * resourceDesc.Size.y));
+                    memcpy(pMappedData, resourceDesc.Data, size);
                     resourceBuffer->Unmap(0, nullptr);
                 }
                 

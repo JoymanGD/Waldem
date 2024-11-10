@@ -2,6 +2,7 @@
 #include <d3d12.h>
 #include "Waldem/Renderer/Model/Mesh.h"
 #include "Waldem/Renderer/Shader.h"
+#include "Waldem/Renderer/Model/Model.h"
 
 namespace Waldem
 {
@@ -14,6 +15,7 @@ namespace Waldem
         void Begin(D3D12_VIEWPORT* viewport, D3D12_RECT* scissor, D3D12_CPU_DESCRIPTOR_HANDLE renderTargetHandle, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandle);
         void End();
 
+        void AddDrawCommand(Model* mesh, PixelShader* shader);
         void AddDrawCommand(Mesh* mesh, PixelShader* shader);
         void Clear(D3D12_CPU_DESCRIPTOR_HANDLE renderTarget, D3D12_CPU_DESCRIPTOR_HANDLE depthStencil, Vector3 clearColor);
 
@@ -42,5 +44,7 @@ namespace Waldem
         UINT64 FenceValue;
         D3D12_CPU_DESCRIPTOR_HANDLE CurrentRenderTargetHandle;
         D3D12_CPU_DESCRIPTOR_HANDLE CurrentDepthStencilHandle;
+        D3D12_VIEWPORT CurrentViewport;
+        D3D12_RECT CurrentScissorRect;
     };
 }

@@ -45,19 +45,12 @@ namespace Waldem
 
     void Renderer::Draw(Model* model, PixelShader* pixelShader)
     {
-        auto meshes = model->GetMeshes();
-
-        for (uint32_t i = 0; i < meshes.size(); ++i)
-        {
-            auto mesh = meshes[i];
-            
-            Draw(mesh, pixelShader);
-        }
+        PlatformRenderer->Draw(model, pixelShader);
     }
 
-    PixelShader* Renderer::LoadShader(String shaderName, std::vector<Resource> resources, RenderTarget* renderTarget)
+    PixelShader* Renderer::LoadPixelShader(String shaderName, std::vector<Resource> resources, RenderTarget* renderTarget)
     {
-        return PlatformRenderer->LoadShader(shaderName, resources, renderTarget);
+        return PlatformRenderer->LoadPixelShader(shaderName, resources, renderTarget);
     }
 
     Texture2D* Renderer::CreateTexture(String name, int width, int height, TextureFormat format, uint8_t* data)
