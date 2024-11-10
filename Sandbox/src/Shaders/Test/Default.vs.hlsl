@@ -18,7 +18,8 @@ struct PS_INPUT
 cbuffer MyConstantBuffer : register(b0)
 {
     matrix world;
-    matrix vp;
+    matrix view;
+    matrix proj;
 };
 
 PS_INPUT main(VS_INPUT input)
@@ -26,7 +27,8 @@ PS_INPUT main(VS_INPUT input)
     PS_INPUT output;
 
     output.WorldPosition = mul(world, float4(input.Position, 1));
-    output.Position = mul(vp, output.WorldPosition);
+    output.Position = mul(view, output.WorldPosition);
+    output.Position = mul(proj, output.Position);
     output.Normal = input.Normal;
     output.UV = input.UV;
     output.MeshId = input.MeshId;

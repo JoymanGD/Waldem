@@ -1,18 +1,19 @@
 #include "Core.hlsl"
 
+#define SHADOW_BIAS 0.001f
+#define AMBIENT 0.2f
+
 struct Light
 {
-    float3 Position;
-    uint Type;
-    float3 Direction;
-    float Intensity;
     float3 Color;
+    float Intensity;
+    uint Type;
     float Range;
-    matrix ViewProjection;
+    float2 Padding1;
+    matrix World;
+    matrix View;
+    matrix Projection;
 };
-
-#define SHADOW_BIAS 0.001f
-#define AMBIENT 0.8f
 
 struct PS_INPUT
 {
@@ -32,20 +33,28 @@ cbuffer MyConstantBuffer : register(b0)
 SamplerState myStaticSampler : register(s0);
 
 StructuredBuffer<Light> Lights : register(t0);
-Texture2D Shadowmap : register(t1);
+Texture2D<float> Shadowmap : register(t1);
 Texture2D DiffuseTextures[MAX_TEXTURES] : register(t2);
 
-float CalculateShadowFactor(float4 worldPos, float4x4 lightViewProjection)
+float3 GetLightDirection(Light light)
 {
-    float4 lightClipPos = mul(lightViewProjection, worldPos);
+    float3 forward = transpose(light.World)[2];
+    return normalize(forward);
+}
 
-    float2 shadowUVRaw = lightClipPos.xy / lightClipPos.w;
+float CalculateShadowFactor(float4 worldPos, float4x4 view, float4x4 projection)
+{
+    float4 lightClipPos = mul(view, worldPos);
+    lightClipPos = mul(projection, lightClipPos);
     
-    float2 shadowUV = (shadowUVRaw + 1.0f) / 2.0f;
+    float2 shadowUVRaw = lightClipPos.xy;
+    
+    float2 shadowUV = shadowUVRaw * 0.5f + 0.5f;
+    shadowUV.y = -shadowUV.y;
 
     float shadowDepth = Shadowmap.Sample(myStaticSampler, shadowUV).r;
 
-    float currentDepth = lightClipPos.z / lightClipPos.w;
+    float currentDepth = lightClipPos.z - SHADOW_BIAS;
 
     return currentDepth > shadowDepth ? 0.0f : 1.0f;
 }
@@ -59,9 +68,11 @@ float4 main(PS_INPUT input) : SV_TARGET
 
     Light light = Lights[0];
 
-    float shadowFactor = CalculateShadowFactor(input.WorldPosition, light.ViewProjection);
+    float shadowFactor = CalculateShadowFactor(input.WorldPosition, light.View, light.Projection);
 
-    float3 resultColor = color.rgb * AMBIENT + light.Color * light.Intensity * saturate(dot(input.Normal, -light.Direction)) * shadowFactor;
+    float3 lightDirection = GetLightDirection(light);
+
+    float3 resultColor = color.rgb * AMBIENT + color.rgb * light.Color * light.Intensity * saturate(dot(input.Normal, -lightDirection)) * shadowFactor;
 
     return float4(resultColor, 1.0f);
 }

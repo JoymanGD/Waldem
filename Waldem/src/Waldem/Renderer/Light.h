@@ -12,13 +12,14 @@ namespace Waldem
     
     struct LightData
     {
-        Vector3 Position;
-        LightType Type;
-        Vector3 Direction;
-        float Intensity;
         Vector3 Color;
+        float Intensity;
+        LightType Type;
         float Range;
-        Matrix4 ViewProjection;
+        Vector2 Padding1;
+        Matrix4 World;
+        Matrix4 View;
+        Matrix4 Projection;
     };
     
     struct Light

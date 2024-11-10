@@ -4,20 +4,12 @@
 
 namespace Waldem
 {
-    Matrix4 ZFlipMatrix = glm::scale(Matrix4(1.0f), Vector3(1.0f, 1.0f, -1.0f));
-    
     Camera::Camera(float fov, float aspectRatio, float nearClip, float farClip, Vector3 position, float movementSpeed, float rotationSpeed)
     {
         WorldTransform = Transform(position);
         ProjectionMatrix = glm::perspective(fov * glm::pi<float>() / 180.0f, aspectRatio, nearClip, farClip);
         MovementSpeed = movementSpeed;
         RotationSpeed = rotationSpeed / ROTATION_COEF;
-    }
-
-    Matrix4 Camera::GetViewProjectionMatrix()
-    {
-        ViewProjectionMatrix = ProjectionMatrix * ZFlipMatrix * WorldTransform.Inverse();
-        return ViewProjectionMatrix;
     }
 
     void Camera::Move(Vector3 delta)
