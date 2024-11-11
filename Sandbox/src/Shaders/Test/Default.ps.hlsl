@@ -1,8 +1,7 @@
 #include "Core.hlsl"
 
-#define SHADOW_BIAS 0.01f
+#define SHADOW_BIAS 0.0001f
 #define AMBIENT 0.2f
-#define PCF_TAP_SIZE 16.0f
 
 struct Light
 {
@@ -57,16 +56,15 @@ float CalculateShadowFactor(float4 worldPos, float4x4 view, float4x4 projection)
     float depth = lightClipPos.z - SHADOW_BIAS;
 
     float sum = 0;
-    float x, y;
     
     float2 shadowMapSize = float2(2048, 2048);
     float xOffset = 1.0/shadowMapSize.x;
     float yOffset = 1.0/shadowMapSize.y;
  
     //perform PCF filtering on a 4 x 4 texel neighborhood
-    for (y = -1.; y <= 1.; y += 1.0)
+    for (int y = -1; y <= 1; y += 1)
     {
-        for (x = -1.; x <= 1.; x += 1.0)
+        for (int x = -1; x <= 1; x += 1)
         {
             float2 Offsets = float2(x * xOffset, y * yOffset);
             sum += Shadowmap.SampleCmpLevelZero(cmpSampler, shadowUV + Offsets, depth);
@@ -86,10 +84,10 @@ float4 main(PS_INPUT input) : SV_TARGET
     Light light = Lights[0];
 
     float shadowFactor = CalculateShadowFactor(input.WorldPosition, light.View, light.Projection);
-
+    
     float3 lightDirection = GetLightDirection(light);
 
-    float3 resultColor = color.rgb * AMBIENT + color.rgb * light.Color * light.Intensity * saturate(dot(input.Normal, -lightDirection)) * shadowFactor;
+    float3 resultColor = color.rgb * AMBIENT + color.rgb * light.Color * light.Intensity * saturate(dot(input.Normal, -lightDirection)) * saturate(shadowFactor);
 
     return float4(resultColor, 1.0f);
 }
