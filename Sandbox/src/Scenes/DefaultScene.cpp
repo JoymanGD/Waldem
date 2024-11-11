@@ -41,6 +41,7 @@ namespace Sandbox
 		resources.push_back(Waldem::Resource("LightsBuffer", Waldem::ResourceType::RTYPE_Buffer, allLightsData.data(), sizeof(Waldem::LightData), (uint32_t)Lights.size() * sizeof(Waldem::LightData), 0));
 		resources.push_back(Waldem::Resource("Shadowmap", Lights[0].Shadowmap, 1));
 		resources.push_back(Waldem::Resource("TestTextures", TestModel->GetTextures(), 2));
+		resources.push_back(Waldem::Resource("ComparisonSampler", { Waldem::Sampler( Waldem::COMPARISON_MIN_MAG_MIP_LINEAR, Waldem::WRAP, Waldem::WRAP, Waldem::WRAP, Waldem::LESS_EQUAL) }, 1));
 		
 		TestPixelShader = sceneData->Renderer->LoadPixelShader("Default", resources);
 	}
@@ -58,7 +59,7 @@ namespace Sandbox
 		dirLight.Data.Range = 100.0f;
 		dirLight.Data.World = TestDirLightTransform;
 		dirLight.Data.View = glm::scale(Waldem::Matrix4(1.0f), Waldem::Vector3(1.0f, 1.0f, -1.0f)) * TestDirLightTransform.Inverse();
-		dirLight.Data.Projection = glm::orthoZO(-15.0f, 15.0f, -15.0f, 15.0f, -100.f, 100.0f);
+		dirLight.Data.Projection = glm::orthoZO(-20.0f, 20.0f, -20.0f, 20.0f, -200.f, 200.0f);
 		// dirLight.Data.Projection = glm::perspectiveZO(70 * glm::pi<float>() / 180.0f, 1.0f, .1f, 100.0f);
 		dirLight.Shadowmap = Renderer->CreateRenderTarget("ShadowmapRT", 2048, 2048, Waldem::TextureFormat::TEXTURE_FORMAT_D32_FLOAT);
 
@@ -127,7 +128,7 @@ namespace Sandbox
 			float deltaX = (mouseX - lastMouseX) * deltaTime;
 			float deltaY = (mouseY - lastMouseY) * deltaTime;
 
-			TestDirLightTransform.Rotate(deltaX, deltaY, 0);
+			TestDirLightTransform.Rotate(0, deltaY, deltaX);
 		}
 
 		lastMouseX = mouseX;

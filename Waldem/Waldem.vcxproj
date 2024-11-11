@@ -153,6 +153,7 @@
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12PixelShader.h" />
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12Renderer.h" />
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12RenderTarget.h" />
+    <ClInclude Include="src\Platform\Graphics\DirectX\DX12Sampler.h" />
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12Texture.h" />
     <ClInclude Include="src\Platform\OS\Windows\WindowsInput.h" />
     <ClInclude Include="src\Platform\OS\Windows\WindowsWindow.h" />
@@ -183,6 +184,7 @@
     <ClInclude Include="src\Waldem\Renderer\RenderTarget.h" />
     <ClInclude Include="src\Waldem\Renderer\Resource.h" />
     <ClInclude Include="src\Waldem\Renderer\Resources\ResourceManager.h" />
+    <ClInclude Include="src\Waldem\Renderer\Sampler.h" />
     <ClInclude Include="src\Waldem\Renderer\Shader.h" />
     <ClInclude Include="src\Waldem\Renderer\Texture.h" />
     <ClInclude Include="src\Waldem\Renderer\TextureFormat.h" />

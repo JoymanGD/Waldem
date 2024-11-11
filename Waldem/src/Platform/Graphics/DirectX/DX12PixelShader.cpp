@@ -17,6 +17,8 @@ namespace Waldem
 
         if(CompileFromFile(name))
         {
+            std::vector<D3D12_ROOT_PARAMETER> rootParams;
+            
             for (uint32_t i = 0; i < resources.size(); ++i)
             {
                 D3D12_DESCRIPTOR_RANGE* range = new D3D12_DESCRIPTOR_RANGE();
@@ -49,7 +51,8 @@ namespace Waldem
                 param.DescriptorTable.pDescriptorRanges = range;
                 param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
-                RootParams.push_back(param);
+                rootParams.push_back(param);
+                RootParamTypes.push_back(resources[i].Type);
             }
             
             D3D12_STATIC_SAMPLER_DESC staticSampler = {};
@@ -68,8 +71,8 @@ namespace Waldem
             staticSampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
             
             D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
-            rootSignatureDesc.NumParameters = RootParams.size();
-            rootSignatureDesc.pParameters = RootParams.data();
+            rootSignatureDesc.NumParameters = rootParams.size();
+            rootSignatureDesc.pParameters = rootParams.data();
             rootSignatureDesc.NumStaticSamplers = 1;
             rootSignatureDesc.pStaticSamplers = &staticSampler;
             rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
@@ -212,18 +215,20 @@ namespace Waldem
 
         UINT descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
         D3D12_CPU_DESCRIPTOR_HANDLE handle = ResourcesHeap->GetCPUDescriptorHandleForHeapStart();
-        // D3D12_DESCRIPTOR_HEAP_DESC samplerHeapDesc = {};
-        // samplerHeapDesc.NumDescriptors = 1;
-        // samplerHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
-        // samplerHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-        //
-        // hr = Device->CreateDescriptorHeap(&samplerHeapDesc, IID_PPV_ARGS(&SamplersHeap));
-        // if(FAILED(hr))
-        // {
-        //     DX12Helper::PrintHResultError(hr);
-        // }
         
-        // D3D12_CPU_DESCRIPTOR_HANDLE samplerHandle = SamplersHeap->GetCPUDescriptorHandleForHeapStart();
+        D3D12_DESCRIPTOR_HEAP_DESC samplerHeapDesc = {};
+        samplerHeapDesc.NumDescriptors = 1;
+        samplerHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
+        samplerHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+        
+        hr = Device->CreateDescriptorHeap(&samplerHeapDesc, IID_PPV_ARGS(&SamplersHeap));
+        if(FAILED(hr))
+        {
+            DX12Helper::PrintHResultError(hr);
+        }
+        
+        UINT samplerDescriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+        D3D12_CPU_DESCRIPTOR_HANDLE samplerHandle = SamplersHeap->GetCPUDescriptorHandleForHeapStart();
         
         D3D12_HEAP_PROPERTIES heapProps = {};
         heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
@@ -232,8 +237,6 @@ namespace Waldem
         heapProps.CreationNodeMask = 1;
         heapProps.VisibleNodeMask = 1;
 
-        bool HasSampler = false;
-        
         for (auto& resourceDesc : resourceDescs)
         {
             for (uint32_t i = 0; i < resourceDesc.NumResources; ++i)
@@ -246,7 +249,20 @@ namespace Waldem
                 {
                 case RTYPE_Sampler:
                     {
-                        HasSampler = true;
+                        auto& sampler = resourceDesc.Samplers[i];
+                        
+                        D3D12_SAMPLER_DESC samplerDesc = {};
+                        samplerDesc.Filter = (D3D12_FILTER)sampler.Filter;
+                        samplerDesc.AddressU = (D3D12_TEXTURE_ADDRESS_MODE)sampler.AddressU;
+                        samplerDesc.AddressV = (D3D12_TEXTURE_ADDRESS_MODE)sampler.AddressV;
+                        samplerDesc.AddressW = (D3D12_TEXTURE_ADDRESS_MODE)sampler.AddressW;
+                        samplerDesc.MipLODBias = sampler.MipLODBias;
+                        samplerDesc.MaxAnisotropy = sampler.MaxAnisotropy;
+                        samplerDesc.ComparisonFunc = (D3D12_COMPARISON_FUNC)sampler.ComparisonFunc;
+                        samplerDesc.MinLOD = sampler.MinLOD;
+                        samplerDesc.MaxLOD = sampler.MaxLOD;
+                        
+                        Device->CreateSampler(&samplerDesc, samplerHandle);
                         break;
                     }
                 case RTYPE_ConstantBuffer:
@@ -397,38 +413,29 @@ namespace Waldem
                     break;
                 }
 
-                // if(!HasSampler)
-                // {
-                //     D3D12_SAMPLER_DESC samplerDesc = {};
-                //     samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-                //     samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-                //     samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-                //     samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-                //     samplerDesc.MipLODBias = 0.0f;
-                //     samplerDesc.MaxAnisotropy = 1;
-                //     samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-                //     samplerDesc.MinLOD = 0.0f;
-                //     samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
-                //
-                //     Device->CreateSampler(&samplerDesc, samplerHandle);
-                // }
-
-                Resources[resourceDesc.Name] = new ResourceData{ resourceBuffer, resourceDesc };
-
-                if(resourceDesc.Data)
+                if(resourceDesc.Type == RTYPE_Sampler)
                 {
-                    //map and copy data
-                    UINT8* pMappedData;
-                    hr = resourceBuffer->Map(0, nullptr, reinterpret_cast<void**>(&pMappedData));
-                    if(FAILED(hr))
-                    {
-                        DX12Helper::PrintHResultError(hr);
-                    }
-                    memcpy(pMappedData, resourceDesc.Data, size);
-                    resourceBuffer->Unmap(0, nullptr);
+                    samplerHandle.ptr += samplerDescriptorSize;
                 }
-                
-                handle.ptr += descriptorSize;
+                else
+                {
+                    Resources[resourceDesc.Name] = new ResourceData{ resourceBuffer, resourceDesc };
+
+                    if(resourceDesc.Data)
+                    {
+                        //map and copy data
+                        UINT8* pMappedData;
+                        hr = resourceBuffer->Map(0, nullptr, reinterpret_cast<void**>(&pMappedData));
+                        if(FAILED(hr))
+                        {
+                            DX12Helper::PrintHResultError(hr);
+                        }
+                        memcpy(pMappedData, resourceDesc.Data, size);
+                        resourceBuffer->Unmap(0, nullptr);
+                    }
+
+                    handle.ptr += descriptorSize;
+                }
             }
         }
     }
@@ -448,7 +455,7 @@ namespace Waldem
         if(data)
         {
             auto resourceData = Resources[name];
-
+            
             if(resourceData)
             {
                 //map and copy data
@@ -460,6 +467,10 @@ namespace Waldem
                 }
                 memcpy(pMappedData, data, resourceData->Desc.Size.x * resourceData->Desc.Size.y);
                 resourceData->DX12Resource->Unmap(0, nullptr);
+            }
+            else
+            {
+                throw std::runtime_error("Resource not found!");
             }
         }
     }

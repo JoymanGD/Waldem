@@ -1,5 +1,6 @@
 #pragma once
 #include "Buffer.h"
+#include "Sampler.h"
 #include "Shader.h"
 #include "Texture.h"
 
@@ -17,6 +18,7 @@ namespace Waldem
         uint32_t Slot = 0;
         std::vector<Texture2D*> Textures;
         std::vector<StorageBuffer*> Buffers;
+        std::vector<Sampler> Samplers;
         RenderTarget* RT = nullptr;
 
         Resource(String name, ResourceType type, void* data, uint32_t stride, Vector2 size, uint32_t slot)
@@ -65,6 +67,15 @@ namespace Waldem
             Type = RTYPE_RenderTarget;
             RT = renderTarget;
             NumResources = 1;
+            Slot = slot;
+        }
+        
+        Resource(String name, std::vector<Sampler> samplers, uint32_t slot)
+        {
+            Name = name;
+            Type = RTYPE_Sampler;
+            Samplers = samplers;
+            NumResources = samplers.size();
             Slot = slot;
         }
     };
