@@ -37,7 +37,7 @@ namespace Waldem
 
     public:
         void UpdateResourceData(String name, void* data) override;
-        std::vector<D3D12_ROOT_PARAMETER> GetRootParams() const { return RootParams; }
+        std::vector<ResourceType> GetRootParamTypes() const { return RootParamTypes; }
         uint32_t GetInitializedDescriptorsAmount() const { return InitializedDescriptorsAmount; }
 
     private:
@@ -50,7 +50,7 @@ namespace Waldem
         ID3D12DescriptorHeap* SamplersHeap;
         ID3D12Device* Device;
         DX12CommandList* CmdList;
-        std::vector<D3D12_ROOT_PARAMETER> RootParams;
+        std::vector<ResourceType> RootParamTypes;
 
         std::unordered_map<String, ResourceData*> Resources;
         uint32_t InitializedDescriptorsAmount = 0;

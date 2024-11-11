@@ -1,7 +1,8 @@
 #include "Core.hlsl"
 
-#define SHADOW_BIAS 0.001f
+#define SHADOW_BIAS 0.01f
 #define AMBIENT 0.2f
+#define PCF_TAP_SIZE 16.0f
 
 struct Light
 {
@@ -31,6 +32,7 @@ cbuffer MyConstantBuffer : register(b0)
 };
 
 SamplerState myStaticSampler : register(s0);
+SamplerComparisonState cmpSampler : register(s1);
 
 StructuredBuffer<Light> Lights : register(t0);
 Texture2D<float> Shadowmap : register(t1);
@@ -46,17 +48,32 @@ float CalculateShadowFactor(float4 worldPos, float4x4 view, float4x4 projection)
 {
     float4 lightClipPos = mul(view, worldPos);
     lightClipPos = mul(projection, lightClipPos);
+
+    lightClipPos.xyz /= lightClipPos.w;
     
-    float2 shadowUVRaw = lightClipPos.xy;
-    
-    float2 shadowUV = shadowUVRaw * 0.5f + 0.5f;
+    float2 shadowUV = lightClipPos.xy * 0.5f + 0.5f;
     shadowUV.y = -shadowUV.y;
 
-    float shadowDepth = Shadowmap.Sample(myStaticSampler, shadowUV).r;
+    float depth = lightClipPos.z - SHADOW_BIAS;
 
-    float currentDepth = lightClipPos.z - SHADOW_BIAS;
+    float sum = 0;
+    float x, y;
+    
+    float2 shadowMapSize = float2(2048, 2048);
+    float xOffset = 1.0/shadowMapSize.x;
+    float yOffset = 1.0/shadowMapSize.y;
+ 
+    //perform PCF filtering on a 4 x 4 texel neighborhood
+    for (y = -1.; y <= 1.; y += 1.0)
+    {
+        for (x = -1.; x <= 1.; x += 1.0)
+        {
+            float2 Offsets = float2(x * xOffset, y * yOffset);
+            sum += Shadowmap.SampleCmpLevelZero(cmpSampler, shadowUV + Offsets, depth);
+        }
+    }
 
-    return currentDepth > shadowDepth ? 0.0f : 1.0f;
+    return sum / 18.0f;
 }
 
 float4 main(PS_INPUT input) : SV_TARGET

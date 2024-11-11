@@ -78,7 +78,8 @@ namespace Waldem
         auto pipeline = dxShader->GetPipeline();
         auto rootSignature = dxShader->GetRootSignature();
         auto resourcesHeap = dxShader->GetResourcesHeap();
-        auto rootParams = dxShader->GetRootParams();
+        auto samplersHeap = dxShader->GetSamplersHeap();
+        auto rootParamTypes = dxShader->GetRootParamTypes();
 
         //If shader does have its own render target, set it
         if(shader->RenderTarget)
@@ -130,19 +131,28 @@ namespace Waldem
         
         CommandList->SetPipelineState(pipeline);
         CommandList->SetGraphicsRootSignature(rootSignature);
-        // auto samplersHeap = ((DX12PixelShader*)shader)->GetSamplersHeap();
-        // ID3D12DescriptorHeap* heaps[] = { resourcesHeap, samplersHeap };
-        // commandList->SetDescriptorHeaps(2, heaps);
-        ID3D12DescriptorHeap* heaps[] = { resourcesHeap };
-        CommandList->SetDescriptorHeaps(1, heaps);
+        ID3D12DescriptorHeap* heaps[] = { resourcesHeap, samplersHeap };
+        CommandList->SetDescriptorHeaps(2, heaps);
         
         UINT descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
         D3D12_GPU_DESCRIPTOR_HANDLE handle = resourcesHeap->GetGPUDescriptorHandleForHeapStart();
+        UINT samplerDescriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        D3D12_GPU_DESCRIPTOR_HANDLE samplersHandle = samplersHeap->GetGPUDescriptorHandleForHeapStart();
 
-        for (uint32_t i = 0; i < rootParams.size(); ++i)
+        for (uint32_t i = 0; i < rootParamTypes.size(); ++i)
         {
-            CommandList->SetGraphicsRootDescriptorTable(i, handle);
-            handle.ptr += descriptorSize;
+            auto& rootParamType = rootParamTypes[i];
+
+            if(rootParamType == RTYPE_Sampler)
+            {
+                CommandList->SetGraphicsRootDescriptorTable(i, samplersHandle);
+                samplersHandle.ptr += samplerDescriptorSize;
+            }
+            else
+            {
+                CommandList->SetGraphicsRootDescriptorTable(i, handle);
+                handle.ptr += descriptorSize;
+            }
         }
         
         CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -197,7 +207,7 @@ namespace Waldem
         auto pipeline = dxShader->GetPipeline();
         auto rootSignature = dxShader->GetRootSignature();
         auto resourcesHeap = dxShader->GetResourcesHeap();
-        auto rootParams = dxShader->GetRootParams();
+        auto rootParams = dxShader->GetRootParamTypes();
 
         //If shader does have its own render target, set it
         if(shader->RenderTarget)
@@ -246,11 +256,9 @@ namespace Waldem
         
         CommandList->SetPipelineState(pipeline);
         CommandList->SetGraphicsRootSignature(rootSignature);
-        // auto samplersHeap = ((DX12PixelShader*)shader)->GetSamplersHeap();
-        // ID3D12DescriptorHeap* heaps[] = { resourcesHeap, samplersHeap };
-        // commandList->SetDescriptorHeaps(2, heaps);
-        ID3D12DescriptorHeap* heaps[] = { resourcesHeap };
-        CommandList->SetDescriptorHeaps(1, heaps);
+        auto samplersHeap = ((DX12PixelShader*)shader)->GetSamplersHeap();
+        ID3D12DescriptorHeap* heaps[] = { resourcesHeap, samplersHeap };
+        CommandList->SetDescriptorHeaps(2, heaps);
         
         UINT descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
         D3D12_GPU_DESCRIPTOR_HANDLE handle = resourcesHeap->GetGPUDescriptorHandleForHeapStart();
