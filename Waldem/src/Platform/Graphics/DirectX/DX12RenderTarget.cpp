@@ -4,7 +4,7 @@
 
 namespace Waldem
 {
-    DX12RenderTarget::DX12RenderTarget(String name, ID3D12Device* device, DX12CommandList* cmdList, int width, int height, TextureFormat format)
+    DX12RenderTarget::DX12RenderTarget(String name, ID3D12Device* device, DX12GraphicCommandList* cmdList, int width, int height, TextureFormat format)
         : RenderTarget(name, width, height, format)
     {
         HRESULT hr;
@@ -76,7 +76,7 @@ namespace Waldem
             textureDesc.SampleDesc.Count = 1;
             textureDesc.SampleDesc.Quality = 0;
             textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-            textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+            textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 
             // Create the texture resource
             D3D12_HEAP_PROPERTIES heapProperties = {};
@@ -90,7 +90,7 @@ namespace Waldem
                 &heapProperties,
                 D3D12_HEAP_FLAG_NONE,
                 &textureDesc,
-                D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE,
+                D3D12_RESOURCE_STATE_COMMON,
                 nullptr,
                 IID_PPV_ARGS(&Resource));
 
@@ -102,13 +102,13 @@ namespace Waldem
             std::wstring widestr = std::wstring(name.begin(), name.end());
             Resource->SetName(widestr.c_str());
 
-            // D3D12_RESOURCE_BARRIER barrier = {};
-            // barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-            // barrier.Transition.pResource = Resource;
-            // barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
-            // barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COMMON;
-            // barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-            // cmdList->ResourceBarrier(1, &barrier);
+            D3D12_RESOURCE_BARRIER barrier = {};
+            barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+            barrier.Transition.pResource = Resource;
+            barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COMMON;
+            barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+            barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+            cmdList->ResourceBarrier(1, &barrier);
 
             //create descriptor Heap for Render Target View (RTV)
             D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};

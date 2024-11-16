@@ -4,7 +4,7 @@
 
 namespace Waldem
 {
-    DX12Texture::DX12Texture(String name, ID3D12Device* device, DX12CommandList* cmdList, int width, int height, TextureFormat format, uint8_t* data)
+    DX12Texture::DX12Texture(String name, ID3D12Device* device, DX12GraphicCommandList* cmdList, int width, int height, TextureFormat format, uint8_t* data)
         : Texture2D(name, width, height, format)
     {
         HRESULT hr;

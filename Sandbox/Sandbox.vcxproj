@@ -101,7 +101,8 @@ xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Debug\Sandbox\Cont
     </PostBuildEvent>
     <FxCompile>
       <ShaderModel>5.1</ShaderModel>
-      <AdditionalOptions></AdditionalOptions>
+      <AdditionalOptions>
+      </AdditionalOptions>
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -186,6 +187,19 @@ xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Dist\Sandbox\Conte
       <ShaderModel>5.0</ShaderModel>
       <EntryPointName>main</EntryPointName>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.1</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Test\PostProcess.comp.hlsl">
+      <ObjectFileOutput>..\bin\Debug\Sandbox\%(Filename).cso</ObjectFileOutput>
+      <TrackerLogDirectory>..\bin-int\Debug\Sandbox\Sandbox.tlog\</TrackerLogDirectory>
+      <EntryPointName>main</EntryPointName>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <ShaderModel>5.1</ShaderModel>
+      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
+      <DisableOptimizations>true</DisableOptimizations>
+      <EnableDebuggingInformation>true</EnableDebuggingInformation>
+      <ShaderType>Vertex</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.1</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
     </FxCompile>
     <FxCompile Include="src\Shaders\Test\Shadowmap.ps.hlsl">
       <ObjectFileOutput>..\bin\Debug\Sandbox\%(Filename).cso</ObjectFileOutput>

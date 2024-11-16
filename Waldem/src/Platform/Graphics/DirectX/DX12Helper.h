@@ -81,6 +81,7 @@ namespace Waldem
             case RTYPE_RWBuffer:
             case RTYPE_RWBufferRaw:
             case RTYPE_RWTexture:
+            case RTYPE_RWRenderTarget:
                 return D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
             case RTYPE_Sampler:
                 return D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;

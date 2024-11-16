@@ -1,6 +1,6 @@
 #include "wdpch.h"
 #include <d3dcompiler.h>
-#include "DX12PixelShader.h"
+#include "DX12ComputeShader.h"
 #include "DX12Helper.h"
 #include "Waldem/Utils/FileUtils.h"
 
@@ -9,8 +9,8 @@ namespace Waldem
 #define MAX_TEXTURES 1024
 #define MAX_BUFFERS 128
     
-    DX12PixelShader::DX12PixelShader(const String& name, ID3D12Device* device, DX12GraphicCommandList* cmdList, std::vector<Resource> resources, Waldem::RenderTarget* renderTarget)
-        : PixelShader(name, renderTarget), Device(device), CmdList(cmdList)
+    DX12ComputeShader::DX12ComputeShader(const String& name, ID3D12Device* device, DX12GraphicCommandList* cmdList, std::vector<Resource> resources)
+        : ComputeShader(name), Device(device), CmdList(cmdList)
     {
         Device = device;
         CmdList = cmdList;
@@ -68,7 +68,7 @@ namespace Waldem
             staticSampler.MaxLOD = D3D12_FLOAT32_MAX;
             staticSampler.ShaderRegister = 0; //matches register(s0) in the shader
             staticSampler.RegisterSpace = 0;
-            staticSampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+            staticSampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
             
             D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
             rootSignatureDesc.NumParameters = rootParams.size();
@@ -88,34 +88,11 @@ namespace Waldem
             }
 
             // Pipeline state
-            D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+            D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc = {};
             psoDesc.pRootSignature = RootSignature;
-            psoDesc.VS = { VertexShaderBlob->GetBufferPointer(), VertexShaderBlob->GetBufferSize() };
-            psoDesc.PS = { PixelShaderBlob->GetBufferPointer(), PixelShaderBlob->GetBufferSize() };
-            psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
-            psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
-            psoDesc.RasterizerState.FrontCounterClockwise = FALSE;
-            psoDesc.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-            psoDesc.DepthStencilState.StencilEnable = FALSE;
-            psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-            psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
-            psoDesc.DepthStencilState.DepthEnable = TRUE;
-            psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
-            psoDesc.SampleMask = UINT_MAX;
-            psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-            psoDesc.NumRenderTargets = 1;
-            psoDesc.RTVFormats[0] = renderTarget ? (DXGI_FORMAT)renderTarget->GetFormat() : DXGI_FORMAT_R8G8B8A8_UNORM;
-            psoDesc.SampleDesc.Count = 1;
+            psoDesc.CS = { ShaderBlob->GetBufferPointer(), ShaderBlob->GetBufferSize() };
             
-            D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
-                { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-                { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-                { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-                { "MESH_ID", 0, DXGI_FORMAT_R16_UINT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
-            };
-            
-            psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
-            hr = Device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&PipelineState));
+            hr = Device->CreateComputePipelineState(&psoDesc, IID_PPV_ARGS(&PipelineState));
 
             if(FAILED(hr))
             {
@@ -126,11 +103,11 @@ namespace Waldem
         }
     }
 
-    DX12PixelShader::~DX12PixelShader()
+    DX12ComputeShader::~DX12ComputeShader()
     {
     }
 
-    bool DX12PixelShader::CompileFromFile(const String& shaderName)
+    bool DX12ComputeShader::CompileFromFile(const String& shaderName)
     {
         String entryPoint = "main"; //TODO: make this configurable?
         
@@ -147,10 +124,10 @@ namespace Waldem
         // Extract the base name
         std::wstring baseName = wShaderName.substr(lastSlash + 1);
         
-        std::wstring shaderPath = pathToShaders + baseName + L".vs.hlsl";
-        String target = "vs_5_1";
+        std::wstring shaderPath = pathToShaders + baseName + L".comp.hlsl";
+        String target = "cs_5_1";
 
-        //vertex shader
+        //compute shader
         HRESULT hr = D3DCompileFromFile(
             shaderPath.c_str(), // Filename
             nullptr, // Macros
@@ -159,32 +136,7 @@ namespace Waldem
             target.c_str(), // Target profile (e.g., "vs_5_0" for vertex shader, "ps_5_0" for pixel shader)
             D3DCOMPILE_DEBUG, // Compile flags
             0,
-            &VertexShaderBlob, // Output shader bytecode
-            &ErrorBlob); // Output error messages
-
-        if(FAILED(hr))
-        {
-            if (ErrorBlob)
-            {
-                WD_CORE_ERROR("Shader compilation error: {0}", (char*)ErrorBlob->GetBufferPointer());
-            }
-            
-            return false;
-        }
-
-        //pixel shader
-        shaderPath = pathToShaders + baseName + L".ps.hlsl";
-        target = "ps_5_1";
-        
-        hr = D3DCompileFromFile(
-            shaderPath.c_str(), // Filename
-            nullptr, // Macros
-            D3D_COMPILE_STANDARD_FILE_INCLUDE,
-            entryPoint.c_str(), // Entry point function (e.g., "main")
-            target.c_str(), // Target profile (e.g., "vs_5_0" for vertex shader, "ps_5_0" for pixel shader)
-            D3DCOMPILE_DEBUG, // Compile flags
-            0,
-            &PixelShaderBlob, // Output shader bytecode
+            &ShaderBlob, // Output shader bytecode
             &ErrorBlob); // Output error messages
 
         if(FAILED(hr))
@@ -200,7 +152,7 @@ namespace Waldem
         return true;
     }
 
-    void DX12PixelShader::SetResources(std::vector<Resource> resourceDescs, uint32_t numDescriptors)
+    void DX12ComputeShader::SetResources(std::vector<Resource> resourceDescs, uint32_t numDescriptors)
     {
         D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
         heapDesc.NumDescriptors = numDescriptors;
@@ -463,7 +415,7 @@ namespace Waldem
         }
     }
 
-    void DX12PixelShader::UpdateResourceData(String name, void* data)
+    void DX12ComputeShader::UpdateResourceData(String name, void* data)
     {
         if(data)
         {

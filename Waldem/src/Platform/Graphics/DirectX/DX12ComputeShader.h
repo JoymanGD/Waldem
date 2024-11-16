@@ -4,22 +4,22 @@
 #include "DX12GraphicCommandList.h"
 #include "DX12Resource.h"
 #include "DX12Shader.h"
-#include "Waldem/Renderer/RenderTarget.h"
 #include "Waldem/Renderer/Resource.h"
 #include "Waldem/Renderer/Shader.h"
 
 namespace Waldem
 {
-    class WALDEM_API DX12PixelShader : public PixelShader
+    class WALDEM_API DX12ComputeShader : public ComputeShader
     {
     public:
-        DX12PixelShader(const String& name, ID3D12Device* device, DX12GraphicCommandList* cmdList, std::vector<Resource> resources, Waldem::RenderTarget* renderTarget = nullptr);
-        ~DX12PixelShader() override;
+        DX12ComputeShader(const String& name, ID3D12Device* device, DX12GraphicCommandList* cmdList, std::vector<Resource> resources);
+        ~DX12ComputeShader() override;
 
         ID3D12PipelineState* GetPipeline() const { return PipelineState; }
         ID3D12RootSignature* GetRootSignature() const { return RootSignature; }
         ID3D12DescriptorHeap* GetResourcesHeap() const { return ResourcesHeap; }
         ID3D12DescriptorHeap* GetSamplersHeap() const { return SamplersHeap; }
+        std::unordered_map<String, ResourceData*> GetResources() const { return Resources; }
 
     private:
         bool CompileFromFile(const String& filepath) override;
@@ -28,11 +28,10 @@ namespace Waldem
     public:
         void UpdateResourceData(String name, void* data) override;
         std::vector<ResourceType> GetRootParamTypes() const { return RootParamTypes; }
-        uint32_t GetInitializedDescriptorsAmount() const { return InitializedDescriptorsAmount; }
+        void* GetPlatformData() override { return ShaderBlob; }
 
     private:
-        ID3DBlob* VertexShaderBlob;
-        ID3DBlob* PixelShaderBlob;
+        ID3DBlob* ShaderBlob;
         ID3DBlob* ErrorBlob;
         ID3D12PipelineState* PipelineState;
         ID3D12RootSignature* RootSignature;
