@@ -42,8 +42,12 @@ namespace Sandbox
 		resources.push_back(Waldem::Resource("Shadowmap", Lights[0].Shadowmap, 1));
 		resources.push_back(Waldem::Resource("TestTextures", TestModel->GetTextures(), 2));
 		resources.push_back(Waldem::Resource("ComparisonSampler", { Waldem::Sampler( Waldem::COMPARISON_MIN_MAG_MIP_LINEAR, Waldem::WRAP, Waldem::WRAP, Waldem::WRAP, Waldem::LESS_EQUAL) }, 1));
-		
 		TestPixelShader = sceneData->Renderer->LoadPixelShader("Default", resources);
+
+		TestRenderTarget = sceneData->Renderer->CreateRenderTarget("TestRenderTarget", 1024, 1024, Waldem::TextureFormat::TEXTURE_FORMAT_R32_FLOAT);
+		resources.clear();
+		resources.push_back(Waldem::Resource("TestResource", TestRenderTarget, 0));
+		TestComputeShader = sceneData->Renderer->LoadComputeShader("PostProcess", resources);
 	}
 
 	void DefaultScene::CreateLights(Waldem::Renderer* Renderer)
@@ -155,5 +159,8 @@ namespace Sandbox
 		TestShadowmapShader->UpdateResourceData("MyConstantBuffer", cbv);
 
 		sceneData->Renderer->Draw(TestModel, TestPixelShader);
+		
+		Waldem::Point3 numThreads = sceneData->Renderer->GetNumThreadsPerGroup(TestComputeShader);
+		sceneData->Renderer->Compute(TestComputeShader, Waldem::Point3((TestRenderTarget->GetWidth() + numThreads.x - 1) / numThreads.x, (TestRenderTarget->GetWidth() + numThreads.y - 1) / numThreads.y, 1));
 	}
 }

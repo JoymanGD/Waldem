@@ -6,11 +6,11 @@
 
 namespace Waldem
 {
-    class WALDEM_API DX12CommandList
+    class WALDEM_API DX12GraphicCommandList
     {
     public:
-        DX12CommandList(ID3D12Device* device, D3D12_COMMAND_LIST_TYPE type);
-        ~DX12CommandList();
+        DX12GraphicCommandList(ID3D12Device* device);
+        ~DX12GraphicCommandList();
 
         void Begin(D3D12_VIEWPORT* viewport, D3D12_RECT* scissor, D3D12_CPU_DESCRIPTOR_HANDLE renderTargetHandle, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandle);
         void End();
@@ -23,7 +23,7 @@ namespace Waldem
 
         void* GetCommandAllocator() const { return CommandAllocator; }
 
-        void Execute(void* commandQueue);
+        void Execute(ID3D12CommandQueue* commandQueue);
         void WaitForCompletion();
         void ResourceBarrier(uint32_t count, D3D12_RESOURCE_BARRIER* barrier);
         void Reset();

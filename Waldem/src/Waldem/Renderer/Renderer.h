@@ -26,7 +26,10 @@ namespace Waldem
         virtual void Present() = 0;
         virtual void Draw(Model* model, PixelShader* pixelShader) = 0;
         virtual void Draw(Mesh* mesh, PixelShader* pixelShader) = 0;
+        virtual Point3 GetNumThreadsPerGroup(ComputeShader* computeShader) = 0;
+        virtual void Compute(ComputeShader* computeShader, Point3 groupCount) = 0;
         virtual PixelShader* LoadPixelShader(String shaderName, std::vector<Resource> resources, RenderTarget* renderTarget = nullptr) = 0;
+        virtual ComputeShader* LoadComputeShader(String shaderName, std::vector<Resource> resources) = 0;
         virtual Texture2D* CreateTexture(String name, int width, int height, TextureFormat format, uint8_t* data = nullptr) = 0;
         virtual RenderTarget* CreateRenderTarget(String name, int width, int height, TextureFormat format) = 0;
         virtual VertexBuffer* CreateVertexBuffer(void* data, uint32_t size) = 0;
@@ -46,7 +49,10 @@ namespace Waldem
 
         void Draw(Mesh* mesh, PixelShader* pixelShader);
         void Draw(Model* model, PixelShader* pixelShader);
+        Point3 GetNumThreadsPerGroup(ComputeShader* computeShader);
+        void Compute(ComputeShader* computeShader, Point3 groupCount);
         PixelShader* LoadPixelShader(String shaderName, std::vector<Resource> resources, RenderTarget* renderTarget = nullptr);
+        ComputeShader* LoadComputeShader(String shaderName, std::vector<Resource> resources);
         Texture2D* CreateTexture(String name, int width, int height, TextureFormat format, uint8_t* data = nullptr);
         RenderTarget* CreateRenderTarget(String name, int width, int height, TextureFormat format);
         VertexBuffer* CreateVertexBuffer(void* data, uint32_t size);

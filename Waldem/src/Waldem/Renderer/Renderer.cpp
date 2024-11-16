@@ -38,6 +38,11 @@ namespace Waldem
         PlatformRenderer->Present();
     }
 
+    Point3 Renderer::GetNumThreadsPerGroup(ComputeShader* computeShader)
+    {
+        return PlatformRenderer->GetNumThreadsPerGroup(computeShader);
+    }
+
     void Renderer::Draw(Mesh* mesh, PixelShader* pixelShader)
     {
         PlatformRenderer->Draw(mesh, pixelShader);
@@ -48,9 +53,19 @@ namespace Waldem
         PlatformRenderer->Draw(model, pixelShader);
     }
 
+    void Renderer::Compute(ComputeShader* computeShader, Point3 groupCount)
+    {
+        PlatformRenderer->Compute(computeShader, groupCount);
+    }
+
     PixelShader* Renderer::LoadPixelShader(String shaderName, std::vector<Resource> resources, RenderTarget* renderTarget)
     {
         return PlatformRenderer->LoadPixelShader(shaderName, resources, renderTarget);
+    }
+
+    ComputeShader* Renderer::LoadComputeShader(String shaderName, std::vector<Resource> resources)
+    {
+        return PlatformRenderer->LoadComputeShader(shaderName, resources);
     }
 
     Texture2D* Renderer::CreateTexture(String name, int width, int height, TextureFormat format, uint8_t* data)

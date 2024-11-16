@@ -1,8 +1,12 @@
 #include "wdpch.h"
 #include "DX12Renderer.h"
 
+#include <d3d12shader.h>
+#include <d3dcompiler.h>
+
 #include "D3DX12.h"
 #include "DX12Buffer.h"
+#include "DX12ComputeShader.h"
 #include "DX12Helper.h"
 #include "DX12PixelShader.h"
 #include "DX12RenderTarget.h"
@@ -56,15 +60,28 @@ namespace Waldem
             throw std::runtime_error("Failed to create D3D12 Device");
         }
 
-        D3D12_COMMAND_QUEUE_DESC queueDesc = {};
-        queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-        queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+        //Graphic command queue
+        D3D12_COMMAND_QUEUE_DESC graphicQueueDesc = {};
+        graphicQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+        graphicQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 
-        h = Device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&CommandQueue));
+        h = Device->CreateCommandQueue(&graphicQueueDesc, IID_PPV_ARGS(&GraphicCommandQueue));
 
         if(FAILED(h))
         {
-            throw std::runtime_error("Failed to create D3D12 command queue");
+            throw std::runtime_error("Failed to create D3D12 graphic command queue");
+        }
+
+        //Compute command queue
+        D3D12_COMMAND_QUEUE_DESC computeQueueDesc = {};
+        computeQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+        computeQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_COMPUTE;
+
+        h = Device->CreateCommandQueue(&computeQueueDesc, IID_PPV_ARGS(&ComputeCommandQueue));
+
+        if(FAILED(h))
+        {
+            throw std::runtime_error("Failed to create D3D12 compute command queue");
         }
 
         DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
@@ -78,7 +95,7 @@ namespace Waldem
         swapChainDesc.Windowed = TRUE;
         swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 
-        h = DxgiFactory->CreateSwapChain(CommandQueue, &swapChainDesc, &SwapChain);
+        h = DxgiFactory->CreateSwapChain(GraphicCommandQueue, &swapChainDesc, &SwapChain);
 
         if(FAILED(h))
         {
@@ -161,28 +178,61 @@ namespace Waldem
         DSVHandle = DSVHeap->GetCPUDescriptorHandleForHeapStart();
         Device->CreateDepthStencilView(DepthStencilBuffer, &dsvDesc, DSVHandle);
 
-        WorldCommandList.first = new DX12CommandList(Device, D3D12_COMMAND_LIST_TYPE_DIRECT);
+        WorldGraphicCommandList.first = new DX12GraphicCommandList(Device);
+        
+        ComputeCommandList = new DX12ComputeCommandList(Device);
     }
 
     void DX12Renderer::Draw(Model* model, PixelShader* pixelShader)
     {
-        auto& cmd = WorldCommandList.first;
+        auto& cmd = WorldGraphicCommandList.first;
 
         cmd->AddDrawCommand(model, pixelShader);
     }
 
     void DX12Renderer::Draw(Mesh* mesh, PixelShader* pixelShader)
     {
-        auto& cmd = WorldCommandList.first;
+        auto& cmd = WorldGraphicCommandList.first;
 
         cmd->AddDrawCommand(mesh, pixelShader);
     }
 
+    Point3 DX12Renderer::GetNumThreadsPerGroup(ComputeShader* computeShader)
+    {
+        ID3D12ShaderReflection* shaderReflection;
+
+        ID3DBlob* computeShaderBytecode = (ID3DBlob*)computeShader->GetPlatformData();
+        
+        // Reflect the shader bytecode
+        HRESULT hr = D3DReflect(
+            computeShaderBytecode->GetBufferPointer(),
+            computeShaderBytecode->GetBufferSize(),
+            IID_PPV_ARGS(&shaderReflection)
+        );
+
+        if (FAILED(hr)) {
+            throw std::runtime_error("Failed to reflect shader.");
+        }
+
+        uint32_t threadGroupX = 0, threadGroupY = 0, threadGroupZ = 0;
+
+        // Get thread group size
+        shaderReflection->GetThreadGroupSize(&threadGroupX, &threadGroupY, &threadGroupZ);
+
+        return { threadGroupX, threadGroupY, threadGroupZ };
+    }
+
+    void DX12Renderer::Compute(ComputeShader* computeShader, Point3 groupCount)
+    {
+        ComputeCommandList->AddDispatchCommand(computeShader, groupCount);
+    }
+
     void DX12Renderer::Begin()
     {
-        auto& cmd = WorldCommandList.first;
+        auto& worldGraphicCmd = WorldGraphicCommandList.first;
 
-        cmd->Reset();
+        worldGraphicCmd->Reset();
+        ComputeCommandList->Reset();
 
         D3D12_RESOURCE_BARRIER barrier = {};
         barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -190,23 +240,23 @@ namespace Waldem
         barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
         barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
         barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-        cmd->ResourceBarrier(1, &barrier);
+        worldGraphicCmd->ResourceBarrier(1, &barrier);
 
         CurrentRenderTargetHandle = RTVHeap->GetCPUDescriptorHandleForHeapStart();
         CurrentRenderTargetHandle.ptr += FrameIndex * RTVDescriptorSize;
         
-        if(!WorldCommandList.second)
+        if(!WorldGraphicCommandList.second)
         {
-            cmd->Clear(CurrentRenderTargetHandle, DSVHandle, { 0.0f, 0.0f, 0.0f });
-            cmd->Begin(&Viewport, &ScissorRect, CurrentRenderTargetHandle, DSVHandle);
+            worldGraphicCmd->Clear(CurrentRenderTargetHandle, DSVHandle, { 0.0f, 0.0f, 0.0f });
+            worldGraphicCmd->Begin(&Viewport, &ScissorRect, CurrentRenderTargetHandle, DSVHandle);
             
-            WorldCommandList.second = true;
+            WorldGraphicCommandList.second = true;
         }
     }
 
     void DX12Renderer::End()
     {
-        auto& cmd = WorldCommandList.first;
+        auto& worldGraphicCmd = WorldGraphicCommandList.first;
 
         D3D12_RESOURCE_BARRIER barrier = {};
         barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -214,18 +264,22 @@ namespace Waldem
         barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
         barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
         barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-        cmd->ResourceBarrier(1, &barrier);
+        worldGraphicCmd->ResourceBarrier(1, &barrier);
         
-        if(WorldCommandList.second)
+        if(WorldGraphicCommandList.second)
         {
-            cmd->End();
+            worldGraphicCmd->End();
             
-            WorldCommandList.second = false;
+            WorldGraphicCommandList.second = false;
         }
 
-        cmd->Execute(CommandQueue);
+        ComputeCommandList->Close();
+
+        worldGraphicCmd->Execute(GraphicCommandQueue);
+        worldGraphicCmd->WaitForCompletion();
         
-        cmd->WaitForCompletion();
+        ComputeCommandList->Execute(ComputeCommandQueue);
+        ComputeCommandList->WaitForCompletion();
     }
 
     void DX12Renderer::Present()
@@ -244,18 +298,23 @@ namespace Waldem
 
     PixelShader* DX12Renderer::LoadPixelShader(String shaderName, std::vector<Resource> resources, RenderTarget* renderTarget)
     {
-        return new DX12PixelShader(shaderName, Device, WorldCommandList.first, resources, renderTarget);
+        return new DX12PixelShader(shaderName, Device, WorldGraphicCommandList.first, resources, renderTarget);
+    }
+
+    ComputeShader* DX12Renderer::LoadComputeShader(String shaderName, std::vector<Resource> resources)
+    {
+        return new DX12ComputeShader(shaderName, Device, WorldGraphicCommandList.first, resources);
     }
 
     Texture2D* DX12Renderer::CreateTexture(String name, int width, int height, TextureFormat format, uint8_t* data)
     {
-        Texture2D* texture = new DX12Texture(name, Device, WorldCommandList.first, width, height, format, data);
+        Texture2D* texture = new DX12Texture(name, Device, WorldGraphicCommandList.first, width, height, format, data);
         return texture;
     }
 
     RenderTarget* DX12Renderer::CreateRenderTarget(String name, int width, int height, TextureFormat format)
     {
-        DX12RenderTarget* renderTarget = new DX12RenderTarget(name, Device, WorldCommandList.first, width, height, format);
+        DX12RenderTarget* renderTarget = new DX12RenderTarget(name, Device, WorldGraphicCommandList.first, width, height, format);
         return renderTarget;
     }
 

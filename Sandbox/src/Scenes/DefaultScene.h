@@ -28,9 +28,11 @@ namespace Sandbox
         Waldem::Camera* MainCamera;
         Waldem::Model* TestModel;
         Waldem::PixelShader* TestPixelShader;
+        Waldem::ComputeShader* TestComputeShader;
         Waldem::Transform TestModelTransform;
         Waldem::Transform TestDirLightTransform;
         Waldem::PixelShader* TestShadowmapShader;
+        Waldem::RenderTarget* TestRenderTarget;
         std::vector<Waldem::Light> Lights;
     };
 }
