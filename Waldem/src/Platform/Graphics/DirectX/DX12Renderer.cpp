@@ -296,12 +296,12 @@ namespace Waldem
         FrameIndex %= SWAPCHAIN_SIZE;
     }
 
-    PixelShader* DX12Renderer::LoadPixelShader(String shaderName, std::vector<Resource> resources, RenderTarget* renderTarget)
+    PixelShader* DX12Renderer::LoadPixelShader(String shaderName, WArray<Resource> resources, RenderTarget* renderTarget)
     {
         return new DX12PixelShader(shaderName, Device, WorldGraphicCommandList.first, resources, renderTarget);
     }
 
-    ComputeShader* DX12Renderer::LoadComputeShader(String shaderName, std::vector<Resource> resources)
+    ComputeShader* DX12Renderer::LoadComputeShader(String shaderName, WArray<Resource> resources)
     {
         return new DX12ComputeShader(shaderName, Device, WorldGraphicCommandList.first, resources);
     }

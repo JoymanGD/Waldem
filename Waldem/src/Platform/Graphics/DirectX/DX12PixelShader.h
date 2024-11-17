@@ -13,7 +13,7 @@ namespace Waldem
     class WALDEM_API DX12PixelShader : public PixelShader
     {
     public:
-        DX12PixelShader(const String& name, ID3D12Device* device, DX12GraphicCommandList* cmdList, std::vector<Resource> resources, Waldem::RenderTarget* renderTarget = nullptr);
+        DX12PixelShader(const String& name, ID3D12Device* device, DX12GraphicCommandList* cmdList, WArray<Resource> resources, Waldem::RenderTarget* renderTarget = nullptr);
         ~DX12PixelShader() override;
 
         ID3D12PipelineState* GetPipeline() const { return PipelineState; }
@@ -23,11 +23,11 @@ namespace Waldem
 
     private:
         bool CompileFromFile(const String& filepath) override;
-        void SetResources(std::vector<Resource> resourceDescs, uint32_t numDescriptors);
+        void SetResources(WArray<Resource> resourceDescs, uint32_t numDescriptors);
 
     public:
         void UpdateResourceData(String name, void* data) override;
-        std::vector<ResourceType> GetRootParamTypes() const { return RootParamTypes; }
+        WArray<ResourceType> GetRootParamTypes() const { return RootParamTypes; }
         uint32_t GetInitializedDescriptorsAmount() const { return InitializedDescriptorsAmount; }
 
     private:
@@ -40,7 +40,7 @@ namespace Waldem
         ID3D12DescriptorHeap* SamplersHeap;
         ID3D12Device* Device;
         DX12GraphicCommandList* CmdList;
-        std::vector<ResourceType> RootParamTypes;
+        WArray<ResourceType> RootParamTypes;
 
         std::unordered_map<String, ResourceData*> Resources;
         uint32_t InitializedDescriptorsAmount = 0;

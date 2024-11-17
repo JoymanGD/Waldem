@@ -22,6 +22,9 @@
     <Filter Include="src\Waldem">
       <UniqueIdentifier>{56E54637-429D-8884-ABA4-61E0977B2375}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Waldem\ECS">
+      <UniqueIdentifier>{A09460A0-8C62-54A6-75F6-C4CC6163300B}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Waldem\Events">
       <UniqueIdentifier>{7A748699-E68A-842F-2F02-10519B5755B7}</UniqueIdentifier>
     </Filter>
@@ -78,16 +81,40 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Platform\Graphics\DirectX\D3DX12.h">
+      <Filter>src\Platform\Graphics\DirectX</Filter>
+    </ClInclude>
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12Buffer.h">
       <Filter>src\Platform\Graphics\DirectX</Filter>
     </ClInclude>
-    <ClInclude Include="src\Platform\Graphics\DirectX\DX12CommandList.h">
+    <ClInclude Include="src\Platform\Graphics\DirectX\DX12ComputeCommandList.h">
+      <Filter>src\Platform\Graphics\DirectX</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\Graphics\DirectX\DX12ComputeShader.h">
+      <Filter>src\Platform\Graphics\DirectX</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\Graphics\DirectX\DX12GraphicCommandList.h">
+      <Filter>src\Platform\Graphics\DirectX</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\Graphics\DirectX\DX12Helper.h">
       <Filter>src\Platform\Graphics\DirectX</Filter>
     </ClInclude>
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12PixelShader.h">
       <Filter>src\Platform\Graphics\DirectX</Filter>
     </ClInclude>
+    <ClInclude Include="src\Platform\Graphics\DirectX\DX12RenderTarget.h">
+      <Filter>src\Platform\Graphics\DirectX</Filter>
+    </ClInclude>
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12Renderer.h">
+      <Filter>src\Platform\Graphics\DirectX</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\Graphics\DirectX\DX12Resource.h">
+      <Filter>src\Platform\Graphics\DirectX</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\Graphics\DirectX\DX12Sampler.h">
+      <Filter>src\Platform\Graphics\DirectX</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\Graphics\DirectX\DX12Shader.h">
       <Filter>src\Platform\Graphics\DirectX</Filter>
     </ClInclude>
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12Texture.h">
@@ -107,6 +134,12 @@
     </ClInclude>
     <ClInclude Include="src\Waldem\Core.h">
       <Filter>src\Waldem</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\ECS\Component.h">
+      <Filter>src\Waldem\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\ECS\Entity.h">
+      <Filter>src\Waldem\ECS</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\EntryPoint.h">
       <Filter>src\Waldem</Filter>
@@ -168,14 +201,20 @@
     <ClInclude Include="src\Waldem\Renderer\Model\Transform.h">
       <Filter>src\Waldem\Renderer\Model</Filter>
     </ClInclude>
-    <ClInclude Include="src\Waldem\Renderer\Rect.h">
+    <ClInclude Include="src\Waldem\Renderer\RenderTarget.h">
       <Filter>src\Waldem\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\Renderer\Renderer.h">
       <Filter>src\Waldem\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="src\Waldem\Renderer\Resource.h">
+      <Filter>src\Waldem\Renderer</Filter>
+    </ClInclude>
     <ClInclude Include="src\Waldem\Renderer\Resources\ResourceManager.h">
       <Filter>src\Waldem\Renderer\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\Renderer\Sampler.h">
+      <Filter>src\Waldem\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\Renderer\Shader.h">
       <Filter>src\Waldem\Renderer</Filter>
@@ -183,7 +222,7 @@
     <ClInclude Include="src\Waldem\Renderer\Texture.h">
       <Filter>src\Waldem\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="src\Waldem\Renderer\Viewport.h">
+    <ClInclude Include="src\Waldem\Renderer\TextureFormat.h">
       <Filter>src\Waldem\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\SceneManagement\Scene.h">
@@ -192,10 +231,16 @@
     <ClInclude Include="src\Waldem\SceneManagement\SceneManager.h">
       <Filter>src\Waldem\SceneManagement</Filter>
     </ClInclude>
+    <ClInclude Include="src\Waldem\Types\BasicTypes.h">
+      <Filter>src\Waldem\Types</Filter>
+    </ClInclude>
     <ClInclude Include="src\Waldem\Types\MathTypes.h">
       <Filter>src\Waldem\Types</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\Types\Types.h">
+      <Filter>src\Waldem\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\Types\WArray.h">
       <Filter>src\Waldem\Types</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\Utils\FileUtils.h">
@@ -1463,10 +1508,19 @@
     <ClCompile Include="src\Platform\Graphics\DirectX\DX12Buffer.cpp">
       <Filter>src\Platform\Graphics\DirectX</Filter>
     </ClCompile>
-    <ClCompile Include="src\Platform\Graphics\DirectX\DX12CommandList.cpp">
+    <ClCompile Include="src\Platform\Graphics\DirectX\DX12ComputeCommandList.cpp">
+      <Filter>src\Platform\Graphics\DirectX</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\Graphics\DirectX\DX12ComputeShader.cpp">
+      <Filter>src\Platform\Graphics\DirectX</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\Graphics\DirectX\DX12GraphicCommandList.cpp">
       <Filter>src\Platform\Graphics\DirectX</Filter>
     </ClCompile>
     <ClCompile Include="src\Platform\Graphics\DirectX\DX12PixelShader.cpp">
+      <Filter>src\Platform\Graphics\DirectX</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\Graphics\DirectX\DX12RenderTarget.cpp">
       <Filter>src\Platform\Graphics\DirectX</Filter>
     </ClCompile>
     <ClCompile Include="src\Platform\Graphics\DirectX\DX12Renderer.cpp">
@@ -1517,14 +1571,11 @@
     <ClCompile Include="src\Waldem\Renderer\Resources\ResourceManager.cpp">
       <Filter>src\Waldem\Renderer\Resources</Filter>
     </ClCompile>
-    <ClCompile Include="src\Waldem\Renderer\Shader.cpp">
-      <Filter>src\Waldem\Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Waldem\Renderer\Texture.cpp">
-      <Filter>src\Waldem\Renderer</Filter>
-    </ClCompile>
     <ClCompile Include="src\Waldem\SceneManagement\Scene.cpp">
       <Filter>src\Waldem\SceneManagement</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Waldem\Types\WArray.cpp">
+      <Filter>src\Waldem\Types</Filter>
     </ClCompile>
     <ClCompile Include="src\Waldem\World\Camera.cpp">
       <Filter>src\Waldem\World</Filter>

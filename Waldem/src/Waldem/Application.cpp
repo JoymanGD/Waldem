@@ -77,14 +77,16 @@ namespace Waldem
 		while (IsRunning)
 		{
 			auto currentFrameTime = std::chrono::high_resolution_clock::now();
-			std::chrono::duration<float> deltaTime = currentFrameTime - lastFrameTime;
+			std::chrono::duration<float> deltaTimeDuration = currentFrameTime - lastFrameTime;
+			float deltaTime = deltaTimeDuration.count();
 			lastFrameTime = currentFrameTime;
 
-			CurrentScene->UpdateInternal(deltaTime.count());
+			SceneData sceneData = { &CurrentRenderer };
+			
+			CurrentScene->UpdateInternal(&sceneData, deltaTime);
 
 			CurrentRenderer.Begin();
-			SceneData sceneData = { &CurrentRenderer };
-			CurrentScene->DrawInternal(&sceneData);
+			CurrentScene->DrawInternal(&sceneData, deltaTime);
 			CurrentRenderer.End();
 			CurrentRenderer.Present();
 

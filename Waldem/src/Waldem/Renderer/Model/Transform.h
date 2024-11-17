@@ -1,14 +1,11 @@
 #pragma once
 #include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/quaternion.hpp"
 
 namespace Waldem
 {
-    class WALDEM_API Transform
+    struct WALDEM_API Transform
     {
-    public:
-        Transform() {}
         Transform(Vector3 position);
         Transform(Vector3 position, Quaternion rotation, Vector3 localScale);
         Transform(Matrix4 matrix);
@@ -17,7 +14,7 @@ namespace Waldem
         Vector3 GetPosition() { return Position; }
         Quaternion GetRotation() { return Rotation; }
         Vector3 GetLocalScale() { return LocalScale; }
-        Vector3 GetForwardVector() { return Vector3(Matrix * Vector4(0, 0, -1, 0)); }
+        Vector3 GetForwardVector() { return Vector3(Matrix * Vector4(0, 0, 1, 0)); }
         Vector3 GetRightVector() { return Vector3(Matrix * Vector4(1, 0, 0, 0)); }
         Vector3 GetUpVector() { return Vector3(Matrix * Vector4(0, 1, 0, 0)); }
 
@@ -29,6 +26,8 @@ namespace Waldem
         void Translate(Vector3 translation);
         void Rotate(Quaternion rotation);
         void Rotate(float yaw, float pitch, float roll);
+        void LookAt(Vector3 target);
+        void Move(Vector3 delta);
         void SetEuler(Vector3 euler);
         void SetEuler(float eulerX, float eulerY, float eulerZ);
         void SetRotation(Quaternion newRotation);

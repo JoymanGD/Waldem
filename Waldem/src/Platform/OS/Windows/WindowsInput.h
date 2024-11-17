@@ -11,6 +11,9 @@ namespace Waldem
         virtual std::pair<float, float> GetMousePosImpl() override;
         virtual float GetMouseXImpl() override;
         virtual float GetMouseYImpl() override;
+        virtual Point2 GetMouseDeltaImpl() override;
+
+        Point2 LastMousePosition = { 0.0f, 0.0f };
     };
 }
     

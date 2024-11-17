@@ -3,6 +3,8 @@
 
 namespace Waldem
 {
+#define DEGTORAD 0.0174532925199432957f
+    
     Transform::Transform(Vector3 position)
     {
         Position = position;
@@ -63,9 +65,32 @@ namespace Waldem
 
     void Transform::Rotate(float yaw, float pitch, float roll)
     {
-        Quaternion rotation = Quaternion(Vector3(pitch, yaw, roll));
+        Quaternion verticalRotation = angleAxis(pitch * DEGTORAD, Vector3(1, 0, 0));
+        Quaternion horizontalRotation = angleAxis(yaw * DEGTORAD, Vector3(0, 1, 0));
+        Quaternion rollRotation = angleAxis(roll * DEGTORAD, Vector3(0, 0, 1));
 
-        Rotate(rotation);
+        Rotation = Rotation * verticalRotation;
+        Rotation = horizontalRotation * Rotation;
+        Rotation = rollRotation * Rotation;
+
+        CompileMatrix();
+    }
+
+    void Transform::LookAt(Vector3 target)
+    {
+        Vector3 direction = normalize(target - Position);
+        Vector3 adjustedUp = glm::abs(dot(direction, Vector3(0, 1, 0))) > 0.99f ? Vector3(0, 0, 1) : Vector3(0, 1, 0);
+        
+        SetRotation(quatLookAt(direction, adjustedUp));
+    }
+
+    void Transform::Move(Vector3 delta)
+    {
+        Vector3 forward = GetForwardVector();
+        Vector3 right = GetRightVector();
+        Vector3 up = GetUpVector();
+
+        Translate(forward * delta.z + right * delta.x + up * delta.y);
     }
 
     void Transform::SetEuler(Vector3 euler)

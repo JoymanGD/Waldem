@@ -3,15 +3,15 @@
 
 namespace Waldem
 {
-    void Scene::DrawInternal(SceneData* sceneData)
+    void Scene::DrawInternal(SceneData* sceneData, float deltaTime)
     {
         if(PreDraw) PreDraw();
-        Draw(sceneData);
+        Draw(sceneData, deltaTime);
         if(PostDraw) PostDraw();
     }
 
-    void Scene::UpdateInternal(float deltaTime)
+    void Scene::UpdateInternal(SceneData* sceneData, float deltaTime)
     {
-        Update(deltaTime);
+        Update(sceneData, deltaTime);
     }
 }

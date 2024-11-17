@@ -21,6 +21,8 @@ namespace Waldem
         }
 
         PlatformRenderer->Initialize(window);
+
+        Instance = this;
     }
 
     void Renderer::Begin()
@@ -40,53 +42,53 @@ namespace Waldem
 
     Point3 Renderer::GetNumThreadsPerGroup(ComputeShader* computeShader)
     {
-        return PlatformRenderer->GetNumThreadsPerGroup(computeShader);
+        return Instance->PlatformRenderer->GetNumThreadsPerGroup(computeShader);
     }
 
     void Renderer::Draw(Mesh* mesh, PixelShader* pixelShader)
     {
-        PlatformRenderer->Draw(mesh, pixelShader);
+        Instance->PlatformRenderer->Draw(mesh, pixelShader);
     }
 
     void Renderer::Draw(Model* model, PixelShader* pixelShader)
     {
-        PlatformRenderer->Draw(model, pixelShader);
+        Instance->PlatformRenderer->Draw(model, pixelShader);
     }
 
     void Renderer::Compute(ComputeShader* computeShader, Point3 groupCount)
     {
-        PlatformRenderer->Compute(computeShader, groupCount);
+        Instance->PlatformRenderer->Compute(computeShader, groupCount);
     }
 
-    PixelShader* Renderer::LoadPixelShader(String shaderName, std::vector<Resource> resources, RenderTarget* renderTarget)
+    PixelShader* Renderer::LoadPixelShader(String shaderName, WArray<Resource> resources, RenderTarget* renderTarget)
     {
-        return PlatformRenderer->LoadPixelShader(shaderName, resources, renderTarget);
+        return Instance->PlatformRenderer->LoadPixelShader(shaderName, resources, renderTarget);
     }
 
-    ComputeShader* Renderer::LoadComputeShader(String shaderName, std::vector<Resource> resources)
+    ComputeShader* Renderer::LoadComputeShader(String shaderName, WArray<Resource> resources)
     {
-        return PlatformRenderer->LoadComputeShader(shaderName, resources);
+        return Instance->PlatformRenderer->LoadComputeShader(shaderName, resources);
     }
 
     Texture2D* Renderer::CreateTexture(String name, int width, int height, TextureFormat format, uint8_t* data)
     {
-        Texture2D* texture = PlatformRenderer->CreateTexture(name, width, height, format, data);
+        Texture2D* texture = Instance->PlatformRenderer->CreateTexture(name, width, height, format, data);
         return texture;
     }
 
     RenderTarget* Renderer::CreateRenderTarget(String name, int width, int height, TextureFormat format)
     {
-        RenderTarget* renderTarget = PlatformRenderer->CreateRenderTarget(name, width, height, format);
+        RenderTarget* renderTarget = Instance->PlatformRenderer->CreateRenderTarget(name, width, height, format);
         return renderTarget;
     }
 
     VertexBuffer* Renderer::CreateVertexBuffer(void* data, uint32_t size)
     {
-        return PlatformRenderer->CreateVertexBuffer(data, size);
+        return Instance->PlatformRenderer->CreateVertexBuffer(data, size);
     }
 
     IndexBuffer* Renderer::CreateIndexBuffer(void* data, uint32_t count)
     {
-        return PlatformRenderer->CreateIndexBuffer(data, count);
+        return Instance->PlatformRenderer->CreateIndexBuffer(data, count);
     }
 }

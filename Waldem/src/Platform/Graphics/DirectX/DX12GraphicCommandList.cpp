@@ -139,7 +139,7 @@ namespace Waldem
         UINT samplerDescriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
         D3D12_GPU_DESCRIPTOR_HANDLE samplersHandle = samplersHeap->GetGPUDescriptorHandleForHeapStart();
 
-        for (uint32_t i = 0; i < rootParamTypes.size(); ++i)
+        for (uint32_t i = 0; i < rootParamTypes.Num(); ++i)
         {
             auto& rootParamType = rootParamTypes[i];
 
@@ -266,7 +266,7 @@ namespace Waldem
         UINT samplerDescriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
         D3D12_GPU_DESCRIPTOR_HANDLE samplersHandle = samplersHeap->GetGPUDescriptorHandleForHeapStart();
 
-        for (uint32_t i = 0; i < rootParamTypes.size(); ++i)
+        for (uint32_t i = 0; i < rootParamTypes.Num(); ++i)
         {
             auto& rootParamType = rootParamTypes[i];
 

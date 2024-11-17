@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Array.h"
+#include "WArray.h"
 
 namespace Waldem
 {

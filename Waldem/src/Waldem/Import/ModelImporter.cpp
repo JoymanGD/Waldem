@@ -10,7 +10,7 @@
 
 namespace Waldem
 {
-    Model* ModelImporter::Import(String& path, bool relative)
+    Model* ModelImporter::Import(String path, bool relative)
     {
         Model* result = new Model();
 
@@ -21,7 +21,7 @@ namespace Waldem
             { ShaderDataType::Int, "MeshId", true },
         };
         
-        auto assimpModel = ImportInternal(path, ModelImportFlags::CalcTangentSpace | ModelImportFlags::Triangulate | ModelImportFlags::PreTransformVertices | ModelImportFlags::FlipUVs, relative);
+        auto assimpModel = ImportInternal(path, ModelImportFlags::CalcTangentSpace | ModelImportFlags::Triangulate | ModelImportFlags::PreTransformVertices | ModelImportFlags::FlipUVs | ModelImportFlags::MakeLeftHanded | ModelImportFlags::FlipWindingOrder, relative);
 
         if(assimpModel)
         {

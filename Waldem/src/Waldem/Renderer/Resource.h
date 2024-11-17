@@ -16,9 +16,9 @@ namespace Waldem
         uint32_t Stride = 0;
         Vector2 Size;
         uint32_t Slot = 0;
-        std::vector<Texture2D*> Textures;
-        std::vector<StorageBuffer*> Buffers;
-        std::vector<Sampler> Samplers;
+        WArray<Texture2D*> Textures;
+        WArray<StorageBuffer*> Buffers;
+        WArray<Sampler> Samplers;
         RenderTarget* RT = nullptr;
 
         Resource(String name, ResourceType type, void* data, uint32_t stride, Vector2 size, uint32_t slot)
@@ -43,21 +43,21 @@ namespace Waldem
             Slot = slot;
         }
         
-        Resource(String name, std::vector<Texture2D*> textures, uint32_t slot)
+        Resource(String name, WArray<Texture2D*> textures, uint32_t slot)
         {
             Name = name;
             Type = RTYPE_Texture;
             Textures = textures;
-            NumResources = textures.size();
+            NumResources = textures.Num();
             Slot = slot;
         }
         
-        Resource(String name, std::vector<StorageBuffer*> buffers, uint32_t slot)
+        Resource(String name, WArray<StorageBuffer*> buffers, uint32_t slot)
         {
             Name = name;
             Type = RTYPE_Buffer;
             Buffers = buffers;
-            NumResources = buffers.size();
+            NumResources = buffers.Num();
             Slot = slot;
         }
         
@@ -70,12 +70,12 @@ namespace Waldem
             Slot = slot;
         }
         
-        Resource(String name, std::vector<Sampler> samplers, uint32_t slot)
+        Resource(String name, WArray<Sampler> samplers, uint32_t slot)
         {
             Name = name;
             Type = RTYPE_Sampler;
             Samplers = samplers;
-            NumResources = samplers.size();
+            NumResources = samplers.Num();
             Slot = slot;
         }
     };
