@@ -9,7 +9,7 @@ namespace Waldem
 #define MAX_TEXTURES 1024
 #define MAX_BUFFERS 128
     
-    DX12PixelShader::DX12PixelShader(const String& name, ID3D12Device* device, DX12GraphicCommandList* cmdList, std::vector<Resource> resources, Waldem::RenderTarget* renderTarget)
+    DX12PixelShader::DX12PixelShader(const String& name, ID3D12Device* device, DX12GraphicCommandList* cmdList, WArray<Resource> resources, Waldem::RenderTarget* renderTarget)
         : PixelShader(name, renderTarget), Device(device), CmdList(cmdList)
     {
         Device = device;
@@ -17,9 +17,9 @@ namespace Waldem
 
         if(CompileFromFile(name))
         {
-            std::vector<D3D12_ROOT_PARAMETER> rootParams;
+            WArray<D3D12_ROOT_PARAMETER> rootParams;
             
-            for (uint32_t i = 0; i < resources.size(); ++i)
+            for (uint32_t i = 0; i < resources.Num(); ++i)
             {
                 D3D12_DESCRIPTOR_RANGE* range = new D3D12_DESCRIPTOR_RANGE();
 
@@ -51,8 +51,8 @@ namespace Waldem
                 param.DescriptorTable.pDescriptorRanges = range;
                 param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
-                rootParams.push_back(param);
-                RootParamTypes.push_back(resources[i].Type);
+                rootParams.Add(param);
+                RootParamTypes.Add(resources[i].Type);
             }
             
             D3D12_STATIC_SAMPLER_DESC staticSampler = {};
@@ -71,8 +71,8 @@ namespace Waldem
             staticSampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
             
             D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
-            rootSignatureDesc.NumParameters = rootParams.size();
-            rootSignatureDesc.pParameters = rootParams.data();
+            rootSignatureDesc.NumParameters = rootParams.Num();
+            rootSignatureDesc.pParameters = rootParams.GetData();
             rootSignatureDesc.NumStaticSamplers = 1;
             rootSignatureDesc.pStaticSamplers = &staticSampler;
             rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
@@ -200,7 +200,7 @@ namespace Waldem
         return true;
     }
 
-    void DX12PixelShader::SetResources(std::vector<Resource> resourceDescs, uint32_t numDescriptors)
+    void DX12PixelShader::SetResources(WArray<Resource> resourceDescs, uint32_t numDescriptors)
     {
         D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
         heapDesc.NumDescriptors = numDescriptors;
@@ -301,7 +301,7 @@ namespace Waldem
                     {
                         size = (uint32_t)resourceDesc.Size.x;
                             
-                        if(resourceDesc.Buffers.size() != 0)
+                        if(resourceDesc.Buffers.Num() != 0)
                         {
                             resourceBuffer = (ID3D12Resource*)resourceDesc.Buffers[i]->GetPlatformResource();
                         }
@@ -345,7 +345,7 @@ namespace Waldem
                     {
                         size = resourceDesc.Size.x * resourceDesc.Size.y;
                         
-                        if(resourceDesc.Textures.size() != 0)
+                        if(resourceDesc.Textures.Num() != 0)
                         {
                             resourceBuffer = (ID3D12Resource*)resourceDesc.Textures[i]->GetPlatformResource();
                         }

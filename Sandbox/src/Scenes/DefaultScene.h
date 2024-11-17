@@ -1,10 +1,11 @@
 #pragma once
 
 #include "Waldem/Renderer/Light.h"
-#include "Waldem/Renderer/Model/Model.h"
 #include "Waldem/SceneManagement/Scene.h"
 #include "Waldem/World/Camera.h"
 #include "Waldem/Renderer/Shader.h"
+#include "ECS/include/ecs.h"
+#include "Waldem/ECS/Systems/System.h"
 
 namespace Sandbox
 {
@@ -18,21 +19,13 @@ namespace Sandbox
     class DefaultScene : public Waldem::Scene
     {
     protected:
-        void Update(float deltaTime) override;
-        void Draw(Waldem::SceneData* sceneData) override;
+        void Update(Waldem::SceneData* sceneData, float deltaTime) override;
+        void Draw(Waldem::SceneData* sceneData, float deltaTime) override;
         void Initialize(Waldem::SceneData* sceneData) override;
+
     private:
-        void CreateLights(Waldem::Renderer* Renderer);
-        std::vector<Waldem::LightData> GetLightsData();
-        
-        Waldem::Camera* MainCamera;
-        Waldem::Model* TestModel;
-        Waldem::PixelShader* TestPixelShader;
-        Waldem::ComputeShader* TestComputeShader;
-        Waldem::Transform TestModelTransform;
-        Waldem::Transform TestDirLightTransform;
-        Waldem::PixelShader* TestShadowmapShader;
-        Waldem::RenderTarget* TestRenderTarget;
-        std::vector<Waldem::Light> Lights;
+        ecs::Manager ECSManager;
+        Waldem::WArray<Waldem::ISystem*> UpdateSystems;
+        Waldem::WArray<Waldem::ISystem*> DrawSystems;
     };
 }

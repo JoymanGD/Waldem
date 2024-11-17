@@ -3,9 +3,8 @@
 
 namespace Waldem
 {
-    class WALDEM_API Model
+    struct WALDEM_API Model
     {
-    public:
         Model() = default;
         Model(std::vector<Mesh*> meshes) : Meshes(meshes) {}
 

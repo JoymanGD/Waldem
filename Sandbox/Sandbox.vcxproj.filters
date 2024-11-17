@@ -28,17 +28,25 @@
     <ClCompile Include="src\Scenes\DefaultScene.cpp">
       <Filter>Scenes</Filter>
     </ClCompile>
-    <ClCompile Include="src\Shaders\Test\Core.hlsl" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="src\Shaders\Test\Core.hlsl">
+      <Filter>Shaders\Test</Filter>
+    </FxCompile>
     <FxCompile Include="src\Shaders\Test\Default.ps.hlsl">
       <Filter>Shaders\Test</Filter>
     </FxCompile>
     <FxCompile Include="src\Shaders\Test\Default.vs.hlsl">
       <Filter>Shaders\Test</Filter>
     </FxCompile>
-    <FxCompile Include="src\Shaders\Test\PostProcess.comp.hlsl" />
-    <FxCompile Include="src\Shaders\Test\Shadowmap.ps.hlsl" />
-    <FxCompile Include="src\Shaders\Test\Shadowmap.vs.hlsl" />
+    <FxCompile Include="src\Shaders\Test\PostProcess.comp.hlsl">
+      <Filter>Shaders\Test</Filter>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Test\Shadowmap.ps.hlsl">
+      <Filter>Shaders\Test</Filter>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Test\Shadowmap.vs.hlsl">
+      <Filter>Shaders\Test</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

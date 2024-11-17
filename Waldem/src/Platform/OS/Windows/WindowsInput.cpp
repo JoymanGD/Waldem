@@ -46,5 +46,17 @@ namespace Waldem
 
         return y;
     }
+
+    Point2 WindowsInput::GetMouseDeltaImpl()
+    {
+        Point2 mousePos;
+        SDL_GetMouseState(&mousePos.x, &mousePos.y);
+
+        auto delta = Point2(mousePos.x - LastMousePosition.x, mousePos.y - LastMousePosition.y);
+
+        LastMousePosition = mousePos;
+        
+        return delta;
+    }
 }
 

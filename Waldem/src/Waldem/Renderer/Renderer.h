@@ -28,8 +28,8 @@ namespace Waldem
         virtual void Draw(Mesh* mesh, PixelShader* pixelShader) = 0;
         virtual Point3 GetNumThreadsPerGroup(ComputeShader* computeShader) = 0;
         virtual void Compute(ComputeShader* computeShader, Point3 groupCount) = 0;
-        virtual PixelShader* LoadPixelShader(String shaderName, std::vector<Resource> resources, RenderTarget* renderTarget = nullptr) = 0;
-        virtual ComputeShader* LoadComputeShader(String shaderName, std::vector<Resource> resources) = 0;
+        virtual PixelShader* LoadPixelShader(String shaderName, WArray<Resource> resources, RenderTarget* renderTarget = nullptr) = 0;
+        virtual ComputeShader* LoadComputeShader(String shaderName, WArray<Resource> resources) = 0;
         virtual Texture2D* CreateTexture(String name, int width, int height, TextureFormat format, uint8_t* data = nullptr) = 0;
         virtual RenderTarget* CreateRenderTarget(String name, int width, int height, TextureFormat format) = 0;
         virtual VertexBuffer* CreateVertexBuffer(void* data, uint32_t size) = 0;
@@ -47,18 +47,19 @@ namespace Waldem
         void End();
         void Present();
 
-        void Draw(Mesh* mesh, PixelShader* pixelShader);
-        void Draw(Model* model, PixelShader* pixelShader);
-        Point3 GetNumThreadsPerGroup(ComputeShader* computeShader);
-        void Compute(ComputeShader* computeShader, Point3 groupCount);
-        PixelShader* LoadPixelShader(String shaderName, std::vector<Resource> resources, RenderTarget* renderTarget = nullptr);
-        ComputeShader* LoadComputeShader(String shaderName, std::vector<Resource> resources);
-        Texture2D* CreateTexture(String name, int width, int height, TextureFormat format, uint8_t* data = nullptr);
-        RenderTarget* CreateRenderTarget(String name, int width, int height, TextureFormat format);
-        VertexBuffer* CreateVertexBuffer(void* data, uint32_t size);
-        IndexBuffer* CreateIndexBuffer(void* data, uint32_t count);
+        static void Draw(Mesh* mesh, PixelShader* pixelShader);
+        static void Draw(Model* model, PixelShader* pixelShader);
+        static Point3 GetNumThreadsPerGroup(ComputeShader* computeShader);
+        static void Compute(ComputeShader* computeShader, Point3 groupCount);
+        static PixelShader* LoadPixelShader(String shaderName, WArray<Resource> resources, RenderTarget* renderTarget = nullptr);
+        static ComputeShader* LoadComputeShader(String shaderName, WArray<Resource> resources);
+        static Texture2D* CreateTexture(String name, int width, int height, TextureFormat format, uint8_t* data = nullptr);
+        static RenderTarget* CreateRenderTarget(String name, int width, int height, TextureFormat format);
+        static VertexBuffer* CreateVertexBuffer(void* data, uint32_t size);
+        static IndexBuffer* CreateIndexBuffer(void* data, uint32_t count);
 
         static RendererAPI RAPI;
+        inline static Renderer* Instance;
         
     private:
         IRenderer* PlatformRenderer;

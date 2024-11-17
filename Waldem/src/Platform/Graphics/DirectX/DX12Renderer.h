@@ -22,8 +22,8 @@ namespace Waldem
         void Present() override;
         D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentRenderTargetHandle() const { return CurrentRenderTargetHandle; }
         D3D12_CPU_DESCRIPTOR_HANDLE GetDepthStencilHandle() const { return DSVHandle; }
-        PixelShader* LoadPixelShader(String shaderName, std::vector<Resource> resources, RenderTarget* renderTarget = nullptr) override;
-        ComputeShader* LoadComputeShader(String shaderName, std::vector<Resource> resources) override;
+        PixelShader* LoadPixelShader(String shaderName, WArray<Resource> resources, RenderTarget* renderTarget = nullptr) override;
+        ComputeShader* LoadComputeShader(String shaderName, WArray<Resource> resources) override;
         Texture2D* CreateTexture(String name, int width, int height, TextureFormat format, uint8_t* data = nullptr) override;
         RenderTarget* CreateRenderTarget(String name, int width, int height, TextureFormat format) override;
         VertexBuffer* CreateVertexBuffer(void* data, uint32_t size) override;

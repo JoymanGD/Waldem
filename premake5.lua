@@ -17,6 +17,7 @@ IncludeDir["Glad"] = "Waldem/vendor/Glad/include"
 IncludeDir["ImGui"] = "Waldem/vendor/imgui"
 IncludeDir["glm"] = "Waldem/vendor/glm"
 IncludeDir["SDL"] = "Waldem/vendor/SDL/include"
+IncludeDir["ECS"] = "Waldem/vendor/ECS/include"
 
 include "Waldem/vendor/GLFW"
 include "Waldem/vendor/Glad"
@@ -58,7 +59,8 @@ project "Waldem"
         "%{IncludeDir.SDL}",
         "%{IncludeDir.Glad}",
         "%{IncludeDir.ImGui}",
-        "%{IncludeDir.glm}"
+        "%{IncludeDir.glm}",
+        "%{IncludeDir.ECS}"
     }
     
     libdirs
@@ -142,7 +144,8 @@ project "Sandbox"
         "Waldem/src",
         "Waldem/vendor",
         "%{IncludeDir.Glad}",
-        "%{IncludeDir.glm}"
+        "%{IncludeDir.glm}",
+        "%{IncludeDir.ECS}"
     }
 
     links

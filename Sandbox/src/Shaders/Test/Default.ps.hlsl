@@ -7,9 +7,9 @@ struct Light
 {
     float3 Color;
     float Intensity;
+    float2 Padding1;
     uint Type;
     float Range;
-    float2 Padding1;
     matrix World;
     matrix View;
     matrix Projection;
