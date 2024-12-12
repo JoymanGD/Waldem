@@ -13,8 +13,11 @@ namespace Waldem
     public:
         ~DX12Renderer() override = default;
         void Initialize(Window* window) override;
-        void Draw(Model* model, PixelShader* pixelShader) override;
-        void Draw(Mesh* mesh, PixelShader* pixelShader) override;
+        void BeginDraw(PixelShader* pixelShader) override;
+        void Draw(Model* model) override;
+        void Draw(Mesh* mesh) override;
+        void EndDraw(PixelShader* pixelShader) override;
+        void Wait() override;
         Point3 GetNumThreadsPerGroup(ComputeShader* computeShader) override;
         void Compute(ComputeShader* computeShader, Point3 groupCount) override;
         void Begin() override;
@@ -55,5 +58,7 @@ namespace Waldem
         ID3D12Debug* DebugController;
         ID3D12Debug1* DebugController1;
         ID3D12InfoQueue* InfoQueue;
+        ID3D12Fence* waitFence;
+        UINT64 waitFenceValue = 0;
     };
 }

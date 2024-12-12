@@ -35,7 +35,7 @@ SamplerComparisonState cmpSampler : register(s1);
 
 StructuredBuffer<Light> Lights : register(t0);
 Texture2D<float> Shadowmap : register(t1);
-Texture2D DiffuseTextures[MAX_TEXTURES] : register(t2);
+Texture2D DiffuseTextures[MAX_TEXTURES] : register(t3);
 
 float3 GetLightDirection(Light light)
 {

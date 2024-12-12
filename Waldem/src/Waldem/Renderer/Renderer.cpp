@@ -27,12 +27,12 @@ namespace Waldem
 
     void Renderer::Begin()
     {
-        PlatformRenderer->Begin();
+        Instance->PlatformRenderer->Begin();
     }
 
     void Renderer::End()
     {
-        PlatformRenderer->End();
+        Instance->PlatformRenderer->End();
     }
 
     void Renderer::Present()
@@ -45,14 +45,29 @@ namespace Waldem
         return Instance->PlatformRenderer->GetNumThreadsPerGroup(computeShader);
     }
 
-    void Renderer::Draw(Mesh* mesh, PixelShader* pixelShader)
+    void Renderer::BeginDraw(PixelShader* pixelShader)
     {
-        Instance->PlatformRenderer->Draw(mesh, pixelShader);
+        Instance->PlatformRenderer->BeginDraw(pixelShader);
     }
 
-    void Renderer::Draw(Model* model, PixelShader* pixelShader)
+    void Renderer::Draw(Mesh* mesh)
     {
-        Instance->PlatformRenderer->Draw(model, pixelShader);
+        Instance->PlatformRenderer->Draw(mesh);
+    }
+
+    void Renderer::Draw(Model* model)
+    {
+        Instance->PlatformRenderer->Draw(model);
+    }
+
+    void Renderer::EndDraw(PixelShader* pixelShader)
+    {
+        Instance->PlatformRenderer->EndDraw(pixelShader);
+    }
+
+    void Renderer::Wait()
+    {
+        Instance->PlatformRenderer->Wait();
     }
 
     void Renderer::Compute(ComputeShader* computeShader, Point3 groupCount)

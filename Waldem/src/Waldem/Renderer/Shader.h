@@ -22,7 +22,8 @@ namespace Waldem
         RTYPE_RWTexture = 6,
         RTYPE_Sampler = 7,
         RTYPE_RenderTarget = 8,
-        RTYPE_RWRenderTarget = 9
+        RTYPE_RWRenderTarget = 9,
+        RTYPE_Constant = 19
     };
 
     struct SamplerData
@@ -38,6 +39,7 @@ namespace Waldem
         virtual ~Shader() = default;
         virtual void UpdateResourceData(String name, void* data) = 0;
         virtual bool CompileFromFile(const String& filepath) = 0;
+        virtual void Reset() = 0;
     protected:
         String Name;
     };
@@ -48,6 +50,8 @@ namespace Waldem
         PixelShader(const String& name, RenderTarget* renderTarget = nullptr) : Shader(name), RenderTarget(renderTarget) {}
         virtual ~PixelShader() {}
         RenderTarget* RenderTarget;
+        virtual void* GetVS() = 0;
+        virtual void* GetPS() = 0;
     };
 
     class WALDEM_API ComputeShader : public Shader

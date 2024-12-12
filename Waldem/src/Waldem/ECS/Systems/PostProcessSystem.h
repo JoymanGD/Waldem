@@ -24,7 +24,7 @@ namespace Waldem
         void Update(SceneData* sceneData, float deltaTime) override
         {
             Point3 numThreads = sceneData->Renderer->GetNumThreadsPerGroup(PostProcessComputeShader);
-            sceneData->Renderer->Compute(PostProcessComputeShader, Point3((TestRenderTarget->GetWidth() + numThreads.x - 1) / numThreads.x, (TestRenderTarget->GetWidth() + numThreads.y - 1) / numThreads.y, 1));
+            Renderer::Compute(PostProcessComputeShader, Point3((TestRenderTarget->GetWidth() + numThreads.x - 1) / numThreads.x, (TestRenderTarget->GetWidth() + numThreads.y - 1) / numThreads.y, 1));
         }
     };
 }

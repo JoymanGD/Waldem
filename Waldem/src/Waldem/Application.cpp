@@ -88,6 +88,7 @@ namespace Waldem
 			CurrentRenderer.Begin();
 			CurrentScene->DrawInternal(&sceneData, deltaTime);
 			CurrentRenderer.End();
+			
 			CurrentRenderer.Present();
 
 			for (Layer* layer : LayerStack)

@@ -10,10 +10,12 @@ namespace Waldem
         DX12VertexBuffer(ID3D12Device* device, void* data, uint32_t size);
 
         D3D12_VERTEX_BUFFER_VIEW& GetBufferView() { return BufferView; }
+        uint32_t GetCount() const override { return Count; };
         
     private:
         ID3D12Resource* BufferResource;
         D3D12_VERTEX_BUFFER_VIEW BufferView;
+        uint32_t Count;
     };
     
     class WALDEM_API DX12IndexBuffer : public IndexBuffer

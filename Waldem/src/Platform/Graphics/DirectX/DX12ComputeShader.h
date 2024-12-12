@@ -29,6 +29,7 @@ namespace Waldem
         void UpdateResourceData(String name, void* data) override;
         WArray<ResourceType> GetRootParamTypes() const { return RootParamTypes; }
         void* GetPlatformData() override { return ShaderBlob; }
+        void Reset() override;
 
     private:
         ID3DBlob* ShaderBlob;

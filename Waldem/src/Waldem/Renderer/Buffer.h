@@ -116,6 +116,7 @@ namespace Waldem
     {
     public:
         virtual ~VertexBuffer() {}
+        virtual uint32_t GetCount() const = 0;
     };
     
     class IndexBuffer

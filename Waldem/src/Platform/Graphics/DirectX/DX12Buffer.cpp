@@ -41,6 +41,8 @@ namespace Waldem
         BufferView.BufferLocation = BufferResource->GetGPUVirtualAddress();
         BufferView.StrideInBytes = sizeof(Vertex);
         BufferView.SizeInBytes = size;
+
+        Count = BufferView.SizeInBytes / BufferView.StrideInBytes;
     }
 
     DX12IndexBuffer::DX12IndexBuffer(ID3D12Device* device, void* data, uint32_t count)
