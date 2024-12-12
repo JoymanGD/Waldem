@@ -25,14 +25,19 @@ namespace Waldem
                 testShadowMap = light.Shadowmap;
                 LightDatas.Add(lightData);
             }
-
-            WArray<Matrix4> worldTransforms;
+            
             WArray<Texture2D*> textures;
             for (auto [entity, model, transform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
             {
                 for (auto texture : model.Model->GetTextures())
                     textures.Add(texture);
 
+                break;
+            }
+
+            WArray<Matrix4> worldTransforms;
+            for (auto [entity, model, transform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
+            {
                 worldTransforms.Add(transform.GetMatrix());
             }
             

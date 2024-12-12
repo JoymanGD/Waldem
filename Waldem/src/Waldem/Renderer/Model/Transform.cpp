@@ -149,6 +149,7 @@ namespace Waldem
 
     void Transform::CompileMatrix()
     {
+        //TODO: Optimize this
         Matrix = Matrix4(translate(Matrix4(1.0f), Position) * mat4_cast(Rotation) * scale(Matrix4(1.0f), LocalScale));
     }
 }
