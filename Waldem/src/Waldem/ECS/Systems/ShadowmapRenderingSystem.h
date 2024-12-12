@@ -52,10 +52,14 @@ namespace Waldem
                         lightTransform.SetPosition(currentPosition);
                         break;
                     }
-                    
+
                     Matrix4 matrices[2];
                     matrices[0] = lightTransform.Inverse();
                     matrices[1] = light.Data.Projection;
+
+                    //Create frustrum for culling
+                    Frustrum frustrum;
+                    auto frustrumPlanes = frustrum.ExtractFrustumPlanes(matrices[1] * matrices[0]);
                 
                     DefaultShadowmappingShader->UpdateResourceData("MyConstantBuffer", matrices);
 
@@ -75,7 +79,15 @@ namespace Waldem
                     {
                         DefaultShadowmappingShader->UpdateResourceData("RootConstants", &modelID);
                         
-                        Renderer::Draw(modelComponent.Model);
+                        for (auto mesh : modelComponent.Model->GetMeshes())
+                        {
+                            auto transformedBBox = mesh->BBox.Transform(modelTransform.GetMatrix());
+                    
+                            if(transformedBBox.IsInFrustum(frustrumPlanes))
+                            {
+                                Renderer::Draw(mesh);
+                            }
+                        }
 
                         modelID++;
                     }
