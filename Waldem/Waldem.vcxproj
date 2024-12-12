@@ -188,6 +188,7 @@
     <ClInclude Include="src\Waldem\LayerStack.h" />
     <ClInclude Include="src\Waldem\Log.h" />
     <ClInclude Include="src\Waldem\MouseButtonCodes.h" />
+    <ClInclude Include="src\Waldem\Renderer\BoundingBox.h" />
     <ClInclude Include="src\Waldem\Renderer\Buffer.h" />
     <ClInclude Include="src\Waldem\Renderer\Interfaces\IGraphicObject.h" />
     <ClInclude Include="src\Waldem\Renderer\Light.h" />

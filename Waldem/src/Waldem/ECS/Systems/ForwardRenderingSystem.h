@@ -71,17 +71,20 @@ namespace Waldem
 
             if(!LightDatas.IsEmpty())
                 DefaultPixelShader->UpdateResourceData("LightsBuffer", LightDatas.GetData());
-		
+
+            WArray<FrustumPlane> frustrumPlanes;
             Matrix4 matrices[2];
             for (auto [entity, camera, mainCamera] : ECSManager->EntitiesWith<Camera, MainCamera>())
             {
                 matrices[0] = camera.GetViewMatrix();
                 matrices[1] = camera.GetProjectionMatrix();
                 DefaultPixelShader->UpdateResourceData("MyConstantBuffer", matrices);
+                frustrumPlanes = camera.ExtractFrustumPlanes();
 
                 break;
             }
 
+            //collect world transforms for buffer update
             WArray<Matrix4> worldTransforms;
             for (auto [entity, model, transform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
             {
@@ -97,7 +100,15 @@ namespace Waldem
             for (auto [entity, modelComponent, transform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
             {
                 DefaultPixelShader->UpdateResourceData("RootConstants", &modelID);
-                Renderer::Draw(modelComponent.Model);
+                for (auto mesh : modelComponent.Model->GetMeshes())
+                {
+                    auto transformedBBox = mesh->BBox.Transform(transform.GetMatrix());
+                    
+                    if(transformedBBox.IsInFrustum(frustrumPlanes))
+                    {
+                        Renderer::Draw(mesh);
+                    }
+                }
                 modelID++;
             }
             

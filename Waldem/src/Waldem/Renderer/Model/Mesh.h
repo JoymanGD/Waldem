@@ -1,6 +1,7 @@
 #pragma once
 #include "Material.h"
 #include "Transform.h"
+#include "Waldem/Renderer/BoundingBox.h"
 #include "Waldem/Renderer/Buffer.h"
 
 namespace Waldem
@@ -16,10 +17,11 @@ namespace Waldem
     class WALDEM_API Mesh
     {
     public:
-        Mesh(void* vertexBufferData, uint32_t vertexBufferDataSize, uint32_t* indices, uint32_t indicesAmount, const BufferLayout& layout, Material material);
+        Mesh(void* vertexBufferData, uint32_t vertexBufferDataSize, uint32_t* indices, uint32_t indicesAmount, Material material, BoundingBox bBox);
 
         IndexBuffer* IB;
         VertexBuffer* VB;
         Material MeshMaterial;
+        BoundingBox BBox;
     };
 }

@@ -21,7 +21,7 @@ namespace Waldem
             { ShaderDataType::Int, "MeshId", true },
         };
         
-        auto assimpModel = ImportInternal(path, ModelImportFlags::CalcTangentSpace | ModelImportFlags::Triangulate | ModelImportFlags::PreTransformVertices | ModelImportFlags::FlipUVs | ModelImportFlags::MakeLeftHanded | ModelImportFlags::FlipWindingOrder, relative);
+        auto assimpModel = ImportInternal(path, ModelImportFlags::CalcTangentSpace | ModelImportFlags::Triangulate | ModelImportFlags::GenBoundingBoxes | ModelImportFlags::PreTransformVertices | ModelImportFlags::FlipUVs | ModelImportFlags::MakeLeftHanded | ModelImportFlags::FlipWindingOrder, relative);
 
         if(assimpModel)
         {
@@ -111,8 +111,9 @@ namespace Waldem
                 Material mat(texture);
 
                 uint32_t vertexBufferSize = vertexData.size() * sizeof(Vertex);
+                BoundingBox bBox { Vector3(assimpMesh->mAABB.mMin.x, assimpMesh->mAABB.mMin.y, assimpMesh->mAABB.mMin.z), Vector3(assimpMesh->mAABB.mMax.x, assimpMesh->mAABB.mMax.y, assimpMesh->mAABB.mMax.z)};
 
-                Mesh* mesh = new Mesh(vertexData.data(), vertexBufferSize, indices.data(), indices.size(), bufferLayout, mat);
+                Mesh* mesh = new Mesh(vertexData.data(), vertexBufferSize, indices.data(), indices.size(), mat, bBox);
 
                 result->AddMesh(mesh);
             }

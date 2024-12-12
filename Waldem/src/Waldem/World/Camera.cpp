@@ -10,5 +10,7 @@ namespace Waldem
         RotationSpeed = rotationSpeed;
 
         ViewMatrix = glm::identity<Matrix4>();
+
+        Frustrum.ExtractFrustumPlanes(ProjectionMatrix * ViewMatrix);
     }
 }
