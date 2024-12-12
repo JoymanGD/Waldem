@@ -152,10 +152,12 @@
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12ComputeShader.h" />
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12GraphicCommandList.h" />
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12Helper.h" />
+    <ClInclude Include="src\Platform\Graphics\DirectX\DX12Pipeline.h" />
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12PixelShader.h" />
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12RenderTarget.h" />
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12Renderer.h" />
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12Resource.h" />
+    <ClInclude Include="src\Platform\Graphics\DirectX\DX12RootSignature.h" />
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12Sampler.h" />
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12Shader.h" />
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12Texture.h" />
@@ -164,6 +166,7 @@
     <ClInclude Include="src\Waldem.h" />
     <ClInclude Include="src\Waldem\Application.h" />
     <ClInclude Include="src\Waldem\Core.h" />
+    <ClInclude Include="src\Waldem\ECS\Components\MainCamera.h" />
     <ClInclude Include="src\Waldem\ECS\Components\ModelComponent.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\DebugSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\ForwardRenderingSystem.h" />
@@ -186,15 +189,19 @@
     <ClInclude Include="src\Waldem\Log.h" />
     <ClInclude Include="src\Waldem\MouseButtonCodes.h" />
     <ClInclude Include="src\Waldem\Renderer\Buffer.h" />
+    <ClInclude Include="src\Waldem\Renderer\Interfaces\IGraphicObject.h" />
     <ClInclude Include="src\Waldem\Renderer\Light.h" />
     <ClInclude Include="src\Waldem\Renderer\Model\Material.h" />
     <ClInclude Include="src\Waldem\Renderer\Model\Mesh.h" />
     <ClInclude Include="src\Waldem\Renderer\Model\Model.h" />
     <ClInclude Include="src\Waldem\Renderer\Model\Transform.h" />
+    <ClInclude Include="src\Waldem\Renderer\Pipeline.h" />
     <ClInclude Include="src\Waldem\Renderer\RenderTarget.h" />
     <ClInclude Include="src\Waldem\Renderer\Renderer.h" />
+    <ClInclude Include="src\Waldem\Renderer\GraphicTypes.h" />
     <ClInclude Include="src\Waldem\Renderer\Resource.h" />
     <ClInclude Include="src\Waldem\Renderer\Resources\ResourceManager.h" />
+    <ClInclude Include="src\Waldem\Renderer\RootSignature.h" />
     <ClInclude Include="src\Waldem\Renderer\Sampler.h" />
     <ClInclude Include="src\Waldem\Renderer\Shader.h" />
     <ClInclude Include="src\Waldem\Renderer\Texture.h" />
@@ -631,9 +638,157 @@
     <ClCompile Include="src\Platform\Graphics\DirectX\DX12ComputeCommandList.cpp" />
     <ClCompile Include="src\Platform\Graphics\DirectX\DX12ComputeShader.cpp" />
     <ClCompile Include="src\Platform\Graphics\DirectX\DX12GraphicCommandList.cpp" />
+    <ClCompile Include="src\Platform\Graphics\DirectX\DX12Pipeline.cpp">
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <Optimization>Disabled</Optimization>
+      <SupportJustMyCode>true</SupportJustMyCode>
+      <AssemblerOutput>NoListing</AssemblerOutput>
+      <AssemblerListingLocation>..\bin-int\Debug\Waldem\</AssemblerListingLocation>
+      <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <BrowseInformation>false</BrowseInformation>
+      <BrowseInformationFile>..\bin-int\Debug\Waldem\</BrowseInformationFile>
+      <CompileAs>Default</CompileAs>
+      <ConformanceMode>Default</ConformanceMode>
+      <DiagnosticsFormat>Column</DiagnosticsFormat>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <ErrorReporting>Prompt</ErrorReporting>
+      <ExpandAttributedSource>false</ExpandAttributedSource>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <EnableASAN>false</EnableASAN>
+      <EnableFuzzer>false</EnableFuzzer>
+      <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <ForceConformanceInForLoopScope>true</ForceConformanceInForLoopScope>
+      <GenerateModuleDependencies>false</GenerateModuleDependencies>
+      <GenerateSourceDependencies>false</GenerateSourceDependencies>
+      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>Default</LanguageStandard_C>
+      <MinimalRebuild>false</MinimalRebuild>
+      <ModuleDependenciesFile>..\bin-int\Debug\Waldem\</ModuleDependenciesFile>
+      <ModuleOutputFile>..\bin-int\Debug\Waldem\</ModuleOutputFile>
+      <OmitDefaultLibName>false</OmitDefaultLibName>
+      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <ObjectFileName>..\bin-int\Debug\Waldem\</ObjectFileName>
+      <CallingConvention>Cdecl</CallingConvention>
+      <ProgramDataBaseFileName>..\bin\Debug\Waldem\Waldem.pdb</ProgramDataBaseFileName>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>wdpch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>..\bin-int\Debug\Waldem\Waldem.pch</PrecompiledHeaderOutputFile>
+      <PreprocessToFile>false</PreprocessToFile>
+      <PreprocessKeepComments>false</PreprocessKeepComments>
+      <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
+      <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+      <ShowIncludes>false</ShowIncludes>
+      <SourceDependenciesFile>..\bin-int\Debug\Waldem\</SourceDependenciesFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <SmallerTypeCheck>false</SmallerTypeCheck>
+      <SpectreMitigation>false</SpectreMitigation>
+      <StructMemberAlignment>Default</StructMemberAlignment>
+      <TrackerLogDirectory>..\bin-int\Debug\Waldem\Waldem.tlog\</TrackerLogDirectory>
+      <TranslateIncludes>false</TranslateIncludes>
+      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <UseFullPaths>true</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <XMLDocumentationFileName>..\bin-int\Debug\Waldem\</XMLDocumentationFileName>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <IntelJCCErratum>false</IntelJCCErratum>
+      <BuildStlModules>false</BuildStlModules>
+      <TreatAngleIncludeAsExternal>false</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+      <TreatExternalTemplatesAsInternal>true</TreatExternalTemplatesAsInternal>
+      <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WD_PLATFORM_WINDOWS;WD_BUILD_DLL;GLFW_INCLUDE_NONE;WD_DEBUG;_UNICODE;UNICODE;</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\assimp\include;vendor\stb\include;vendor\GLFW\include;vendor\SDL\include;vendor\Glad\include;vendor\imgui;vendor\glm;vendor\ECS\include;</AdditionalIncludeDirectories>
+      <LibCompiled>true</LibCompiled>
+    </ClCompile>
     <ClCompile Include="src\Platform\Graphics\DirectX\DX12PixelShader.cpp" />
     <ClCompile Include="src\Platform\Graphics\DirectX\DX12RenderTarget.cpp" />
     <ClCompile Include="src\Platform\Graphics\DirectX\DX12Renderer.cpp" />
+    <ClCompile Include="src\Platform\Graphics\DirectX\DX12RootSignature.cpp">
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <Optimization>Disabled</Optimization>
+      <SupportJustMyCode>true</SupportJustMyCode>
+      <AssemblerOutput>NoListing</AssemblerOutput>
+      <AssemblerListingLocation>..\bin-int\Debug\Waldem\</AssemblerListingLocation>
+      <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <BrowseInformation>false</BrowseInformation>
+      <BrowseInformationFile>..\bin-int\Debug\Waldem\</BrowseInformationFile>
+      <CompileAs>Default</CompileAs>
+      <ConformanceMode>Default</ConformanceMode>
+      <DiagnosticsFormat>Column</DiagnosticsFormat>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <ErrorReporting>Prompt</ErrorReporting>
+      <ExpandAttributedSource>false</ExpandAttributedSource>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <EnableASAN>false</EnableASAN>
+      <EnableFuzzer>false</EnableFuzzer>
+      <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <ForceConformanceInForLoopScope>true</ForceConformanceInForLoopScope>
+      <GenerateModuleDependencies>false</GenerateModuleDependencies>
+      <GenerateSourceDependencies>false</GenerateSourceDependencies>
+      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>Default</LanguageStandard_C>
+      <MinimalRebuild>false</MinimalRebuild>
+      <ModuleDependenciesFile>..\bin-int\Debug\Waldem\</ModuleDependenciesFile>
+      <ModuleOutputFile>..\bin-int\Debug\Waldem\</ModuleOutputFile>
+      <OmitDefaultLibName>false</OmitDefaultLibName>
+      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <ObjectFileName>..\bin-int\Debug\Waldem\</ObjectFileName>
+      <CallingConvention>Cdecl</CallingConvention>
+      <ProgramDataBaseFileName>..\bin\Debug\Waldem\Waldem.pdb</ProgramDataBaseFileName>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>wdpch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>..\bin-int\Debug\Waldem\Waldem.pch</PrecompiledHeaderOutputFile>
+      <PreprocessToFile>false</PreprocessToFile>
+      <PreprocessKeepComments>false</PreprocessKeepComments>
+      <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
+      <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+      <ShowIncludes>false</ShowIncludes>
+      <SourceDependenciesFile>..\bin-int\Debug\Waldem\</SourceDependenciesFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <SmallerTypeCheck>false</SmallerTypeCheck>
+      <SpectreMitigation>false</SpectreMitigation>
+      <StructMemberAlignment>Default</StructMemberAlignment>
+      <TrackerLogDirectory>..\bin-int\Debug\Waldem\Waldem.tlog\</TrackerLogDirectory>
+      <TranslateIncludes>false</TranslateIncludes>
+      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <UseFullPaths>true</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <XMLDocumentationFileName>..\bin-int\Debug\Waldem\</XMLDocumentationFileName>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <IntelJCCErratum>false</IntelJCCErratum>
+      <BuildStlModules>false</BuildStlModules>
+      <TreatAngleIncludeAsExternal>false</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+      <TreatExternalTemplatesAsInternal>true</TreatExternalTemplatesAsInternal>
+      <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WD_PLATFORM_WINDOWS;WD_BUILD_DLL;GLFW_INCLUDE_NONE;WD_DEBUG;_UNICODE;UNICODE;</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\assimp\include;vendor\stb\include;vendor\GLFW\include;vendor\SDL\include;vendor\Glad\include;vendor\imgui;vendor\glm;vendor\ECS\include;</AdditionalIncludeDirectories>
+      <LibCompiled>true</LibCompiled>
+    </ClCompile>
     <ClCompile Include="src\Platform\Graphics\DirectX\DX12Texture.cpp" />
     <ClCompile Include="src\Platform\OS\Windows\WindowsInput.cpp" />
     <ClCompile Include="src\Platform\OS\Windows\WindowsWindow.cpp" />
@@ -645,6 +800,7 @@
     <ClCompile Include="src\Waldem\LayerStack.cpp" />
     <ClCompile Include="src\Waldem\Log.cpp" />
     <ClCompile Include="src\Waldem\Renderer\Buffer.cpp" />
+    <ClCompile Include="src\Waldem\Renderer\Interfaces\IGraphicObject.cpp" />
     <ClCompile Include="src\Waldem\Renderer\Model\Mesh.cpp" />
     <ClCompile Include="src\Waldem\Renderer\Model\Transform.cpp" />
     <ClCompile Include="src\Waldem\Renderer\Renderer.cpp" />

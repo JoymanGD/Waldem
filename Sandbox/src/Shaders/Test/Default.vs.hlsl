@@ -4,6 +4,7 @@ struct VS_INPUT
     float3 Normal : NORMAL;
     float2 UV : TEXCOORD;
     uint MeshId : MESH_ID;
+    uint VertexID : SV_VertexID;
 };
 
 struct PS_INPUT
@@ -17,16 +18,23 @@ struct PS_INPUT
 
 cbuffer MyConstantBuffer : register(b0)
 {
-    matrix world;
     matrix view;
     matrix proj;
 };
+
+cbuffer RootConstants : register(b1)
+{
+    uint ModelId;
+};
+
+
+StructuredBuffer<float4x4> WorldTransforms : register(t2);
 
 PS_INPUT main(VS_INPUT input)
 {
     PS_INPUT output;
 
-    output.WorldPosition = mul(world, float4(input.Position, 1));
+    output.WorldPosition = mul(WorldTransforms[ModelId], float4(input.Position, 1));
     output.Position = mul(view, output.WorldPosition);
     output.Position = mul(proj, output.Position);
     output.Normal = input.Normal;

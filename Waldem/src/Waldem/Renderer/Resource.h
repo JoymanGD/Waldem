@@ -21,6 +21,7 @@ namespace Waldem
         WArray<Sampler> Samplers;
         RenderTarget* RT = nullptr;
 
+        //constant buffers
         Resource(String name, ResourceType type, void* data, uint32_t stride, Vector2 size, uint32_t slot)
         {
             Name = name;
@@ -31,7 +32,8 @@ namespace Waldem
             Size = size;
             Slot = slot;
         }
-        
+
+        //constant buffers
         Resource(String name, ResourceType type, void* data, uint32_t stride, float size, uint32_t slot)
         {
             Name = name;
@@ -42,7 +44,21 @@ namespace Waldem
             Size = Vector2(size, 1);
             Slot = slot;
         }
-        
+
+        //constants
+        Resource(String name, ResourceType type, uint32_t numConstants, void* data, uint32_t slot)
+        {
+            Name = name;
+            Type = type;
+            NumResources = 1;
+            Data = data;
+            uint32_t stride = sizeof(uint32_t);
+            Stride = stride;
+            Size = Vector2(stride * numConstants, 1);
+            Slot = slot;
+        }
+
+        //textures
         Resource(String name, WArray<Texture2D*> textures, uint32_t slot)
         {
             Name = name;
@@ -51,7 +67,8 @@ namespace Waldem
             NumResources = textures.Num();
             Slot = slot;
         }
-        
+
+        //buffers
         Resource(String name, WArray<StorageBuffer*> buffers, uint32_t slot)
         {
             Name = name;
@@ -60,7 +77,8 @@ namespace Waldem
             NumResources = buffers.Num();
             Slot = slot;
         }
-        
+
+        //render targets
         Resource(String name, RenderTarget* renderTarget, uint32_t slot)
         {
             Name = name;
@@ -69,7 +87,8 @@ namespace Waldem
             NumResources = 1;
             Slot = slot;
         }
-        
+
+        //samplers
         Resource(String name, WArray<Sampler> samplers, uint32_t slot)
         {
             Name = name;

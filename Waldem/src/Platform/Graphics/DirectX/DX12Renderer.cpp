@@ -181,20 +181,50 @@ namespace Waldem
         WorldGraphicCommandList.first = new DX12GraphicCommandList(Device);
         
         ComputeCommandList = new DX12ComputeCommandList(Device);
+        
+        Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&waitFence));
     }
 
-    void DX12Renderer::Draw(Model* model, PixelShader* pixelShader)
+    void DX12Renderer::BeginDraw(PixelShader* pixelShader)
     {
         auto& cmd = WorldGraphicCommandList.first;
 
-        cmd->AddDrawCommand(model, pixelShader);
+        cmd->BeginDraw(pixelShader);
     }
 
-    void DX12Renderer::Draw(Mesh* mesh, PixelShader* pixelShader)
+    void DX12Renderer::Draw(Model* model)
     {
         auto& cmd = WorldGraphicCommandList.first;
 
-        cmd->AddDrawCommand(mesh, pixelShader);
+        cmd->Draw(model);
+    }
+
+    void DX12Renderer::Draw(Mesh* mesh)
+    {
+        auto& cmd = WorldGraphicCommandList.first;
+
+        cmd->Draw(mesh);
+    }
+
+    void DX12Renderer::EndDraw(PixelShader* pixelShader)
+    {
+        auto& cmd = WorldGraphicCommandList.first;
+
+        cmd->EndDraw(pixelShader);
+    }
+
+    void DX12Renderer::Wait()
+    {
+        GraphicCommandQueue->Signal(waitFence, ++waitFenceValue);
+        
+        if (waitFence->GetCompletedValue() < waitFenceValue)
+        {
+            HANDLE eventHandle = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+            waitFence->SetEventOnCompletion(waitFenceValue, eventHandle);
+            WaitForSingleObject(eventHandle, INFINITE);
+            CloseHandle(eventHandle);
+            waitFenceValue--;
+        }
     }
 
     Point3 DX12Renderer::GetNumThreadsPerGroup(ComputeShader* computeShader)
@@ -248,7 +278,7 @@ namespace Waldem
         if(!WorldGraphicCommandList.second)
         {
             worldGraphicCmd->Clear(CurrentRenderTargetHandle, DSVHandle, { 0.0f, 0.0f, 0.0f });
-            worldGraphicCmd->Begin(&Viewport, &ScissorRect, CurrentRenderTargetHandle, DSVHandle);
+            worldGraphicCmd->BeginInternal(&Viewport, &ScissorRect, CurrentRenderTargetHandle, DSVHandle);
             
             WorldGraphicCommandList.second = true;
         }
@@ -268,7 +298,7 @@ namespace Waldem
         
         if(WorldGraphicCommandList.second)
         {
-            worldGraphicCmd->End();
+            worldGraphicCmd->EndInternal();
             
             WorldGraphicCommandList.second = false;
         }

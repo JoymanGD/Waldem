@@ -6,7 +6,8 @@ namespace Waldem
 {
     struct ResourceData
     {
-        ID3D12Resource* DX12Resource;
+        ID3D12Resource* DX12UploadResource = nullptr;
+        ID3D12Resource* DX12DefaultResource = nullptr;
         Resource Desc;
     };
 }

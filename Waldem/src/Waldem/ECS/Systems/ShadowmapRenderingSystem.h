@@ -17,49 +17,68 @@ namespace Waldem
         void Initialize(SceneData* sceneData) override
         {
             RenderTarget* testShadowMap = nullptr;
-            WArray<Matrix4> matrices;
             
-            for (auto [entity, model, transform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
-            {
-                matrices.Add(transform.GetMatrix());
-            }
+            // WArray<Matrix4> matrices;
+            // for (auto [entity, model, transform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
+            // {
+            //     matrices.Add(transform.GetMatrix());
+            // }
             
             for (auto [entity, light, transform] : ECSManager->EntitiesWith<Light, Transform>())
             {
                 testShadowMap = light.Shadowmap;
-                matrices.Add(transform.Inverse());
-                matrices.Add(light.Data.Projection);
+                // matrices.Add(transform.Inverse());
+                // matrices.Add(light.Data.Projection);
+            }
+            
+            WArray<Matrix4> worldTransforms;
+            for (auto [entity, model, transform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
+            {
+                worldTransforms.Add(transform.GetMatrix());
             }
             
             WArray<Resource> resources;
 
-            if(!matrices.IsEmpty())
-                resources.Add(Resource("MyConstantBuffer", RTYPE_ConstantBuffer, matrices.GetData(), sizeof(Matrix4), matrices.GetSize(), 0));
+            resources.Add(Resource("MyConstantBuffer", RTYPE_ConstantBuffer, nullptr, sizeof(Matrix4), sizeof(Matrix4) * 2, 0));
+            resources.Add(Resource("RootConstants", RTYPE_Constant, 1, nullptr, 1));
+            if(!worldTransforms.IsEmpty())
+                resources.Add(Resource("WorldTransforms", RTYPE_Buffer, worldTransforms.GetData(), sizeof(Matrix4), worldTransforms.GetSize(), 0));
             
             DefaultShadowmappingShader = Renderer::LoadPixelShader("Shadowmap", resources, testShadowMap);
         }
 
         void Update(SceneData* sceneData, float deltaTime) override
         {
-            WArray<Matrix4> matrices;
-            
-            for (auto [entity, model, transform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
-            {
-                matrices.Add(transform.GetMatrix());
-            }
-            
             for (auto [entity, light, transform] : ECSManager->EntitiesWith<Light, Transform>())
             {
-                matrices.Add(transform.Inverse());
-                matrices.Add(light.Data.Projection);
-            }
+                Matrix4 matrices[2];
+                matrices[0] = transform.Inverse();
+                matrices[1] = light.Data.Projection;
             
-            for (auto [entity, modelComponent] : ECSManager->EntitiesWith<ModelComponent>())
-            {
-                if(!matrices.IsEmpty())
-                    DefaultShadowmappingShader->UpdateResourceData("MyConstantBuffer", matrices.GetData());
+                DefaultShadowmappingShader->UpdateResourceData("MyConstantBuffer", matrices);
+
+                WArray<Matrix4> worldTransforms;
+                for (auto [entity, model, transform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
+                {
+                    worldTransforms.Add(transform.GetMatrix());
+                }
+
+                DefaultShadowmappingShader->UpdateResourceData("WorldTransforms", worldTransforms.GetData());
+
+                uint32_t modelID = 0;
+
+                Renderer::BeginDraw(DefaultShadowmappingShader);
                 
-                Renderer::Draw(modelComponent.Model, DefaultShadowmappingShader);
+                for (auto [entity, modelComponent, transform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
+                {
+                    DefaultShadowmappingShader->UpdateResourceData("RootConstants", &modelID);
+                    
+                    Renderer::Draw(modelComponent.Model);
+
+                    modelID++;
+                }
+
+                Renderer::EndDraw(DefaultShadowmappingShader);
             }
         }
     };

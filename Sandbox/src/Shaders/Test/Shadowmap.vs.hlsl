@@ -13,16 +13,22 @@ struct PS_INPUT
 
 cbuffer MyConstantBuffer : register(b0)
 {
-    matrix world;
     matrix view;
     matrix proj;
 };
+
+cbuffer RootConstants : register(b1)
+{
+    uint ModelId;
+};
+
+StructuredBuffer<float4x4> WorldTransforms : register(t0);
 
 PS_INPUT main(VS_INPUT input)
 {
     PS_INPUT output;
     
-    output.Position = mul(world, float4(input.Position, 1));
+    output.Position = mul(WorldTransforms[ModelId], float4(input.Position, 1));
     output.Position = mul(view, output.Position);
     output.Position = mul(proj, output.Position);
 

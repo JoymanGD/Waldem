@@ -24,8 +24,11 @@ namespace Waldem
         virtual void Begin() = 0;
         virtual void End() = 0;
         virtual void Present() = 0;
-        virtual void Draw(Model* model, PixelShader* pixelShader) = 0;
-        virtual void Draw(Mesh* mesh, PixelShader* pixelShader) = 0;
+        virtual void BeginDraw(PixelShader* pixelShader) = 0;
+        virtual void Draw(Model* model) = 0;
+        virtual void Draw(Mesh* mesh) = 0;
+        virtual void EndDraw(PixelShader* pixelShader) = 0;
+        virtual void Wait() = 0;
         virtual Point3 GetNumThreadsPerGroup(ComputeShader* computeShader) = 0;
         virtual void Compute(ComputeShader* computeShader, Point3 groupCount) = 0;
         virtual PixelShader* LoadPixelShader(String shaderName, WArray<Resource> resources, RenderTarget* renderTarget = nullptr) = 0;
@@ -43,12 +46,15 @@ namespace Waldem
 
         void Initialize(Window* window);
 
-        void Begin();
-        void End();
+        static void Begin();
+        static void End();
         void Present();
 
-        static void Draw(Mesh* mesh, PixelShader* pixelShader);
-        static void Draw(Model* model, PixelShader* pixelShader);
+        static void BeginDraw(PixelShader* pixelShader);
+        static void Draw(Mesh* mesh);
+        static void Draw(Model* model);
+        static void EndDraw(PixelShader* pixelShader);
+        static void Wait();
         static Point3 GetNumThreadsPerGroup(ComputeShader* computeShader);
         static void Compute(ComputeShader* computeShader, Point3 groupCount);
         static PixelShader* LoadPixelShader(String shaderName, WArray<Resource> resources, RenderTarget* renderTarget = nullptr);

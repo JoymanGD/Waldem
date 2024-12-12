@@ -27,8 +27,11 @@ namespace Waldem
 
     public:
         void UpdateResourceData(String name, void* data) override;
+        void Reset() override;
         WArray<ResourceType> GetRootParamTypes() const { return RootParamTypes; }
         uint32_t GetInitializedDescriptorsAmount() const { return InitializedDescriptorsAmount; }
+        void* GetVS() override { return VertexShaderBlob; }
+        void* GetPS() override { return PixelShaderBlob; }
 
     private:
         ID3DBlob* VertexShaderBlob;
