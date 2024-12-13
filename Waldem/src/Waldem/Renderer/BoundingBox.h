@@ -17,13 +17,13 @@ namespace Waldem
             return result;
         }
         
-        bool IsInFrustum(const WArray<FrustumPlane>& frustumPlanes)
+        bool IsInFrustum(WArray<FrustumPlane>& frustrumPlanes)
         {
             //convert BoundingBox to Vector3 for simplicity
             Vector3 min = Vector3(Min.x, Min.y, Min.z);
             Vector3 max = Vector3(Max.x, Max.y, Max.z);
 
-            for (const auto& plane : frustumPlanes)
+            for (const auto& plane : frustrumPlanes)
             {
                 //check if all 8 corners of the AABB are behind the plane
                 if (!plane.IsPointInFront(Vector3(min.x, min.y, min.z)) &&

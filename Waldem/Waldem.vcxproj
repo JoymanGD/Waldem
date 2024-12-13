@@ -169,8 +169,10 @@
     <ClInclude Include="src\Waldem\ECS\Components\MainCamera.h" />
     <ClInclude Include="src\Waldem\ECS\Components\ModelComponent.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\DebugSystem.h" />
+    <ClInclude Include="src\Waldem\ECS\Systems\DefferedRenderingSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\ForwardRenderingSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\FreeLookCameraSystem.h" />
+    <ClInclude Include="src\Waldem\ECS\Systems\GBufferRenderingSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\PostProcessSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\ShadowmapRenderingSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\System.h" />

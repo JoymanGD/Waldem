@@ -16,9 +16,11 @@ namespace Waldem
 
     struct Frustrum
     {
+    private:
         WArray<FrustumPlane> Planes;
 
-        WArray<FrustumPlane> ExtractFrustumPlanes(Matrix4 viewProjMatrix)
+    public:
+        WArray<FrustumPlane> GetPlanes(Matrix4 viewProjMatrix)
         {
             Planes.Clear();
             Planes.Resize(6);
@@ -79,7 +81,7 @@ namespace Waldem
         void SetViewMatrix(Matrix4 matrix) { ViewMatrix = matrix; }
         Matrix4 GetViewMatrix() { return ViewMatrix; }
         Matrix4 GetProjectionMatrix() { return ProjectionMatrix; }
-        WArray<FrustumPlane> ExtractFrustumPlanes() { return Frustrum.ExtractFrustumPlanes(ProjectionMatrix * ViewMatrix); }
+        WArray<FrustumPlane> ExtractFrustumPlanes() { return Frustrum.GetPlanes(ProjectionMatrix * ViewMatrix); }
         
         float MovementSpeed = 1.0f;
         float RotationSpeed = 1.0f;
