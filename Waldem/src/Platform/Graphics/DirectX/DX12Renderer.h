@@ -5,6 +5,8 @@
 
 #include "DX12ComputeCommandList.h"
 #include "DX12GraphicCommandList.h"
+#include "Waldem/Renderer/Pipeline.h"
+#include "Waldem/Renderer/RootSignature.h"
 
 namespace Waldem
 {
@@ -13,26 +15,32 @@ namespace Waldem
     public:
         ~DX12Renderer() override = default;
         void Initialize(Window* window) override;
-        void BeginDraw(PixelShader* pixelShader) override;
         void Draw(Model* model) override;
         void Draw(Mesh* mesh) override;
-        void EndDraw(PixelShader* pixelShader) override;
         void DrawLine(Line line) override;
         void DrawLines(WArray<Line> lines) override;
         void Wait() override;
         Point3 GetNumThreadsPerGroup(ComputeShader* computeShader) override;
-        void Compute(ComputeShader* computeShader, Point3 groupCount) override;
+        void Compute(Point3 groupCount) override;
         void Begin() override;
         void End() override;
         void Present() override;
         D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentRenderTargetHandle() const { return CurrentRenderTargetHandle; }
         D3D12_CPU_DESCRIPTOR_HANDLE GetDepthStencilHandle() const { return DSVHandle; }
-        PixelShader* LoadPixelShader(String shaderName, WArray<Resource> resources, RenderTarget* renderTarget = nullptr) override;
-        ComputeShader* LoadComputeShader(String shaderName, WArray<Resource> resources) override;
+        PixelShader* LoadPixelShader(String shaderName) override;
+        ComputeShader* LoadComputeShader(String shaderName) override;
+        void SetPipeline(Pipeline* pipeline) override;
+        void SetRootSignature(RootSignature* rootSignature) override;
+        void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr) override;
+        void ResourceBarrier(RenderTarget* rt, ResourceStates before, ResourceStates after) override;
+        Pipeline* CreatePipeline(const String& name, WArray<TextureFormat> RTFormats, PrimitiveTopologyType primitiveTopologyType, RootSignature* rootSignature, PixelShader* shader) override;
+        RootSignature* CreateRootSignature(WArray<Resource> resources) override;
         Texture2D* CreateTexture(String name, int width, int height, TextureFormat format, uint8_t* data = nullptr) override;
         RenderTarget* CreateRenderTarget(String name, int width, int height, TextureFormat format) override;
         VertexBuffer* CreateVertexBuffer(void* data, uint32_t size) override;
         IndexBuffer* CreateIndexBuffer(void* data, uint32_t size) override;
+        void ClearRenderTarget(RenderTarget* rt) override;
+        void ClearDepthStencil(RenderTarget* ds) override;
 
     private:
         uint32_t FrameIndex = 0;

@@ -16,7 +16,7 @@ namespace Waldem
 
         void* GetCommandAllocator() const { return CommandAllocator; }
 
-        void AddDispatchCommand(ComputeShader* shader, Point3 groupCount);
+        void Dispatch(Point3 groupCount);
         void Execute(ID3D12CommandQueue* commandQueue);
         void WaitForCompletion();
         void ResourceBarrier(uint32_t count, D3D12_RESOURCE_BARRIER* barrier);

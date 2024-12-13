@@ -29,10 +29,9 @@ namespace Waldem
             return wstrTo.c_str();
         }
 
-        static LPCWSTR StringToLPCWSTR(const String& str)
+        static std::wstring StringToLPCWSTR(const String& str)
         {
-            std::wstring stemp = std::wstring(str.begin(), str.end());
-            return stemp.c_str();
+            return std::wstring(str.begin(), str.end());
         }
         
         static void PrintHResultError(HRESULT hr, bool throwException = true)
@@ -86,6 +85,7 @@ namespace Waldem
         {
             switch (resourceType)
             {
+            case RTYPE_Constant:
             case RTYPE_ConstantBuffer:
                 return D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
             case RTYPE_Buffer:

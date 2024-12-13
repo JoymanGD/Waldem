@@ -8,8 +8,10 @@
 #include "DX12Buffer.h"
 #include "DX12ComputeShader.h"
 #include "DX12Helper.h"
+#include "DX12Pipeline.h"
 #include "DX12PixelShader.h"
 #include "DX12RenderTarget.h"
+#include "DX12RootSignature.h"
 #include "DX12Texture.h"
 
 namespace Waldem
@@ -185,13 +187,6 @@ namespace Waldem
         Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&waitFence));
     }
 
-    void DX12Renderer::BeginDraw(PixelShader* pixelShader)
-    {
-        auto& cmd = WorldGraphicCommandList.first;
-
-        cmd->BeginDraw(pixelShader);
-    }
-
     void DX12Renderer::Draw(Model* model)
     {
         auto& cmd = WorldGraphicCommandList.first;
@@ -204,13 +199,6 @@ namespace Waldem
         auto& cmd = WorldGraphicCommandList.first;
 
         cmd->Draw(mesh);
-    }
-
-    void DX12Renderer::EndDraw(PixelShader* pixelShader)
-    {
-        auto& cmd = WorldGraphicCommandList.first;
-
-        cmd->EndDraw(pixelShader);
     }
 
     void DX12Renderer::DrawLine(Line line)
@@ -269,9 +257,9 @@ namespace Waldem
         return { threadGroupX, threadGroupY, threadGroupZ };
     }
 
-    void DX12Renderer::Compute(ComputeShader* computeShader, Point3 groupCount)
+    void DX12Renderer::Compute(Point3 groupCount)
     {
-        ComputeCommandList->AddDispatchCommand(computeShader, groupCount);
+        ComputeCommandList->Dispatch(groupCount);
     }
 
     void DX12Renderer::Begin()
@@ -345,14 +333,39 @@ namespace Waldem
         FrameIndex %= SWAPCHAIN_SIZE;
     }
 
-    PixelShader* DX12Renderer::LoadPixelShader(String shaderName, WArray<Resource> resources, RenderTarget* renderTarget)
+    PixelShader* DX12Renderer::LoadPixelShader(String shaderName)
     {
-        return new DX12PixelShader(shaderName, Device, WorldGraphicCommandList.first, resources, renderTarget);
+        return new DX12PixelShader(shaderName);
     }
 
-    ComputeShader* DX12Renderer::LoadComputeShader(String shaderName, WArray<Resource> resources)
+    ComputeShader* DX12Renderer::LoadComputeShader(String shaderName)
     {
-        return new DX12ComputeShader(shaderName, Device, WorldGraphicCommandList.first, resources);
+        return new DX12ComputeShader(shaderName);
+    }
+
+    void DX12Renderer::SetPipeline(Pipeline* pipeline)
+    {
+        WorldGraphicCommandList.first->SetPipeline(pipeline);
+    }
+
+    void DX12Renderer::SetRootSignature(RootSignature* rootSignature)
+    {
+        WorldGraphicCommandList.first->SetRootSignature(rootSignature);
+    }
+
+    void DX12Renderer::SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil)
+    {
+        WorldGraphicCommandList.first->SetRenderTargets(renderTargets, depthStencil);
+    }
+
+    Pipeline* DX12Renderer::CreatePipeline(const String& name, WArray<TextureFormat> RTFormats, PrimitiveTopologyType primitiveTopologyType, RootSignature* rootSignature, PixelShader* shader)
+    {
+        return new DX12Pipeline(name, RTFormats, primitiveTopologyType, Device, rootSignature, shader);
+    }
+
+    RootSignature* DX12Renderer::CreateRootSignature(WArray<Resource> resources)
+    {
+        return new DX12RootSignature(Device, WorldGraphicCommandList.first, resources);
     }
 
     Texture2D* DX12Renderer::CreateTexture(String name, int width, int height, TextureFormat format, uint8_t* data)
@@ -375,5 +388,23 @@ namespace Waldem
     IndexBuffer* DX12Renderer::CreateIndexBuffer(void* data, uint32_t count)
     {
         return new DX12IndexBuffer(Device, data, count);
+    }
+
+    void DX12Renderer::ClearRenderTarget(RenderTarget* rt)
+    {
+        D3D12_CPU_DESCRIPTOR_HANDLE dx12RenderTarget = ((DX12RenderTarget*)rt)->GetRenderTargetHandle();
+        WorldGraphicCommandList.first->ClearRenderTarget(dx12RenderTarget);
+    }
+
+    void DX12Renderer::ClearDepthStencil(RenderTarget* ds)
+    {
+        D3D12_CPU_DESCRIPTOR_HANDLE dx12DepthStencil = ((DX12RenderTarget*)ds)->GetRenderTargetHandle();
+        WorldGraphicCommandList.first->ClearDepthStencil(dx12DepthStencil);
+    }
+
+    void DX12Renderer::ResourceBarrier(RenderTarget* rt, ResourceStates before, ResourceStates after)
+    {
+        ID3D12Resource* resource = (ID3D12Resource*)rt->GetPlatformResource();
+        WorldGraphicCommandList.first->ResourceBarrier(resource, (D3D12_RESOURCE_STATES)before, (D3D12_RESOURCE_STATES)after);
     }
 }

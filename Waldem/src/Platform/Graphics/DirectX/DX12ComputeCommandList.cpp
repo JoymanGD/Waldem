@@ -78,42 +78,8 @@ namespace Waldem
         UpdateSubresources(CommandList, destResource, srcResource, 0, 0, numSubresources, subresourceData);
     }
 
-    void DX12ComputeCommandList::AddDispatchCommand(ComputeShader* shader, Point3 groupCount)
+    void DX12ComputeCommandList::Dispatch(Point3 groupCount)
     {
-        auto dxShader = (DX12ComputeShader*)shader;
-        auto pipeline = dxShader->GetPipeline();
-        auto rootSignature = dxShader->GetRootSignature();
-        auto resourcesHeap = dxShader->GetResourcesHeap();
-        auto samplersHeap = dxShader->GetSamplersHeap();
-        auto rootParamTypes = dxShader->GetRootParamTypes();
-        auto resources = dxShader->GetResources();
-        
-        CommandList->SetPipelineState(pipeline);
-        CommandList->SetComputeRootSignature(rootSignature);
-        ID3D12DescriptorHeap* heaps[] = { resourcesHeap, samplersHeap };
-        CommandList->SetDescriptorHeaps(2, heaps);
-        
-        UINT descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-        D3D12_GPU_DESCRIPTOR_HANDLE handle = resourcesHeap->GetGPUDescriptorHandleForHeapStart();
-        UINT samplerDescriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
-        D3D12_GPU_DESCRIPTOR_HANDLE samplersHandle = samplersHeap->GetGPUDescriptorHandleForHeapStart();
-
-        for (uint32_t i = 0; i < rootParamTypes.Num(); ++i)
-        {
-            auto& rootParamType = rootParamTypes[i];
-
-            if(rootParamType == RTYPE_Sampler)
-            {
-                CommandList->SetComputeRootDescriptorTable(i, samplersHandle);
-                samplersHandle.ptr += samplerDescriptorSize;
-            }
-            else
-            {
-                CommandList->SetComputeRootDescriptorTable(i, handle);
-                handle.ptr += descriptorSize;
-            }
-        }
-        
         CommandList->Dispatch(groupCount.x, groupCount.y, groupCount.z);
     }
 

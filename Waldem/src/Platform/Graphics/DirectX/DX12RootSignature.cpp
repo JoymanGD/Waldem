@@ -8,67 +8,79 @@ namespace Waldem
 #define MAX_TEXTURES 1024
 #define MAX_BUFFERS 128
     
-    DX12RootSignature::DX12RootSignature(ID3D12Device* device, DX12GraphicCommandList* cmdList, WArray<Resource> resources)
+    DX12RootSignature::DX12RootSignature(ID3D12Device* device, DX12GraphicCommandList* cmdList, WArray<Resource> resources) : CmdList(cmdList)
     {
         WArray<D3D12_ROOT_PARAMETER> rootParams;
-        
-        for (uint32_t i = 0; i < resources.Num(); ++i)
-        {
-            D3D12_DESCRIPTOR_RANGE* range = new D3D12_DESCRIPTOR_RANGE();
-
-            uint32_t numDescriptors = 1;
-
-            if(resources[i].NumResources > 1)
+            
+            for (uint32_t i = 0; i < resources.Num(); ++i)
             {
-                if(resources[i].Type == RTYPE_Texture)
+                InitializedDescriptorsAmount += resources[i].NumResources;
+                
+                D3D12_ROOT_PARAMETER param = {};
+
+                if(resources[i].Type == RTYPE_Constant)
                 {
-                    numDescriptors = MAX_TEXTURES;
+                    param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+                    param.Constants.ShaderRegister = resources[i].Slot;
+                    param.Constants.RegisterSpace = 0;
+                    param.Constants.Num32BitValues = resources[i].NumResources;
+                    param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
                 }
-                else if(resources[i].Type == RTYPE_Buffer)
+                else
                 {
-                    numDescriptors = MAX_BUFFERS;
+                    D3D12_DESCRIPTOR_RANGE* range = new D3D12_DESCRIPTOR_RANGE();
+
+                    uint32_t numDescriptors = 1;
+
+                    if(resources[i].NumResources > 1)
+                    {
+                        if(resources[i].Type == RTYPE_Texture)
+                        {
+                            numDescriptors = MAX_TEXTURES;
+                        }
+                        else if(resources[i].Type == RTYPE_Buffer)
+                        {
+                            numDescriptors = MAX_BUFFERS;
+                        }
+                    }
+                
+                    range->NumDescriptors = numDescriptors;
+                    range->OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+                    range->RegisterSpace = 0;
+                    range->RangeType = DX12Helper::ResourceTypeToRangeType(resources[i].Type);
+                    range->BaseShaderRegister = resources[i].Slot;
+                    
+                    param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+                    param.DescriptorTable.NumDescriptorRanges = 1;
+                    param.DescriptorTable.pDescriptorRanges = range;
+                    param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
                 }
+
+                rootParams.Add(param);
+                RootParamTypes.Add(resources[i].Type);
             }
             
-            InitializedDescriptorsAmount += resources[i].NumResources;
+            D3D12_STATIC_SAMPLER_DESC staticSampler = {};
+            staticSampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+            staticSampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+            staticSampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+            staticSampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+            staticSampler.MipLODBias = 0.0f;
+            staticSampler.MaxAnisotropy = 1;
+            staticSampler.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+            staticSampler.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+            staticSampler.MinLOD = 0.0f;
+            staticSampler.MaxLOD = D3D12_FLOAT32_MAX;
+            staticSampler.ShaderRegister = 0; //matches register(s0) in the shader
+            staticSampler.RegisterSpace = 0;
+            staticSampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
             
-            range->NumDescriptors = numDescriptors;
-            range->OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-            range->RegisterSpace = 0;
-            range->RangeType = DX12Helper::ResourceTypeToRangeType(resources[i].Type);
-            range->BaseShaderRegister = resources[i].Slot;
-            
-            D3D12_ROOT_PARAMETER param = {};
-            param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-            param.DescriptorTable.NumDescriptorRanges = 1;
-            param.DescriptorTable.pDescriptorRanges = range;
-            param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-
-            rootParams.Add(param);
-            RootParamTypes.Add(resources[i].Type);
-        }
-        
-        D3D12_STATIC_SAMPLER_DESC staticSampler = {};
-        staticSampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-        staticSampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-        staticSampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-        staticSampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-        staticSampler.MipLODBias = 0.0f;
-        staticSampler.MaxAnisotropy = 1;
-        staticSampler.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-        staticSampler.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
-        staticSampler.MinLOD = 0.0f;
-        staticSampler.MaxLOD = D3D12_FLOAT32_MAX;
-        staticSampler.ShaderRegister = 0; //matches register(s0) in the shader
-        staticSampler.RegisterSpace = 0;
-        staticSampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-        
-        D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
-        rootSignatureDesc.NumParameters = rootParams.Num();
-        rootSignatureDesc.pParameters = rootParams.GetData();
-        rootSignatureDesc.NumStaticSamplers = 1;
-        rootSignatureDesc.pStaticSamplers = &staticSampler;
-        rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+            D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
+            rootSignatureDesc.NumParameters = rootParams.Num();
+            rootSignatureDesc.pParameters = rootParams.GetData();
+            rootSignatureDesc.NumStaticSamplers = 1;
+            rootSignatureDesc.pStaticSamplers = &staticSampler;
+            rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
         
         ID3DBlob* signature;
         ID3DBlob* error;
@@ -81,6 +93,10 @@ namespace Waldem
         }
 
         SetResources(device, cmdList, resources, InitializedDescriptorsAmount);
+    }
+
+    DX12RootSignature::~DX12RootSignature()
+    {
     }
 
     void DX12RootSignature::SetResources(ID3D12Device* device, DX12GraphicCommandList* cmdList, WArray<Resource> resourceDescs, uint32_t numDescriptors)
@@ -126,6 +142,18 @@ namespace Waldem
         defaultHeapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
         defaultHeapProps.CreationNodeMask = 1;
         defaultHeapProps.VisibleNodeMask = 1;
+        
+        D3D12_RESOURCE_DESC dummyBufferDesc = {};
+        dummyBufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+        dummyBufferDesc.Alignment = 0;
+        dummyBufferDesc.Width = 1;
+        dummyBufferDesc.Height = 1;
+        dummyBufferDesc.DepthOrArraySize = 1;
+        dummyBufferDesc.MipLevels = 1;
+        dummyBufferDesc.SampleDesc.Count = 1;
+        dummyBufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+        dummyBufferDesc.Format = DXGI_FORMAT_UNKNOWN;
+        dummyBufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
         for (auto& resourceDesc : resourceDescs)
         {
@@ -186,9 +214,11 @@ namespace Waldem
                             &defaultHeapProps,
                             D3D12_HEAP_FLAG_NONE,
                             &bufferDesc,
-                            D3D12_RESOURCE_STATE_GENERIC_READ,
+                            D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
                             nullptr,
                             IID_PPV_ARGS(&defaultResourceBuffer));
+                        
+                        cmdList->ResourceBarrier(defaultResourceBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
                         
                         D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
                         cbvDesc.BufferLocation = defaultResourceBuffer->GetGPUVirtualAddress();
@@ -199,6 +229,27 @@ namespace Waldem
                 case RTYPE_Buffer:
                     {
                         size = (uint32_t)resourceDesc.Size.x;
+                        
+                        D3D12_RESOURCE_DESC bufferDesc = {};
+                            
+                        bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+                        bufferDesc.Alignment = 0;
+                        bufferDesc.Width = size;
+                        bufferDesc.Height = 1;
+                        bufferDesc.DepthOrArraySize = 1;
+                        bufferDesc.MipLevels = 1;
+                        bufferDesc.SampleDesc.Count = 1;
+                        bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+                        bufferDesc.Format = DXGI_FORMAT_UNKNOWN;
+                        bufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+                        device->CreateCommittedResource(
+                            &uploadHeapProps,
+                            D3D12_HEAP_FLAG_NONE,
+                            &bufferDesc,
+                            D3D12_RESOURCE_STATE_GENERIC_READ,
+                            nullptr,
+                            IID_PPV_ARGS(&uploadResourceBuffer));
                             
                         if(resourceDesc.Buffers.Num() != 0)
                         {
@@ -207,34 +258,15 @@ namespace Waldem
                         }
                         else
                         {
-                            D3D12_RESOURCE_DESC bufferDesc = {};
-                            
-                            bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-                            bufferDesc.Alignment = 0;
-                            bufferDesc.Width = size;
-                            bufferDesc.Height = 1;
-                            bufferDesc.DepthOrArraySize = 1;
-                            bufferDesc.MipLevels = 1;
-                            bufferDesc.SampleDesc.Count = 1;
-                            bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-                            bufferDesc.Format = DXGI_FORMAT_UNKNOWN;
-                            bufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-
-                            device->CreateCommittedResource(
-                                &uploadHeapProps,
-                                D3D12_HEAP_FLAG_NONE,
-                                &bufferDesc,
-                                D3D12_RESOURCE_STATE_GENERIC_READ,
-                                nullptr,
-                                IID_PPV_ARGS(&uploadResourceBuffer));
-
                             device->CreateCommittedResource(
                                 &defaultHeapProps,
                                 D3D12_HEAP_FLAG_NONE,
                                 &bufferDesc,
-                                D3D12_RESOURCE_STATE_GENERIC_READ,
+                                D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
                                 nullptr,
                                 IID_PPV_ARGS(&defaultResourceBuffer));
+                        
+                            cmdList->ResourceBarrier(defaultResourceBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
                         }
                         
                         D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -252,6 +284,14 @@ namespace Waldem
                 case RTYPE_Texture:
                     {
                         size = resourceDesc.Size.x * resourceDesc.Size.y;
+
+                        device->CreateCommittedResource(
+                            &uploadHeapProps,
+                            D3D12_HEAP_FLAG_NONE,
+                            &dummyBufferDesc,
+                            D3D12_RESOURCE_STATE_GENERIC_READ,
+                            nullptr,
+                            IID_PPV_ARGS(&uploadResourceBuffer));
                         
                         if(resourceDesc.Textures.Num() != 0)
                         {
@@ -261,33 +301,16 @@ namespace Waldem
                         else
                         {
                             D3D12_RESOURCE_DESC bufferDesc = {};
-                            
-                            bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-                            bufferDesc.Alignment = 0;
-                            bufferDesc.Width = (uint32_t)resourceDesc.Size.x;
-                            bufferDesc.Height = (uint32_t)resourceDesc.Size.y;
-                            bufferDesc.DepthOrArraySize = 1;
-                            bufferDesc.MipLevels = 1;
-                            bufferDesc.SampleDesc.Count = 1;
-                            bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-                            bufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-                            bufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-
-                            device->CreateCommittedResource(
-                                &uploadHeapProps,
-                                D3D12_HEAP_FLAG_NONE,
-                                &bufferDesc,
-                                D3D12_RESOURCE_STATE_GENERIC_READ,
-                                nullptr,
-                                IID_PPV_ARGS(&uploadResourceBuffer));
-
+                        
                             device->CreateCommittedResource(
                                 &defaultHeapProps,
                                 D3D12_HEAP_FLAG_NONE,
                                 &bufferDesc,
-                                D3D12_RESOURCE_STATE_GENERIC_READ,
+                                D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
                                 nullptr,
                                 IID_PPV_ARGS(&defaultResourceBuffer));
+                        
+                            cmdList->ResourceBarrier(defaultResourceBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
                         }
                         
                         D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -304,6 +327,14 @@ namespace Waldem
                 case RTYPE_RenderTarget:
                     {
                         size = resourceDesc.Size.x * resourceDesc.Size.y;
+
+                        device->CreateCommittedResource(
+                            &uploadHeapProps,
+                            D3D12_HEAP_FLAG_NONE,
+                            &dummyBufferDesc,
+                            D3D12_RESOURCE_STATE_GENERIC_READ,
+                            nullptr,
+                            IID_PPV_ARGS(&uploadResourceBuffer));
                         
                         // uploadResourceBuffer = (ID3D12Resource*)resourceDesc.RT->GetPlatformResource();
                         defaultResourceBuffer = (ID3D12Resource*)resourceDesc.RT->GetPlatformResource();
@@ -331,6 +362,14 @@ namespace Waldem
                 case RTYPE_RWRenderTarget:
                     {
                         size = resourceDesc.Size.x * resourceDesc.Size.y;
+
+                        device->CreateCommittedResource(
+                            &uploadHeapProps,
+                            D3D12_HEAP_FLAG_NONE,
+                            &dummyBufferDesc,
+                            D3D12_RESOURCE_STATE_GENERIC_READ,
+                            nullptr,
+                            IID_PPV_ARGS(&uploadResourceBuffer));
                         
                         // uploadResourceBuffer = (ID3D12Resource*)resourceDesc.RT->GetPlatformResource();
                         defaultResourceBuffer = (ID3D12Resource*)resourceDesc.RT->GetPlatformResource();
@@ -359,9 +398,15 @@ namespace Waldem
                 {
                     samplerHandle.ptr += samplerDescriptorSize;
                 }
+                else if(resourceDesc.Type == RTYPE_Constant)
+                {
+                    ResourcesMap[resourceDesc.Name] = new ResourceData{ NULL, NULL, resourceDesc };
+                }
                 else
                 {
-                    Resources[resourceDesc.Name] = new ResourceData{ uploadResourceBuffer, defaultResourceBuffer, resourceDesc };
+                    uploadResourceBuffer->SetName(DX12Helper::StringToLPCWSTR(resourceDesc.Name + "_Upload").c_str());
+                    defaultResourceBuffer->SetName(DX12Helper::StringToLPCWSTR(resourceDesc.Name + "_Default").c_str());
+                    ResourcesMap[resourceDesc.Name] = new ResourceData{ uploadResourceBuffer, defaultResourceBuffer, resourceDesc };
 
                     if(resourceDesc.Data)
                     {
@@ -375,13 +420,52 @@ namespace Waldem
                         memcpy(pMappedData, resourceDesc.Data, size);
                         uploadResourceBuffer->Unmap(0, nullptr);
                         
-                        cmdList->ResourceBarrier(defaultResourceBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, D3D12_RESOURCE_STATE_COPY_DEST);
+                        cmdList->ResourceBarrier(defaultResourceBuffer, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, D3D12_RESOURCE_STATE_COPY_DEST);
                         cmdList->CopyResource(defaultResourceBuffer, uploadResourceBuffer);
-                        cmdList->ResourceBarrier(defaultResourceBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+                        cmdList->ResourceBarrier(defaultResourceBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
                     }
 
                     handle.ptr += descriptorSize;
                 }
+            }
+        }
+    }
+
+    void DX12RootSignature::UpdateResourceData(String name, void* data)
+    {
+        if(data)
+        {
+            auto resourceData = ResourcesMap[name];
+            
+            if(resourceData)
+            {
+                if(resourceData->Desc.Type == RTYPE_Constant)
+                {
+                    uint32_t numConstants = resourceData->Desc.Size.x / resourceData->Desc.Stride;
+                    CmdList->SetConstants(resourceData->Desc.Slot, numConstants, data);
+                }
+                else
+                {
+                    //map and copy data
+                    UINT8* pMappedData;
+                    HRESULT hr = resourceData->DX12UploadResource->Map(0, nullptr, reinterpret_cast<void**>(&pMappedData));
+                    if(FAILED(hr))
+                    {
+                        DX12Helper::PrintHResultError(hr);
+                    }
+                    memcpy(pMappedData, data, resourceData->Desc.Size.x * resourceData->Desc.Size.y);
+                    resourceData->DX12UploadResource->Unmap(0, nullptr);
+
+                    //copy data to default resource
+                    //barrier
+                    CmdList->ResourceBarrier(resourceData->DX12DefaultResource, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, D3D12_RESOURCE_STATE_COPY_DEST);
+                    CmdList->CopyResource(resourceData->DX12DefaultResource, resourceData->DX12UploadResource);
+                    CmdList->ResourceBarrier(resourceData->DX12DefaultResource, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+                }
+            }
+            else
+            {
+                throw std::runtime_error("Resource not found!");
             }
         }
     }

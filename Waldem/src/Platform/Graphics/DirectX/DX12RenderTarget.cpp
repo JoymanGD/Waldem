@@ -11,7 +11,7 @@ namespace Waldem
 
         Name = name;
         
-        if(format == TextureFormat::TEXTURE_FORMAT_D32_FLOAT)
+        if(format == TextureFormat::D32_FLOAT)
         {
             IsDepthStencil = true;
             

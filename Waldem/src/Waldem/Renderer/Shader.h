@@ -39,9 +39,8 @@ namespace Waldem
     public:
         Shader(const String& name) : Name(name) {}
         virtual ~Shader() = default;
-        virtual void UpdateResourceData(String name, void* data) = 0;
         virtual bool CompileFromFile(const String& filepath) = 0;
-        virtual void Reset() = 0;
+        String GetName() { return Name; }
     protected:
         String Name;
     };
@@ -49,9 +48,8 @@ namespace Waldem
     class WALDEM_API PixelShader : public Shader
     {
     public:
-        PixelShader(const String& name, RenderTarget* renderTarget = nullptr) : Shader(name), RenderTarget(renderTarget) {}
+        PixelShader(const String& name) : Shader(name) {}
         virtual ~PixelShader() {}
-        RenderTarget* RenderTarget;
         virtual void* GetVS() = 0;
         virtual void* GetPS() = 0;
     };
