@@ -56,7 +56,7 @@ namespace Waldem
 
                     //Create frustrum for culling
                     Frustrum frustrum;
-                    auto frustrumPlanes = frustrum.ExtractFrustumPlanes(matrices[1] * matrices[0]);
+                    auto frustrumPlanes = frustrum.GetPlanes(matrices[1] * matrices[0]);
                 
                     DefaultRootSignature->UpdateResourceData("MyConstantBuffer", matrices);
 
@@ -76,7 +76,7 @@ namespace Waldem
 
                     uint32_t modelID = 0;
 
-                    for (auto [modeleEtity, modelComponent, modelTransform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
+                    for (auto [modelEtity, modelComponent, modelTransform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
                     {
                         DefaultRootSignature->UpdateResourceData("RootConstants", &modelID);
                         
