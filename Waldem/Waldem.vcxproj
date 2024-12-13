@@ -192,6 +192,7 @@
     <ClInclude Include="src\Waldem\Renderer\Buffer.h" />
     <ClInclude Include="src\Waldem\Renderer\Interfaces\IGraphicObject.h" />
     <ClInclude Include="src\Waldem\Renderer\Light.h" />
+    <ClInclude Include="src\Waldem\Renderer\Line.h" />
     <ClInclude Include="src\Waldem\Renderer\Model\Material.h" />
     <ClInclude Include="src\Waldem\Renderer\Model\Mesh.h" />
     <ClInclude Include="src\Waldem\Renderer\Model\Model.h" />

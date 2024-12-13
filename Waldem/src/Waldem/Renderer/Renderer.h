@@ -1,4 +1,5 @@
 #pragma once
+#include "Line.h"
 #include "RenderTarget.h"
 #include "Model/Mesh.h"
 #include "Model/Model.h"
@@ -28,6 +29,8 @@ namespace Waldem
         virtual void Draw(Model* model) = 0;
         virtual void Draw(Mesh* mesh) = 0;
         virtual void EndDraw(PixelShader* pixelShader) = 0;
+        virtual void DrawLine(Line line) = 0;
+        virtual void DrawLines(WArray<Line> lines) = 0;
         virtual void Wait() = 0;
         virtual Point3 GetNumThreadsPerGroup(ComputeShader* computeShader) = 0;
         virtual void Compute(ComputeShader* computeShader, Point3 groupCount) = 0;
@@ -54,6 +57,8 @@ namespace Waldem
         static void Draw(Mesh* mesh);
         static void Draw(Model* model);
         static void EndDraw(PixelShader* pixelShader);
+        static void DrawLine(Line line);
+        static void DrawLines(WArray<Line> lines);
         static void Wait();
         static Point3 GetNumThreadsPerGroup(ComputeShader* computeShader);
         static void Compute(ComputeShader* computeShader, Point3 groupCount);

@@ -76,6 +76,7 @@ namespace Waldem
         Camera(float fov, float aspectRatio, float nearClip, float farClip, float movementSpeed, float rotationSpeed);
 
         void SetViewMatrix(Transform* transform) { ViewMatrix = transform->Inverse(); }
+        void SetViewMatrix(Matrix4 matrix) { ViewMatrix = matrix; }
         Matrix4 GetViewMatrix() { return ViewMatrix; }
         Matrix4 GetProjectionMatrix() { return ProjectionMatrix; }
         WArray<FrustumPlane> ExtractFrustumPlanes() { return Frustrum.ExtractFrustumPlanes(ProjectionMatrix * ViewMatrix); }

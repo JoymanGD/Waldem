@@ -11,6 +11,7 @@ namespace Waldem
     class WALDEM_API ForwardRenderingSystem : ISystem
     {
         PixelShader* DefaultPixelShader = nullptr;
+        
     public:
         ForwardRenderingSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
         
@@ -74,7 +75,7 @@ namespace Waldem
 
             WArray<FrustumPlane> frustrumPlanes;
             Matrix4 matrices[2];
-            for (auto [entity, camera, mainCamera] : ECSManager->EntitiesWith<Camera, MainCamera>())
+            for (auto [entity, camera, mainCamera, cameraTransform] : ECSManager->EntitiesWith<Camera, MainCamera, Transform>())
             {
                 matrices[0] = camera.GetViewMatrix();
                 matrices[1] = camera.GetProjectionMatrix();
@@ -103,7 +104,8 @@ namespace Waldem
                 for (auto mesh : modelComponent.Model->GetMeshes())
                 {
                     auto transformedBBox = mesh->BBox.Transform(transform.GetMatrix());
-                    
+
+                    //Frustrum culling
                     if(transformedBBox.IsInFrustum(frustrumPlanes))
                     {
                         Renderer::Draw(mesh);
@@ -113,6 +115,12 @@ namespace Waldem
             }
             
             Renderer::EndDraw(DefaultPixelShader);
+
+            Matrix4 viewProj = matrices[1] * matrices[0];
+
+            Line line = { { 50.f, 0.0f, .0f }, { 55.f, 5.f, .0f }, { 1.0f, 0.0f, 0.0f, 1.0f } };
+            line.ToClipSpace(viewProj);
+            Renderer::DrawLine(line);
         }
     };
 }

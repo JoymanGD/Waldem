@@ -1,5 +1,7 @@
 #pragma once
 #include <string>
+
+#include "GraphicTypes.h"
 #include "RenderTarget.h"
 
 namespace Waldem

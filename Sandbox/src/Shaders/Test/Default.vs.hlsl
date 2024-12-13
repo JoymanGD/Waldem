@@ -27,7 +27,6 @@ cbuffer RootConstants : register(b1)
     uint ModelId;
 };
 
-
 StructuredBuffer<float4x4> WorldTransforms : register(t2);
 
 PS_INPUT main(VS_INPUT input)
