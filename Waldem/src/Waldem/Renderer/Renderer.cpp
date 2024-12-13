@@ -45,11 +45,6 @@ namespace Waldem
         return Instance->PlatformRenderer->GetNumThreadsPerGroup(computeShader);
     }
 
-    void Renderer::BeginDraw(PixelShader* pixelShader)
-    {
-        Instance->PlatformRenderer->BeginDraw(pixelShader);
-    }
-
     void Renderer::Draw(Mesh* mesh)
     {
         Instance->PlatformRenderer->Draw(mesh);
@@ -58,11 +53,6 @@ namespace Waldem
     void Renderer::Draw(Model* model)
     {
         Instance->PlatformRenderer->Draw(model);
-    }
-
-    void Renderer::EndDraw(PixelShader* pixelShader)
-    {
-        Instance->PlatformRenderer->EndDraw(pixelShader);
     }
 
     void Renderer::DrawLine(Line line)
@@ -80,19 +70,44 @@ namespace Waldem
         Instance->PlatformRenderer->Wait();
     }
 
-    void Renderer::Compute(ComputeShader* computeShader, Point3 groupCount)
+    void Renderer::Compute(Point3 groupCount)
     {
-        Instance->PlatformRenderer->Compute(computeShader, groupCount);
+        Instance->PlatformRenderer->Compute(groupCount);
     }
 
-    PixelShader* Renderer::LoadPixelShader(String shaderName, WArray<Resource> resources, RenderTarget* renderTarget)
+    PixelShader* Renderer::LoadPixelShader(String shaderName)
     {
-        return Instance->PlatformRenderer->LoadPixelShader(shaderName, resources, renderTarget);
+        return Instance->PlatformRenderer->LoadPixelShader(shaderName);
     }
 
-    ComputeShader* Renderer::LoadComputeShader(String shaderName, WArray<Resource> resources)
+    ComputeShader* Renderer::LoadComputeShader(String shaderName)
     {
-        return Instance->PlatformRenderer->LoadComputeShader(shaderName, resources);
+        return Instance->PlatformRenderer->LoadComputeShader(shaderName);
+    }
+
+    void Renderer::SetPipeline(Pipeline* pipeline)
+    {
+        Instance->PlatformRenderer->SetPipeline(pipeline);
+    }
+
+    void Renderer::SetRootSignature(RootSignature* rootSignature)
+    {
+        Instance->PlatformRenderer->SetRootSignature(rootSignature);
+    }
+
+    void Renderer::SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil)
+    {
+        Instance->PlatformRenderer->SetRenderTargets(renderTargets, depthStencil);
+    }
+
+    Pipeline* Renderer::CreatePipeline(const String& name, WArray<TextureFormat> RTFormats, PrimitiveTopologyType primitiveTopologyType, RootSignature* rootSignature, PixelShader* shader)
+    {
+        return Instance->PlatformRenderer->CreatePipeline(name, RTFormats, primitiveTopologyType, rootSignature, shader);
+    }
+
+    RootSignature* Renderer::CreateRootSignature(WArray<Resource> resources)
+    {
+        return Instance->PlatformRenderer->CreateRootSignature(resources);
     }
 
     Texture2D* Renderer::CreateTexture(String name, int width, int height, TextureFormat format, uint8_t* data)
@@ -115,5 +130,20 @@ namespace Waldem
     IndexBuffer* Renderer::CreateIndexBuffer(void* data, uint32_t count)
     {
         return Instance->PlatformRenderer->CreateIndexBuffer(data, count);
+    }
+
+    void Renderer::ResourceBarrier(RenderTarget* rt, ResourceStates before, ResourceStates after)
+    {
+        Instance->PlatformRenderer->ResourceBarrier(rt, before, after);
+    }
+
+    void Renderer::ClearRenderTarget(RenderTarget* rt)
+    {
+        Instance->PlatformRenderer->ClearRenderTarget(rt);
+    }
+
+    void Renderer::ClearDepthStencil(RenderTarget* ds)
+    {
+        Instance->PlatformRenderer->ClearDepthStencil(ds);
     }
 }

@@ -51,7 +51,7 @@ namespace Sandbox
 
 		DrawSystems.Add((Waldem::ISystem*)new Waldem::ShadowmapRenderingSystem(&ECSManager));
 		DrawSystems.Add((Waldem::ISystem*)new Waldem::ForwardRenderingSystem(&ECSManager));
-		DrawSystems.Add((Waldem::ISystem*)new Waldem::PostProcessSystem(&ECSManager));
+		// DrawSystems.Add((Waldem::ISystem*)new Waldem::PostProcessSystem(&ECSManager));
 		
 		for (Waldem::ISystem* system : UpdateSystems)
 		{
@@ -60,7 +60,7 @@ namespace Sandbox
 		
 		for (Waldem::ISystem* system : DrawSystems)
 		{
-			system->Initialize(sceneData);
+			system->Initialize(sceneData); 
 		}
 	}
 

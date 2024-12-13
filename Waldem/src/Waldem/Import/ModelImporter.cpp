@@ -100,11 +100,11 @@ namespace Waldem
                 
                 if(componentsCount == 3)
                 {
-                    format = TextureFormat::TEXTURE_FORMAT_R32G32B32_FLOAT; //TODO: check if its workable
+                    format = TextureFormat::R32G32B32_FLOAT; //TODO: check if its workable
                 }
                 else
                 {
-                    format = TextureFormat::TEXTURE_FORMAT_R8G8B8A8_UNORM;
+                    format = TextureFormat::R8G8B8A8_UNORM;
                 }
 
                 Texture2D* texture = Application::GetRenderer().CreateTexture("DiffuseTexture", width, height, format, image_data);

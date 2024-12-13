@@ -9,6 +9,8 @@ namespace Waldem
 {
     class WALDEM_API ShadowmapRenderingSystem : ISystem
     {
+        Pipeline* DefaultPipeline = nullptr;
+        RootSignature* DefaultRootSignature = nullptr;
         PixelShader* DefaultShadowmappingShader = nullptr;
         
     public:
@@ -16,13 +18,6 @@ namespace Waldem
         
         void Initialize(SceneData* sceneData) override
         {
-            RenderTarget* testShadowMap = nullptr;
-            
-            for (auto [entity, light, transform] : ECSManager->EntitiesWith<Light, Transform>())
-            {
-                testShadowMap = light.Shadowmap;
-            }
-            
             WArray<Matrix4> worldTransforms;
             for (auto [entity, model, transform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
             {
@@ -36,7 +31,9 @@ namespace Waldem
             if(!worldTransforms.IsEmpty())
                 resources.Add(Resource("WorldTransforms", RTYPE_Buffer, worldTransforms.GetData(), sizeof(Matrix4), worldTransforms.GetSize(), 0));
             
-            DefaultShadowmappingShader = Renderer::LoadPixelShader("Shadowmap", resources, testShadowMap);
+            DefaultShadowmappingShader = Renderer::LoadPixelShader("Shadowmap");
+            DefaultRootSignature = Renderer::CreateRootSignature(resources);
+            DefaultPipeline = Renderer::CreatePipeline("ForwardRenderingPipeline", { TextureFormat::R8G8B8A8_UNORM }, WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, DefaultRootSignature, DefaultShadowmappingShader);
         }
 
         void Update(SceneData* sceneData, float deltaTime) override
@@ -45,13 +42,11 @@ namespace Waldem
             {
                 if(light.Data.Type == LightType::Directional)
                 {
-                    Matrix4 viewProj;
                     for (auto [cameraEntity, camera, cameraTransform, mainCamera] : ECSManager->EntitiesWith<Camera, Transform, MainCamera>())
                     {
                         auto currentPosition = cameraTransform.GetPosition();
                         currentPosition.y = lightTransform.GetPosition().y;
                         lightTransform.SetPosition(currentPosition);
-                        viewProj = camera.GetProjectionMatrix() * camera.GetViewMatrix();
                         break;
                     }
 
@@ -63,7 +58,7 @@ namespace Waldem
                     Frustrum frustrum;
                     auto frustrumPlanes = frustrum.ExtractFrustumPlanes(matrices[1] * matrices[0]);
                 
-                    DefaultShadowmappingShader->UpdateResourceData("MyConstantBuffer", matrices);
+                    DefaultRootSignature->UpdateResourceData("MyConstantBuffer", matrices);
 
                     WArray<Matrix4> worldTransforms;
                     for (auto [modelEntity, modelComponent, modelTransform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
@@ -71,15 +66,19 @@ namespace Waldem
                         worldTransforms.Add(modelTransform.GetMatrix());
                     }
 
-                    DefaultShadowmappingShader->UpdateResourceData("WorldTransforms", worldTransforms.GetData());
+                    DefaultRootSignature->UpdateResourceData("WorldTransforms", worldTransforms.GetData());
+                    
+                    Renderer::SetPipeline(DefaultPipeline);
+                    Renderer::SetRootSignature(DefaultRootSignature);
+                    Renderer::ResourceBarrier(light.Shadowmap, ALL_SHADER_RESOURCE, DEPTH_WRITE);
+                    Renderer::SetRenderTargets({}, light.Shadowmap);
+                    Renderer::ClearDepthStencil(light.Shadowmap);
 
                     uint32_t modelID = 0;
 
-                    Renderer::BeginDraw(DefaultShadowmappingShader);
-                    
                     for (auto [modeleEtity, modelComponent, modelTransform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
                     {
-                        DefaultShadowmappingShader->UpdateResourceData("RootConstants", &modelID);
+                        DefaultRootSignature->UpdateResourceData("RootConstants", &modelID);
                         
                         for (auto mesh : modelComponent.Model->GetMeshes())
                         {
@@ -94,8 +93,10 @@ namespace Waldem
 
                         modelID++;
                     }
+                    
+                    Renderer::ResourceBarrier(light.Shadowmap, DEPTH_WRITE, ALL_SHADER_RESOURCE);
 
-                    Renderer::EndDraw(DefaultShadowmappingShader);
+                    Renderer::SetRenderTargets({});
                 }
             }
         }
