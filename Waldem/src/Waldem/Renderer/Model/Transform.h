@@ -21,7 +21,7 @@ namespace Waldem
         operator Matrix4() const { return Matrix; }
         
         void Reset();
-        void SetPosition(Vector3 newPosition);
+        void SetPosition(Vector3 newPosition); 
         void SetPosition(float x, float y, float z);
         void Translate(Vector3 translation);
         void Rotate(Quaternion rotation);
@@ -41,6 +41,5 @@ namespace Waldem
         Quaternion Rotation;
         Vector3 LocalScale;
         Matrix4 Matrix;
-        Matrix4 InversedMatrix;
     };
 }

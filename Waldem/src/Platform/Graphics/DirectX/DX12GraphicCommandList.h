@@ -1,5 +1,7 @@
 #pragma once
 #include <d3d12.h>
+
+#include "Waldem/Renderer/Line.h"
 #include "Waldem/Renderer/Model/Mesh.h"
 #include "Waldem/Renderer/Shader.h"
 #include "Waldem/Renderer/Model/Model.h"
@@ -11,6 +13,9 @@ namespace Waldem
     public:
         DX12GraphicCommandList(ID3D12Device* device);
         ~DX12GraphicCommandList();
+        bool CompileFromFile(const String& shaderName);
+
+        void InitializeLineRendering();
 
         void BeginInternal(D3D12_VIEWPORT* viewport, D3D12_RECT* scissor, D3D12_CPU_DESCRIPTOR_HANDLE renderTargetHandle, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandle);
         void EndInternal();
@@ -20,6 +25,9 @@ namespace Waldem
 
         void Draw(Model* model);
         void Draw(Mesh* mesh);
+        void AddLine(Line line);
+        void DrawLine(Line line);
+        void DrawLines(WArray<Line> lines);
         void Clear(D3D12_CPU_DESCRIPTOR_HANDLE renderTarget, D3D12_CPU_DESCRIPTOR_HANDLE depthStencil, Vector3 clearColor);
 
         void* GetNativeCommandList() const { return CommandList; }
@@ -36,10 +44,10 @@ namespace Waldem
         void CopyResource(ID3D12Resource* dst, ID3D12Resource* src);
         
         void UpdateSubresoures(ID3D12Resource* destResource, ID3D12Resource* srcResource, uint32_t numSubresources, D3D12_SUBRESOURCE_DATA* subresourceData);
-
-    private:
         
         void Close();
+
+    private:
 
         ID3D12Device* Device;
         ID3D12Resource* CurrentRenderTarget;
@@ -53,5 +61,15 @@ namespace Waldem
         D3D12_VIEWPORT CurrentViewport;
         D3D12_RECT CurrentScissorRect;
         PixelShader* CurrentExecutableShader;
+
+        //Line rendering
+        ID3D12Resource* LineVertexBuffer;
+        ID3D12Resource* LineVertexBufferUpload;
+        ID3D12PipelineState* LinePipeline;
+        ID3D12RootSignature* LineRootSignature;
+        ID3DBlob* LineVertexShaderBlob;
+        ID3DBlob* LinePixelShaderBlob;
+        ID3DBlob* LineShaderErrorBlob;
+        WArray<Line> Lines;
     };
 }

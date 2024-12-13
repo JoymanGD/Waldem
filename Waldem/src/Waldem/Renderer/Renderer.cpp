@@ -65,6 +65,16 @@ namespace Waldem
         Instance->PlatformRenderer->EndDraw(pixelShader);
     }
 
+    void Renderer::DrawLine(Line line)
+    {
+        Instance->PlatformRenderer->DrawLine(line);
+    }
+
+    void Renderer::DrawLines(WArray<Line> lines)
+    {
+        Instance->PlatformRenderer->DrawLines(lines);
+    }
+
     void Renderer::Wait()
     {
         Instance->PlatformRenderer->Wait();

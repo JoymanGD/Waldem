@@ -190,6 +190,28 @@ xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Dist\Sandbox\Conte
       <EntryPointName>main</EntryPointName>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.1</ShaderModel>
     </FxCompile>
+    <FxCompile Include="src\Shaders\Test\Line.ps.hlsl">
+      <ObjectFileOutput>..\bin\Debug\Sandbox\%(Filename).cso</ObjectFileOutput>
+      <TrackerLogDirectory>..\bin-int\Debug\Sandbox\Sandbox.tlog\</TrackerLogDirectory>
+      <EntryPointName>main</EntryPointName>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <ShaderModel>5.1</ShaderModel>
+      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
+      <DisableOptimizations>true</DisableOptimizations>
+      <EnableDebuggingInformation>true</EnableDebuggingInformation>
+      <ShaderType>Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Test\Line.vs.hlsl">
+      <ObjectFileOutput>..\bin\Debug\Sandbox\%(Filename).cso</ObjectFileOutput>
+      <TrackerLogDirectory>..\bin-int\Debug\Sandbox\Sandbox.tlog\</TrackerLogDirectory>
+      <EntryPointName>main</EntryPointName>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <ShaderModel>5.1</ShaderModel>
+      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
+      <DisableOptimizations>true</DisableOptimizations>
+      <EnableDebuggingInformation>true</EnableDebuggingInformation>
+      <ShaderType>Vertex</ShaderType>
+    </FxCompile>
     <FxCompile Include="src\Shaders\Test\PostProcess.comp.hlsl">
       <ExcludedFromBuild>true</ExcludedFromBuild>
       <ShaderModel>5.0</ShaderModel>

@@ -213,6 +213,23 @@ namespace Waldem
         cmd->EndDraw(pixelShader);
     }
 
+    void DX12Renderer::DrawLine(Line line)
+    {
+        auto& cmd = WorldGraphicCommandList.first;
+
+        cmd->AddLine(line);
+    }
+
+    void DX12Renderer::DrawLines(WArray<Line> lines)
+    {
+        auto& cmd = WorldGraphicCommandList.first;
+
+        for (auto line : lines)
+        {
+            cmd->AddLine(line);
+        }
+    }
+
     void DX12Renderer::Wait()
     {
         GraphicCommandQueue->Signal(waitFence, ++waitFenceValue);
@@ -287,6 +304,13 @@ namespace Waldem
     void DX12Renderer::End()
     {
         auto& worldGraphicCmd = WorldGraphicCommandList.first;
+        
+        if(WorldGraphicCommandList.second)
+        {
+            worldGraphicCmd->EndInternal();
+            
+            WorldGraphicCommandList.second = false;
+        }
 
         D3D12_RESOURCE_BARRIER barrier = {};
         barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -296,12 +320,7 @@ namespace Waldem
         barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
         worldGraphicCmd->ResourceBarrier(1, &barrier);
         
-        if(WorldGraphicCommandList.second)
-        {
-            worldGraphicCmd->EndInternal();
-            
-            WorldGraphicCommandList.second = false;
-        }
+        worldGraphicCmd->Close();
 
         ComputeCommandList->Close();
 

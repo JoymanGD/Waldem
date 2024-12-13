@@ -17,6 +17,8 @@ namespace Waldem
         void Draw(Model* model) override;
         void Draw(Mesh* mesh) override;
         void EndDraw(PixelShader* pixelShader) override;
+        void DrawLine(Line line) override;
+        void DrawLines(WArray<Line> lines) override;
         void Wait() override;
         Point3 GetNumThreadsPerGroup(ComputeShader* computeShader) override;
         void Compute(ComputeShader* computeShader, Point3 groupCount) override;

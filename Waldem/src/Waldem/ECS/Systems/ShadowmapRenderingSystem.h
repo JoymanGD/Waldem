@@ -45,11 +45,13 @@ namespace Waldem
             {
                 if(light.Data.Type == LightType::Directional)
                 {
+                    Matrix4 viewProj;
                     for (auto [cameraEntity, camera, cameraTransform, mainCamera] : ECSManager->EntitiesWith<Camera, Transform, MainCamera>())
                     {
                         auto currentPosition = cameraTransform.GetPosition();
                         currentPosition.y = lightTransform.GetPosition().y;
                         lightTransform.SetPosition(currentPosition);
+                        viewProj = camera.GetProjectionMatrix() * camera.GetViewMatrix();
                         break;
                     }
 
@@ -82,7 +84,8 @@ namespace Waldem
                         for (auto mesh : modelComponent.Model->GetMeshes())
                         {
                             auto transformedBBox = mesh->BBox.Transform(modelTransform.GetMatrix());
-                    
+
+                            //Frustrum culling
                             if(transformedBBox.IsInFrustum(frustrumPlanes))
                             {
                                 Renderer::Draw(mesh);
