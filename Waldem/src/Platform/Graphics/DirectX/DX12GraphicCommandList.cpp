@@ -228,7 +228,9 @@ namespace Waldem
             psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
             psoDesc.BlendState.RenderTarget[0].BlendEnable = FALSE;
             psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-            psoDesc.DepthStencilState.DepthEnable = FALSE;
+            psoDesc.DepthStencilState.DepthEnable = TRUE;
+            psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+            psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
             psoDesc.DepthStencilState.StencilEnable = FALSE;
             psoDesc.SampleMask = UINT_MAX;
             psoDesc.NumRenderTargets = 1;
@@ -309,7 +311,7 @@ namespace Waldem
         ResourceBarrier(LineVertexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
         
         D3D12_VERTEX_BUFFER_VIEW vbView;
-        vbView.BufferLocation = LineVertexBuffer->GetGPUVirtualAddress();
+        vbView.BufferLocation = LineVertexBuffer->GetGPUVirtualAddress(); 
         vbView.SizeInBytes = vertexBufferSize;
         vbView.StrideInBytes = sizeof(LineVertex);
         

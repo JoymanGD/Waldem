@@ -107,7 +107,7 @@ project "Waldem"
         
     filter { "files:**.hlsl" }
        flags "ExcludeFromBuild"
-       shadermodel "5.0"
+       shadermodel "5.1"
     filter { "files:**.ps.hlsl" }
        removeflags "ExcludeFromBuild"
        shadertype "Pixel"
@@ -124,6 +124,7 @@ project "Sandbox"
     language "C++"
     cppdialect "C++20"
     staticruntime "on"
+    dependson { "Waldem" }
 
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
@@ -136,6 +137,11 @@ project "Sandbox"
         "%{prj.name}/src/**.hlsl"
     }
 
+    links
+    {
+        "Waldem"
+    }
+
     includedirs
     {
         "Waldem/vendor/assimp/include",
@@ -146,11 +152,6 @@ project "Sandbox"
         "%{IncludeDir.Glad}",
         "%{IncludeDir.glm}",
         "%{IncludeDir.ECS}"
-    }
-
-    links
-    {
-        "Waldem"
     }
 
     filter "system:windows"
@@ -185,7 +186,7 @@ project "Sandbox"
         
     filter { "files:**.hlsl" }
        flags "ExcludeFromBuild"
-       shadermodel "5.0"
+       shadermodel "5.1"
     filter { "files:**.ps.hlsl" }
        removeflags "ExcludeFromBuild"
        shadertype "Pixel"
