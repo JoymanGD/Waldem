@@ -39,6 +39,12 @@
     <FxCompile Include="src\Shaders\Test\Default.vs.hlsl">
       <Filter>Shaders\Test</Filter>
     </FxCompile>
+    <FxCompile Include="src\Shaders\Test\Line.ps.hlsl">
+      <Filter>Shaders\Test</Filter>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Test\Line.vs.hlsl">
+      <Filter>Shaders\Test</Filter>
+    </FxCompile>
     <FxCompile Include="src\Shaders\Test\PostProcess.comp.hlsl">
       <Filter>Shaders\Test</Filter>
     </FxCompile>
