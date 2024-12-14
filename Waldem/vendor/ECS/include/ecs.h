@@ -1005,9 +1005,8 @@ private:
 				if (pool_is_null) {
 					return false;
 				}
-				bool has_all_components{
-					(std::get<Pool<Ts>*>(pools_)->template Pool<Ts>::Has(entity) && ...)
-				};
+				auto result = (std::get<Pool<Ts>*>(pools_)->template Has(entity) && ...);
+				bool has_all_components = { result };
 				return has_all_components;
 			}
 
