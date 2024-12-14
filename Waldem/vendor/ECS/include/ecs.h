@@ -1015,7 +1015,7 @@ private:
 					return true;
 				}
 				bool missing_all_components{
-					(!std::get<Pool<Ts>*>(pools_)->template Pool<Ts>::Has(entity) && ...)
+					(!std::get<Pool<Ts>*>(pools_)->template Has(entity) && ...)
 				};
 				return missing_all_components;
 			}
