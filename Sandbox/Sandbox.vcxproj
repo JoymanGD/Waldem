@@ -174,15 +174,59 @@ xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Dist\Sandbox\Conte
       <ExcludedFromBuild>true</ExcludedFromBuild>
       <ShaderModel>5.1</ShaderModel>
     </FxCompile>
-    <FxCompile Include="src\Shaders\Test\Default.ps.hlsl">
+    <FxCompile Include="src\Shaders\Test\DeferredRendering.vs.hlsl">
+      <ObjectFileOutput>..\bin\Debug\Sandbox\%(Filename).cso</ObjectFileOutput>
+      <TrackerLogDirectory>..\bin-int\Debug\Sandbox\Sandbox.tlog\</TrackerLogDirectory>
+      <EntryPointName>main</EntryPointName>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <ShaderModel>5.1</ShaderModel>
+      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
+      <DisableOptimizations>true</DisableOptimizations>
+      <EnableDebuggingInformation>true</EnableDebuggingInformation>
+      <ShaderType>Vertex</ShaderType>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Test\ForwardRendering.ps.hlsl">
       <ShaderType>Pixel</ShaderType>
       <ShaderModel>5.1</ShaderModel>
       <EntryPointName>main</EntryPointName>
     </FxCompile>
-    <FxCompile Include="src\Shaders\Test\Default.vs.hlsl">
+    <FxCompile Include="src\Shaders\Test\ForwardRendering.vs.hlsl">
       <ShaderType>Vertex</ShaderType>
       <ShaderModel>5.1</ShaderModel>
       <EntryPointName>main</EntryPointName>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Test\DeferredRendering.ps.hlsl">
+      <ObjectFileOutput>..\bin\Debug\Sandbox\%(Filename).cso</ObjectFileOutput>
+      <TrackerLogDirectory>..\bin-int\Debug\Sandbox\Sandbox.tlog\</TrackerLogDirectory>
+      <EntryPointName>main</EntryPointName>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <ShaderModel>5.1</ShaderModel>
+      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
+      <DisableOptimizations>true</DisableOptimizations>
+      <EnableDebuggingInformation>true</EnableDebuggingInformation>
+      <ShaderType>Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Test\GBuffer.ps.hlsl">
+      <ObjectFileOutput>..\bin\Debug\Sandbox\%(Filename).cso</ObjectFileOutput>
+      <TrackerLogDirectory>..\bin-int\Debug\Sandbox\Sandbox.tlog\</TrackerLogDirectory>
+      <EntryPointName>main</EntryPointName>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <ShaderModel>5.1</ShaderModel>
+      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
+      <DisableOptimizations>true</DisableOptimizations>
+      <EnableDebuggingInformation>true</EnableDebuggingInformation>
+      <ShaderType>Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Test\GBuffer.vs.hlsl">
+      <ObjectFileOutput>..\bin\Debug\Sandbox\%(Filename).cso</ObjectFileOutput>
+      <TrackerLogDirectory>..\bin-int\Debug\Sandbox\Sandbox.tlog\</TrackerLogDirectory>
+      <EntryPointName>main</EntryPointName>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <ShaderModel>5.1</ShaderModel>
+      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
+      <DisableOptimizations>true</DisableOptimizations>
+      <EnableDebuggingInformation>true</EnableDebuggingInformation>
+      <ShaderType>Vertex</ShaderType>
     </FxCompile>
     <FxCompile Include="src\Shaders\Test\Line.ps.hlsl">
       <ShaderType>Pixel</ShaderType>

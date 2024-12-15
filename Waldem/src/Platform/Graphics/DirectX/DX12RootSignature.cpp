@@ -84,8 +84,14 @@ namespace Waldem
         
         ID3DBlob* signature;
         ID3DBlob* error;
-        D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error);
-        HRESULT hr = device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&NativeRootSignature));
+        HRESULT hr = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error);
+        
+        if(FAILED(hr))
+        {
+            DX12Helper::PrintHResultError(hr);
+        }
+        
+        hr = device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&NativeRootSignature));
 
         if(FAILED(hr))
         {

@@ -41,7 +41,12 @@ namespace Waldem
             throw std::runtime_error("Failed to create DXGIFactory");
         }
 
-        h = D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&Device));
+        h = D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS(&Device));
+
+        if(FAILED(h))
+        {
+            throw std::runtime_error("Failed to create DXGIDevice");
+        }
 
         //Break on any D3D12 error
         if (SUCCEEDED(Device->QueryInterface(IID_PPV_ARGS(&InfoQueue))))
