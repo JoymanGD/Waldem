@@ -4,6 +4,7 @@
 #include "Waldem/ECS/Components/MainCamera.h"
 #include "Waldem/ECS/Components/ModelComponent.h"
 #include "Waldem/ECS/Systems/DebugSystem.h"
+#include "Waldem/ECS/Systems/DeferredRenderingSystem.h"
 #include "Waldem/ECS/Systems/ForwardRenderingSystem.h"
 #include "Waldem/ECS/Systems/FreeLookCameraSystem.h"
 #include "Waldem/ECS/Systems/PostProcessSystem.h"
@@ -34,7 +35,7 @@ namespace Sandbox
 		auto cameraEntity = ECSManager.CreateEntity();
 		float aspectRatio = sceneData->Window->GetWidth() / sceneData->Window->GetHeight();
 		cameraEntity.Add<Waldem::Transform>(Waldem::Vector3(0, 0, 0));
-		cameraEntity.Add<Waldem::Camera>(70.0f, aspectRatio, 0.1f, 1000.0f, 100.0f, 30.0f);
+		cameraEntity.Add<Waldem::Camera>(70.0f, aspectRatio, 0.001f, 1000.0f, 100.0f, 30.0f);
 		cameraEntity.Add<Waldem::MainCamera>();
 
 		auto dirLightEntity = ECSManager.CreateEntity();
@@ -50,7 +51,8 @@ namespace Sandbox
 		UpdateSystems.Add((Waldem::ISystem*)new Waldem::DebugSystem(&ECSManager));
 
 		DrawSystems.Add((Waldem::ISystem*)new Waldem::ShadowmapRenderingSystem(&ECSManager));
-		DrawSystems.Add((Waldem::ISystem*)new Waldem::ForwardRenderingSystem(&ECSManager));
+		// DrawSystems.Add((Waldem::ISystem*)new Waldem::ForwardRenderingSystem(&ECSManager));
+		DrawSystems.Add((Waldem::ISystem*)new Waldem::DeferredRenderingSystem(&ECSManager));
 		// DrawSystems.Add((Waldem::ISystem*)new Waldem::PostProcessSystem(&ECSManager));
 		
 		for (Waldem::ISystem* system : UpdateSystems)

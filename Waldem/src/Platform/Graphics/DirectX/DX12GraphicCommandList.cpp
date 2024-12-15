@@ -430,7 +430,7 @@ namespace Waldem
             if(depthStencil)
                 dsHandle = ((DX12RenderTarget*)depthStencil)->GetRenderTargetHandle();
                 
-            CommandList->OMSetRenderTargets(rtHandles.Num(), rtHandles.GetData(), FALSE, depthStencil ? &dsHandle : nullptr);
+            CommandList->OMSetRenderTargets(rtHandles.Num(), rtHandles.GetData(), FALSE, depthStencil ? &dsHandle : &CurrentDepthStencilHandle);
         }
         else
         {

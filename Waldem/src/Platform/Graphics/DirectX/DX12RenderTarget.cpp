@@ -76,7 +76,7 @@ namespace Waldem
             textureDesc.SampleDesc.Count = 1;
             textureDesc.SampleDesc.Quality = 0;
             textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-            textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+            textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
 
             // Create the texture resource
             D3D12_HEAP_PROPERTIES heapProperties = {};
@@ -106,7 +106,7 @@ namespace Waldem
             barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
             barrier.Transition.pResource = Resource;
             barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COMMON;
-            barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+            barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
             barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
             cmdList->ResourceBarrier(1, &barrier);
 

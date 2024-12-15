@@ -82,7 +82,8 @@ namespace Waldem
         Resource(String name, RenderTarget* renderTarget, uint32_t slot)
         {
             Name = name;
-            Type = renderTarget->IsDepthStencilBuffer() ? RTYPE_RenderTarget : RTYPE_RWRenderTarget;
+            // Type = renderTarget->IsDepthStencilBuffer() ? RTYPE_RenderTarget : RTYPE_RWRenderTarget;
+            Type = RTYPE_RenderTarget;
             RT = renderTarget;
             NumResources = 1;
             Slot = slot;

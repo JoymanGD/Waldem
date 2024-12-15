@@ -59,7 +59,7 @@ namespace Waldem
 
             DefaultRenderTarget = Renderer::CreateRenderTarget("DefaultRenderTarget", sceneData->Window->GetWidth(), sceneData->Window->GetHeight(), TextureFormat::R8G8B8A8_UNORM);
             DefaultRootSignature = Renderer::CreateRootSignature(resources);
-            DefaultPixelShader = Renderer::LoadPixelShader("Default");
+            DefaultPixelShader = Renderer::LoadPixelShader("ForwardRendering");
             DefaultPipeline = Renderer::CreatePipeline("ForwardRenderingPipeline", { TextureFormat::R8G8B8A8_UNORM }, WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, DefaultRootSignature, DefaultPixelShader);
         }
 
