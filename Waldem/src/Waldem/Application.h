@@ -36,7 +36,12 @@ namespace Waldem
 		LayerStack LayerStack;
 		ImGuiLayer* ImGuiLayer;
         Scene* CurrentScene;
-	protected:
+		
+		std::vector<float> FrameTimes;
+		int FrameCount = 0;
+		const int MaxFrames = 100;
+
+		float CalculateAverageFPS(float deltaTime);
 	};
 
 	//to be defined in CLIENT

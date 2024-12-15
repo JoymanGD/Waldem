@@ -3,6 +3,7 @@
 
 #include "Renderer/Renderer.h"
 #include "Waldem/Log.h"
+#include <numeric>
 
 namespace Waldem
 {
@@ -17,7 +18,6 @@ namespace Waldem
 		Instance = this;
 		Window = std::unique_ptr<Waldem::Window>(Window::Create());
 		Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
-
 		ImGuiLayer = new Waldem::ImGuiLayer();
 		PushOverlay(ImGuiLayer);
 
@@ -70,6 +70,24 @@ namespace Waldem
 		}
 	}
 
+	
+	float Application::CalculateAverageFPS(float deltaTime)
+	{
+		if (FrameTimes.size() < MaxFrames)
+		{
+			FrameTimes.push_back(deltaTime);
+		}
+		else
+		{
+			FrameTimes[FrameCount % MaxFrames] = deltaTime;
+		}
+		FrameCount++;
+
+		float averageDeltaTime = std::accumulate(FrameTimes.begin(), FrameTimes.end(), 0.0f) / FrameTimes.size();
+		
+		return 1.0f / averageDeltaTime;
+	}
+
 	void Application::Run()
 	{
 		auto lastFrameTime = std::chrono::high_resolution_clock::now();
@@ -104,6 +122,9 @@ namespace Waldem
 			// ImGuiLayer->End();
 
 			Window->OnUpdate();
+
+			float FPS = CalculateAverageFPS(deltaTime);
+			Window->SetTitle(std::to_string(FPS).substr(0, 4));
 		}
 	}
 

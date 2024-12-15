@@ -29,12 +29,11 @@ namespace Waldem
     {
         HWND hwnd = nullptr;
         
-        // Obtain the HWND from SDL_Window using SDL_SysWMinfo
         SDL_SysWMinfo wmInfo;
-        SDL_VERSION(&wmInfo.version) // Initialize SDL version info
+        SDL_VERSION(&wmInfo.version)
         if (SDL_GetWindowWMInfo(Window, &wmInfo))
         {
-            hwnd = wmInfo.info.win.window;  // Get the native HWND
+            hwnd = wmInfo.info.win.window;
         }
         else
         {
@@ -49,16 +48,14 @@ namespace Waldem
         Data.Title = props.Title;
         Data.Width = props.Width;
         Data.Height = props.Height;
-        Data.VSync = false; // Default VSync is off
+        Data.VSync = false;
 
-        // Initialize SDL
         if (SDL_Init(SDL_INIT_VIDEO) != 0)
         {
             WD_CORE_ERROR("SDL could not initialize! SDL_Error: {0}", SDL_GetError());
             return;
         }
 
-        // Create an SDL window
         Window = SDL_CreateWindow(Data.Title.c_str(),
                                     SDL_WINDOWPOS_CENTERED,
                                     SDL_WINDOWPOS_CENTERED,
@@ -67,7 +64,6 @@ namespace Waldem
         if (!Window)
         {
             WD_CORE_ERROR("Window could not be created! SDL_Error: {0}", SDL_GetError());
-            return;
         }
     }
 
@@ -87,7 +83,7 @@ namespace Waldem
             case SDL_QUIT:
                 {
                     WindowCloseEvent closeEvent;
-                    Data.EventCallback(closeEvent);  // Trigger the event callback
+                    Data.EventCallback(closeEvent);
                     break;
                 }
             case SDL_KEYDOWN:
@@ -100,6 +96,11 @@ namespace Waldem
                 break;
             }
         }
+    }
+
+    void WindowsWindow::SetTitle(String title)
+    {
+        SDL_SetWindowTitle(Window, title.c_str());
     }
 
     void WindowsWindow::OnUpdate()

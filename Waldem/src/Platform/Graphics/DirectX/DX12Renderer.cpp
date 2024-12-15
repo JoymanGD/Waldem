@@ -326,7 +326,7 @@ namespace Waldem
 
     void DX12Renderer::Present()
     {
-        HRESULT h = SwapChain->Present(1, 0);
+        HRESULT h = SwapChain->Present(0, 0);
 
         if(FAILED(h))
         {
