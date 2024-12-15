@@ -27,6 +27,7 @@ namespace Waldem
     
         void SetEventCallback(const EventCallbackFn& callback) override { Data.EventCallback = callback; }
         void SetVSync(bool enabled) override;
+        void SetTitle(String title) override;
         bool IsVSync() const override { return Data.VSync; }
 
         void* GetNativeWindow() const override { return Window; }
