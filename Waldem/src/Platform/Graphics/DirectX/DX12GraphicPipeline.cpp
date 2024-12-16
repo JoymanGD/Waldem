@@ -1,11 +1,12 @@
 #include "wdpch.h"
-#include "DX12Pipeline.h"
+#include "DX12GraphicPipeline.h"
 
 namespace Waldem
 {
-    DX12Pipeline::DX12Pipeline(const String& name, WArray<TextureFormat> RTFormats, PrimitiveTopologyType primitiveTopologyType, ID3D12Device* device, RootSignature* rootSignature, PixelShader* shader) : Pipeline(name)
+    DX12GraphicPipeline::DX12GraphicPipeline(const String& name, WArray<TextureFormat> RTFormats, PrimitiveTopologyType primitiveTopologyType, ID3D12Device* device, RootSignature* rootSignature, PixelShader* shader) : Pipeline(name)
     {
-        // Pipeline state
+        rootSignature->CurrentPipelineType = PipelineType::Graphics;
+
         ID3DBlob* VertexShaderBlob = (ID3DBlob*)shader->GetVS();
         ID3DBlob* PixelShaderBlob = (ID3DBlob*)shader->GetPS();
         
@@ -50,7 +51,7 @@ namespace Waldem
         }
     }
 
-    DX12Pipeline::~DX12Pipeline()
+    DX12GraphicPipeline::~DX12GraphicPipeline()
     {
     }
 }

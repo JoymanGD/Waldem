@@ -7,11 +7,11 @@
 
 namespace Waldem
 {
-    class WALDEM_API DX12Pipeline : public Pipeline
+    class WALDEM_API DX12GraphicPipeline : public Pipeline
     {
     public:
-        DX12Pipeline(const String& name, WArray<TextureFormat> RTFormats, PrimitiveTopologyType primitiveTopologyType, ID3D12Device* device, RootSignature* rootSignature, PixelShader* shader);
-        ~DX12Pipeline() override;
+        DX12GraphicPipeline(const String& name, WArray<TextureFormat> RTFormats, PrimitiveTopologyType primitiveTopologyType, ID3D12Device* device, RootSignature* rootSignature, PixelShader* shader);
+        ~DX12GraphicPipeline() override;
         void* GetNativeObject() const override { return NativePipeline; }
         D3D12_GRAPHICS_PIPELINE_STATE_DESC* GetDesc() { return &PsoDesc; }
 

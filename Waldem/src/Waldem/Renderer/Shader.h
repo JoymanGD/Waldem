@@ -6,11 +6,10 @@
 
 namespace Waldem
 {
-    enum class ShaderType
+    enum class PipelineType
     {
-        PIXEL = 0,
-        COMPUTE = 1,
-        RTX = 2
+        Graphics = 0,
+        Compute = 1
     };
     
     enum ResourceType

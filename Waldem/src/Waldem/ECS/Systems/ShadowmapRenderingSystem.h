@@ -33,7 +33,7 @@ namespace Waldem
             
             DefaultShadowmappingShader = Renderer::LoadPixelShader("Shadowmap");
             DefaultRootSignature = Renderer::CreateRootSignature(resources);
-            DefaultPipeline = Renderer::CreatePipeline("ForwardRenderingPipeline", { TextureFormat::R8G8B8A8_UNORM }, WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, DefaultRootSignature, DefaultShadowmappingShader);
+            DefaultPipeline = Renderer::CreateGraphicPipeline("ForwardRenderingPipeline", { TextureFormat::R8G8B8A8_UNORM }, WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, DefaultRootSignature, DefaultShadowmappingShader);
         }
 
         void Update(SceneData* sceneData, float deltaTime) override

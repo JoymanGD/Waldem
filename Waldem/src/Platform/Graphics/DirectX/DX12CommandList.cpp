@@ -1,12 +1,12 @@
 #include "wdpch.h"
-#include "DX12GraphicCommandList.h"
+#include "DX12CommandList.h"
 
 #include <d3dcompiler.h>
 
 #include "D3DX12.h"
 #include "DX12Buffer.h"
 #include "DX12Helper.h"
-#include "DX12Pipeline.h"
+#include "DX12GraphicPipeline.h"
 #include "DX12PixelShader.h"
 #include "DX12RenderTarget.h"
 #include "DX12RootSignature.h"
@@ -15,7 +15,7 @@
 
 namespace Waldem
 {
-    DX12GraphicCommandList::DX12GraphicCommandList(ID3D12Device* device)
+    DX12CommandList::DX12CommandList(ID3D12Device* device)
     {
         Device = device;
         
@@ -56,12 +56,12 @@ namespace Waldem
         InitializeLineRendering();
     }
 
-    DX12GraphicCommandList::~DX12GraphicCommandList()
+    DX12CommandList::~DX12CommandList()
     {
         CloseHandle(FenceEvent);
     }
 
-    bool DX12GraphicCommandList::CompileFromFile(const String& shaderName)
+    bool DX12CommandList::CompileFromFile(const String& shaderName)
     {
         String entryPoint = "main"; //TODO: make this configurable?
         
@@ -131,7 +131,7 @@ namespace Waldem
         return true;
     }
 
-    void DX12GraphicCommandList::InitializeLineRendering()
+    void DX12CommandList::InitializeLineRendering()
     {
         if(CompileFromFile("Line"))
         {
@@ -244,7 +244,7 @@ namespace Waldem
         }
     }
 
-    void DX12GraphicCommandList::BeginInternal(D3D12_VIEWPORT* viewport, D3D12_RECT* scissor, D3D12_CPU_DESCRIPTOR_HANDLE renderTargetHandle, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandle)
+    void DX12CommandList::BeginInternal(D3D12_VIEWPORT* viewport, D3D12_RECT* scissor, D3D12_CPU_DESCRIPTOR_HANDLE renderTargetHandle, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandle)
     {
         CommandList->RSSetViewports(1, viewport);
         CommandList->RSSetScissorRects(1, scissor);
@@ -259,7 +259,7 @@ namespace Waldem
         CurrentDepthStencilHandle = depthStencilHandle;
     }
 
-    void DX12GraphicCommandList::EndInternal()
+    void DX12CommandList::EndInternal()
     {
         if(!Lines.IsEmpty())
         {
@@ -270,7 +270,7 @@ namespace Waldem
         CurrentExecutableShader = nullptr;
     }
 
-    void DX12GraphicCommandList::Draw(Model* model)
+    void DX12CommandList::Draw(Model* model)
     {
         //Draw meshes
         auto meshes = model->GetMeshes();
@@ -281,7 +281,7 @@ namespace Waldem
         }
     }
 
-    void DX12GraphicCommandList::Draw(Mesh* mesh)
+    void DX12CommandList::Draw(Mesh* mesh)
     {
         //Draw mesh
         auto& indexBufferView = ((DX12IndexBuffer*)mesh->IB)->GetBufferView();
@@ -291,12 +291,12 @@ namespace Waldem
         CommandList->DrawIndexedInstanced(mesh->IB->GetCount(), 1, 0, 0, 0);
     }
 
-    void DX12GraphicCommandList::AddLine(Line line)
+    void DX12CommandList::AddLine(Line line)
     {
         Lines.Add(line);
     }
 
-    void DX12GraphicCommandList::DrawLines(WArray<Line> lines)
+    void DX12CommandList::DrawLines(WArray<Line> lines)
     {
         auto vertexBufferSize = lines.GetSize();
         void* mappedData = nullptr;
@@ -322,7 +322,12 @@ namespace Waldem
         CommandList->DrawInstanced(lines.Num() * 2, 1, 0, 0);
     }
 
-    void DX12GraphicCommandList::Clear(D3D12_CPU_DESCRIPTOR_HANDLE renderTarget, D3D12_CPU_DESCRIPTOR_HANDLE depthStencil, Vector3 clearColor)
+    void DX12CommandList::Dispatch(Point3 groupCount)
+    {
+        CommandList->Dispatch(groupCount.x, groupCount.y, groupCount.z);
+    }
+
+    void DX12CommandList::Clear(D3D12_CPU_DESCRIPTOR_HANDLE renderTarget, D3D12_CPU_DESCRIPTOR_HANDLE depthStencil, Vector3 clearColor)
     {
         //clear the render target
         const float clearColorFloat[] = { clearColor.x, clearColor.y, clearColor.z, 1.0f };
@@ -330,9 +335,9 @@ namespace Waldem
         CommandList->ClearDepthStencilView(depthStencil, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
     }
 
-    void DX12GraphicCommandList::SetPipeline(Pipeline* pipeline)
+    void DX12CommandList::SetPipeline(Pipeline* pipeline)
     {
-        DX12Pipeline* dx12Pipeline = (DX12Pipeline*)pipeline;
+        DX12GraphicPipeline* dx12Pipeline = (DX12GraphicPipeline*)pipeline;
         D3D12_GRAPHICS_PIPELINE_STATE_DESC* psoDesc = dx12Pipeline->GetDesc();
         ID3D12PipelineState* pso = (ID3D12PipelineState*)dx12Pipeline->GetNativeObject();
         CommandList->SetPipelineState(pso);
@@ -359,11 +364,19 @@ namespace Waldem
         CommandList->IASetPrimitiveTopology(primitiveTopology);
     }
 
-    void DX12GraphicCommandList::SetRootSignature(RootSignature* rootSignature)
+    void DX12CommandList::SetRootSignature(RootSignature* rootSignature)
     {
         DX12RootSignature* dx12RootSignature = (DX12RootSignature*)rootSignature;
         ID3D12RootSignature* rootSignatureObject = (ID3D12RootSignature*)dx12RootSignature->GetNativeObject();
-        CommandList->SetGraphicsRootSignature(rootSignatureObject);
+
+        if(rootSignature->CurrentPipelineType == PipelineType::Compute)
+        {
+            CommandList->SetComputeRootSignature(rootSignatureObject);
+        }
+        else
+        {
+            CommandList->SetGraphicsRootSignature(rootSignatureObject);
+        }
 
         auto resourcesHeap = dx12RootSignature->GetResourcesHeap();
         auto samplersHeap = dx12RootSignature->GetSamplersHeap();
@@ -383,7 +396,15 @@ namespace Waldem
 
             if(rootParamType == RTYPE_Sampler)
             {
-                CommandList->SetGraphicsRootDescriptorTable(i, samplersHandle);
+                if(rootSignature->CurrentPipelineType == PipelineType::Compute)
+                {
+                    CommandList->SetComputeRootDescriptorTable(i, samplersHandle);
+                }
+                else
+                {
+                    CommandList->SetGraphicsRootDescriptorTable(i, samplersHandle);
+                }
+
                 samplersHandle.ptr += samplerDescriptorSize;
             }
             else if(rootParamType == RTYPE_Constant)
@@ -392,13 +413,21 @@ namespace Waldem
             }
             else
             {
-                CommandList->SetGraphicsRootDescriptorTable(i, handle);
+                if(rootSignature->CurrentPipelineType == PipelineType::Compute)
+                {
+                    CommandList->SetComputeRootDescriptorTable(i, handle);
+                }
+                else
+                {
+                    CommandList->SetGraphicsRootDescriptorTable(i, handle);
+                }
+
                 handle.ptr += descriptorSize;
             }
         }
     }
 
-    void DX12GraphicCommandList::SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil)
+    void DX12CommandList::SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil)
     {
         RenderTarget* currentRT = renderTargets.IsEmpty() ? depthStencil : renderTargets[0];
         
@@ -440,7 +469,7 @@ namespace Waldem
         }
     }
 
-    void DX12GraphicCommandList::Reset()
+    void DX12CommandList::Reset()
     {
         //reset the command allocator (reuses the memory)
         HRESULT hr = CommandAllocator->Reset();
@@ -458,27 +487,27 @@ namespace Waldem
         }
     }
 
-    void DX12GraphicCommandList::SetConstants(uint32_t slot, uint32_t numConstants, void* data)
+    void DX12CommandList::SetConstants(uint32_t slot, uint32_t numConstants, void* data)
     {
         CommandList->SetGraphicsRoot32BitConstants(slot, numConstants, data, 0);
     }
 
-    void DX12GraphicCommandList::CopyTextureRegion(const D3D12_TEXTURE_COPY_LOCATION* dst, uint32_t dstX, uint32_t dstY, uint32_t dstZ, const D3D12_TEXTURE_COPY_LOCATION* src, const D3D12_BOX* srcBox)
+    void DX12CommandList::CopyTextureRegion(const D3D12_TEXTURE_COPY_LOCATION* dst, uint32_t dstX, uint32_t dstY, uint32_t dstZ, const D3D12_TEXTURE_COPY_LOCATION* src, const D3D12_BOX* srcBox)
     {
         CommandList->CopyTextureRegion(dst, dstX, dstY, dstZ, src, srcBox);
     }
 
-    void DX12GraphicCommandList::CopyResource(ID3D12Resource* dst, ID3D12Resource* src)
+    void DX12CommandList::CopyResource(ID3D12Resource* dst, ID3D12Resource* src)
     {
         CommandList->CopyResource(dst, src);
     }
 
-    void DX12GraphicCommandList::UpdateSubresoures(ID3D12Resource* destResource, ID3D12Resource* srcResource, uint32_t numSubresources, D3D12_SUBRESOURCE_DATA* subresourceData)
+    void DX12CommandList::UpdateSubresoures(ID3D12Resource* destResource, ID3D12Resource* srcResource, uint32_t numSubresources, D3D12_SUBRESOURCE_DATA* subresourceData)
     {
         UpdateSubresources(CommandList, destResource, srcResource, 0, 0, numSubresources, subresourceData);
     }
 
-    void DX12GraphicCommandList::Execute(ID3D12CommandQueue* commandQueue)
+    void DX12CommandList::Execute(ID3D12CommandQueue* commandQueue)
     {
         ID3D12CommandQueue* dx12CommandQueue = commandQueue;
         
@@ -495,7 +524,7 @@ namespace Waldem
         }
     }
 
-    void DX12GraphicCommandList::WaitForCompletion()
+    void DX12CommandList::WaitForCompletion()
     {
         //check if the GPU has finished executing the command list
         if (Fence->GetCompletedValue() < FenceValue)
@@ -512,12 +541,12 @@ namespace Waldem
         }
     }
 
-    void DX12GraphicCommandList::ResourceBarrier(uint32_t count, D3D12_RESOURCE_BARRIER* barrier)
+    void DX12CommandList::ResourceBarrier(uint32_t count, D3D12_RESOURCE_BARRIER* barrier)
     {
         CommandList->ResourceBarrier(count, barrier);
     }
 
-    void DX12GraphicCommandList::ResourceBarrier(ID3D12Resource* resource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after)
+    void DX12CommandList::ResourceBarrier(ID3D12Resource* resource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after)
     {
         D3D12_RESOURCE_BARRIER barrier = {};
         barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -528,18 +557,18 @@ namespace Waldem
         CommandList->ResourceBarrier(1, &barrier);
     }
 
-    void DX12GraphicCommandList::ClearRenderTarget(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetHandle)
+    void DX12CommandList::ClearRenderTarget(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetHandle)
     {
         const float clearColorFloat[] = { 0.0f, 0.0f, 0.0f, 1.0f };
         CommandList->ClearRenderTargetView(renderTargetHandle, clearColorFloat, 0, 0);
     }
 
-    void DX12GraphicCommandList::ClearDepthStencil(D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandle)
+    void DX12CommandList::ClearDepthStencil(D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandle)
     {
         CommandList->ClearDepthStencilView(depthStencilHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
     }
 
-    void DX12GraphicCommandList::Close()
+    void DX12CommandList::Close()
     {
         //close the command list to indicate we're done recording commands.
         HRESULT hr = CommandList->Close();

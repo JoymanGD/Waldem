@@ -39,7 +39,8 @@ namespace Waldem
         virtual void SetPipeline(Pipeline* pipeline) = 0;
         virtual void SetRootSignature(RootSignature* rootSignature) = 0;
         virtual void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr) = 0;
-        virtual Pipeline* CreatePipeline(const String& name, WArray<TextureFormat> RTFormats, PrimitiveTopologyType primitiveTopologyType, RootSignature* rootSignature, PixelShader* shader) = 0;
+        virtual Pipeline* CreateGraphicPipeline(const String& name, WArray<TextureFormat> RTFormats, PrimitiveTopologyType primitiveTopologyType, RootSignature* rootSignature, PixelShader* shader) = 0;
+        virtual Pipeline* CreateComputePipeline(const String& name, RootSignature* rootSignature, ComputeShader* shader) = 0;
         virtual RootSignature* CreateRootSignature(WArray<Resource> resources) = 0;
         virtual Texture2D* CreateTexture(String name, int width, int height, TextureFormat format, uint8_t* data = nullptr) = 0;
         virtual RenderTarget* CreateRenderTarget(String name, int width, int height, TextureFormat format) = 0;
@@ -73,7 +74,8 @@ namespace Waldem
         static void SetPipeline(Pipeline* pipeline);
         static void SetRootSignature(RootSignature* rootSignature);
         static void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr);
-        static Pipeline* CreatePipeline(const String& name, WArray<TextureFormat> RTFormats, PrimitiveTopologyType primitiveTopologyType, RootSignature* rootSignature, PixelShader* shader);
+        static Pipeline* CreateGraphicPipeline(const String& name, WArray<TextureFormat> RTFormats, PrimitiveTopologyType primitiveTopologyType, RootSignature* rootSignature, PixelShader* shader);
+        static Pipeline* CreateComputePipeline(const String& name, RootSignature* rootSignature, ComputeShader* shader);
         static RootSignature* CreateRootSignature(WArray<Resource> resources);
         static Texture2D* CreateTexture(String name, int width, int height, TextureFormat format, uint8_t* data = nullptr);
         static RenderTarget* CreateRenderTarget(String name, int width, int height, TextureFormat format);

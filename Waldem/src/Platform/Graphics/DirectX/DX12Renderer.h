@@ -3,8 +3,7 @@
 #include <d3d12.h>
 #include <dxgi1_6.h>
 
-#include "DX12ComputeCommandList.h"
-#include "DX12GraphicCommandList.h"
+#include "DX12CommandList.h"
 #include "Waldem/Renderer/Pipeline.h"
 #include "Waldem/Renderer/RootSignature.h"
 
@@ -33,7 +32,8 @@ namespace Waldem
         void SetRootSignature(RootSignature* rootSignature) override;
         void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr) override;
         void ResourceBarrier(RenderTarget* rt, ResourceStates before, ResourceStates after) override;
-        Pipeline* CreatePipeline(const String& name, WArray<TextureFormat> RTFormats, PrimitiveTopologyType primitiveTopologyType, RootSignature* rootSignature, PixelShader* shader) override;
+        Pipeline* CreateGraphicPipeline(const String& name, WArray<TextureFormat> RTFormats, PrimitiveTopologyType primitiveTopologyType, RootSignature* rootSignature, PixelShader* shader) override;
+        Pipeline* CreateComputePipeline(const String& name, RootSignature* rootSignature, ComputeShader* shader) override;
         RootSignature* CreateRootSignature(WArray<Resource> resources) override;
         Texture2D* CreateTexture(String name, int width, int height, TextureFormat format, uint8_t* data = nullptr) override;
         RenderTarget* CreateRenderTarget(String name, int width, int height, TextureFormat format) override;
@@ -54,9 +54,8 @@ namespace Waldem
         D3D12_VIEWPORT Viewport = { 0.0f, 0.0f, 800.0f, 600.0f, 0.0f, 1.0f };
         D3D12_RECT ScissorRect = { 0, 0, 800, 600 };
 
-        std::pair<DX12GraphicCommandList*, bool> WorldGraphicCommandList;
-        std::pair<DX12GraphicCommandList*, bool> UIGraphicCommandList;
-        DX12ComputeCommandList* ComputeCommandList;
+        std::pair<DX12CommandList*, bool> WorldGraphicCommandList;
+        std::pair<DX12CommandList*, bool> UIGraphicCommandList;
         
         ID3D12DescriptorHeap* RTVHeap;
         ID3D12DescriptorHeap* DSVHeap;

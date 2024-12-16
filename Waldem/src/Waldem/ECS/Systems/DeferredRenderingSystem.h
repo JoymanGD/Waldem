@@ -10,6 +10,13 @@
 
 namespace Waldem
 {
+    struct BloomParams
+    {
+        float BrightThreshold = 0.5f;
+        float BloomIntensity = .6f;
+        Vector2 TexelSize = Vector2(1.f / 1280.f, 1.f / 720.f);
+    };
+
     class WALDEM_API DeferredRenderingSystem : ISystem
     {
         //GBuffer pass
@@ -19,10 +26,21 @@ namespace Waldem
         RenderTarget* WorldPositionRT = nullptr;
         RenderTarget* NormalRT = nullptr;
         RenderTarget* AlbedoRT = nullptr;
-        //Deferred lighting pass
-        Pipeline* DeferredLightingPipeline = nullptr;
-        PixelShader* DeferredLightingPixelShader = nullptr;
-        RootSignature* DeferredLightingRootSignature = nullptr;
+        //Deferred rendering pass
+        Pipeline* DeferredRenderingPipeline = nullptr;
+        ComputeShader* DeferredRenderingComputeShader = nullptr;
+        RootSignature* DeferredRenderingRootSignature = nullptr;
+        RenderTarget* DeferredRenderingRenderTarget = nullptr;
+        Point3 GroupCount;
+        //Post process pass
+        Pipeline* PostProcessPipeline = nullptr;
+        ComputeShader* PostProcessComputeShader = nullptr;
+        RootSignature* PostProcessRootSignature = nullptr;
+        RenderTarget* PostProcessRenderTarget = nullptr;
+        //Quad draw pass
+        Pipeline* QuadDrawPipeline = nullptr;
+        PixelShader* QuadDrawPixelShader = nullptr;
+        RootSignature* QuadDrawRootSignature = nullptr;
         Quad FullscreenQuad = {};
         
     public:
@@ -30,6 +48,11 @@ namespace Waldem
         
         void Initialize(SceneData* sceneData) override
         {
+            Vector2 resolution = Vector2(sceneData->Window->GetWidth(), sceneData->Window->GetHeight());
+            
+            //Common resources
+            auto constantBufferResource = Resource("MyConstantBuffer", RTYPE_ConstantBuffer, &resolution, sizeof(Vector2), sizeof(Vector2), 0);
+            
             //GBuffer pass
             WArray<Texture2D*> textures;
             for (auto [entity, model, transform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
@@ -54,14 +77,17 @@ namespace Waldem
             if(!textures.IsEmpty())
                 gBufferPassResources.Add(Resource("TestTextures", textures, 1));
 
-            WorldPositionRT = Renderer::CreateRenderTarget("WorldPositionRT", sceneData->Window->GetWidth(), sceneData->Window->GetHeight(), TextureFormat::R32G32B32A32_FLOAT);
-            NormalRT = Renderer::CreateRenderTarget("NormalRT", sceneData->Window->GetWidth(), sceneData->Window->GetHeight(), TextureFormat::R16G16B16A16_FLOAT);
-            AlbedoRT = Renderer::CreateRenderTarget("AlbedoRT", sceneData->Window->GetWidth(), sceneData->Window->GetHeight(), TextureFormat::R8G8B8A8_UNORM);
+            WorldPositionRT = Renderer::CreateRenderTarget("WorldPositionRT", resolution.x, resolution.y, TextureFormat::R32G32B32A32_FLOAT);
+            NormalRT = Renderer::CreateRenderTarget("NormalRT", resolution.x, resolution.y, TextureFormat::R16G16B16A16_FLOAT);
+            AlbedoRT = Renderer::CreateRenderTarget("AlbedoRT", resolution.x, resolution.y, TextureFormat::R8G8B8A8_UNORM);
             GBufferRootSignature = Renderer::CreateRootSignature(gBufferPassResources);
             GBufferPixelShader = Renderer::LoadPixelShader("GBuffer");
-            GBufferPipeline = Renderer::CreatePipeline("GBufferPipeline", { WorldPositionRT->GetFormat(), NormalRT->GetFormat(), AlbedoRT->GetFormat() }, WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, GBufferRootSignature, GBufferPixelShader);
+            GBufferPipeline = Renderer::CreateGraphicPipeline("GBufferPipeline", { WorldPositionRT->GetFormat(), NormalRT->GetFormat(), AlbedoRT->GetFormat() }, WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, GBufferRootSignature, GBufferPixelShader);
 
-            //Deferred lighting pass
+            //Deferred rendering pass
+            DeferredRenderingRenderTarget = Renderer::CreateRenderTarget("DeferredRenderingRenderTarget", resolution.x, resolution.y, TextureFormat::R8G8B8A8_UNORM);
+            Renderer::ResourceBarrier(DeferredRenderingRenderTarget, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
+            WArray<Resource> deferredRenderingPassResources;
             RenderTarget* testShadowMap = nullptr;
             WArray<LightShaderData> LightDatas;
             for (auto [entity, light, transform] : ECSManager->EntitiesWith<Light, Transform>())
@@ -70,19 +96,42 @@ namespace Waldem
                 testShadowMap = light.Shadowmap;
                 LightDatas.Add(lightData);
             }
-            WArray<Resource> deferredLightingPassResources;
-            deferredLightingPassResources.Add(Resource("ComparisonSampler", { Sampler( COMPARISON_MIN_MAG_MIP_LINEAR, WRAP, WRAP, WRAP, LESS_EQUAL) }, 1));
+            deferredRenderingPassResources.Add(Resource("ComparisonSampler", { Sampler( COMPARISON_MIN_MAG_MIP_LINEAR, WRAP, WRAP, WRAP, LESS_EQUAL) }, 1));
             if(!LightDatas.IsEmpty())
-                deferredLightingPassResources.Add(Resource("LightsBuffer", RTYPE_Buffer, nullptr, sizeof(LightShaderData), LightDatas.GetSize(), 0));
+                deferredRenderingPassResources.Add(Resource("LightsBuffer", RTYPE_Buffer, nullptr, sizeof(LightShaderData), LightDatas.GetSize(), 0));
             if(testShadowMap)
-                deferredLightingPassResources.Add(Resource("Shadowmap", testShadowMap, 1));
-            deferredLightingPassResources.Add(Resource("WorldPosition", WorldPositionRT, 2));
-            deferredLightingPassResources.Add(Resource("Normal", NormalRT, 3));
-            deferredLightingPassResources.Add(Resource("Albedo", AlbedoRT, 4));
+                deferredRenderingPassResources.Add(Resource("Shadowmap", testShadowMap, 1));
+            deferredRenderingPassResources.Add(Resource("WorldPosition", WorldPositionRT, 2));
+            deferredRenderingPassResources.Add(Resource("Normal", NormalRT, 3));
+            deferredRenderingPassResources.Add(Resource("Albedo", AlbedoRT, 4));
+            deferredRenderingPassResources.Add(Resource("DeferredRenderingRenderTarget", DeferredRenderingRenderTarget, 0, true));
+            deferredRenderingPassResources.Add(constantBufferResource);
+            DeferredRenderingRootSignature = Renderer::CreateRootSignature(deferredRenderingPassResources);
+            DeferredRenderingComputeShader = Renderer::LoadComputeShader("DeferredRendering");
+            DeferredRenderingPipeline = Renderer::CreateComputePipeline("DeferredLightingPipeline", DeferredRenderingRootSignature, DeferredRenderingComputeShader);
+            Point3 numThreads = sceneData->Renderer->GetNumThreadsPerGroup(DeferredRenderingComputeShader);
+            GroupCount = Point3((resolution.x + numThreads.x - 1) / numThreads.x, (resolution.y + numThreads.y - 1) / numThreads.y, 1);
+
+            //Post process pass
+            PostProcessRenderTarget = Renderer::CreateRenderTarget("PostProcessRenderTarget", resolution.x, resolution.y, TextureFormat::R8G8B8A8_UNORM);
+            Renderer::ResourceBarrier(PostProcessRenderTarget, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
+            WArray<Resource> postProcessPassResources;
+            postProcessPassResources.Add(Resource("DeferredRenderingRenderTarget", DeferredRenderingRenderTarget, 0));
+            postProcessPassResources.Add(Resource("PostProcessRenderTarget", PostProcessRenderTarget, 0, true));
+            postProcessPassResources.Add(constantBufferResource);
+            BloomParams bloomParams = {};
+            postProcessPassResources.Add(Resource("BloomParams", RTYPE_ConstantBuffer, &bloomParams, sizeof(BloomParams), sizeof(BloomParams), 1));
             
-            DeferredLightingRootSignature = Renderer::CreateRootSignature(deferredLightingPassResources);
-            DeferredLightingPixelShader = Renderer::LoadPixelShader("DeferredRendering");
-            DeferredLightingPipeline = Renderer::CreatePipeline("DeferredLightingPipeline", { TextureFormat::R8G8B8A8_UNORM }, WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, DeferredLightingRootSignature, DeferredLightingPixelShader);
+            PostProcessRootSignature = Renderer::CreateRootSignature(postProcessPassResources);
+            PostProcessComputeShader = Renderer::LoadComputeShader("PostProcess");
+            PostProcessPipeline = Renderer::CreateComputePipeline("PostProcessPipeline", PostProcessRootSignature, PostProcessComputeShader);
+            
+            //Quad draw pass
+            WArray<Resource> QuadDrawPassResources;
+            QuadDrawPassResources.Add(Resource("PostProcessRenderTarget", PostProcessRenderTarget, 0));
+            QuadDrawRootSignature = Renderer::CreateRootSignature(QuadDrawPassResources);
+            QuadDrawPixelShader = Renderer::LoadPixelShader("QuadDraw");
+            QuadDrawPipeline = Renderer::CreateGraphicPipeline("QuadDrawPipeline", { TextureFormat::R8G8B8A8_UNORM }, WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, QuadDrawRootSignature, QuadDrawPixelShader);
         }
 
         void Update(SceneData* sceneData, float deltaTime) override
@@ -135,8 +184,8 @@ namespace Waldem
                 modelID++;
             }
             Renderer::SetRenderTargets({});
-            
-            //Deferred lighting pass
+
+            //Deferred rendering pass
             Renderer::ResourceBarrier(WorldPositionRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
             Renderer::ResourceBarrier(NormalRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
             Renderer::ResourceBarrier(AlbedoRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
@@ -150,12 +199,24 @@ namespace Waldem
             }
 
             if(!LightDatas.IsEmpty())
-                DeferredLightingRootSignature->UpdateResourceData("LightsBuffer", LightDatas.GetData());
-            Renderer::SetPipeline(DeferredLightingPipeline);
-            Renderer::SetRootSignature(DeferredLightingRootSignature);
-            Renderer::Draw(&FullscreenQuad);
-            
+                DeferredRenderingRootSignature->UpdateResourceData("LightsBuffer", LightDatas.GetData());
+            Renderer::SetPipeline(DeferredRenderingPipeline);
+            Renderer::SetRootSignature(DeferredRenderingRootSignature);
+            Renderer::Compute(GroupCount);
+
             //Post process pass
+            Renderer::ResourceBarrier(DeferredRenderingRenderTarget, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
+            Renderer::SetPipeline(PostProcessPipeline);
+            Renderer::SetRootSignature(PostProcessRootSignature);
+            Renderer::Compute(GroupCount);
+            Renderer::ResourceBarrier(DeferredRenderingRenderTarget, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
+            
+            //Quad drawing pass
+            Renderer::ResourceBarrier(PostProcessRenderTarget, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
+            Renderer::SetPipeline(QuadDrawPipeline);
+            Renderer::SetRootSignature(QuadDrawRootSignature);
+            Renderer::Draw(&FullscreenQuad);
+            Renderer::ResourceBarrier(PostProcessRenderTarget, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
         }
     };
 }
