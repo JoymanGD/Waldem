@@ -1,6 +1,7 @@
 #include "wdpch.h"
 #include "DX12RootSignature.h"
 
+#include "DX12CommandList.h"
 #include "DX12Helper.h"
 
 namespace Waldem
@@ -8,79 +9,79 @@ namespace Waldem
 #define MAX_TEXTURES 1024
 #define MAX_BUFFERS 128
     
-    DX12RootSignature::DX12RootSignature(ID3D12Device* device, DX12GraphicCommandList* cmdList, WArray<Resource> resources) : CmdList(cmdList)
+    DX12RootSignature::DX12RootSignature(ID3D12Device* device, DX12CommandList* cmdList, WArray<Resource> resources) : CmdList(cmdList)
     {
         WArray<D3D12_ROOT_PARAMETER> rootParams;
             
-            for (uint32_t i = 0; i < resources.Num(); ++i)
+        for (uint32_t i = 0; i < resources.Num(); ++i)
+        {
+            InitializedDescriptorsAmount += resources[i].NumResources;
+            
+            D3D12_ROOT_PARAMETER param = {};
+
+            if(resources[i].Type == RTYPE_Constant)
             {
-                InitializedDescriptorsAmount += resources[i].NumResources;
-                
-                D3D12_ROOT_PARAMETER param = {};
-
-                if(resources[i].Type == RTYPE_Constant)
-                {
-                    param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
-                    param.Constants.ShaderRegister = resources[i].Slot;
-                    param.Constants.RegisterSpace = 0;
-                    param.Constants.Num32BitValues = resources[i].NumResources;
-                    param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-                }
-                else
-                {
-                    D3D12_DESCRIPTOR_RANGE* range = new D3D12_DESCRIPTOR_RANGE();
-
-                    uint32_t numDescriptors = 1;
-
-                    if(resources[i].NumResources > 1)
-                    {
-                        if(resources[i].Type == RTYPE_Texture)
-                        {
-                            numDescriptors = MAX_TEXTURES;
-                        }
-                        else if(resources[i].Type == RTYPE_Buffer)
-                        {
-                            numDescriptors = MAX_BUFFERS;
-                        }
-                    }
-                
-                    range->NumDescriptors = numDescriptors;
-                    range->OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-                    range->RegisterSpace = 0;
-                    range->RangeType = DX12Helper::ResourceTypeToRangeType(resources[i].Type);
-                    range->BaseShaderRegister = resources[i].Slot;
-                    
-                    param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-                    param.DescriptorTable.NumDescriptorRanges = 1;
-                    param.DescriptorTable.pDescriptorRanges = range;
-                    param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-                }
-
-                rootParams.Add(param);
-                RootParamTypes.Add(resources[i].Type);
+                param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+                param.Constants.ShaderRegister = resources[i].Slot;
+                param.Constants.RegisterSpace = 0;
+                param.Constants.Num32BitValues = resources[i].NumResources;
+                param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
             }
+            else
+            {
+                D3D12_DESCRIPTOR_RANGE* range = new D3D12_DESCRIPTOR_RANGE();
+
+                uint32_t numDescriptors = 1;
+
+                if(resources[i].NumResources > 1)
+                {
+                    if(resources[i].Type == RTYPE_Texture)
+                    {
+                        numDescriptors = MAX_TEXTURES;
+                    }
+                    else if(resources[i].Type == RTYPE_Buffer)
+                    {
+                        numDescriptors = MAX_BUFFERS;
+                    }
+                }
             
-            D3D12_STATIC_SAMPLER_DESC staticSampler = {};
-            staticSampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-            staticSampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-            staticSampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-            staticSampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-            staticSampler.MipLODBias = 0.0f;
-            staticSampler.MaxAnisotropy = 1;
-            staticSampler.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-            staticSampler.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
-            staticSampler.MinLOD = 0.0f;
-            staticSampler.MaxLOD = D3D12_FLOAT32_MAX;
-            staticSampler.ShaderRegister = 0; //matches register(s0) in the shader
-            staticSampler.RegisterSpace = 0;
-            staticSampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-            
-            D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
-            rootSignatureDesc.NumParameters = rootParams.Num();
-            rootSignatureDesc.pParameters = rootParams.GetData();
-            rootSignatureDesc.NumStaticSamplers = 1;
-            rootSignatureDesc.pStaticSamplers = &staticSampler;
-            rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+                range->NumDescriptors = numDescriptors;
+                range->OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+                range->RegisterSpace = 0;
+                range->RangeType = DX12Helper::ResourceTypeToRangeType(resources[i].Type);
+                range->BaseShaderRegister = resources[i].Slot;
+                
+                param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+                param.DescriptorTable.NumDescriptorRanges = 1;
+                param.DescriptorTable.pDescriptorRanges = range;
+                param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+            }
+
+            rootParams.Add(param);
+            RootParamTypes.Add(resources[i].Type);
+        }
+        
+        D3D12_STATIC_SAMPLER_DESC staticSampler = {};
+        staticSampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+        staticSampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        staticSampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        staticSampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        staticSampler.MipLODBias = 0.0f;
+        staticSampler.MaxAnisotropy = 1;
+        staticSampler.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+        staticSampler.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+        staticSampler.MinLOD = 0.0f;
+        staticSampler.MaxLOD = D3D12_FLOAT32_MAX;
+        staticSampler.ShaderRegister = 0; //matches register(s0) in the shader
+        staticSampler.RegisterSpace = 0;
+        staticSampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+        
+        D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
+        rootSignatureDesc.NumParameters = rootParams.Num();
+        rootSignatureDesc.pParameters = rootParams.GetData();
+        rootSignatureDesc.NumStaticSamplers = 1;
+        rootSignatureDesc.pStaticSamplers = &staticSampler;
+        rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
         
         ID3DBlob* signature;
         ID3DBlob* error;
@@ -105,7 +106,7 @@ namespace Waldem
     {
     }
 
-    void DX12RootSignature::SetResources(ID3D12Device* device, DX12GraphicCommandList* cmdList, WArray<Resource> resourceDescs, uint32_t numDescriptors)
+    void DX12RootSignature::SetResources(ID3D12Device* device, DX12CommandList* cmdList, WArray<Resource> resourceDescs, uint32_t numDescriptors)
     {
         D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
         heapDesc.NumDescriptors = numDescriptors;
@@ -223,7 +224,7 @@ namespace Waldem
                             D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
                             nullptr,
                             IID_PPV_ARGS(&defaultResourceBuffer));
-                        
+
                         cmdList->ResourceBarrier(defaultResourceBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
                         
                         D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};

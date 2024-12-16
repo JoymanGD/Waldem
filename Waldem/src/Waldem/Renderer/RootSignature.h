@@ -10,5 +10,6 @@ namespace Waldem
         RootSignature() {}
         virtual void UpdateResourceData(String name, void* data) = 0;
         virtual ~RootSignature() = default;
+        PipelineType CurrentPipelineType;
     };
 }

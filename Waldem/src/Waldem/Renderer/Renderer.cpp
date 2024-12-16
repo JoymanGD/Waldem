@@ -100,9 +100,14 @@ namespace Waldem
         Instance->PlatformRenderer->SetRenderTargets(renderTargets, depthStencil);
     }
 
-    Pipeline* Renderer::CreatePipeline(const String& name, WArray<TextureFormat> RTFormats, PrimitiveTopologyType primitiveTopologyType, RootSignature* rootSignature, PixelShader* shader)
+    Pipeline* Renderer::CreateGraphicPipeline(const String& name, WArray<TextureFormat> RTFormats, PrimitiveTopologyType primitiveTopologyType, RootSignature* rootSignature, PixelShader* shader)
     {
-        return Instance->PlatformRenderer->CreatePipeline(name, RTFormats, primitiveTopologyType, rootSignature, shader);
+        return Instance->PlatformRenderer->CreateGraphicPipeline(name, RTFormats, primitiveTopologyType, rootSignature, shader);
+    }
+
+    Pipeline* Renderer::CreateComputePipeline(const String& name, RootSignature* rootSignature, ComputeShader* shader)
+    {
+        return Instance->PlatformRenderer->CreateComputePipeline(name, rootSignature, shader);
     }
 
     RootSignature* Renderer::CreateRootSignature(WArray<Resource> resources)

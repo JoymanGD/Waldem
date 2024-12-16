@@ -41,7 +41,7 @@ namespace Sandbox
 		auto dirLightEntity = ECSManager.CreateEntity();
 		auto& lightTransform = dirLightEntity.Add<Waldem::Transform>(Waldem::Vector3(0, 0, 0));
 		lightTransform.SetEuler(90, 0, 0);
-		dirLightEntity.Add<Waldem::Light>(Waldem::Vector3(1, 1, 1), 1.0f, Waldem::LightType::Directional, 100.0f);
+		dirLightEntity.Add<Waldem::Light>(Waldem::Vector3(1, 1, 1), 2.0f, Waldem::LightType::Directional, 100.0f);
 
 		//do it after all entities set up
 		ECSManager.Refresh();

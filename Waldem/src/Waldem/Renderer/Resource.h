@@ -79,11 +79,10 @@ namespace Waldem
         }
 
         //render targets
-        Resource(String name, RenderTarget* renderTarget, uint32_t slot)
+        Resource(String name, RenderTarget* renderTarget, uint32_t slot, bool UAV = false)
         {
             Name = name;
-            // Type = renderTarget->IsDepthStencilBuffer() ? RTYPE_RenderTarget : RTYPE_RWRenderTarget;
-            Type = RTYPE_RenderTarget;
+            Type = UAV ? RTYPE_RWRenderTarget : RTYPE_RenderTarget;
             RT = renderTarget;
             NumResources = 1;
             Slot = slot;

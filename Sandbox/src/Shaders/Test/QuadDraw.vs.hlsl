@@ -15,8 +15,6 @@ struct PS_INPUT
     uint MeshId : MESH_ID;
 };
 
-StructuredBuffer<float4x4> WorldTransforms : register(t2);
-
 PS_INPUT main(VS_INPUT input)
 {
     PS_INPUT output;

@@ -6,9 +6,10 @@
 
 #include "D3DX12.h"
 #include "DX12Buffer.h"
+#include "DX12ComputePipeline.h"
 #include "DX12ComputeShader.h"
 #include "DX12Helper.h"
-#include "DX12Pipeline.h"
+#include "DX12GraphicPipeline.h"
 #include "DX12PixelShader.h"
 #include "DX12RenderTarget.h"
 #include "DX12RootSignature.h"
@@ -185,9 +186,7 @@ namespace Waldem
         DSVHandle = DSVHeap->GetCPUDescriptorHandleForHeapStart();
         Device->CreateDepthStencilView(DepthStencilBuffer, &dsvDesc, DSVHandle);
 
-        WorldGraphicCommandList.first = new DX12GraphicCommandList(Device);
-        
-        ComputeCommandList = new DX12ComputeCommandList(Device);
+        WorldGraphicCommandList.first = new DX12CommandList(Device);
         
         Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&waitFence));
     }
@@ -264,7 +263,7 @@ namespace Waldem
 
     void DX12Renderer::Compute(Point3 groupCount)
     {
-        ComputeCommandList->Dispatch(groupCount);
+        WorldGraphicCommandList.first->Dispatch(groupCount);
     }
 
     void DX12Renderer::Begin()
@@ -272,7 +271,6 @@ namespace Waldem
         auto& worldGraphicCmd = WorldGraphicCommandList.first;
 
         worldGraphicCmd->Reset();
-        ComputeCommandList->Reset();
 
         D3D12_RESOURCE_BARRIER barrier = {};
         barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -315,13 +313,8 @@ namespace Waldem
         
         worldGraphicCmd->Close();
 
-        ComputeCommandList->Close();
-
         worldGraphicCmd->Execute(GraphicCommandQueue);
         worldGraphicCmd->WaitForCompletion();
-        
-        ComputeCommandList->Execute(ComputeCommandQueue);
-        ComputeCommandList->WaitForCompletion();
     }
 
     void DX12Renderer::Present()
@@ -363,14 +356,19 @@ namespace Waldem
         WorldGraphicCommandList.first->SetRenderTargets(renderTargets, depthStencil);
     }
 
-    Pipeline* DX12Renderer::CreatePipeline(const String& name, WArray<TextureFormat> RTFormats, PrimitiveTopologyType primitiveTopologyType, RootSignature* rootSignature, PixelShader* shader)
+    Pipeline* DX12Renderer::CreateGraphicPipeline(const String& name, WArray<TextureFormat> RTFormats, PrimitiveTopologyType primitiveTopologyType, RootSignature* rootSignature, PixelShader* shader)
     {
-        return new DX12Pipeline(name, RTFormats, primitiveTopologyType, Device, rootSignature, shader);
+        return new DX12GraphicPipeline(name, RTFormats, primitiveTopologyType, Device, rootSignature, shader);
+    }
+
+    Pipeline* DX12Renderer::CreateComputePipeline(const String& name, RootSignature* rootSignature, ComputeShader* shader)
+    {
+        return new DX12ComputePipeline(name, Device, rootSignature, shader);
     }
 
     RootSignature* DX12Renderer::CreateRootSignature(WArray<Resource> resources)
     {
-        return new DX12RootSignature(Device, WorldGraphicCommandList.first, resources);
+        return new DX12RootSignature(Device, (DX12CommandList*)WorldGraphicCommandList.first, resources);
     }
 
     Texture2D* DX12Renderer::CreateTexture(String name, int width, int height, TextureFormat format, uint8_t* data)

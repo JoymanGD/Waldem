@@ -1,5 +1,5 @@
 #pragma once
-#include "DX12GraphicCommandList.h"
+#include "DX12CommandList.h"
 #include <d3d12.h>
 #include "Waldem/Renderer/Sampler.h"
 

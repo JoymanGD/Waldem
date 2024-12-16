@@ -10,11 +10,11 @@
 
 namespace Waldem
 {
-    class WALDEM_API DX12GraphicCommandList
+    class WALDEM_API DX12CommandList
     {
     public:
-        DX12GraphicCommandList(ID3D12Device* device);
-        ~DX12GraphicCommandList();
+        DX12CommandList(ID3D12Device* device);
+        ~DX12CommandList();
         bool CompileFromFile(const String& shaderName);
 
         void InitializeLineRendering();
@@ -26,15 +26,16 @@ namespace Waldem
         void Draw(Mesh* mesh);
         void AddLine(Line line);
         void DrawLines(WArray<Line> lines);
+        void Dispatch(Point3 groupCount);
         void Clear(D3D12_CPU_DESCRIPTOR_HANDLE renderTarget, D3D12_CPU_DESCRIPTOR_HANDLE depthStencil, Vector3 clearColor);
         
         void SetPipeline(Pipeline* pipeline);
         void SetRootSignature(RootSignature* rootSignature);
         void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr);
 
-        void* GetNativeCommandList() const { return CommandList; }
+        void* GetNativeCommandList() { return CommandList; }
 
-        void* GetCommandAllocator() const { return CommandAllocator; }
+        void* GetCommandAllocator() { return CommandAllocator; }
 
         void Execute(ID3D12CommandQueue* commandQueue);
         void WaitForCompletion();
