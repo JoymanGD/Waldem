@@ -1,3 +1,5 @@
+#define AMBIENT 0.2f
+
 struct Light
 {
     float3 Color;

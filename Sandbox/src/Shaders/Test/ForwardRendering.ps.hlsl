@@ -1,3 +1,4 @@
+#include "Core.hlsl"
 #include "Lighting.hlsl"
 #include "Shadows.hlsl"
 
@@ -32,12 +33,11 @@ float4 main(PS_INPUT input) : SV_TARGET
 
     Light light = Lights[0];
 
-    float3 lightDirection = GetLightDirection(light);
+    float3 lightDirection = -GetLightDirection(light);
     
-    float bias = max(0.05 * (1.0 - dot(input.Normal, lightDirection)), 0.005);
-    float shadowFactor = CalculateShadowFactor(Shadowmap, cmpSampler, input.WorldPosition, light.View, light.Projection, bias);
+    float shadowFactor = CalculateShadowFactor(Shadowmap, cmpSampler, input.WorldPosition, input.Normal, light.View, light.Projection);
 
-    float3 resultColor = color.rgb * AMBIENT + color.rgb * light.Color * light.Intensity * saturate(dot(input.Normal, -lightDirection)) * saturate(shadowFactor);
+    float3 resultColor = color.rgb * AMBIENT + color.rgb * light.Color * light.Intensity * saturate(dot(input.Normal, lightDirection)) * saturate(shadowFactor);
 
     return float4(resultColor, 1.0f);
 }
