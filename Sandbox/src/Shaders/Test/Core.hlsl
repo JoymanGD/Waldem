@@ -1,3 +1,2 @@
 #define MAX_TEXTURES 1024
 #define MAX_BUFFERS 128
-#define AMBIENT 0.2f
