@@ -4,7 +4,7 @@
 #include "Waldem/SceneManagement/Scene.h"
 #include "Waldem/World/Camera.h"
 #include "Waldem/Renderer/Shader.h"
-#include "ECS/include/ecs.h"
+#include "ecs.h"
 #include "Waldem/ECS/Systems/System.h"
 
 namespace Sandbox
