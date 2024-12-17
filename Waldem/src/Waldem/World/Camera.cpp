@@ -11,6 +11,6 @@ namespace Waldem
 
         ViewMatrix = glm::identity<Matrix4>();
 
-        Frustrum.ExtractFrustumPlanes(ProjectionMatrix * ViewMatrix);
+        Frustrum.GetPlanes(ProjectionMatrix * ViewMatrix);
     }
 }

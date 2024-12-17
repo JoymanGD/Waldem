@@ -12,16 +12,9 @@ workspace "Waldem"
 outputdir = "%{cfg.buildcfg}"
 
 IncludeDir = {}
-IncludeDir["GLFW"] = "Waldem/vendor/GLFW/include"
-IncludeDir["Glad"] = "Waldem/vendor/Glad/include"
-IncludeDir["ImGui"] = "Waldem/vendor/imgui"
 IncludeDir["glm"] = "Waldem/vendor/glm"
 IncludeDir["SDL"] = "Waldem/vendor/SDL/include"
 IncludeDir["ECS"] = "Waldem/vendor/ECS/include"
-
-include "Waldem/vendor/GLFW"
-include "Waldem/vendor/Glad"
-include "Waldem/vendor/imgui"
 
 project "Waldem"
     location "Waldem"    
@@ -55,10 +48,7 @@ project "Waldem"
         "%{prj.name}/vendor/spdlog/include",
         "%{prj.name}/vendor/assimp/include",
         "%{prj.name}/vendor/stb/include",
-        "%{IncludeDir.GLFW}",
         "%{IncludeDir.SDL}",
-        "%{IncludeDir.Glad}",
-        "%{IncludeDir.ImGui}",
         "%{IncludeDir.glm}",
         "%{IncludeDir.ECS}"
     }
@@ -71,10 +61,7 @@ project "Waldem"
 
     links
     {
-        "GLFW",
-        "Glad",
         "SDL2", "SDL2main",
-        "ImGui",
         "opengl32.lib",
         "assimp-vc142-mt.lib",
         "d3d12", "dxgi", "d3dcompiler"
@@ -86,8 +73,7 @@ project "Waldem"
         defines
         {
             "WD_PLATFORM_WINDOWS",
-            "WD_BUILD_DLL",
-            "GLFW_INCLUDE_NONE"
+            "WD_BUILD_DLL"
         }
 
     filter "configurations:Debug"
@@ -149,7 +135,6 @@ project "Sandbox"
         "Waldem/vendor/stb/include",
         "Waldem/src",
         "Waldem/vendor",
-        "%{IncludeDir.Glad}",
         "%{IncludeDir.glm}",
         "%{IncludeDir.ECS}"
     }

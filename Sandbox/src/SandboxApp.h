@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Waldem.h>
-#include "imgui/imgui.h"
 #include "Layers/ExampleLayer.h"
 #include "Scenes/DefaultScene.h"
 
