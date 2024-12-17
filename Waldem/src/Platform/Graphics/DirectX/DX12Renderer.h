@@ -14,6 +14,7 @@ namespace Waldem
     public:
         ~DX12Renderer() override = default;
         void Initialize(Window* window) override;
+        void InitializeImGui();
         void Draw(Model* model) override;
         void Draw(Mesh* mesh) override;
         void DrawLine(Line line) override;
@@ -44,6 +45,8 @@ namespace Waldem
 
     private:
         uint32_t FrameIndex = 0;
+
+        Window* CurrentWindow;
         
         IDXGIFactory4* DxgiFactory = nullptr;
         ID3D12Device* Device = nullptr;
@@ -54,7 +57,7 @@ namespace Waldem
         D3D12_VIEWPORT Viewport = { 0.0f, 0.0f, 800.0f, 600.0f, 0.0f, 1.0f };
         D3D12_RECT ScissorRect = { 0, 0, 800, 600 };
 
-        std::pair<DX12CommandList*, bool> WorldGraphicCommandList;
+        std::pair<DX12CommandList*, bool> WorldCommandList;
         std::pair<DX12CommandList*, bool> UIGraphicCommandList;
         
         ID3D12DescriptorHeap* RTVHeap;
@@ -67,7 +70,10 @@ namespace Waldem
         ID3D12Debug* DebugController;
         ID3D12Debug1* DebugController1;
         ID3D12InfoQueue* InfoQueue;
-        ID3D12Fence* waitFence;
+        ID3D12Fence* WaitFence;
         UINT64 waitFenceValue = 0;
+
+        //ImGui
+        ID3D12DescriptorHeap* ImGuiHeap;
     };
 }

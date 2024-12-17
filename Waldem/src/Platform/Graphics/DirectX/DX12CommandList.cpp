@@ -469,6 +469,11 @@ namespace Waldem
         }
     }
 
+    void DX12CommandList::SetDescriptorHeaps(uint32_t NumDescriptorHeaps, ID3D12DescriptorHeap* const* ppDescriptorHeaps)
+    {
+        CommandList->SetDescriptorHeaps(NumDescriptorHeaps, ppDescriptorHeaps);
+    }
+
     void DX12CommandList::Reset()
     {
         //reset the command allocator (reuses the memory)

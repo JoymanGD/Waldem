@@ -34,9 +34,6 @@
     <Filter Include="src\Waldem\Events">
       <UniqueIdentifier>{7A748699-E68A-842F-2F02-10519B5755B7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\Waldem\ImGui">
-      <UniqueIdentifier>{0083373B-EC7B-568D-15AE-3B1201063699}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\Waldem\Import">
       <UniqueIdentifier>{A0463EA2-0C5D-3C38-55D4-C759C1290DC0}</UniqueIdentifier>
     </Filter>
@@ -69,6 +66,24 @@
     </Filter>
     <Filter Include="vendor">
       <UniqueIdentifier>{B3738122-9F15-ACF8-88D0-BF4C74113349}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vendor\ImGui">
+      <UniqueIdentifier>{1DA38CEE-0906-1C93-B28B-54499ECDE715}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vendor\ImGui\backends">
+      <UniqueIdentifier>{E7ED3B29-535A-F723-1C4E-8F818879198C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vendor\ImGui\misc">
+      <UniqueIdentifier>{18302066-8446-1EFC-CDBD-A91D3913EF83}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vendor\ImGui\misc\cpp">
+      <UniqueIdentifier>{EAF585DC-5662-41D7-1F56-D9348B81633F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vendor\ImGui\misc\fonts">
+      <UniqueIdentifier>{71DC1016-DD13-59AD-E61D-BDD052D47FA6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vendor\ImGui\misc\single_file">
+      <UniqueIdentifier>{08DD8AEE-74F5-7118-3DA2-01B2A97906B2}</UniqueIdentifier>
     </Filter>
     <Filter Include="vendor\glm">
       <UniqueIdentifier>{829FC5A8-6E57-07F6-D75E-E051C335A2E6}</UniqueIdentifier>
@@ -192,9 +207,6 @@
     <ClInclude Include="src\Waldem\Events\MouseEvent.h">
       <Filter>src\Waldem\Events</Filter>
     </ClInclude>
-    <ClInclude Include="src\Waldem\ImGui\ImGuiLayer.h">
-      <Filter>src\Waldem\ImGui</Filter>
-    </ClInclude>
     <ClInclude Include="src\Waldem\Import\ModelImporter.h">
       <Filter>src\Waldem\Import</Filter>
     </ClInclude>
@@ -311,6 +323,36 @@
     </ClInclude>
     <ClInclude Include="src\wdpch.h">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\ImGui\backends\imgui_impl_dx12.h">
+      <Filter>vendor\ImGui\backends</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\ImGui\backends\imgui_impl_sdl2.h">
+      <Filter>vendor\ImGui\backends</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\ImGui\imconfig.h">
+      <Filter>vendor\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\ImGui\imgui.h">
+      <Filter>vendor\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\ImGui\imgui_internal.h">
+      <Filter>vendor\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\ImGui\imstb_rectpack.h">
+      <Filter>vendor\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\ImGui\imstb_textedit.h">
+      <Filter>vendor\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\ImGui\imstb_truetype.h">
+      <Filter>vendor\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\ImGui\misc\cpp\imgui_stdlib.h">
+      <Filter>vendor\ImGui\misc\cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\ImGui\misc\single_file\imgui_single_file.h">
+      <Filter>vendor\ImGui\misc\single_file</Filter>
     </ClInclude>
     <ClInclude Include="vendor\glm\glm\common.hpp">
       <Filter>vendor\glm\glm</Filter>
@@ -1601,12 +1643,6 @@
     <ClCompile Include="src\Waldem\Application.cpp">
       <Filter>src\Waldem</Filter>
     </ClCompile>
-    <ClCompile Include="src\Waldem\ImGui\ImGuiBuild.cpp">
-      <Filter>src\Waldem\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Waldem\ImGui\ImGuiLayer.cpp">
-      <Filter>src\Waldem\ImGui</Filter>
-    </ClCompile>
     <ClCompile Include="src\Waldem\Import\ModelImporter.cpp">
       <Filter>src\Waldem\Import</Filter>
     </ClCompile>
@@ -1648,6 +1684,33 @@
     </ClCompile>
     <ClCompile Include="src\wdpch.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\ImGui\backends\imgui_impl_dx12.cpp">
+      <Filter>vendor\ImGui\backends</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\ImGui\backends\imgui_impl_sdl2.cpp">
+      <Filter>vendor\ImGui\backends</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\ImGui\imgui.cpp">
+      <Filter>vendor\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\ImGui\imgui_demo.cpp">
+      <Filter>vendor\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\ImGui\imgui_draw.cpp">
+      <Filter>vendor\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\ImGui\imgui_tables.cpp">
+      <Filter>vendor\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\ImGui\imgui_widgets.cpp">
+      <Filter>vendor\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\ImGui\misc\cpp\imgui_stdlib.cpp">
+      <Filter>vendor\ImGui\misc\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\ImGui\misc\fonts\binary_to_compressed_c.cpp">
+      <Filter>vendor\ImGui\misc\fonts</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

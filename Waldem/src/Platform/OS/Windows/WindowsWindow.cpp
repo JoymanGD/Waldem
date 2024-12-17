@@ -8,6 +8,8 @@
 #include <SDL.h>
 #include <SDL_syswm.h>
 
+#include "backends/imgui_impl_sdl2.h"
+
 namespace Waldem
 {
     Window* Window::Create(const WindowProps& props)
@@ -78,6 +80,8 @@ namespace Waldem
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
+            ImGui_ImplSDL2_ProcessEvent(&event);
+            
             switch (event.type)
             {
             case SDL_QUIT:

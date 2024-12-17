@@ -32,6 +32,7 @@ namespace Waldem
         void SetPipeline(Pipeline* pipeline);
         void SetRootSignature(RootSignature* rootSignature);
         void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr);
+        void SetDescriptorHeaps(uint32_t NumDescriptorHeaps, ID3D12DescriptorHeap* const* ppDescriptorHeaps);
 
         void* GetNativeCommandList() { return CommandList; }
 

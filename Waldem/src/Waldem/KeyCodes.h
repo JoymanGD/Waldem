@@ -1,5 +1,5 @@
 #pragma once
-#include <SDL/include/SDL_keycode.h>
+#include "SDL_keycode.h"
 
 //from SDL_keycode.h
 

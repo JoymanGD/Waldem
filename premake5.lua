@@ -12,9 +12,13 @@ workspace "Waldem"
 outputdir = "%{cfg.buildcfg}"
 
 IncludeDir = {}
+IncludeDir["ImGui"] = "Waldem/vendor/ImGui"
 IncludeDir["glm"] = "Waldem/vendor/glm"
 IncludeDir["SDL"] = "Waldem/vendor/SDL/include"
 IncludeDir["ECS"] = "Waldem/vendor/ECS/include"
+IncludeDir["SPDLog"] = "Waldem/vendor/spdlog/include"
+IncludeDir["Assimp"] = "Waldem/vendor/assimp/include"
+IncludeDir["stb"] = "Waldem/vendor/stb/include"
 
 project "Waldem"
     location "Waldem"    
@@ -38,6 +42,10 @@ project "Waldem"
     {
         "%{prj.name}/src/**.h",
         "%{prj.name}/src/**.cpp",
+        "%{prj.name}/vendor/ImGui/**.h",
+        "%{prj.name}/vendor/ImGui/**.cpp",
+        "%{prj.name}/vendor/ImGui/backends/**.h",
+        "%{prj.name}/vendor/ImGui/backends/**.cpp",
         "%{prj.name}/vendor/glm/glm/**.hpp",
         "%{prj.name}/vendor/glm/glm/**.inl"
     }
@@ -45,11 +53,12 @@ project "Waldem"
     includedirs
     {
         "%{prj.name}/src",
-        "%{prj.name}/vendor/spdlog/include",
-        "%{prj.name}/vendor/assimp/include",
-        "%{prj.name}/vendor/stb/include",
+        "%{IncludeDir.SPDLog}",
+        "%{IncludeDir.Assimp}",
+        "%{IncludeDir.stb}",
         "%{IncludeDir.SDL}",
         "%{IncludeDir.glm}",
+        "%{IncludeDir.ImGui}",
         "%{IncludeDir.ECS}"
     }
     
@@ -130,11 +139,11 @@ project "Sandbox"
 
     includedirs
     {
-        "Waldem/vendor/assimp/include",
-        "Waldem/vendor/spdlog/include",
-        "Waldem/vendor/stb/include",
         "Waldem/src",
-        "Waldem/vendor",
+        "%{IncludeDir.SPDLog}",
+        "%{IncludeDir.Assimp}",
+        "%{IncludeDir.stb}",
+        "%{IncludeDir.SDL}",
         "%{IncludeDir.glm}",
         "%{IncludeDir.ECS}"
     }

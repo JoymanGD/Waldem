@@ -1,5 +1,5 @@
 #pragma once
-#include <SDL/include/SDL_mouse.h>
+#include "SDL_mouse.h"
 
 //from SDL_mouse.h
 
