@@ -96,19 +96,19 @@
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12Buffer.h">
       <Filter>src\Platform\Graphics\DirectX</Filter>
     </ClInclude>
-    <ClInclude Include="src\Platform\Graphics\DirectX\DX12ComputeCommandList.h">
+    <ClInclude Include="src\Platform\Graphics\DirectX\DX12CommandList.h">
+      <Filter>src\Platform\Graphics\DirectX</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\Graphics\DirectX\DX12ComputePipeline.h">
       <Filter>src\Platform\Graphics\DirectX</Filter>
     </ClInclude>
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12ComputeShader.h">
       <Filter>src\Platform\Graphics\DirectX</Filter>
     </ClInclude>
-    <ClInclude Include="src\Platform\Graphics\DirectX\DX12GraphicCommandList.h">
+    <ClInclude Include="src\Platform\Graphics\DirectX\DX12GraphicPipeline.h">
       <Filter>src\Platform\Graphics\DirectX</Filter>
     </ClInclude>
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12Helper.h">
-      <Filter>src\Platform\Graphics\DirectX</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Platform\Graphics\DirectX\DX12Pipeline.h">
       <Filter>src\Platform\Graphics\DirectX</Filter>
     </ClInclude>
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12PixelShader.h">
@@ -157,6 +157,9 @@
       <Filter>src\Waldem\ECS\Components</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\ECS\Systems\DebugSystem.h">
+      <Filter>src\Waldem\ECS\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\ECS\Systems\DeferredRenderingSystem.h">
       <Filter>src\Waldem\ECS\Systems</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\ECS\Systems\ForwardRenderingSystem.h">
@@ -241,6 +244,9 @@
       <Filter>src\Waldem\Renderer\Model</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\Renderer\Model\Model.h">
+      <Filter>src\Waldem\Renderer\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\Renderer\Model\Quad.h">
       <Filter>src\Waldem\Renderer\Model</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\Renderer\Model\Transform.h">
@@ -1559,16 +1565,16 @@
     <ClCompile Include="src\Platform\Graphics\DirectX\DX12Buffer.cpp">
       <Filter>src\Platform\Graphics\DirectX</Filter>
     </ClCompile>
-    <ClCompile Include="src\Platform\Graphics\DirectX\DX12ComputeCommandList.cpp">
+    <ClCompile Include="src\Platform\Graphics\DirectX\DX12CommandList.cpp">
+      <Filter>src\Platform\Graphics\DirectX</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\Graphics\DirectX\DX12ComputePipeline.cpp">
       <Filter>src\Platform\Graphics\DirectX</Filter>
     </ClCompile>
     <ClCompile Include="src\Platform\Graphics\DirectX\DX12ComputeShader.cpp">
       <Filter>src\Platform\Graphics\DirectX</Filter>
     </ClCompile>
-    <ClCompile Include="src\Platform\Graphics\DirectX\DX12GraphicCommandList.cpp">
-      <Filter>src\Platform\Graphics\DirectX</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Platform\Graphics\DirectX\DX12Pipeline.cpp">
+    <ClCompile Include="src\Platform\Graphics\DirectX\DX12GraphicPipeline.cpp">
       <Filter>src\Platform\Graphics\DirectX</Filter>
     </ClCompile>
     <ClCompile Include="src\Platform\Graphics\DirectX\DX12PixelShader.cpp">

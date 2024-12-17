@@ -33,10 +33,22 @@
     <FxCompile Include="src\Shaders\Test\Core.hlsl">
       <Filter>Shaders\Test</Filter>
     </FxCompile>
-    <FxCompile Include="src\Shaders\Test\Default.ps.hlsl">
+    <FxCompile Include="src\Shaders\Test\DeferredRendering.comp.hlsl">
       <Filter>Shaders\Test</Filter>
     </FxCompile>
-    <FxCompile Include="src\Shaders\Test\Default.vs.hlsl">
+    <FxCompile Include="src\Shaders\Test\ForwardRendering.ps.hlsl">
+      <Filter>Shaders\Test</Filter>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Test\ForwardRendering.vs.hlsl">
+      <Filter>Shaders\Test</Filter>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Test\GBuffer.ps.hlsl">
+      <Filter>Shaders\Test</Filter>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Test\GBuffer.vs.hlsl">
+      <Filter>Shaders\Test</Filter>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Test\Lighting.hlsl">
       <Filter>Shaders\Test</Filter>
     </FxCompile>
     <FxCompile Include="src\Shaders\Test\Line.ps.hlsl">
@@ -48,10 +60,22 @@
     <FxCompile Include="src\Shaders\Test\PostProcess.comp.hlsl">
       <Filter>Shaders\Test</Filter>
     </FxCompile>
+    <FxCompile Include="src\Shaders\Test\QuadDraw.ps.hlsl">
+      <Filter>Shaders\Test</Filter>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Test\QuadDraw.vs.hlsl">
+      <Filter>Shaders\Test</Filter>
+    </FxCompile>
     <FxCompile Include="src\Shaders\Test\Shadowmap.ps.hlsl">
       <Filter>Shaders\Test</Filter>
     </FxCompile>
     <FxCompile Include="src\Shaders\Test\Shadowmap.vs.hlsl">
+      <Filter>Shaders\Test</Filter>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Test\Shadows.hlsl">
+      <Filter>Shaders\Test</Filter>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Test\Types.hlsl">
       <Filter>Shaders\Test</Filter>
     </FxCompile>
   </ItemGroup>

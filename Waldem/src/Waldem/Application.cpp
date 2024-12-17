@@ -18,8 +18,6 @@ namespace Waldem
 		Instance = this;
 		Window = std::unique_ptr<Waldem::Window>(Window::Create());
 		Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
-		ImGuiLayer = new Waldem::ImGuiLayer();
-		PushOverlay(ImGuiLayer);
 
 		CurrentRenderer = {};
 
@@ -113,13 +111,6 @@ namespace Waldem
 			{
 				layer->OnUpdate();
 			}
-
-			// ImGuiLayer->Begin();
-			// for (Layer* layer : LayerStack)
-			// {
-			// 	layer->OnUIRender();
-			// }
-			// ImGuiLayer->End();
 
 			Window->OnUpdate();
 

@@ -11,6 +11,4 @@
 #include "Waldem/KeyCodes.h"
 #include "Waldem/MouseButtonCodes.h"
 
-#include "Waldem/ImGui/ImGuiLayer.h"
-
 #include "Waldem/EntryPoint.h"

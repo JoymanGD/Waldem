@@ -2,7 +2,6 @@
 
 #include "Core.h"
 #include "Window.h"
-#include "ImGui/ImGuiLayer.h"
 #include "Renderer/Renderer.h"
 #include "SceneManagement/SceneManager.h"
 #include "Waldem/LayerStack.h"
@@ -34,7 +33,6 @@ namespace Waldem
 		Renderer CurrentRenderer;
 		bool IsRunning = true;
 		LayerStack LayerStack;
-		ImGuiLayer* ImGuiLayer;
         Scene* CurrentScene;
 		
 		std::vector<float> FrameTimes;

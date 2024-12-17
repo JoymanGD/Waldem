@@ -51,8 +51,8 @@ namespace Sandbox
 		UpdateSystems.Add((Waldem::ISystem*)new Waldem::DebugSystem(&ECSManager));
 
 		DrawSystems.Add((Waldem::ISystem*)new Waldem::ShadowmapRenderingSystem(&ECSManager));
-		DrawSystems.Add((Waldem::ISystem*)new Waldem::ForwardRenderingSystem(&ECSManager));
-		// DrawSystems.Add((Waldem::ISystem*)new Waldem::DeferredRenderingSystem(&ECSManager));
+		DrawSystems.Add((Waldem::ISystem*)new Waldem::DeferredRenderingSystem(&ECSManager));
+		// DrawSystems.Add((Waldem::ISystem*)new Waldem::ForwardRenderingSystem(&ECSManager));
 		// DrawSystems.Add((Waldem::ISystem*)new Waldem::PostProcessSystem(&ECSManager));
 		
 		for (Waldem::ISystem* system : UpdateSystems)

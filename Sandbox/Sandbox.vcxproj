@@ -79,7 +79,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WD_PLATFORM_WINDOWS;WD_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Waldem\vendor\assimp\include;..\Waldem\vendor\spdlog\include;..\Waldem\vendor\stb\include;..\Waldem\src;..\Waldem\vendor;..\Waldem\vendor\Glad\include;..\Waldem\vendor\glm;..\Waldem\vendor\ECS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Waldem\vendor\assimp\include;..\Waldem\vendor\spdlog\include;..\Waldem\vendor\stb\include;..\Waldem\src;..\Waldem\vendor;..\Waldem\vendor\glm;..\Waldem\vendor\ECS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -105,7 +105,7 @@ xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Debug\Sandbox\Cont
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WD_PLATFORM_WINDOWS;WD_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Waldem\vendor\assimp\include;..\Waldem\vendor\spdlog\include;..\Waldem\vendor\stb\include;..\Waldem\src;..\Waldem\vendor;..\Waldem\vendor\Glad\include;..\Waldem\vendor\glm;..\Waldem\vendor\ECS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Waldem\vendor\assimp\include;..\Waldem\vendor\spdlog\include;..\Waldem\vendor\stb\include;..\Waldem\src;..\Waldem\vendor;..\Waldem\vendor\glm;..\Waldem\vendor\ECS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -135,7 +135,7 @@ xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Release\Sandbox\Co
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WD_PLATFORM_WINDOWS;WD_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Waldem\vendor\assimp\include;..\Waldem\vendor\spdlog\include;..\Waldem\vendor\stb\include;..\Waldem\src;..\Waldem\vendor;..\Waldem\vendor\Glad\include;..\Waldem\vendor\glm;..\Waldem\vendor\ECS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Waldem\vendor\assimp\include;..\Waldem\vendor\spdlog\include;..\Waldem\vendor\stb\include;..\Waldem\src;..\Waldem\vendor;..\Waldem\vendor\glm;..\Waldem\vendor\ECS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -174,27 +174,9 @@ xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Dist\Sandbox\Conte
       <ExcludedFromBuild>true</ExcludedFromBuild>
       <ShaderModel>5.1</ShaderModel>
     </FxCompile>
-    <FxCompile Include="src\Shaders\Test\PostProcess.comp.hlsl">
-      <ObjectFileOutput>..\bin\Debug\Sandbox\%(Filename).cso</ObjectFileOutput>
-      <TrackerLogDirectory>..\bin-int\Debug\Sandbox\Sandbox.tlog\</TrackerLogDirectory>
-      <EntryPointName>main</EntryPointName>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ShaderModel>5.1</ShaderModel>
-      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
-      <DisableOptimizations>true</DisableOptimizations>
-      <EnableDebuggingInformation>true</EnableDebuggingInformation>
+    <FxCompile Include="src\Shaders\Test\DeferredRendering.comp.hlsl">
       <ExcludedFromBuild>true</ExcludedFromBuild>
-    </FxCompile>
-    <FxCompile Include="src\Shaders\Test\QuadDraw.vs.hlsl">
-      <ObjectFileOutput>..\bin\Debug\Sandbox\%(Filename).cso</ObjectFileOutput>
-      <TrackerLogDirectory>..\bin-int\Debug\Sandbox\Sandbox.tlog\</TrackerLogDirectory>
-      <EntryPointName>main</EntryPointName>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
       <ShaderModel>5.1</ShaderModel>
-      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
-      <DisableOptimizations>true</DisableOptimizations>
-      <EnableDebuggingInformation>true</EnableDebuggingInformation>
-      <ShaderType>Vertex</ShaderType>
     </FxCompile>
     <FxCompile Include="src\Shaders\Test\ForwardRendering.ps.hlsl">
       <ShaderType>Pixel</ShaderType>
@@ -206,49 +188,19 @@ xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Dist\Sandbox\Conte
       <ShaderModel>5.1</ShaderModel>
       <EntryPointName>main</EntryPointName>
     </FxCompile>
-    <FxCompile Include="src\Shaders\Test\QuadDraw.ps.hlsl">
-      <ObjectFileOutput>..\bin\Debug\Sandbox\%(Filename).cso</ObjectFileOutput>
-      <TrackerLogDirectory>..\bin-int\Debug\Sandbox\Sandbox.tlog\</TrackerLogDirectory>
-      <EntryPointName>main</EntryPointName>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ShaderModel>5.1</ShaderModel>
-      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
-      <DisableOptimizations>true</DisableOptimizations>
-      <EnableDebuggingInformation>true</EnableDebuggingInformation>
-      <ShaderType>Pixel</ShaderType>
-    </FxCompile>
     <FxCompile Include="src\Shaders\Test\GBuffer.ps.hlsl">
-      <ObjectFileOutput>..\bin\Debug\Sandbox\%(Filename).cso</ObjectFileOutput>
-      <TrackerLogDirectory>..\bin-int\Debug\Sandbox\Sandbox.tlog\</TrackerLogDirectory>
-      <EntryPointName>main</EntryPointName>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ShaderModel>5.1</ShaderModel>
-      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
-      <DisableOptimizations>true</DisableOptimizations>
-      <EnableDebuggingInformation>true</EnableDebuggingInformation>
       <ShaderType>Pixel</ShaderType>
+      <ShaderModel>5.1</ShaderModel>
+      <EntryPointName>main</EntryPointName>
     </FxCompile>
     <FxCompile Include="src\Shaders\Test\GBuffer.vs.hlsl">
-      <ObjectFileOutput>..\bin\Debug\Sandbox\%(Filename).cso</ObjectFileOutput>
-      <TrackerLogDirectory>..\bin-int\Debug\Sandbox\Sandbox.tlog\</TrackerLogDirectory>
-      <EntryPointName>main</EntryPointName>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ShaderModel>5.1</ShaderModel>
-      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
-      <DisableOptimizations>true</DisableOptimizations>
-      <EnableDebuggingInformation>true</EnableDebuggingInformation>
       <ShaderType>Vertex</ShaderType>
+      <ShaderModel>5.1</ShaderModel>
+      <EntryPointName>main</EntryPointName>
     </FxCompile>
     <FxCompile Include="src\Shaders\Test\Lighting.hlsl">
-      <ObjectFileOutput>..\bin\Debug\Sandbox\Shadows.cso</ObjectFileOutput>
-      <TrackerLogDirectory>..\bin-int\Debug\Sandbox\Sandbox.tlog\</TrackerLogDirectory>
-      <EntryPointName>main</EntryPointName>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ShaderModel>5.1</ShaderModel>
-      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
-      <DisableOptimizations>true</DisableOptimizations>
-      <EnableDebuggingInformation>true</EnableDebuggingInformation>
       <ExcludedFromBuild>true</ExcludedFromBuild>
+      <ShaderModel>5.1</ShaderModel>
     </FxCompile>
     <FxCompile Include="src\Shaders\Test\Line.ps.hlsl">
       <ShaderType>Pixel</ShaderType>
@@ -260,9 +212,19 @@ xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Dist\Sandbox\Conte
       <ShaderModel>5.1</ShaderModel>
       <EntryPointName>main</EntryPointName>
     </FxCompile>
-    <FxCompile Include="src\Shaders\Test\DeferredRendering.comp.hlsl">
+    <FxCompile Include="src\Shaders\Test\PostProcess.comp.hlsl">
       <ExcludedFromBuild>true</ExcludedFromBuild>
       <ShaderModel>5.1</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Test\QuadDraw.ps.hlsl">
+      <ShaderType>Pixel</ShaderType>
+      <ShaderModel>5.1</ShaderModel>
+      <EntryPointName>main</EntryPointName>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Test\QuadDraw.vs.hlsl">
+      <ShaderType>Vertex</ShaderType>
+      <ShaderModel>5.1</ShaderModel>
+      <EntryPointName>main</EntryPointName>
     </FxCompile>
     <FxCompile Include="src\Shaders\Test\Shadowmap.ps.hlsl">
       <ShaderType>Pixel</ShaderType>
@@ -275,26 +237,12 @@ xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Dist\Sandbox\Conte
       <EntryPointName>main</EntryPointName>
     </FxCompile>
     <FxCompile Include="src\Shaders\Test\Shadows.hlsl">
-      <ObjectFileOutput>..\bin\Debug\Sandbox\%(Filename).cso</ObjectFileOutput>
-      <TrackerLogDirectory>..\bin-int\Debug\Sandbox\Sandbox.tlog\</TrackerLogDirectory>
-      <EntryPointName>main</EntryPointName>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ShaderModel>5.1</ShaderModel>
-      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
-      <DisableOptimizations>true</DisableOptimizations>
-      <EnableDebuggingInformation>true</EnableDebuggingInformation>
       <ExcludedFromBuild>true</ExcludedFromBuild>
+      <ShaderModel>5.1</ShaderModel>
     </FxCompile>
     <FxCompile Include="src\Shaders\Test\Types.hlsl">
-      <ObjectFileOutput>..\bin\Debug\Sandbox\%(Filename).cso</ObjectFileOutput>
-      <TrackerLogDirectory>..\bin-int\Debug\Sandbox\Sandbox.tlog\</TrackerLogDirectory>
-      <EntryPointName>main</EntryPointName>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ShaderModel>5.1</ShaderModel>
-      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
-      <DisableOptimizations>true</DisableOptimizations>
-      <EnableDebuggingInformation>true</EnableDebuggingInformation>
       <ExcludedFromBuild>true</ExcludedFromBuild>
+      <ShaderModel>5.1</ShaderModel>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
