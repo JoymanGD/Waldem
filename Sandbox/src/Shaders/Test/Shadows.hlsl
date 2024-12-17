@@ -1,6 +1,7 @@
 #include "Core.hlsl"
+#define SHADOW_BIAS 0.005f
 
-float CalculateShadowFactor(Texture2D<float> Shadowmap, SamplerComparisonState cmpSampler, float3 worldPos, float4x4 view, float4x4 projection)
+float CalculateShadowFactor(Texture2D<float> Shadowmap, SamplerComparisonState cmpSampler, float3 worldPos, float4x4 view, float4x4 projection, float bias)
 {
     float4 lightClipPos = mul(view, float4(worldPos, 1.0f));
     lightClipPos = mul(projection, lightClipPos);
@@ -10,7 +11,7 @@ float CalculateShadowFactor(Texture2D<float> Shadowmap, SamplerComparisonState c
     float2 shadowUV = lightClipPos.xy * 0.5f + 0.5f;
     shadowUV.y = -shadowUV.y;
 
-    float depth = lightClipPos.z - SHADOW_BIAS;
+    float depth = lightClipPos.z - bias;
 
     float sum = 0;
     

@@ -27,9 +27,10 @@ void main(uint2 tid : SV_DispatchThreadID)
     //Combining the lighting and shadowing
     Light light = Lights[0];
 
-    float shadowFactor = CalculateShadowFactor(Shadowmap, cmpSampler, worldPosition, light.View, light.Projection);
-    
     float3 lightDirection = GetLightDirection(light);
+    
+    float bias = max(0.005 * (1.0 - dot(normal, -lightDirection)), 0.001);
+    float shadowFactor = CalculateShadowFactor(Shadowmap, cmpSampler, worldPosition, light.View, light.Projection, bias);
 
     float3 resultColor = albedo.rgb * AMBIENT + albedo.rgb * light.Color * light.Intensity * saturate(dot(normal, -lightDirection)) * saturate(shadowFactor);
 
