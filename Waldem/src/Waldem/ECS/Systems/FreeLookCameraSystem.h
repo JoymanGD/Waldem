@@ -1,6 +1,6 @@
 #pragma once
 #include "System.h"
-#include "Waldem/Input.h"
+#include "Waldem/Input/Input.h"
 #include "Waldem/KeyCodes.h"
 #include "Waldem/MouseButtonCodes.h"
 #include "Waldem/Renderer/Model/Transform.h"
@@ -15,7 +15,7 @@ namespace Waldem
         
         void Initialize(SceneData* sceneData) override {}
 
-        void Update(SceneData* sceneData, float deltaTime) override
+        void Update(float deltaTime) override
         {
             for (auto [entity, transform, camera] : ECSManager->EntitiesWith<Transform, Camera>())
             {

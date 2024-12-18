@@ -79,7 +79,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WD_PLATFORM_WINDOWS;WD_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Waldem\src;..\Waldem\vendor\spdlog\include;..\Waldem\vendor\assimp\include;..\Waldem\vendor\stb\include;..\Waldem\vendor\SDL\include;..\Waldem\vendor\glm;..\Waldem\vendor\ECS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Waldem\src;..\Waldem\vendor\spdlog\include;..\Waldem\vendor\assimp\include;..\Waldem\vendor\stb\include;..\Waldem\vendor\SDL\include;..\Waldem\vendor\glm;..\Waldem\vendor\ImGui;..\Waldem\vendor\ECS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -105,7 +105,7 @@ xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Debug\Sandbox\Cont
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WD_PLATFORM_WINDOWS;WD_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Waldem\src;..\Waldem\vendor\spdlog\include;..\Waldem\vendor\assimp\include;..\Waldem\vendor\stb\include;..\Waldem\vendor\SDL\include;..\Waldem\vendor\glm;..\Waldem\vendor\ECS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Waldem\src;..\Waldem\vendor\spdlog\include;..\Waldem\vendor\assimp\include;..\Waldem\vendor\stb\include;..\Waldem\vendor\SDL\include;..\Waldem\vendor\glm;..\Waldem\vendor\ImGui;..\Waldem\vendor\ECS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -135,7 +135,7 @@ xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Release\Sandbox\Co
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WD_PLATFORM_WINDOWS;WD_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Waldem\src;..\Waldem\vendor\spdlog\include;..\Waldem\vendor\assimp\include;..\Waldem\vendor\stb\include;..\Waldem\vendor\SDL\include;..\Waldem\vendor\glm;..\Waldem\vendor\ECS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Waldem\src;..\Waldem\vendor\spdlog\include;..\Waldem\vendor\assimp\include;..\Waldem\vendor\stb\include;..\Waldem\vendor\SDL\include;..\Waldem\vendor\glm;..\Waldem\vendor\ImGui;..\Waldem\vendor\ECS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -161,7 +161,6 @@ xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Dist\Sandbox\Conte
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\Layers\ExampleLayer.h" />
     <ClInclude Include="src\SandboxApp.h" />
     <ClInclude Include="src\Scenes\DefaultScene.h" />
   </ItemGroup>
@@ -249,6 +248,9 @@ xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Dist\Sandbox\Conte
     <ProjectReference Include="..\Waldem\Waldem.vcxproj">
       <Project>{1F0CE8D9-0BAE-12B0-F468-2604E0A99900}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="src\Layers\" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

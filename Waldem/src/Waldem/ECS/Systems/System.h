@@ -11,6 +11,6 @@ namespace Waldem
     public:
         ISystem(ecs::Manager* ECSManager) : ECSManager(ECSManager) {}
         virtual void Initialize(SceneData* sceneData) = 0;
-        virtual void Update(SceneData* sceneData, float deltaTime) = 0;
+        virtual void Update(float deltaTime) = 0;
     };
 }

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Waldem.h>
-#include "Layers/ExampleLayer.h"
 #include "Scenes/DefaultScene.h"
 
 namespace Sandbox
@@ -11,7 +10,6 @@ namespace Sandbox
 	public:
 		SandboxApp()
 		{
-			PushLayer(new ExampleLayer());
 			OpenScene(new DefaultScene);
 		}
 

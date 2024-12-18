@@ -145,6 +145,7 @@ project "Sandbox"
         "%{IncludeDir.stb}",
         "%{IncludeDir.SDL}",
         "%{IncludeDir.glm}",
+        "%{IncludeDir.ImGui}",
         "%{IncludeDir.ECS}"
     }
 

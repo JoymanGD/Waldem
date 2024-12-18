@@ -14,7 +14,7 @@ namespace Waldem
     public:
         ~DX12Renderer() override = default;
         void Initialize(Window* window) override;
-        void InitializeImGui();
+        void InitializeUI() override;
         void Draw(Model* model) override;
         void Draw(Mesh* mesh) override;
         void DrawLine(Line line) override;
@@ -42,6 +42,8 @@ namespace Waldem
         IndexBuffer* CreateIndexBuffer(void* data, uint32_t size) override;
         void ClearRenderTarget(RenderTarget* rt) override;
         void ClearDepthStencil(RenderTarget* ds) override;
+        void BeginUI() override;
+        void EndUI() override;
 
     private:
         uint32_t FrameIndex = 0;
@@ -58,7 +60,6 @@ namespace Waldem
         D3D12_RECT ScissorRect = { 0, 0, 800, 600 };
 
         std::pair<DX12CommandList*, bool> WorldCommandList;
-        std::pair<DX12CommandList*, bool> UIGraphicCommandList;
         
         ID3D12DescriptorHeap* RTVHeap;
         ID3D12DescriptorHeap* DSVHeap;

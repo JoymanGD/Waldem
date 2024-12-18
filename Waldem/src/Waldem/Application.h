@@ -2,9 +2,11 @@
 
 #include "Core.h"
 #include "Window.h"
+#include "Layers/ImGuiLayer.h"
+#include "Layers/GameLayer.h"
 #include "Renderer/Renderer.h"
 #include "SceneManagement/SceneManager.h"
-#include "Waldem/LayerStack.h"
+#include "Waldem/Layers/LayerStack.h"
 #include "Waldem/Events/Event.h"
 #include "Waldem/Events/ApplicationEvent.h"
 
@@ -24,8 +26,6 @@ namespace Waldem
 
 		//Singleton
 		static Application* Instance;
-
-		static Renderer& GetRenderer() { return Instance->CurrentRenderer; }
 	private:
 		bool OnWindowClose(WindowCloseEvent& e);
 		
@@ -33,7 +33,8 @@ namespace Waldem
 		Renderer CurrentRenderer;
 		bool IsRunning = true;
 		LayerStack LayerStack;
-        Scene* CurrentScene;
+		ImGuiLayer* UILayer;
+		GameLayer* CurrentGameLayer;
 		
 		std::vector<float> FrameTimes;
 		int FrameCount = 0;

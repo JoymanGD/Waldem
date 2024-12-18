@@ -4,10 +4,10 @@
 
 #include <stdio.h>
 #include "Waldem/Application.h"
-#include "Waldem/Layer.h"
+#include "Waldem/Layers/Layer.h"
 #include "Waldem/Log.h"
 
-#include "Waldem/Input.h"
+#include "Waldem/Input/Input.h"
 #include "Waldem/KeyCodes.h"
 #include "Waldem/MouseButtonCodes.h"
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "Waldem/Input.h"
+#include "Waldem/Input/Input.h"
 
 namespace Waldem
 {

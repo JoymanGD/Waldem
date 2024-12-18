@@ -1,9 +1,7 @@
 #pragma once
 
-#include "Waldem/Renderer/Light.h"
 #include "Waldem/SceneManagement/Scene.h"
 #include "Waldem/World/Camera.h"
-#include "Waldem/Renderer/Shader.h"
 #include "ecs.h"
 #include "Waldem/ECS/Systems/System.h"
 
@@ -18,10 +16,11 @@ namespace Sandbox
     
     class DefaultScene : public Waldem::Scene
     {
-    protected:
-        void Update(Waldem::SceneData* sceneData, float deltaTime) override;
-        void Draw(Waldem::SceneData* sceneData, float deltaTime) override;
-        void Initialize(Waldem::SceneData* sceneData) override;
+    public:
+        void Update(float deltaTime) override;
+        void Draw(float deltaTime) override;
+        void Initialize(Waldem::SceneData* sceneData, InputManager* inputManager) override;
+        void DrawUI(float deltaTime) override;
 
     private:
         ecs::Manager ECSManager;
