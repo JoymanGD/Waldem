@@ -197,11 +197,9 @@ namespace Waldem
         WorldCommandList.first = new DX12CommandList(Device);
         
         Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&WaitFence));
-
-        InitializeImGui();
     }
 
-    void DX12Renderer::InitializeImGui()
+    void DX12Renderer::InitializeUI()
     {
         D3D12_DESCRIPTOR_HEAP_DESC desc = {};
         desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
@@ -209,21 +207,8 @@ namespace Waldem
         desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
         Device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&ImGuiHeap));
-
-        IMGUI_CHECKVERSION();
-        ImGui::CreateContext();
-        ImGuiIO& io = ImGui::GetIO();
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable keyboard controls
-        // io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     // Enable docking
-        // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;   // Enable multi-viewport
-        
-        // Style
-        ImGui::StyleColorsDark();
         
         // Platform/Renderer bindings
-
-        SDL_Window* sdlWindow = (SDL_Window*)CurrentWindow->GetNativeWindow();
-        ImGui_ImplSDL2_InitForD3D(sdlWindow);
         ImGui_ImplDX12_Init(Device, SWAPCHAIN_SIZE, DXGI_FORMAT_R8G8B8A8_UNORM, ImGuiHeap, ImGuiHeap->GetCPUDescriptorHandleForHeapStart(), ImGuiHeap->GetGPUDescriptorHandleForHeapStart());
     }
 
@@ -326,21 +311,11 @@ namespace Waldem
             
             WorldCommandList.second = true;
         }
-
-        ImGui_ImplDX12_NewFrame();
-        ImGui_ImplSDL2_NewFrame();
-        ImGui::NewFrame();
     }
 
     void DX12Renderer::End()
     {
         auto& worldCmd = WorldCommandList.first;
-
-        ImGui::ShowDemoWindow();
-        ImGui::Render();
-        ImDrawData* drawData = ImGui::GetDrawData();
-        worldCmd->SetDescriptorHeaps(1, &ImGuiHeap);
-        ImGui_ImplDX12_RenderDrawData(drawData, (ID3D12GraphicsCommandList*)worldCmd->GetNativeCommandList());
         
         if(WorldCommandList.second)
         {
@@ -414,7 +389,7 @@ namespace Waldem
 
     RootSignature* DX12Renderer::CreateRootSignature(WArray<Resource> resources)
     {
-        return new DX12RootSignature(Device, (DX12CommandList*)WorldCommandList.first, resources);
+        return new DX12RootSignature(Device, WorldCommandList.first, resources);
     }
 
     Texture2D* DX12Renderer::CreateTexture(String name, int width, int height, TextureFormat format, uint8_t* data)
@@ -455,5 +430,22 @@ namespace Waldem
     {
         ID3D12Resource* resource = (ID3D12Resource*)rt->GetPlatformResource();
         WorldCommandList.first->ResourceBarrier(resource, (D3D12_RESOURCE_STATES)before, (D3D12_RESOURCE_STATES)after);
+    }
+
+    void DX12Renderer::BeginUI()
+    {
+        ImGui_ImplDX12_NewFrame();
+        ImGui_ImplSDL2_NewFrame();
+        ImGui::NewFrame();
+    }
+
+    void DX12Renderer::EndUI()
+    {
+        auto& worldCmd = WorldCommandList.first;
+
+        ImGui::Render();
+        ImDrawData* drawData = ImGui::GetDrawData();
+        worldCmd->SetDescriptorHeaps(1, &ImGuiHeap);
+        ImGui_ImplDX12_RenderDrawData(drawData, (ID3D12GraphicsCommandList*)worldCmd->GetNativeCommandList());
     }
 }

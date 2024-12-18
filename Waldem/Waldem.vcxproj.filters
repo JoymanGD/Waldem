@@ -40,6 +40,9 @@
     <Filter Include="src\Waldem\Interfaces">
       <UniqueIdentifier>{E98737B2-55F4-F2AC-1EE8-8A0A8A131515}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Waldem\Layers">
+      <UniqueIdentifier>{555F69A8-C175-673E-0AED-F25F764238C6}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Waldem\Renderer">
       <UniqueIdentifier>{BC89F00B-28EB-CD19-B158-14CC1DB904D9}</UniqueIdentifier>
     </Filter>
@@ -219,11 +222,17 @@
     <ClInclude Include="src\Waldem\KeyCodes.h">
       <Filter>src\Waldem</Filter>
     </ClInclude>
-    <ClInclude Include="src\Waldem\Layer.h">
-      <Filter>src\Waldem</Filter>
+    <ClInclude Include="src\Waldem\Layers\GameLayer.h">
+      <Filter>src\Waldem\Layers</Filter>
     </ClInclude>
-    <ClInclude Include="src\Waldem\LayerStack.h">
-      <Filter>src\Waldem</Filter>
+    <ClInclude Include="src\Waldem\Layers\ImGuiLayer.h">
+      <Filter>src\Waldem\Layers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\Layers\Layer.h">
+      <Filter>src\Waldem\Layers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\Layers\LayerStack.h">
+      <Filter>src\Waldem\Layers</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\Log.h">
       <Filter>src\Waldem</Filter>
@@ -1646,11 +1655,11 @@
     <ClCompile Include="src\Waldem\Import\ModelImporter.cpp">
       <Filter>src\Waldem\Import</Filter>
     </ClCompile>
-    <ClCompile Include="src\Waldem\Layer.cpp">
-      <Filter>src\Waldem</Filter>
+    <ClCompile Include="src\Waldem\Layers\ImGuiLayer.cpp">
+      <Filter>src\Waldem\Layers</Filter>
     </ClCompile>
-    <ClCompile Include="src\Waldem\LayerStack.cpp">
-      <Filter>src\Waldem</Filter>
+    <ClCompile Include="src\Waldem\Layers\LayerStack.cpp">
+      <Filter>src\Waldem\Layers</Filter>
     </ClCompile>
     <ClCompile Include="src\Waldem\Log.cpp">
       <Filter>src\Waldem</Filter>
@@ -1672,9 +1681,6 @@
     </ClCompile>
     <ClCompile Include="src\Waldem\Renderer\Resources\ResourceManager.cpp">
       <Filter>src\Waldem\Renderer\Resources</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Waldem\SceneManagement\Scene.cpp">
-      <Filter>src\Waldem\SceneManagement</Filter>
     </ClCompile>
     <ClCompile Include="src\Waldem\Types\WArray.cpp">
       <Filter>src\Waldem\Types</Filter>

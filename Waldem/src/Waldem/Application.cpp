@@ -1,6 +1,5 @@
 #include <wdpch.h>
 #include "Application.h"
-
 #include "Renderer/Renderer.h"
 #include "Waldem/Log.h"
 #include <numeric>
@@ -20,20 +19,19 @@ namespace Waldem
 		Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
 
 		CurrentRenderer = {};
-
 		CurrentRenderer.Initialize(Window.get());
+		
+		UILayer = new ImGuiLayer();
+		PushOverlay(UILayer);
+
+		CurrentGameLayer = new GameLayer();
+		PushLayer(CurrentGameLayer);
 	}
 	
 	void Application::OpenScene(Scene* scene)
 	{
-		CurrentRenderer.Begin();
-		
-		SceneData sceneData = { &CurrentRenderer, Window.get() };
-		scene->Initialize(&sceneData);
-		
-		CurrentRenderer.End();
-        
-		CurrentScene = scene;
+		SceneData sceneData = { Window.get() };
+		CurrentGameLayer->OpenScene(scene, &sceneData);
 	}
 
 	Application::~Application()
@@ -91,27 +89,30 @@ namespace Waldem
 
 		while (IsRunning)
 		{
+			Window->OnUpdate();
+
 			auto currentFrameTime = std::chrono::high_resolution_clock::now();
 			std::chrono::duration<float> deltaTimeDuration = currentFrameTime - lastFrameTime;
 			float deltaTime = deltaTimeDuration.count();
 			lastFrameTime = currentFrameTime;
 
-			SceneData sceneData = { &CurrentRenderer };
+			Renderer::Begin();
 			
-			CurrentScene->UpdateInternal(&sceneData, deltaTime);
-
-			CurrentRenderer.Begin();
-			CurrentScene->DrawInternal(&sceneData, deltaTime);
-			CurrentRenderer.End();
-			
-			CurrentRenderer.Present();
-
 			for (Layer* layer : LayerStack)
 			{
-				layer->OnUpdate();
+				layer->OnUpdate(deltaTime);
 			}
 
-			Window->OnUpdate();
+			UILayer->Begin();
+			for (Layer* layer : LayerStack)
+			{
+				layer->OnDrawUI(deltaTime);
+			}
+			UILayer->End();
+			
+			Renderer::End();
+			
+			Renderer::Present();
 
 			float FPS = CalculateAverageFPS(deltaTime);
 			Window->SetTitle(std::to_string(FPS).substr(0, 4));

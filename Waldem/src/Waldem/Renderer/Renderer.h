@@ -49,6 +49,9 @@ namespace Waldem
         virtual void ResourceBarrier(RenderTarget* rt, ResourceStates before, ResourceStates after) = 0;
         virtual void ClearRenderTarget(RenderTarget* rt) = 0;
         virtual void ClearDepthStencil(RenderTarget* ds) = 0;
+        virtual void InitializeUI() = 0;
+        virtual void BeginUI() = 0;
+        virtual void EndUI() = 0;
     };
 
     class Renderer
@@ -60,7 +63,7 @@ namespace Waldem
 
         static void Begin();
         static void End();
-        void Present();
+        static void Present();
 
         static void Draw(Mesh* mesh);
         static void Draw(Model* model);
@@ -84,6 +87,9 @@ namespace Waldem
         static void ResourceBarrier(RenderTarget* rt, ResourceStates before, ResourceStates after);
         static void ClearRenderTarget(RenderTarget* rt);
         static void ClearDepthStencil(RenderTarget* ds);
+        static void InitializeUI();
+        static void BeginUI();
+        static void EndUI();
 
         static RendererAPI RAPI;
         inline static Renderer* Instance;

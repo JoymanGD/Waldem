@@ -109,7 +109,7 @@ namespace Waldem
             DeferredRenderingRootSignature = Renderer::CreateRootSignature(deferredRenderingPassResources);
             DeferredRenderingComputeShader = Renderer::LoadComputeShader("DeferredRendering");
             DeferredRenderingPipeline = Renderer::CreateComputePipeline("DeferredLightingPipeline", DeferredRenderingRootSignature, DeferredRenderingComputeShader);
-            Point3 numThreads = sceneData->Renderer->GetNumThreadsPerGroup(DeferredRenderingComputeShader);
+            Point3 numThreads = Renderer::GetNumThreadsPerGroup(DeferredRenderingComputeShader);
             GroupCount = Point3((resolution.x + numThreads.x - 1) / numThreads.x, (resolution.y + numThreads.y - 1) / numThreads.y, 1);
 
             //Post process pass
@@ -134,7 +134,7 @@ namespace Waldem
             QuadDrawPipeline = Renderer::CreateGraphicPipeline("QuadDrawPipeline", { TextureFormat::R8G8B8A8_UNORM }, WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, QuadDrawRootSignature, QuadDrawPixelShader);
         }
 
-        void Update(SceneData* sceneData, float deltaTime) override
+        void Update(float deltaTime) override
         {
             //GBuffer pass
             WArray<FrustumPlane> frustrumPlanes;

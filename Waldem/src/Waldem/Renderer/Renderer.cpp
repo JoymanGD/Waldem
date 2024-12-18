@@ -37,7 +37,7 @@ namespace Waldem
 
     void Renderer::Present()
     {
-        PlatformRenderer->Present();
+        Instance->PlatformRenderer->Present();
     }
 
     Point3 Renderer::GetNumThreadsPerGroup(ComputeShader* computeShader)
@@ -150,5 +150,20 @@ namespace Waldem
     void Renderer::ClearDepthStencil(RenderTarget* ds)
     {
         Instance->PlatformRenderer->ClearDepthStencil(ds);
+    }
+
+    void Renderer::InitializeUI()
+    {
+        Instance->PlatformRenderer->InitializeUI();
+    }
+
+    void Renderer::BeginUI()
+    {
+        Instance->PlatformRenderer->BeginUI();
+    }
+
+    void Renderer::EndUI()
+    {
+        Instance->PlatformRenderer->EndUI();
     }
 }

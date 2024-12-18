@@ -63,7 +63,7 @@ namespace Waldem
             DefaultPipeline = Renderer::CreateGraphicPipeline("ForwardRenderingPipeline", { TextureFormat::R8G8B8A8_UNORM }, WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, DefaultRootSignature, DefaultPixelShader);
         }
 
-        void Update(SceneData* sceneData, float deltaTime) override
+        void Update(float deltaTime) override
         {
             WArray<LightShaderData> LightDatas;
             

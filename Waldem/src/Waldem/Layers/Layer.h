@@ -8,16 +8,15 @@ namespace Waldem
     class WALDEM_API Layer
     {
     public:
-        Layer(const String& name = "Layer");
-        virtual ~Layer();
-
+        Layer(const String& name = "Layer") { DebugName = name; }
+        virtual ~Layer() = default;
         virtual void Begin() {}
         virtual void End() {}
         virtual void OnAttach() {}
         virtual void OnDetach() {}
-        virtual void OnUpdate() {}
+        virtual void OnUpdate(float deltaTime) {}
+        virtual void OnDrawUI(float deltaTime) {}
         virtual void OnEvent(Event& event) {}
-        virtual void OnUIRender() {}
 
         inline const String& GetName() const { return DebugName; }
     protected:

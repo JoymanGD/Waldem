@@ -30,8 +30,9 @@ namespace Waldem
         void SetTitle(String title) override;
         bool IsVSync() const override { return Data.VSync; }
 
-        void* GetNativeWindow() const override { return Window; }
         HWND GetWindowsHandle() const override;
+        
+        SDL_Window* NativeWindow;
 
     private:
         void Init(const WindowProps& props);
@@ -40,6 +41,5 @@ namespace Waldem
         void ProcessEvents();
 
         WindowData Data;
-        SDL_Window* Window;
     };
 }

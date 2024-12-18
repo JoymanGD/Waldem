@@ -1,6 +1,6 @@
 #pragma once
 #include "System.h"
-#include "Waldem/Input.h"
+#include "Waldem/Input/Input.h"
 #include "Waldem/MouseButtonCodes.h"
 #include "Waldem/Renderer/Light.h"
 #include "Waldem/Renderer/Model/Transform.h"
@@ -83,7 +83,7 @@ namespace Waldem
             CacheFrustrumCorners();
         }
 
-        void Update(SceneData* sceneData, float deltaTime) override
+        void Update(float deltaTime) override
         {
             for (auto [entity, light, transform] : ECSManager->EntitiesWith<Light, Transform>())
             {

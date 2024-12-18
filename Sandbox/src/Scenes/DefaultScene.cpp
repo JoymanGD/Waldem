@@ -11,9 +11,10 @@
 #include "Waldem/ECS/Systems/ShadowmapRenderingSystem.h"
 #include "Waldem/Import/ModelImporter.h"
 #include "Waldem/World/Camera.h"
+#include "imgui.h"
 namespace Sandbox
 {
-	void DefaultScene::Initialize(Waldem::SceneData* sceneData)
+	void DefaultScene::Initialize(Waldem::SceneData* sceneData, InputManager* inputManager)
 	{
 		Waldem::ModelImporter importer;
 
@@ -66,19 +67,24 @@ namespace Sandbox
 		}
 	}
 
-	void DefaultScene::Update(Waldem::SceneData* sceneData, float deltaTime)
+	void DefaultScene::Update(float deltaTime)
 	{
 		for (Waldem::ISystem* system : UpdateSystems)
 		{
-			system->Update(sceneData, deltaTime);
+			system->Update(deltaTime);
 		}
 	}
 
-	void DefaultScene::Draw(Waldem::SceneData* sceneData, float deltaTime)
+	void DefaultScene::Draw(float deltaTime)
 	{
 		for (Waldem::ISystem* system : DrawSystems)
 		{
-			system->Update(sceneData, deltaTime);
+			system->Update(deltaTime);
 		}
+	}
+
+	void DefaultScene::DrawUI(float deltaTime)
+	{
+		ImGui::ShowDemoWindow();
 	}
 }

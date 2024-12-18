@@ -107,7 +107,7 @@ namespace Waldem
                     format = TextureFormat::R8G8B8A8_UNORM;
                 }
 
-                Texture2D* texture = Application::GetRenderer().CreateTexture("DiffuseTexture", width, height, format, image_data);
+                Texture2D* texture = Renderer::CreateTexture("DiffuseTexture", width, height, format, image_data);
                 Material mat(texture);
 
                 uint32_t vertexBufferSize = vertexData.size() * sizeof(Vertex);

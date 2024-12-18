@@ -13,7 +13,16 @@ namespace Waldem
 {
     Window* Window::Create(const WindowProps& props)
     {
-    	return new WindowsWindow(props);
+    	Instance = new WindowsWindow(props);
+        
+        return Instance;
+    }
+
+    void* Window::GetNativeWindow()
+    {
+        auto windowsWindow = dynamic_cast<WindowsWindow*>(Instance);
+        
+        return windowsWindow->NativeWindow;
     }
     
     WindowsWindow::WindowsWindow(const WindowProps& props)
@@ -32,7 +41,7 @@ namespace Waldem
         
         SDL_SysWMinfo wmInfo;
         SDL_VERSION(&wmInfo.version)
-        if (SDL_GetWindowWMInfo(Window, &wmInfo))
+        if (SDL_GetWindowWMInfo(NativeWindow, &wmInfo))
         {
             hwnd = wmInfo.info.win.window;
         }
@@ -57,12 +66,12 @@ namespace Waldem
             return;
         }
 
-        Window = SDL_CreateWindow(Data.Title.c_str(),
+        NativeWindow = SDL_CreateWindow(Data.Title.c_str(),
                                     SDL_WINDOWPOS_CENTERED,
                                     SDL_WINDOWPOS_CENTERED,
                                     Data.Width, Data.Height,
                                     SDL_WINDOW_RESIZABLE);
-        if (!Window)
+        if (!NativeWindow)
         {
             WD_CORE_ERROR("Window could not be created! SDL_Error: {0}", SDL_GetError());
         }
@@ -70,7 +79,7 @@ namespace Waldem
 
     void WindowsWindow::Shutdown()
     {
-        SDL_DestroyWindow(Window);
+        SDL_DestroyWindow(NativeWindow);
         SDL_Quit();
     }
 
@@ -103,7 +112,7 @@ namespace Waldem
 
     void WindowsWindow::SetTitle(String title)
     {
-        SDL_SetWindowTitle(Window, title.c_str());
+        SDL_SetWindowTitle(NativeWindow, title.c_str());
     }
 
     void WindowsWindow::OnUpdate()

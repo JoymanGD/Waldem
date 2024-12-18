@@ -181,11 +181,14 @@
     <ClInclude Include="src\Waldem\Events\KeyEvent.h" />
     <ClInclude Include="src\Waldem\Events\MouseEvent.h" />
     <ClInclude Include="src\Waldem\Import\ModelImporter.h" />
-    <ClInclude Include="src\Waldem\Input.h" />
+    <ClInclude Include="src\Waldem\Input\Input.h" />
+    <ClInclude Include="src\Waldem\Input\InputManager.h" />
     <ClInclude Include="src\Waldem\Interfaces\Importer.h" />
     <ClInclude Include="src\Waldem\KeyCodes.h" />
-    <ClInclude Include="src\Waldem\Layer.h" />
-    <ClInclude Include="src\Waldem\LayerStack.h" />
+    <ClInclude Include="src\Waldem\Layers\GameLayer.h" />
+    <ClInclude Include="src\Waldem\Layers\ImGuiLayer.h" />
+    <ClInclude Include="src\Waldem\Layers\Layer.h" />
+    <ClInclude Include="src\Waldem\Layers\LayerStack.h" />
     <ClInclude Include="src\Waldem\Log.h" />
     <ClInclude Include="src\Waldem\MouseButtonCodes.h" />
     <ClInclude Include="src\Waldem\Renderer\BoundingBox.h" />
@@ -661,8 +664,8 @@
     <ClCompile Include="src\Platform\OS\Windows\WindowsWindow.cpp" />
     <ClCompile Include="src\Waldem\Application.cpp" />
     <ClCompile Include="src\Waldem\Import\ModelImporter.cpp" />
-    <ClCompile Include="src\Waldem\Layer.cpp" />
-    <ClCompile Include="src\Waldem\LayerStack.cpp" />
+    <ClCompile Include="src\Waldem\Input\InputManager.cpp" />
+    <ClCompile Include="src\Waldem\Layers\LayerStack.cpp" />
     <ClCompile Include="src\Waldem\Log.cpp" />
     <ClCompile Include="src\Waldem\Renderer\Buffer.cpp" />
     <ClCompile Include="src\Waldem\Renderer\Interfaces\IGraphicObject.cpp" />
@@ -670,7 +673,6 @@
     <ClCompile Include="src\Waldem\Renderer\Model\Transform.cpp" />
     <ClCompile Include="src\Waldem\Renderer\Renderer.cpp" />
     <ClCompile Include="src\Waldem\Renderer\Resources\ResourceManager.cpp" />
-    <ClCompile Include="src\Waldem\SceneManagement\Scene.cpp" />
     <ClCompile Include="src\Waldem\Types\WArray.cpp" />
     <ClCompile Include="src\Waldem\World\Camera.cpp" />
     <ClCompile Include="src\wdpch.cpp">
