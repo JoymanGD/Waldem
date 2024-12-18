@@ -67,7 +67,6 @@ namespace Waldem
 			}
 		}
 	}
-
 	
 	float Application::CalculateAverageFPS(float deltaTime)
 	{
