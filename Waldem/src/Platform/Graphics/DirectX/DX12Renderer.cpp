@@ -224,10 +224,7 @@ namespace Waldem
 
         SDL_Window* sdlWindow = (SDL_Window*)CurrentWindow->GetNativeWindow();
         ImGui_ImplSDL2_InitForD3D(sdlWindow);
-        ImGui_ImplDX12_Init(Device, SWAPCHAIN_SIZE,
-            DXGI_FORMAT_R8G8B8A8_UNORM, ImGuiHeap,
-            ImGuiHeap->GetCPUDescriptorHandleForHeapStart(),
-            ImGuiHeap->GetGPUDescriptorHandleForHeapStart());
+        ImGui_ImplDX12_Init(Device, SWAPCHAIN_SIZE, DXGI_FORMAT_R8G8B8A8_UNORM, ImGuiHeap, ImGuiHeap->GetCPUDescriptorHandleForHeapStart(), ImGuiHeap->GetGPUDescriptorHandleForHeapStart());
     }
 
     void DX12Renderer::Draw(Model* model)
