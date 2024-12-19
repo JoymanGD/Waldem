@@ -14,7 +14,7 @@
 #include "imgui.h"
 namespace Sandbox
 {
-	void DefaultScene::Initialize(Waldem::SceneData* sceneData, InputManager* inputManager)
+	void DefaultScene::Initialize(Waldem::SceneData* sceneData, Waldem::InputManager* inputManager)
 	{
 		Waldem::ModelImporter importer;
 
