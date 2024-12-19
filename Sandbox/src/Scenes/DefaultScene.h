@@ -4,6 +4,7 @@
 #include "Waldem/World/Camera.h"
 #include "ecs.h"
 #include "Waldem/ECS/Systems/System.h"
+#include "Waldem/Input/InputManager.h"
 
 namespace Sandbox
 {
@@ -19,7 +20,7 @@ namespace Sandbox
     public:
         void Update(float deltaTime) override;
         void Draw(float deltaTime) override;
-        void Initialize(Waldem::SceneData* sceneData, InputManager* inputManager) override;
+        void Initialize(Waldem::SceneData* sceneData, Waldem::InputManager* inputManager) override;
         void DrawUI(float deltaTime) override;
 
     private:

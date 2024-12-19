@@ -1,4 +1,5 @@
 #pragma once
+#include "Waldem/Input/InputManager.h"
 #include "Waldem/Layers/Layer.h"
 #include "Waldem/SceneManagement/Scene.h"
 #include "Waldem/Renderer/Renderer.h"
@@ -33,7 +34,7 @@ namespace Waldem
         void OpenScene(Scene* scene, SceneData* sceneData)
         {
 		    Renderer::Begin();
-            scene->Initialize(sceneData);
+            scene->Initialize(sceneData, &CurrentInputManager);
 		    Renderer::End();
             
             CurrentScene = scene;

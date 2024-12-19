@@ -1,6 +1,7 @@
 #pragma once
-#include "glm/vec4.hpp"
-#include "Waldem/Renderer/Renderer.h"
+
+#include "Waldem/Input/InputManager.h"
+#include "Waldem/Window.h"
 
 namespace Waldem
 {
