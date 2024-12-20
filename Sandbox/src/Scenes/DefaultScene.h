@@ -20,11 +20,10 @@ namespace Sandbox
     public:
         void Update(float deltaTime) override;
         void Draw(float deltaTime) override;
-        void Initialize(Waldem::SceneData* sceneData, Waldem::InputManager* inputManager) override;
+        void Initialize(Waldem::SceneData* sceneData, Waldem::InputManager* inputManager, ecs::Manager* ecsManager) override;
         void DrawUI(float deltaTime) override;
 
     private:
-        ecs::Manager ECSManager;
         Waldem::WArray<Waldem::ISystem*> UpdateSystems;
         Waldem::WArray<Waldem::ISystem*> DrawSystems;
     };

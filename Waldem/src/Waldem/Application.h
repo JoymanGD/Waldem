@@ -31,7 +31,7 @@ namespace Waldem
 	private:
 		bool OnWindowClose(WindowCloseEvent& e);
 		
-		std::unique_ptr<Window> Window;
+		Window* Window;
 		Renderer CurrentRenderer;
 		bool IsRunning = true;
 		LayerStack LayerStack;

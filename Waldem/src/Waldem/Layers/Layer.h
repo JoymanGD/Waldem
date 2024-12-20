@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Waldem/Core.h"
+#include "Waldem/Window.h"
 #include "Waldem/Events/Event.h"
 
 namespace Waldem
@@ -8,7 +9,7 @@ namespace Waldem
     class WALDEM_API Layer
     {
     public:
-        Layer(const String& name = "Layer") { DebugName = name; }
+        Layer(const String& name = "Layer", Window* window = nullptr) { DebugName = name; }
         virtual ~Layer() = default;
         virtual void Begin() {}
         virtual void End() {}
