@@ -59,6 +59,7 @@ namespace Waldem
 				        {
 				            ImGui::MenuItem("Hello");
 				            ImGui::MenuItem("Sailor");
+				        	ImGui::EndMenu();
 				        }
 				        ImGui::EndMenu();
 				    }
@@ -110,6 +111,7 @@ namespace Waldem
 				    if (ImGui::BeginMenu("Disabled", false)) // Disabled
 				    {
 				        IM_ASSERT(0);
+				        ImGui::EndMenu();
 				    }
 				    if (ImGui::MenuItem("Checked", NULL, true)) {}
 				    ImGui::Separator();
