@@ -18,7 +18,7 @@ namespace Waldem
     public:
         ForwardRenderingSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
         
-        void Initialize(SceneData* sceneData) override
+        void Initialize(SceneData* sceneData, InputManager* inputManager) override
         {
             RenderTarget* testShadowMap = nullptr;
             WArray<LightShaderData> LightDatas;
