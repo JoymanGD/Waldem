@@ -85,25 +85,66 @@ namespace Waldem
 
     void WindowsWindow::ProcessEvents()
     {
-        SDL_Event event;
-        while (SDL_PollEvent(&event))
+        SDL_Event sdlEvent;
+        while (SDL_PollEvent(&sdlEvent))
         {
-            ImGui_ImplSDL2_ProcessEvent(&event);
+            ImGui_ImplSDL2_ProcessEvent(&sdlEvent);
             
-            switch (event.type)
+            switch (sdlEvent.type)
             {
             case SDL_QUIT:
                 {
-                    WindowCloseEvent closeEvent;
-                    Data.EventCallback(closeEvent);
+                    WindowCloseEvent event = {};
+                    Data.EventCallback(event);
                     break;
                 }
             case SDL_KEYDOWN:
-                WD_CORE_INFO("Key Pressed: {0}", SDL_GetKeyName(event.key.keysym.sym));
-                break;
+                {
+                    if(sdlEvent.key.state == 1 && sdlEvent.key.repeat == 0)
+                    {
+                        KeyPressedEvent event(sdlEvent.key.keysym.sym, 0);
+                        Data.EventCallback(event);
+                        WD_CORE_INFO("Key Pressed: {0}", SDL_GetKeyName(sdlEvent.key.keysym.sym), sdlEvent.key.repeat);
+                    }
+                    break;
+                }
+            case SDL_KEYUP:
+                {
+                    if(sdlEvent.key.state == 0 && sdlEvent.key.repeat == 0)
+                    {
+                        KeyReleasedEvent event(sdlEvent.key.keysym.sym);
+                        Data.EventCallback(event);
+                        WD_CORE_INFO("Key Released: {0}", SDL_GetKeyName(sdlEvent.key.keysym.sym));
+                    }
+                    
+                    break;
+                }
             case SDL_MOUSEBUTTONDOWN:
-                WD_CORE_INFO("Mouse Button Pressed: {0}", (int)event.button.button);
-                break;
+                {
+                    MouseButtonPressedEvent event(sdlEvent.button.button);
+                    Data.EventCallback(event);
+                    WD_CORE_INFO("Mouse Button Pressed: {0}", (int)sdlEvent.button.button);
+                    break;
+                }
+            case SDL_MOUSEBUTTONUP:
+                {
+                    MouseButtonReleasedEvent event(sdlEvent.button.button);
+                    Data.EventCallback(event);
+                    WD_CORE_INFO("Mouse Button Released: {0}", (int)sdlEvent.button.button);
+                    break;
+                }
+            case SDL_MOUSEMOTION:
+                {
+                    MouseMovedEvent event(sdlEvent.motion.x, sdlEvent.motion.y);
+                    Data.EventCallback(event);
+                    break;
+                }
+            case SDL_MOUSEWHEEL:
+                {
+                    MouseScrolledEvent event(sdlEvent.wheel.x, sdlEvent.wheel.y);
+                    Data.EventCallback(event);
+                    break;
+                }
             default:
                 break;
             }

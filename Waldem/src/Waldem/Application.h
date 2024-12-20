@@ -26,6 +26,8 @@ namespace Waldem
 
 		//Singleton
 		static Application* Instance;
+		
+		inline static float DeltaTime;
 	private:
 		bool OnWindowClose(WindowCloseEvent& e);
 		
@@ -35,7 +37,7 @@ namespace Waldem
 		LayerStack LayerStack;
 		ImGuiLayer* UILayer;
 		GameLayer* CurrentGameLayer;
-		
+
 		std::vector<float> FrameTimes;
 		int FrameCount = 0;
 		const int MaxFrames = 100;

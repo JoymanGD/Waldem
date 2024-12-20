@@ -72,6 +72,13 @@ namespace Waldem
             return Planes;
         }
     };
+
+    struct WALDEM_API CameraSpeedParams
+    {
+        float ModificationStep = 0.1f;
+        float MinSpeedModificator = 0.01f;
+        float MaxSpeedModificator = 10.0f;
+    };
     
     struct WALDEM_API Camera
     {
@@ -85,6 +92,8 @@ namespace Waldem
         
         float MovementSpeed = 1.0f;
         float RotationSpeed = 1.0f;
+        float SpeedModificator = 1.0f;
+        CameraSpeedParams SpeedParams;
         Frustrum Frustrum;
         
     private:

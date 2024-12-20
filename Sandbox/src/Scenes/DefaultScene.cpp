@@ -36,7 +36,7 @@ namespace Sandbox
 		auto cameraEntity = ECSManager.CreateEntity();
 		float aspectRatio = sceneData->Window->GetWidth() / sceneData->Window->GetHeight();
 		cameraEntity.Add<Waldem::Transform>(Waldem::Vector3(0, 0, 0));
-		cameraEntity.Add<Waldem::Camera>(70.0f, aspectRatio, 0.001f, 1000.0f, 100.0f, 30.0f);
+		cameraEntity.Add<Waldem::Camera>(70.0f, aspectRatio, 0.001f, 1000.0f, 30.0f, 30.0f);
 		cameraEntity.Add<Waldem::MainCamera>();
 
 		auto dirLightEntity = ECSManager.CreateEntity();
@@ -58,12 +58,12 @@ namespace Sandbox
 		
 		for (Waldem::ISystem* system : UpdateSystems)
 		{
-			system->Initialize(sceneData);
+			system->Initialize(sceneData, inputManager);
 		}
 		
 		for (Waldem::ISystem* system : DrawSystems)
 		{
-			system->Initialize(sceneData); 
+			system->Initialize(sceneData, inputManager);
 		}
 	}
 
@@ -85,6 +85,5 @@ namespace Sandbox
 
 	void DefaultScene::DrawUI(float deltaTime)
 	{
-		ImGui::ShowDemoWindow();
 	}
 }

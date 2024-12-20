@@ -10,7 +10,7 @@ namespace Waldem
         ecs::Manager* ECSManager = nullptr;
     public:
         ISystem(ecs::Manager* ECSManager) : ECSManager(ECSManager) {}
-        virtual void Initialize(SceneData* sceneData) = 0;
+        virtual void Initialize(SceneData* sceneData, InputManager* inputManager) = 0;
         virtual void Update(float deltaTime) = 0;
     };
 }

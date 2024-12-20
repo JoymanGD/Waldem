@@ -93,20 +93,20 @@ namespace Waldem
 
 			auto currentFrameTime = std::chrono::high_resolution_clock::now();
 			std::chrono::duration<float> deltaTimeDuration = currentFrameTime - lastFrameTime;
-			float deltaTime = deltaTimeDuration.count();
+			DeltaTime = deltaTimeDuration.count();
 			lastFrameTime = currentFrameTime;
 
 			Renderer::Begin();
 			
 			for (Layer* layer : LayerStack)
 			{
-				layer->OnUpdate(deltaTime);
+				layer->OnUpdate(DeltaTime);
 			}
 
 			UILayer->Begin();
 			for (Layer* layer : LayerStack)
 			{
-				layer->OnDrawUI(deltaTime);
+				layer->OnDrawUI(DeltaTime);
 			}
 			UILayer->End();
 			
@@ -114,7 +114,7 @@ namespace Waldem
 			
 			Renderer::Present();
 
-			float FPS = CalculateAverageFPS(deltaTime);
+			float FPS = CalculateAverageFPS(DeltaTime);
 			Window->SetTitle(std::to_string(FPS).substr(0, 4));
 		}
 	}

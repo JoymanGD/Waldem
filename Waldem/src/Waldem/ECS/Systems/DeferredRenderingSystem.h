@@ -46,7 +46,7 @@ namespace Waldem
     public:
         DeferredRenderingSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
         
-        void Initialize(SceneData* sceneData) override
+        void Initialize(SceneData* sceneData, InputManager* inputManager) override
         {
             Vector2 resolution = Vector2(sceneData->Window->GetWidth(), sceneData->Window->GetHeight());
             

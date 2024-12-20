@@ -16,7 +16,7 @@ namespace Waldem
     public:
         ShadowmapRenderingSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
         
-        void Initialize(SceneData* sceneData) override
+        void Initialize(SceneData* sceneData, InputManager* inputManager) override
         {
             WArray<Matrix4> worldTransforms;
             for (auto [entity, model, transform] : ECSManager->EntitiesWith<ModelComponent, Transform>())

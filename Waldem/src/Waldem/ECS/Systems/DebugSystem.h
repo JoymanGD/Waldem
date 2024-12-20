@@ -13,6 +13,9 @@ namespace Waldem
         Vector3 LightTargetDirection = { 0, -1, 0 };
         Matrix4 CachedViewProjMatrix;
         Vector3 frustumCorners[8];
+
+        bool IsRotatingLight = false;
+        Vector2 MousePos = { 0, 0 };
         
     public:
         DebugSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
@@ -78,9 +81,19 @@ namespace Waldem
             Renderer::DrawLines(lines);
         }
         
-        void Initialize(SceneData* sceneData) override
+        void Initialize(SceneData* sceneData, InputManager* inputManager) override
         {
             CacheFrustrumCorners();
+
+            inputManager->SubscribeToMouseButtonEvent(WD_MOUSE_BUTTON_RIGHT, [&](bool isPressed)
+            {
+                IsRotatingLight = isPressed;
+            });
+
+            inputManager->SubscribeToMouseMoveEvent([&](Vector2 mousePos)
+            {
+                MousePos = mousePos;
+            });
         }
 
         void Update(float deltaTime) override
@@ -98,16 +111,14 @@ namespace Waldem
                     
                     static float lastMouseX = 0;
                     static float lastMouseY = 0;
-                
-                    auto [mouseX, mouseY] = Input::GetMousePos();
 
-                    if (Input::IsMouseButtonPressed(WD_MOUSE_BUTTON_RIGHT))
+                    if (IsRotatingLight)
                     {
                         cameraRight.y = 0;
                         cameraUp.y = 0;
                     
-                        float deltaX = (mouseX - lastMouseX) * deltaTime;
-                        float deltaY = (mouseY - lastMouseY) * deltaTime;
+                        float deltaX = (MousePos.x - lastMouseX) * deltaTime;
+                        float deltaY = (MousePos.y - lastMouseY) * deltaTime;
 
                         Matrix4 rotationMatrix = rotate(Matrix4(1.0f), deltaX, cameraUp) * rotate(Matrix4(1.0f), deltaY, cameraRight);
                         LightTargetDirection = normalize(Vector3(rotationMatrix * Vector4(LightTargetDirection, 0.0f)));
@@ -115,8 +126,8 @@ namespace Waldem
                         transform.LookAt(transform.GetPosition() + LightTargetDirection);
                     }
                 
-                    lastMouseX = mouseX;
-                    lastMouseY = mouseY;
+                    lastMouseX = MousePos.x;
+                    lastMouseY = MousePos.y;
                 }
             }
 
