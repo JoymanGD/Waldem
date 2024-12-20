@@ -12,7 +12,7 @@ namespace Waldem
     class WALDEM_API ImGuiLayer : public Layer
     {
     public:
-        ImGuiLayer() : Layer("ImGuiLayer") {}
+        ImGuiLayer(Window* window) : Layer("ImGuiLayer", window) {}
         
         void Begin() override
         {

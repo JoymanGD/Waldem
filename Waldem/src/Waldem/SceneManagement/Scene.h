@@ -2,6 +2,7 @@
 
 #include "Waldem/Input/InputManager.h"
 #include "Waldem/Window.h"
+#include "ecs.h"
 
 namespace Waldem
 {
@@ -15,7 +16,7 @@ namespace Waldem
     public:
         Scene() {}
         virtual ~Scene() = default;
-        virtual void Initialize(SceneData* sceneData, InputManager* inputManager) = 0;
+        virtual void Initialize(SceneData* sceneData, InputManager* inputManager, ecs::Manager* ecsManager) = 0;
         virtual void Draw(float deltaTime) = 0;
         virtual void Update(float deltaTime) = 0;
         virtual void DrawUI(float deltaTime) = 0;

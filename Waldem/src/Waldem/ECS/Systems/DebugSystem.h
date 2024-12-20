@@ -2,6 +2,7 @@
 #include "System.h"
 #include "Waldem/Input/Input.h"
 #include "Waldem/MouseButtonCodes.h"
+#include "Waldem/ECS/Components/MainCamera.h"
 #include "Waldem/Renderer/Light.h"
 #include "Waldem/Renderer/Model/Transform.h"
 

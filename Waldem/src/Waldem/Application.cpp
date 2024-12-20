@@ -15,22 +15,22 @@ namespace Waldem
 	{
 		WD_CORE_ASSERT(!Instance, "Application already exists!")
 		Instance = this;
-		Window = std::unique_ptr<Waldem::Window>(Window::Create());
+		Window = Window::Create();
 		Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
 
 		CurrentRenderer = {};
-		CurrentRenderer.Initialize(Window.get());
+		CurrentRenderer.Initialize(Window);
 		
-		UILayer = new ImGuiLayer();
+		UILayer = new ImGuiLayer(Window);
 		PushOverlay(UILayer);
 
-		CurrentGameLayer = new GameLayer();
+		CurrentGameLayer = new GameLayer(Window);
 		PushLayer(CurrentGameLayer);
 	}
 	
 	void Application::OpenScene(Scene* scene)
 	{
-		SceneData sceneData = { Window.get() };
+		SceneData sceneData = { Window };
 		CurrentGameLayer->OpenScene(scene, &sceneData);
 	}
 
