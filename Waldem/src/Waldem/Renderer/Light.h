@@ -27,7 +27,7 @@ namespace Waldem
             Intensity = lightData.Intensity;
             Type = lightData.Type;
             Range = lightData.Range;
-            World = transform.GetMatrix();
+            World = transform.Matrix;
             View = transform.Inverse();
             Projection = lightData.Projection;
         }

@@ -37,6 +37,9 @@
     <Filter Include="src\Waldem\Import">
       <UniqueIdentifier>{A0463EA2-0C5D-3C38-55D4-C759C1290DC0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Waldem\Input">
+      <UniqueIdentifier>{D5BD383B-C1B6-578D-EAE8-3C12D6403799}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Waldem\Interfaces">
       <UniqueIdentifier>{E98737B2-55F4-F2AC-1EE8-8A0A8A131515}</UniqueIdentifier>
     </Filter>
@@ -70,23 +73,8 @@
     <Filter Include="vendor">
       <UniqueIdentifier>{B3738122-9F15-ACF8-88D0-BF4C74113349}</UniqueIdentifier>
     </Filter>
-    <Filter Include="vendor\ImGui">
-      <UniqueIdentifier>{1DA38CEE-0906-1C93-B28B-54499ECDE715}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="vendor\ImGui\backends">
-      <UniqueIdentifier>{E7ED3B29-535A-F723-1C4E-8F818879198C}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="vendor\ImGui\misc">
-      <UniqueIdentifier>{18302066-8446-1EFC-CDBD-A91D3913EF83}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="vendor\ImGui\misc\cpp">
-      <UniqueIdentifier>{EAF585DC-5662-41D7-1F56-D9348B81633F}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="vendor\ImGui\misc\fonts">
-      <UniqueIdentifier>{71DC1016-DD13-59AD-E61D-BDD052D47FA6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="vendor\ImGui\misc\single_file">
-      <UniqueIdentifier>{08DD8AEE-74F5-7118-3DA2-01B2A97906B2}</UniqueIdentifier>
+    <Filter Include="vendor\ImGuizmo">
+      <UniqueIdentifier>{73BF7F4C-DF4A-ED10-E85B-700554664911}</UniqueIdentifier>
     </Filter>
     <Filter Include="vendor\glm">
       <UniqueIdentifier>{829FC5A8-6E57-07F6-D75E-E051C335A2E6}</UniqueIdentifier>
@@ -105,6 +93,24 @@
     </Filter>
     <Filter Include="vendor\glm\glm\gtx">
       <UniqueIdentifier>{B3A6A76B-9F8A-68C1-08EB-6214F4ED5243}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vendor\imgui">
+      <UniqueIdentifier>{5D3BD0F0-499E-5F95-F223-984BDE652B18}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vendor\imgui\backends">
+      <UniqueIdentifier>{27CEAEAF-933A-6AAA-5C2E-0208C8598C12}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vendor\imgui\misc">
+      <UniqueIdentifier>{58F0AC6F-C406-AB05-0D7E-362779D37B8D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vendor\imgui\misc\cpp">
+      <UniqueIdentifier>{2AD6F862-9642-B45D-5F36-4CBBCB61D6C5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vendor\imgui\misc\fonts">
+      <UniqueIdentifier>{B1CCBC04-1D04-059C-260E-69BF92C42B95}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vendor\imgui\misc\single_file">
+      <UniqueIdentifier>{48FDF9C8-B415-E1F2-7DC2-708CE999758C}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -174,10 +180,16 @@
     <ClInclude Include="src\Waldem\ECS\Components\ModelComponent.h">
       <Filter>src\Waldem\ECS\Components</Filter>
     </ClInclude>
+    <ClInclude Include="src\Waldem\ECS\Components\Selected.h">
+      <Filter>src\Waldem\ECS\Components</Filter>
+    </ClInclude>
     <ClInclude Include="src\Waldem\ECS\Systems\DebugSystem.h">
       <Filter>src\Waldem\ECS\Systems</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\ECS\Systems\DeferredRenderingSystem.h">
+      <Filter>src\Waldem\ECS\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\ECS\Systems\EditorTransformsManipulationSystem.h">
       <Filter>src\Waldem\ECS\Systems</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\ECS\Systems\ForwardRenderingSystem.h">
@@ -213,8 +225,11 @@
     <ClInclude Include="src\Waldem\Import\ModelImporter.h">
       <Filter>src\Waldem\Import</Filter>
     </ClInclude>
-    <ClInclude Include="src\Waldem\Input.h">
-      <Filter>src\Waldem</Filter>
+    <ClInclude Include="src\Waldem\Input\Input.h">
+      <Filter>src\Waldem\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\Input\InputManager.h">
+      <Filter>src\Waldem\Input</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\Interfaces\Importer.h">
       <Filter>src\Waldem\Interfaces</Filter>
@@ -333,35 +348,23 @@
     <ClInclude Include="src\wdpch.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\ImGui\backends\imgui_impl_dx12.h">
-      <Filter>vendor\ImGui\backends</Filter>
+    <ClInclude Include="vendor\ImGuizmo\GraphEditor.h">
+      <Filter>vendor\ImGuizmo</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\ImGui\backends\imgui_impl_sdl2.h">
-      <Filter>vendor\ImGui\backends</Filter>
+    <ClInclude Include="vendor\ImGuizmo\ImCurveEdit.h">
+      <Filter>vendor\ImGuizmo</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\ImGui\imconfig.h">
-      <Filter>vendor\ImGui</Filter>
+    <ClInclude Include="vendor\ImGuizmo\ImGradient.h">
+      <Filter>vendor\ImGuizmo</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\ImGui\imgui.h">
-      <Filter>vendor\ImGui</Filter>
+    <ClInclude Include="vendor\ImGuizmo\ImGuizmo.h">
+      <Filter>vendor\ImGuizmo</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\ImGui\imgui_internal.h">
-      <Filter>vendor\ImGui</Filter>
+    <ClInclude Include="vendor\ImGuizmo\ImSequencer.h">
+      <Filter>vendor\ImGuizmo</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\ImGui\imstb_rectpack.h">
-      <Filter>vendor\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="vendor\ImGui\imstb_textedit.h">
-      <Filter>vendor\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="vendor\ImGui\imstb_truetype.h">
-      <Filter>vendor\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="vendor\ImGui\misc\cpp\imgui_stdlib.h">
-      <Filter>vendor\ImGui\misc\cpp</Filter>
-    </ClInclude>
-    <ClInclude Include="vendor\ImGui\misc\single_file\imgui_single_file.h">
-      <Filter>vendor\ImGui\misc\single_file</Filter>
+    <ClInclude Include="vendor\ImGuizmo\ImZoomSlider.h">
+      <Filter>vendor\ImGuizmo</Filter>
     </ClInclude>
     <ClInclude Include="vendor\glm\glm\common.hpp">
       <Filter>vendor\glm\glm</Filter>
@@ -1611,6 +1614,36 @@
     <ClInclude Include="vendor\glm\glm\vector_relational.hpp">
       <Filter>vendor\glm\glm</Filter>
     </ClInclude>
+    <ClInclude Include="vendor\imgui\backends\imgui_impl_dx12.h">
+      <Filter>vendor\imgui\backends</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\imgui\backends\imgui_impl_sdl2.h">
+      <Filter>vendor\imgui\backends</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\imgui\imconfig.h">
+      <Filter>vendor\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\imgui\imgui.h">
+      <Filter>vendor\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\imgui\imgui_internal.h">
+      <Filter>vendor\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\imgui\imstb_rectpack.h">
+      <Filter>vendor\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\imgui\imstb_textedit.h">
+      <Filter>vendor\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\imgui\imstb_truetype.h">
+      <Filter>vendor\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\imgui\misc\cpp\imgui_stdlib.h">
+      <Filter>vendor\imgui\misc\cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\imgui\misc\single_file\imgui_single_file.h">
+      <Filter>vendor\imgui\misc\single_file</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Platform\Graphics\DirectX\DX12Buffer.cpp">
@@ -1655,8 +1688,8 @@
     <ClCompile Include="src\Waldem\Import\ModelImporter.cpp">
       <Filter>src\Waldem\Import</Filter>
     </ClCompile>
-    <ClCompile Include="src\Waldem\Layers\ImGuiLayer.cpp">
-      <Filter>src\Waldem\Layers</Filter>
+    <ClCompile Include="src\Waldem\Input\InputManager.cpp">
+      <Filter>src\Waldem\Input</Filter>
     </ClCompile>
     <ClCompile Include="src\Waldem\Layers\LayerStack.cpp">
       <Filter>src\Waldem\Layers</Filter>
@@ -1691,32 +1724,47 @@
     <ClCompile Include="src\wdpch.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="vendor\ImGui\backends\imgui_impl_dx12.cpp">
-      <Filter>vendor\ImGui\backends</Filter>
+    <ClCompile Include="vendor\ImGuizmo\GraphEditor.cpp">
+      <Filter>vendor\ImGuizmo</Filter>
     </ClCompile>
-    <ClCompile Include="vendor\ImGui\backends\imgui_impl_sdl2.cpp">
-      <Filter>vendor\ImGui\backends</Filter>
+    <ClCompile Include="vendor\ImGuizmo\ImCurveEdit.cpp">
+      <Filter>vendor\ImGuizmo</Filter>
     </ClCompile>
-    <ClCompile Include="vendor\ImGui\imgui.cpp">
-      <Filter>vendor\ImGui</Filter>
+    <ClCompile Include="vendor\ImGuizmo\ImGradient.cpp">
+      <Filter>vendor\ImGuizmo</Filter>
     </ClCompile>
-    <ClCompile Include="vendor\ImGui\imgui_demo.cpp">
-      <Filter>vendor\ImGui</Filter>
+    <ClCompile Include="vendor\ImGuizmo\ImGuizmo.cpp">
+      <Filter>vendor\ImGuizmo</Filter>
     </ClCompile>
-    <ClCompile Include="vendor\ImGui\imgui_draw.cpp">
-      <Filter>vendor\ImGui</Filter>
+    <ClCompile Include="vendor\ImGuizmo\ImSequencer.cpp">
+      <Filter>vendor\ImGuizmo</Filter>
     </ClCompile>
-    <ClCompile Include="vendor\ImGui\imgui_tables.cpp">
-      <Filter>vendor\ImGui</Filter>
+    <ClCompile Include="vendor\imgui\backends\imgui_impl_dx12.cpp">
+      <Filter>vendor\imgui\backends</Filter>
     </ClCompile>
-    <ClCompile Include="vendor\ImGui\imgui_widgets.cpp">
-      <Filter>vendor\ImGui</Filter>
+    <ClCompile Include="vendor\imgui\backends\imgui_impl_sdl2.cpp">
+      <Filter>vendor\imgui\backends</Filter>
     </ClCompile>
-    <ClCompile Include="vendor\ImGui\misc\cpp\imgui_stdlib.cpp">
-      <Filter>vendor\ImGui\misc\cpp</Filter>
+    <ClCompile Include="vendor\imgui\imgui.cpp">
+      <Filter>vendor\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="vendor\ImGui\misc\fonts\binary_to_compressed_c.cpp">
-      <Filter>vendor\ImGui\misc\fonts</Filter>
+    <ClCompile Include="vendor\imgui\imgui_demo.cpp">
+      <Filter>vendor\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\imgui\imgui_draw.cpp">
+      <Filter>vendor\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\imgui\imgui_tables.cpp">
+      <Filter>vendor\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\imgui\imgui_widgets.cpp">
+      <Filter>vendor\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\imgui\misc\cpp\imgui_stdlib.cpp">
+      <Filter>vendor\imgui\misc\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\imgui\misc\fonts\binary_to_compressed_c.cpp">
+      <Filter>vendor\imgui\misc\fonts</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

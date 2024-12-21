@@ -5,6 +5,7 @@
 #include "Waldem/ECS/Systems/DeferredRenderingSystem.h"
 #include "Waldem/Import/ModelImporter.h"
 #include "imgui.h"
+#include "Waldem/ECS/Systems/EditorTransformsManipulationSystem.h"
 #include "Waldem/ECS/Systems/ShadowmapRenderingSystem.h"
 
 namespace Sandbox
@@ -18,6 +19,7 @@ namespace Sandbox
 		auto sponzaEntity = ecsManager->CreateEntity();
 		sponzaEntity.Add<Waldem::ModelComponent>(sponzaModel);
 		sponzaEntity.Add<Waldem::Transform>(Waldem::Vector3(0,0,0));
+		sponzaEntity.Add<Waldem::Selected>();
 		
 		auto secondSponzaEntity = ecsManager->CreateEntity();
 		secondSponzaEntity.Add<Waldem::ModelComponent>(sponzaModel);

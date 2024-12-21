@@ -37,6 +37,8 @@ namespace Waldem
 		LayerStack LayerStack;
 		ImGuiLayer* UILayer;
 		GameLayer* CurrentGameLayer;
+        ecs::Manager CoreECSManager;
+        InputManager CurrentInputManager;
 
 		std::vector<float> FrameTimes;
 		int FrameCount = 0;

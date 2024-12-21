@@ -67,7 +67,7 @@ namespace Waldem
             
             for (auto [entity, model, transform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
             {
-                worldTransforms.Add(transform.GetMatrix());
+                worldTransforms.Add(transform.Matrix);
             }
             
             WArray<Resource> gBufferPassResources;
@@ -142,8 +142,8 @@ namespace Waldem
             Matrix4 matrices[2];
             for (auto [entity, camera, mainCamera, cameraTransform] : ECSManager->EntitiesWith<Camera, MainCamera, Transform>())
             {
-                matrices[0] = camera.GetViewMatrix();
-                matrices[1] = camera.GetProjectionMatrix();
+                matrices[0] = camera.ViewMatrix;
+                matrices[1] = camera.ProjectionMatrix;
                 GBufferRootSignature->UpdateResourceData("MyConstantBuffer", matrices);
                 frustrumPlanes = camera.ExtractFrustumPlanes();
 
@@ -153,7 +153,7 @@ namespace Waldem
             WArray<Matrix4> worldTransforms;
             for (auto [entity, model, transform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
             {
-                worldTransforms.Add(transform.GetMatrix());
+                worldTransforms.Add(transform.Matrix);
             }
 
             GBufferRootSignature->UpdateResourceData("WorldTransforms", worldTransforms.GetData());
@@ -174,7 +174,7 @@ namespace Waldem
                 GBufferRootSignature->UpdateResourceData("RootConstants", &modelID);
                 for (auto mesh : modelComponent.Model->GetMeshes())
                 {
-                    auto transformedBBox = mesh->BBox.Transform(transform.GetMatrix());
+                    auto transformedBBox = mesh->BBox.Transform(transform.Matrix);
 
                     //Frustrum culling
                     if(transformedBBox.IsInFrustum(frustrumPlanes))

@@ -13,6 +13,9 @@ namespace Waldem
 	
 	Application::Application()
 	{
+		CoreECSManager = {};
+		CurrentInputManager = {};
+
 		WD_CORE_ASSERT(!Instance, "Application already exists!")
 		Instance = this;
 		Window = Window::Create();
@@ -21,10 +24,10 @@ namespace Waldem
 		CurrentRenderer = {};
 		CurrentRenderer.Initialize(Window);
 		
-		UILayer = new ImGuiLayer(Window);
+		UILayer = new ImGuiLayer(Window, &CoreECSManager, &CurrentInputManager);
 		PushOverlay(UILayer);
-
-		CurrentGameLayer = new GameLayer(Window);
+		
+		CurrentGameLayer = new GameLayer(Window, &CoreECSManager, &CurrentInputManager);
 		PushLayer(CurrentGameLayer);
 	}
 	

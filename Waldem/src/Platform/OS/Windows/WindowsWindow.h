@@ -8,6 +8,7 @@ namespace Waldem
     struct WindowData
     {
         String Title;
+        Point2 Position;
         float Width, Height;
         bool VSync;
 
@@ -22,6 +23,7 @@ namespace Waldem
 
         void OnUpdate() override;
     
+        Vector2 GetPosition() const override { return Data.Position; }
         float GetWidth() const override { return Data.Width; }
         float GetHeight() const override { return Data.Height; }
     
@@ -40,6 +42,7 @@ namespace Waldem
     
         void ProcessEvents();
 
+    private:
         WindowData Data;
     };
 }

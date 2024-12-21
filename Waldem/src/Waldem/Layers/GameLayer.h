@@ -2,9 +2,7 @@
 #include "Waldem/ECS/Systems/DebugSystem.h"
 #include "Waldem/ECS/Systems/DeferredRenderingSystem.h"
 #include "Waldem/ECS/Systems/FreeLookCameraSystem.h"
-#include "Waldem/ECS/Systems/ShadowmapRenderingSystem.h"
 #include "Waldem/ECS/Systems/System.h"
-#include "Waldem/Import/ModelImporter.h"
 #include "Waldem/Input/InputManager.h"
 #include "Waldem/Layers/Layer.h"
 #include "Waldem/SceneManagement/Scene.h"
@@ -17,33 +15,38 @@ namespace Waldem
 	class WALDEM_API GameLayer : public Layer
     {
     public:
-        GameLayer(Window* window) : Layer("GameLayer", window)
+        GameLayer(Window* window, ecs::Manager* ecsManager, InputManager* inputManager) : Layer("GameLayer", window, ecsManager, inputManager)
         {
-        	CurrentInputManager = {};
-        	
-        	auto cameraEntity = CoreECSManager.CreateEntity();
+        	auto cameraEntity = CoreECSManager->CreateEntity();
         	float aspectRatio = window->GetWidth() / window->GetHeight();
         	cameraEntity.Add<Transform>(Vector3(0, 0, 0));
         	cameraEntity.Add<Camera>(70.0f, aspectRatio, 0.001f, 1000.0f, 30.0f, 30.0f);
         	cameraEntity.Add<MainCamera>();
 
         	//do it after all entities set up
-        	CoreECSManager.Refresh();
+        	CoreECSManager->Refresh();
         	
-        	CoreUpdateSystems.Add((ISystem*)new FreeLookCameraSystem(&CoreECSManager));
-        	CoreUpdateSystems.Add((ISystem*)new DebugSystem(&CoreECSManager));
+        	UpdateSystems.Add((ISystem*)new FreeLookCameraSystem(CoreECSManager));
+        	UpdateSystems.Add((ISystem*)new DebugSystem(CoreECSManager));
+        	
+        	UISystems.Add((ISystem*)new EditorTransformsManipulationSystem(CoreECSManager));
         	
         	SceneData sceneData = { window };
         	
-        	for (ISystem* system : CoreUpdateSystems)
+        	for (ISystem* system : UpdateSystems)
         	{
-        		system->Initialize(&sceneData, &CurrentInputManager);
+        		system->Initialize(&sceneData, CurrentInputManager);
+        	}
+        	
+        	for (ISystem* system : UISystems)
+        	{
+        		system->Initialize(&sceneData, CurrentInputManager);
         	}
         }
 
         void OnUpdate(float deltaTime) override
         {
-        	for (ISystem* system : CoreUpdateSystems)
+        	for (ISystem* system : UpdateSystems)
         	{
         		system->Update(deltaTime);
         	}
@@ -68,7 +71,7 @@ namespace Waldem
             case EventType::MouseScrolled:
                 {
                     event.Handled = true;
-                    CurrentInputManager.Broadcast(event);
+                    CurrentInputManager->Broadcast(event);
                 }
             }
         }
@@ -94,6 +97,11 @@ namespace Waldem
 				}
 				ImGui::EndMainMenuBar();
 			}
+            
+        	for (ISystem* system : UISystems)
+        	{
+        		system->Update(0);
+        	}
         	
             CurrentScene->DrawUI(deltaTime);
         }
@@ -101,7 +109,7 @@ namespace Waldem
         void OpenScene(Scene* scene, SceneData* sceneData)
         {
 		    Renderer::Begin();
-            scene->Initialize(sceneData, &CurrentInputManager, &CoreECSManager);
+            scene->Initialize(sceneData, CurrentInputManager, CoreECSManager);
 		    Renderer::End();
             
             CurrentScene = scene;
@@ -116,9 +124,8 @@ namespace Waldem
 
     private:
         Scene* CurrentScene = nullptr;
-        InputManager CurrentInputManager;
     	
-        ecs::Manager CoreECSManager;
-    	WArray<ISystem*> CoreUpdateSystems;
+    	WArray<ISystem*> UpdateSystems;
+    	WArray<ISystem*> UISystems;
     };
 }

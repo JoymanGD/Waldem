@@ -22,7 +22,7 @@ namespace Waldem
             
             for (auto [entity, model, transform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
             {
-                worldTransforms.Add(transform.GetMatrix());
+                worldTransforms.Add(transform.Matrix);
             }
             
             WArray<Resource> resources;
@@ -63,7 +63,7 @@ namespace Waldem
                     WArray<Matrix4> worldTransforms;
                     for (auto [modelEntity, modelComponent, modelTransform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
                     {
-                        worldTransforms.Add(modelTransform.GetMatrix());
+                        worldTransforms.Add(modelTransform.Matrix);
                     }
 
                     ShadowmapRenderingRootSignature->UpdateResourceData("WorldTransforms", worldTransforms.GetData());
@@ -82,7 +82,7 @@ namespace Waldem
                         
                         for (auto mesh : modelComponent.Model->GetMeshes())
                         {
-                            auto transformedBBox = mesh->BBox.Transform(modelTransform.GetMatrix());
+                            auto transformedBBox = mesh->BBox.Transform(modelTransform.Matrix);
 
                             //Frustrum culling
                             if(transformedBBox.IsInFrustum(frustrumPlanes))

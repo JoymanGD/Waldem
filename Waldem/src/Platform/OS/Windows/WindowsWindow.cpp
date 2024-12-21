@@ -56,6 +56,7 @@ namespace Waldem
     void WindowsWindow::Init(const WindowProps& props)
     {
         Data.Title = props.Title;
+        Data.Position = props.Position;
         Data.Width = props.Width;
         Data.Height = props.Height;
         Data.VSync = false;
@@ -67,8 +68,8 @@ namespace Waldem
         }
 
         NativeWindow = SDL_CreateWindow(Data.Title.c_str(),
-                                    SDL_WINDOWPOS_CENTERED,
-                                    SDL_WINDOWPOS_CENTERED,
+                                    Data.Position.x,
+                                    Data.Position.y,
                                     Data.Width, Data.Height,
                                     SDL_WINDOW_RESIZABLE);
         if (!NativeWindow)

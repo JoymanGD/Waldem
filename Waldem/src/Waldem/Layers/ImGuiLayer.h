@@ -1,6 +1,10 @@
 #pragma once
+#include <SDL_mouse.h>
+
 #include "imgui.h"
 #include "backends/imgui_impl_sdl2.h"
+#include "Waldem/ECS/Systems/EditorTransformsManipulationSystem.h"
+#include "Waldem/ECS/Systems/System.h"
 #include "Waldem/Layers/Layer.h"
 #include "Waldem/Events/ApplicationEvent.h"
 #include "Waldem/Events/KeyEvent.h"
@@ -12,7 +16,9 @@ namespace Waldem
     class WALDEM_API ImGuiLayer : public Layer
     {
     public:
-        ImGuiLayer(Window* window) : Layer("ImGuiLayer", window) {}
+        ImGuiLayer(Window* window, ecs::Manager* ecsManager, InputManager* inputManager) : Layer("ImGuiLayer", window, ecsManager, inputManager)
+        {
+        }
         
         void Begin() override
         {
@@ -55,6 +61,7 @@ namespace Waldem
                 ImGuiIO& io = ImGui::GetIO();
                 event.Handled |= event.IsInCategory(EventCategoryMouse) & io.WantCaptureMouse;
                 event.Handled |= event.IsInCategory(EventCategoryKeyboard) & io.WantCaptureKeyboard;
+                event.Handled |= ImGuizmo::IsUsing();
             }
         }
         
