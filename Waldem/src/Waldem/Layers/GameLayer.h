@@ -4,6 +4,7 @@
 #include "Waldem/ECS/Systems/FreeLookCameraSystem.h"
 #include "Waldem/ECS/Systems/ShadowmapRenderingSystem.h"
 #include "Waldem/ECS/Systems/System.h"
+#include "Waldem/Import/ModelImporter.h"
 #include "Waldem/Input/InputManager.h"
 #include "Waldem/Layers/Layer.h"
 #include "Waldem/SceneManagement/Scene.h"
@@ -18,8 +19,8 @@ namespace Waldem
     public:
         GameLayer(Window* window) : Layer("GameLayer", window)
         {
-            CurrentInputManager = {};
-
+        	CurrentInputManager = {};
+        	
         	auto cameraEntity = CoreECSManager.CreateEntity();
         	float aspectRatio = window->GetWidth() / window->GetHeight();
         	cameraEntity.Add<Transform>(Vector3(0, 0, 0));
@@ -31,9 +32,6 @@ namespace Waldem
         	
         	CoreUpdateSystems.Add((ISystem*)new FreeLookCameraSystem(&CoreECSManager));
         	CoreUpdateSystems.Add((ISystem*)new DebugSystem(&CoreECSManager));
-
-        	CoreDrawSystems.Add((ISystem*)new ShadowmapRenderingSystem(&CoreECSManager));
-        	CoreDrawSystems.Add((ISystem*)new DeferredRenderingSystem(&CoreECSManager));
         	
         	SceneData sceneData = { window };
         	
@@ -41,15 +39,15 @@ namespace Waldem
         	{
         		system->Initialize(&sceneData, &CurrentInputManager);
         	}
-		
-        	for (ISystem* system : CoreDrawSystems)
-        	{
-        		system->Initialize(&sceneData, &CurrentInputManager);
-        	}
         }
 
         void OnUpdate(float deltaTime) override
         {
+        	for (ISystem* system : CoreUpdateSystems)
+        	{
+        		system->Update(deltaTime);
+        	}
+        	
             CurrentScene->Update(deltaTime);
 
             CurrentScene->Draw(deltaTime);
@@ -122,6 +120,5 @@ namespace Waldem
     	
         ecs::Manager CoreECSManager;
     	WArray<ISystem*> CoreUpdateSystems;
-    	WArray<ISystem*> CoreDrawSystems;
     };
 }

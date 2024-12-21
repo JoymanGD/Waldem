@@ -9,9 +9,9 @@ namespace Waldem
 {
     class WALDEM_API ShadowmapRenderingSystem : ISystem
     {
-        Pipeline* DefaultPipeline = nullptr;
-        RootSignature* DefaultRootSignature = nullptr;
-        PixelShader* DefaultShadowmappingShader = nullptr;
+        Pipeline* ShadowmapRenderingPipeline = nullptr;
+        RootSignature* ShadowmapRenderingRootSignature = nullptr;
+        PixelShader* ShadowmapRenderingShader = nullptr;
         
     public:
         ShadowmapRenderingSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
@@ -19,6 +19,7 @@ namespace Waldem
         void Initialize(SceneData* sceneData, InputManager* inputManager) override
         {
             WArray<Matrix4> worldTransforms;
+            
             for (auto [entity, model, transform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
             {
                 worldTransforms.Add(transform.GetMatrix());
@@ -28,12 +29,11 @@ namespace Waldem
 
             resources.Add(Resource("MyConstantBuffer", RTYPE_ConstantBuffer, nullptr, sizeof(Matrix4), sizeof(Matrix4) * 2, 0));
             resources.Add(Resource("RootConstants", RTYPE_Constant, 1, nullptr, 1));
-            if(!worldTransforms.IsEmpty())
-                resources.Add(Resource("WorldTransforms", RTYPE_Buffer, worldTransforms.GetData(), sizeof(Matrix4), worldTransforms.GetSize(), 0));
+            resources.Add(Resource("WorldTransforms", RTYPE_Buffer, worldTransforms.GetData(), sizeof(Matrix4), worldTransforms.GetSize(), 0));
             
-            DefaultShadowmappingShader = Renderer::LoadPixelShader("Shadowmap");
-            DefaultRootSignature = Renderer::CreateRootSignature(resources);
-            DefaultPipeline = Renderer::CreateGraphicPipeline("ForwardRenderingPipeline", { TextureFormat::R8G8B8A8_UNORM }, WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, DefaultRootSignature, DefaultShadowmappingShader);
+            ShadowmapRenderingShader = Renderer::LoadPixelShader("Shadowmap");
+            ShadowmapRenderingRootSignature = Renderer::CreateRootSignature(resources);
+            ShadowmapRenderingPipeline = Renderer::CreateGraphicPipeline("ShadowmapRenderingPipeline", { TextureFormat::R8G8B8A8_UNORM }, WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, ShadowmapRenderingRootSignature, ShadowmapRenderingShader);
         }
 
         void Update(float deltaTime) override
@@ -58,7 +58,7 @@ namespace Waldem
                     Frustrum frustrum;
                     auto frustrumPlanes = frustrum.GetPlanes(matrices[1] * matrices[0]);
                 
-                    DefaultRootSignature->UpdateResourceData("MyConstantBuffer", matrices);
+                    ShadowmapRenderingRootSignature->UpdateResourceData("MyConstantBuffer", matrices);
 
                     WArray<Matrix4> worldTransforms;
                     for (auto [modelEntity, modelComponent, modelTransform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
@@ -66,10 +66,10 @@ namespace Waldem
                         worldTransforms.Add(modelTransform.GetMatrix());
                     }
 
-                    DefaultRootSignature->UpdateResourceData("WorldTransforms", worldTransforms.GetData());
+                    ShadowmapRenderingRootSignature->UpdateResourceData("WorldTransforms", worldTransforms.GetData());
                     
-                    Renderer::SetPipeline(DefaultPipeline);
-                    Renderer::SetRootSignature(DefaultRootSignature);
+                    Renderer::SetPipeline(ShadowmapRenderingPipeline);
+                    Renderer::SetRootSignature(ShadowmapRenderingRootSignature);
                     Renderer::ResourceBarrier(light.Shadowmap, ALL_SHADER_RESOURCE, DEPTH_WRITE);
                     Renderer::SetRenderTargets({}, light.Shadowmap);
                     Renderer::ClearDepthStencil(light.Shadowmap);
@@ -78,7 +78,7 @@ namespace Waldem
 
                     for (auto [modelEtity, modelComponent, modelTransform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
                     {
-                        DefaultRootSignature->UpdateResourceData("RootConstants", &modelID);
+                        ShadowmapRenderingRootSignature->UpdateResourceData("RootConstants", &modelID);
                         
                         for (auto mesh : modelComponent.Model->GetMeshes())
                         {

@@ -64,6 +64,7 @@ namespace Waldem
             }
 
             WArray<Matrix4> worldTransforms;
+            
             for (auto [entity, model, transform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
             {
                 worldTransforms.Add(transform.GetMatrix());
