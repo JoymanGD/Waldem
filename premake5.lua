@@ -12,7 +12,8 @@ workspace "Waldem"
 outputdir = "%{cfg.buildcfg}"
 
 IncludeDir = {}
-IncludeDir["ImGui"] = "Waldem/vendor/ImGui"
+IncludeDir["ImGui"] = "Waldem/vendor/imgui"
+IncludeDir["ImGuizmo"] = "Waldem/vendor/ImGuizmo"
 IncludeDir["glm"] = "Waldem/vendor/glm"
 IncludeDir["SDL"] = "Waldem/vendor/SDL/include"
 IncludeDir["ECS"] = "Waldem/vendor/ECS/include"
@@ -42,10 +43,12 @@ project "Waldem"
     {
         "%{prj.name}/src/**.h",
         "%{prj.name}/src/**.cpp",
-        "%{prj.name}/vendor/ImGui/**.h",
-        "%{prj.name}/vendor/ImGui/**.cpp",
-        "%{prj.name}/vendor/ImGui/backends/**.h",
-        "%{prj.name}/vendor/ImGui/backends/**.cpp",
+        "%{prj.name}/vendor/imgui/**.h",
+        "%{prj.name}/vendor/imgui/**.cpp",
+        "%{prj.name}/vendor/imgui/backends/**.h",
+        "%{prj.name}/vendor/imgui/backends/**.cpp",
+        "%{prj.name}/vendor/ImGuizmo/**.h",
+        "%{prj.name}/vendor/ImGuizmo/**.cpp",
         "%{prj.name}/vendor/glm/glm/**.hpp",
         "%{prj.name}/vendor/glm/glm/**.inl"
     }
@@ -59,6 +62,7 @@ project "Waldem"
         "%{IncludeDir.SDL}",
         "%{IncludeDir.glm}",
         "%{IncludeDir.ImGui}",
+        "%{IncludeDir.ImGuizmo}",
         "%{IncludeDir.ECS}"
     }
     
@@ -146,6 +150,7 @@ project "Sandbox"
         "%{IncludeDir.SDL}",
         "%{IncludeDir.glm}",
         "%{IncludeDir.ImGui}",
+        "%{IncludeDir.ImGuizmo}",
         "%{IncludeDir.ECS}"
     }
 

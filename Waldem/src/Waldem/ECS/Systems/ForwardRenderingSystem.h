@@ -80,8 +80,8 @@ namespace Waldem
             Matrix4 matrices[2];
             for (auto [entity, camera, mainCamera, cameraTransform] : ECSManager->EntitiesWith<Camera, MainCamera, Transform>())
             {
-                matrices[0] = camera.GetViewMatrix();
-                matrices[1] = camera.GetProjectionMatrix();
+                matrices[0] = camera.ViewMatrix;
+                matrices[1] = camera.ProjectionMatrix;
                 DefaultRootSignature->UpdateResourceData("MyConstantBuffer", matrices);
                 frustrumPlanes = camera.ExtractFrustumPlanes();
 

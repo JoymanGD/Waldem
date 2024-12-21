@@ -25,6 +25,6 @@ namespace Sandbox
 
     private:
         Waldem::WArray<Waldem::ISystem*> UpdateSystems;
-        Waldem::WArray<Waldem::ISystem*> DrawSystems;
+        Waldem::WArray<Waldem::ISystem*> DrawSystems; 
     };
 }

@@ -38,7 +38,7 @@ namespace Waldem
                 };
 
                 // Transform NDC corners to world space
-                CachedViewProjMatrix = camera.GetProjectionMatrix() * camera.GetViewMatrix();
+                CachedViewProjMatrix = camera.ProjectionMatrix * camera.ViewMatrix;
                 auto invViewProjMatrix = inverse(CachedViewProjMatrix);
                 
                 for (int i = 0; i < 8; ++i)

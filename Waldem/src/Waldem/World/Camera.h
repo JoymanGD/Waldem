@@ -86,19 +86,14 @@ namespace Waldem
 
         void SetViewMatrix(Transform* transform) { ViewMatrix = transform->Inverse(); }
         void SetViewMatrix(Matrix4 matrix) { ViewMatrix = matrix; }
-        Matrix4 GetViewMatrix() { return ViewMatrix; }
-        Matrix4 GetProjectionMatrix() { return ProjectionMatrix; }
         WArray<FrustumPlane> ExtractFrustumPlanes() { return Frustrum.GetPlanes(ProjectionMatrix * ViewMatrix); }
         
+        glm::mat4 ProjectionMatrix;
+        glm::mat4 ViewMatrix;
         float MovementSpeed = 1.0f;
         float RotationSpeed = 1.0f;
         float SpeedModificator = 1.0f;
         CameraSpeedParams SpeedParams;
         Frustrum Frustrum;
-        
-    private:
-        glm::mat4 ProjectionMatrix;
-        glm::mat4 ViewMatrix;
-        
     };
 }
