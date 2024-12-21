@@ -41,6 +41,7 @@ namespace Waldem
             NumResources = 1;
             Data = data;
             Stride = stride;
+            if(size == 0) size = 1;
             Size = Vector2(size, 1);
             Slot = slot;
         }

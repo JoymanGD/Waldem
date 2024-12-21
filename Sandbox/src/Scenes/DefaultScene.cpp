@@ -5,16 +5,16 @@
 #include "Waldem/ECS/Systems/DeferredRenderingSystem.h"
 #include "Waldem/Import/ModelImporter.h"
 #include "imgui.h"
+#include "Waldem/ECS/Systems/ShadowmapRenderingSystem.h"
 
 namespace Sandbox
 {
 	void DefaultScene::Initialize(Waldem::SceneData* sceneData, Waldem::InputManager* inputManager, ecs::Manager* ecsManager)
 	{
 		Waldem::ModelImporter importer;
+        auto sponzaModel = importer.Import("Content/Models/Sponza/Sponza.gltf", true);
 
 		//Entities
-		auto sponzaModel = importer.Import("Content/Models/Sponza/Sponza.gltf", true);
-		
 		auto sponzaEntity = ecsManager->CreateEntity();
 		sponzaEntity.Add<Waldem::ModelComponent>(sponzaModel);
 		sponzaEntity.Add<Waldem::Transform>(Waldem::Vector3(0,0,0));
@@ -34,6 +34,9 @@ namespace Sandbox
 
 		//do it after all entities set up
 		ecsManager->Refresh();
+
+		DrawSystems.Add((Waldem::ISystem*)new Waldem::ShadowmapRenderingSystem(ecsManager));
+		DrawSystems.Add((Waldem::ISystem*)new Waldem::DeferredRenderingSystem(ecsManager));
 		
 		for (Waldem::ISystem* system : UpdateSystems)
 		{
