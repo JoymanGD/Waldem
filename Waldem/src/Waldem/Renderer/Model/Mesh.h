@@ -23,5 +23,6 @@ namespace Waldem
         VertexBuffer* VB;
         Material MeshMaterial;
         BoundingBox BBox;
+        Matrix4 ObjectMatrix;
     };
 }

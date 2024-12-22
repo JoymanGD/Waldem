@@ -1,6 +1,5 @@
 #pragma once
 #include "System.h"
-#include "Waldem/ECS/Components/ModelComponent.h"
 #include "Waldem/Renderer/Light.h"
 #include "Waldem/Renderer/Shader.h"
 #include "Waldem/Renderer/Model/Transform.h"
@@ -20,7 +19,7 @@ namespace Waldem
         {
             WArray<Matrix4> worldTransforms;
             
-            for (auto [entity, model, transform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
+            for (auto [entity, mesh, transform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
             {
                 worldTransforms.Add(transform.Matrix);
             }
@@ -61,7 +60,7 @@ namespace Waldem
                     ShadowmapRenderingRootSignature->UpdateResourceData("MyConstantBuffer", matrices);
 
                     WArray<Matrix4> worldTransforms;
-                    for (auto [modelEntity, modelComponent, modelTransform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
+                    for (auto [modelEntity, mesh, modelTransform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
                     {
                         worldTransforms.Add(modelTransform.Matrix);
                     }
@@ -76,19 +75,16 @@ namespace Waldem
 
                     uint32_t modelID = 0;
 
-                    for (auto [modelEtity, modelComponent, modelTransform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
+                    for (auto [modelEtity, meshComponent, modelTransform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
                     {
                         ShadowmapRenderingRootSignature->UpdateResourceData("RootConstants", &modelID);
                         
-                        for (auto mesh : modelComponent.Model->GetMeshes())
-                        {
-                            auto transformedBBox = mesh->BBox.Transform(modelTransform.Matrix);
+                        auto transformedBBox = meshComponent.Mesh->BBox.Transform(modelTransform.Matrix);
 
-                            //Frustrum culling
-                            if(transformedBBox.IsInFrustum(frustrumPlanes))
-                            {
-                                Renderer::Draw(mesh);
-                            }
+                        //Frustrum culling
+                        if(transformedBBox.IsInFrustum(frustrumPlanes))
+                        {
+                            Renderer::Draw(meshComponent.Mesh);
                         }
 
                         modelID++;
