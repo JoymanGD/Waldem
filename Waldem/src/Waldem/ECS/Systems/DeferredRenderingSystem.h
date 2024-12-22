@@ -1,6 +1,7 @@
 #pragma once
 #include "System.h"
 #include "Waldem/ECS/Components/MainCamera.h"
+#include "Waldem/ECS/Components/MeshComponent.h"
 #include "Waldem/ECS/Components/ModelComponent.h"
 #include "Waldem/Renderer/Light.h"
 #include "Waldem/Renderer/Shader.h"
@@ -55,17 +56,14 @@ namespace Waldem
             
             //GBuffer pass
             WArray<Texture2D*> textures;
-            for (auto [entity, model, transform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
+            for (auto [entity, mesh, transform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
             {
-                for (auto texture : model.Model->GetTextures())
-                    textures.Add(texture);
-
-                break;
+                textures.Add(mesh.Mesh->MeshMaterial.GetDiffuseTexture());
             }
 
             WArray<Matrix4> worldTransforms;
             
-            for (auto [entity, model, transform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
+            for (auto [entity, mesh, transform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
             {
                 worldTransforms.Add(transform.Matrix);
             }
@@ -151,7 +149,7 @@ namespace Waldem
             }
 
             WArray<Matrix4> worldTransforms;
-            for (auto [entity, model, transform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
+            for (auto [entity, mesh, transform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
             {
                 worldTransforms.Add(transform.Matrix);
             }
@@ -169,18 +167,16 @@ namespace Waldem
             Renderer::ClearRenderTarget(AlbedoRT);
             
             uint32_t modelID = 0;
-            for (auto [entity, modelComponent, transform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
+            for (auto [entity, mesh, transform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
             {
                 GBufferRootSignature->UpdateResourceData("RootConstants", &modelID);
-                for (auto mesh : modelComponent.Model->GetMeshes())
-                {
-                    auto transformedBBox = mesh->BBox.Transform(transform.Matrix);
+                
+                auto transformedBBox = mesh.Mesh->BBox.Transform(transform.Matrix);
 
-                    //Frustrum culling
-                    if(transformedBBox.IsInFrustum(frustrumPlanes))
-                    {
-                        Renderer::Draw(mesh);
-                    }
+                //Frustrum culling
+                if(transformedBBox.IsInFrustum(frustrumPlanes))
+                {
+                    Renderer::Draw(mesh.Mesh);
                 }
                 modelID++;
             }

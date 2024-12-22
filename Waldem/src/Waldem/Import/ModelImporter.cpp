@@ -10,6 +10,15 @@
 
 namespace Waldem
 {
+    Matrix4 AssimpToMatrix4(aiMatrix4x4 matrix)
+    {
+        return Matrix4(
+            matrix.a1, matrix.b1, matrix.c1, matrix.d1,
+            matrix.a2, matrix.b2, matrix.c2, matrix.d2,
+            matrix.a3, matrix.b3, matrix.c3, matrix.d3,
+            matrix.a4, matrix.b4, matrix.c4, matrix.d4
+        );
+    }
     Model* ModelImporter::Import(String path, bool relative)
     {
         Model* result = new Model();
@@ -112,9 +121,8 @@ namespace Waldem
 
                 uint32_t vertexBufferSize = vertexData.size() * sizeof(Vertex);
                 BoundingBox bBox { Vector3(assimpMesh->mAABB.mMin.x, assimpMesh->mAABB.mMin.y, assimpMesh->mAABB.mMin.z), Vector3(assimpMesh->mAABB.mMax.x, assimpMesh->mAABB.mMax.y, assimpMesh->mAABB.mMax.z)};
-
                 Mesh* mesh = new Mesh(vertexData.data(), vertexBufferSize, indices.data(), indices.size(), mat, bBox);
-
+                mesh->ObjectMatrix = AssimpToMatrix4(assimpModel->mRootNode->mChildren[i]->mTransformation);
                 result->AddMesh(mesh);
             }
         }

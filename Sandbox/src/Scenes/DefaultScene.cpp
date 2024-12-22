@@ -5,6 +5,7 @@
 #include "Waldem/ECS/Systems/DeferredRenderingSystem.h"
 #include "Waldem/Import/ModelImporter.h"
 #include "imgui.h"
+#include "Waldem/ECS/Components/MeshComponent.h"
 #include "Waldem/ECS/Systems/EditorTransformsManipulationSystem.h"
 #include "Waldem/ECS/Systems/ShadowmapRenderingSystem.h"
 
@@ -16,18 +17,31 @@ namespace Sandbox
         auto sponzaModel = importer.Import("Content/Models/Sponza/Sponza.gltf", true);
 
 		//Entities
-		auto sponzaEntity = ecsManager->CreateEntity();
-		sponzaEntity.Add<Waldem::ModelComponent>(sponzaModel);
-		sponzaEntity.Add<Waldem::Transform>(Waldem::Vector3(0,0,0));
-		sponzaEntity.Add<Waldem::Selected>();
-		
-		auto secondSponzaEntity = ecsManager->CreateEntity();
-		secondSponzaEntity.Add<Waldem::ModelComponent>(sponzaModel);
-		secondSponzaEntity.Add<Waldem::Transform>(Waldem::Vector3(50,0,0));
-		
-		auto thirdSponzaEntity = ecsManager->CreateEntity();
-		thirdSponzaEntity.Add<Waldem::ModelComponent>(sponzaModel);
-		thirdSponzaEntity.Add<Waldem::Transform>(Waldem::Vector3(50,50,0));
+		uint32_t i = 0;
+		for (Waldem::Mesh* mesh : sponzaModel->GetMeshes())
+		{
+			auto entity = ecsManager->CreateEntity();
+			entity.Add<Waldem::MeshComponent>(mesh);
+			entity.Add<Waldem::Transform>(mesh->ObjectMatrix);
+
+			if(i == 6)
+			{
+				entity.Add<Waldem::Selected>();
+			}
+			i++;
+		}
+		// auto sponzaEntity = ecsManager->CreateEntity();
+		// sponzaEntity.Add<Waldem::ModelComponent>(sponzaModel);
+		// sponzaEntity.Add<Waldem::Transform>(Waldem::Vector3(0,0,0));
+		// sponzaEntity.Add<Waldem::Selected>();
+		//
+		// auto secondSponzaEntity = ecsManager->CreateEntity();
+		// secondSponzaEntity.Add<Waldem::ModelComponent>(sponzaModel);
+		// secondSponzaEntity.Add<Waldem::Transform>(Waldem::Vector3(50,0,0));
+		//
+		// auto thirdSponzaEntity = ecsManager->CreateEntity();
+		// thirdSponzaEntity.Add<Waldem::ModelComponent>(sponzaModel);
+		// thirdSponzaEntity.Add<Waldem::Transform>(Waldem::Vector3(50,50,0));
 
 		auto dirLightEntity = ecsManager->CreateEntity();
 		auto& lightTransform = dirLightEntity.Add<Waldem::Transform>(Waldem::Vector3(0, 0, 0));

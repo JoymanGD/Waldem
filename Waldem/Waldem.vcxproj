@@ -167,6 +167,7 @@
     <ClInclude Include="src\Waldem\Application.h" />
     <ClInclude Include="src\Waldem\Core.h" />
     <ClInclude Include="src\Waldem\ECS\Components\MainCamera.h" />
+    <ClInclude Include="src\Waldem\ECS\Components\MeshComponent.h" />
     <ClInclude Include="src\Waldem\ECS\Components\ModelComponent.h" />
     <ClInclude Include="src\Waldem\ECS\Components\Selected.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\DebugSystem.h" />
