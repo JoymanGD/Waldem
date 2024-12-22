@@ -1,14 +1,10 @@
 #pragma once
-#include <SDL_mouse.h>
 
+#include <SDL_mouse.h>
 #include "imgui.h"
 #include "backends/imgui_impl_sdl2.h"
 #include "Waldem/ECS/Systems/EditorTransformsManipulationSystem.h"
-#include "Waldem/ECS/Systems/System.h"
 #include "Waldem/Layers/Layer.h"
-#include "Waldem/Events/ApplicationEvent.h"
-#include "Waldem/Events/KeyEvent.h"
-#include "Waldem/Events/MouseEvent.h"
 #include "Waldem/Renderer/Renderer.h"
 
 namespace Waldem
@@ -18,6 +14,14 @@ namespace Waldem
     public:
         ImGuiLayer(Window* window, ecs::Manager* ecsManager, InputManager* inputManager) : Layer("ImGuiLayer", window, ecsManager, inputManager)
         {
+			UISystems.Add((ISystem*)new EditorTransformsManipulationSystem(CoreECSManager));
+        	
+			SceneData sceneData = { window };
+        	
+            for (ISystem* system : UISystems)
+            {
+                system->Initialize(&sceneData, CurrentInputManager);
+            }
         }
         
         void Begin() override
@@ -64,8 +68,37 @@ namespace Waldem
                 event.Handled |= ImGuizmo::IsUsing();
             }
         }
-        
+
+        void OnDrawUI(float deltaTime) override
+        {
+            if (ImGui::BeginMainMenuBar())
+            {
+                if (ImGui::BeginMenu("File"))
+                {
+                    if (ImGui::MenuItem("New scene")) {}
+                    if (ImGui::MenuItem("Open scene", "Ctrl+O")) {}
+                    if (ImGui::MenuItem("Save scene")) {}
+
+                    ImGui::Separator();
+					
+                    if (ImGui::BeginMenu("Options"))
+                    {
+                        ImGui::EndMenu();
+                    }
+					
+                    ImGui::EndMenu();
+                }
+                ImGui::EndMainMenuBar();
+            }
+            
+            for (ISystem* system : UISystems)
+            {
+                system->Update(deltaTime);
+            }
+        }
+
     private:
 		bool m_BlockEvents = true;
+		WArray<ISystem*> UISystems;
     };
 }

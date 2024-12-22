@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Waldem/ECS/Systems/DebugSystem.h"
 #include "Waldem/ECS/Systems/DeferredRenderingSystem.h"
 #include "Waldem/ECS/Systems/FreeLookCameraSystem.h"
@@ -13,119 +14,86 @@ namespace Waldem
 	struct MainCamera;
 
 	class WALDEM_API GameLayer : public Layer
-    {
-    public:
-        GameLayer(Window* window, ecs::Manager* ecsManager, InputManager* inputManager) : Layer("GameLayer", window, ecsManager, inputManager)
-        {
-        	auto cameraEntity = CoreECSManager->CreateEntity();
-        	float aspectRatio = window->GetWidth() / window->GetHeight();
-        	cameraEntity.Add<Transform>(Vector3(0, 0, 0));
-        	cameraEntity.Add<Camera>(70.0f, aspectRatio, 0.001f, 1000.0f, 30.0f, 30.0f);
-        	cameraEntity.Add<MainCamera>();
+	{
+	public:
+		GameLayer(Window* window, ecs::Manager* ecsManager, InputManager* inputManager) : Layer("GameLayer", window, ecsManager, inputManager)
+		{
+			auto cameraEntity = CoreECSManager->CreateEntity();
+			float aspectRatio = window->GetWidth() / window->GetHeight();
+			cameraEntity.Add<Transform>(Vector3(0, 0, 0));
+			cameraEntity.Add<Camera>(70.0f, aspectRatio, 0.001f, 1000.0f, 30.0f, 30.0f);
+			cameraEntity.Add<MainCamera>();
 
-        	//do it after all entities set up
-        	CoreECSManager->Refresh();
+			//do it after all entities set up
+			CoreECSManager->Refresh();
         	
-        	UpdateSystems.Add((ISystem*)new FreeLookCameraSystem(CoreECSManager));
-        	UpdateSystems.Add((ISystem*)new DebugSystem(CoreECSManager));
+			UpdateSystems.Add((ISystem*)new FreeLookCameraSystem(CoreECSManager));
+			UpdateSystems.Add((ISystem*)new DebugSystem(CoreECSManager));
         	
-        	UISystems.Add((ISystem*)new EditorTransformsManipulationSystem(CoreECSManager));
+			SceneData sceneData = { window };
         	
-        	SceneData sceneData = { window };
-        	
-        	for (ISystem* system : UpdateSystems)
-        	{
-        		system->Initialize(&sceneData, CurrentInputManager);
-        	}
-        	
-        	for (ISystem* system : UISystems)
-        	{
-        		system->Initialize(&sceneData, CurrentInputManager);
-        	}
-        }
-
-        void OnUpdate(float deltaTime) override
-        {
-        	for (ISystem* system : UpdateSystems)
-        	{
-        		system->Update(deltaTime);
-        	}
-        	
-            CurrentScene->Update(deltaTime);
-
-            CurrentScene->Draw(deltaTime);
-        }
-
-        void OnEvent(Event& event) override
-        {
-            auto eventType = event.GetEventType();
-
-            switch (eventType)
-            {
-            case EventType::KeyPressed:
-            case EventType::KeyReleased:
-            case EventType::KeyTyped:
-            case EventType::MouseButtonPressed:
-            case EventType::MouseButtonReleased:
-            case EventType::MouseMoved:
-            case EventType::MouseScrolled:
-                {
-                    event.Handled = true;
-                    CurrentInputManager->Broadcast(event);
-                }
-            }
-        }
-
-        void OnDrawUI(float deltaTime) override
-        {
-			if (ImGui::BeginMainMenuBar())
+			for (ISystem* system : UpdateSystems)
 			{
-				if (ImGui::BeginMenu("File"))
-				{
-				    if (ImGui::MenuItem("New scene")) {}
-				    if (ImGui::MenuItem("Open scene", "Ctrl+O")) {}
-				    if (ImGui::MenuItem("Save scene")) {}
-
-				    ImGui::Separator();
-					
-				    if (ImGui::BeginMenu("Options"))
-				    {
-				        ImGui::EndMenu();
-				    }
-					
-				    ImGui::EndMenu();
-				}
-				ImGui::EndMainMenuBar();
+				system->Initialize(&sceneData, CurrentInputManager);
 			}
-            
-        	for (ISystem* system : UISystems)
-        	{
-        		system->Update(0);
-        	}
+		}
+
+		void OnUpdate(float deltaTime) override
+		{
+			for (ISystem* system : UpdateSystems)
+			{
+				system->Update(deltaTime);
+			}
         	
-            CurrentScene->DrawUI(deltaTime);
-        }
+			CurrentScene->Update(deltaTime);
 
-        void OpenScene(Scene* scene, SceneData* sceneData)
-        {
-		    Renderer::Begin();
-            scene->Initialize(sceneData, CurrentInputManager, CoreECSManager);
-		    Renderer::End();
+			CurrentScene->Draw(deltaTime);
+		}
+
+		void OnEvent(Event& event) override
+		{
+			auto eventType = event.GetEventType();
+
+			switch (eventType)
+			{
+			case EventType::KeyPressed:
+			case EventType::KeyReleased:
+			case EventType::KeyTyped:
+			case EventType::MouseButtonPressed:
+			case EventType::MouseButtonReleased:
+			case EventType::MouseMoved:
+			case EventType::MouseScrolled:
+				{
+					event.Handled = true;
+					CurrentInputManager->Broadcast(event);
+				}
+			}
+		}
+
+		void OnDrawUI(float deltaTime) override
+		{        	
+			CurrentScene->DrawUI(deltaTime);
+		}
+
+		void OpenScene(Scene* scene, SceneData* sceneData)
+		{
+			Renderer::Begin();
+			scene->Initialize(sceneData, CurrentInputManager, CoreECSManager);
+			Renderer::End();
             
-            CurrentScene = scene;
-        }
+			CurrentScene = scene;
+		}
 
-        Scene* GetCurrentScene() { return CurrentScene; }
+		Scene* GetCurrentScene() { return CurrentScene; }
         
-        void Begin() override {}
-        void End() override {}
-        void OnAttach() override {}
-        void OnDetach() override{}
+		void Begin() override {}
+		void End() override {}
+		void OnAttach() override {}
+		void OnDetach() override{}
 
-    private:
-        Scene* CurrentScene = nullptr;
+	private:
+		Scene* CurrentScene = nullptr;
     	
-    	WArray<ISystem*> UpdateSystems;
-    	WArray<ISystem*> UISystems;
-    };
+		WArray<ISystem*> UpdateSystems;
+	};
 }

@@ -1,6 +1,6 @@
 #pragma once
+
 #include "ImGuizmo.h"
-#include "imgui_internal.h"
 #include "System.h"
 #include "glm/gtc/type_ptr.hpp"
 #include "Waldem/ECS/Components/MainCamera.h"
