@@ -31,6 +31,9 @@
     <Filter Include="src\Waldem\ECS\Systems">
       <UniqueIdentifier>{A78A5537-9384-7E89-7CF1-149A688AE4F5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Waldem\Editor">
+      <UniqueIdentifier>{CC054398-381C-412E-8193-CC4FEDE811B6}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Waldem\Events">
       <UniqueIdentifier>{7A748699-E68A-842F-2F02-10519B5755B7}</UniqueIdentifier>
     </Filter>
@@ -177,6 +180,9 @@
     <ClInclude Include="src\Waldem\ECS\Components\MainCamera.h">
       <Filter>src\Waldem\ECS\Components</Filter>
     </ClInclude>
+    <ClInclude Include="src\Waldem\ECS\Components\MeshComponent.h">
+      <Filter>src\Waldem\ECS\Components</Filter>
+    </ClInclude>
     <ClInclude Include="src\Waldem\ECS\Components\ModelComponent.h">
       <Filter>src\Waldem\ECS\Components</Filter>
     </ClInclude>
@@ -206,6 +212,9 @@
     </ClInclude>
     <ClInclude Include="src\Waldem\ECS\Systems\System.h">
       <Filter>src\Waldem\ECS\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\Editor\Editor.h">
+      <Filter>src\Waldem\Editor</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\EntryPoint.h">
       <Filter>src\Waldem</Filter>
@@ -334,6 +343,12 @@
       <Filter>src\Waldem\Types</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\Types\WArray.h">
+      <Filter>src\Waldem\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\Types\WMap.h">
+      <Filter>src\Waldem\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\Types\WPair.h">
       <Filter>src\Waldem\Types</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\Utils\FileUtils.h">
@@ -1684,6 +1699,9 @@
     </ClCompile>
     <ClCompile Include="src\Waldem\Application.cpp">
       <Filter>src\Waldem</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Waldem\Editor\Editor.cpp">
+      <Filter>src\Waldem\Editor</Filter>
     </ClCompile>
     <ClCompile Include="src\Waldem\Import\ModelImporter.cpp">
       <Filter>src\Waldem\Import</Filter>
