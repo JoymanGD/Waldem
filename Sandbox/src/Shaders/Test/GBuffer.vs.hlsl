@@ -36,7 +36,7 @@ PS_INPUT main(VS_INPUT input)
     output.WorldPosition = mul(WorldTransforms[MeshId], float4(input.Position, 1));
     output.Position = mul(view, output.WorldPosition);
     output.Position = mul(proj, output.Position);
-    output.Normal = input.Normal;
+    output.Normal = normalize(mul(WorldTransforms[MeshId], float4(input.Normal, 0)).xyz);
     output.UV = input.UV;
     output.MeshId = MeshId;
 

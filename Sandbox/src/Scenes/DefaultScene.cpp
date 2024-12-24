@@ -14,21 +14,14 @@ namespace Sandbox
 	void DefaultScene::Initialize(Waldem::SceneData* sceneData, Waldem::InputManager* inputManager, ecs::Manager* ecsManager)
 	{
 		Waldem::ModelImporter importer;
-        auto sponzaModel = importer.Import("Content/Models/Sponza/Sponza.gltf", true);
+        auto sponzaModel = importer.Import("Content/Models/Sponza/Sponza2.gltf", true);
 
 		//Entities
-		uint32_t i = 0;
 		for (Waldem::Mesh* mesh : sponzaModel->GetMeshes())
 		{
 			auto entity = ecsManager->CreateEntity();
 			entity.Add<Waldem::MeshComponent>(mesh);
 			entity.Add<Waldem::Transform>(mesh->ObjectMatrix);
-
-			if(i == 6)
-			{
-				entity.Add<Waldem::Selected>();
-			}
-			i++;
 		}
 		// auto sponzaEntity = ecsManager->CreateEntity();
 		// sponzaEntity.Add<Waldem::ModelComponent>(sponzaModel);
