@@ -21,7 +21,7 @@ namespace Waldem
 			auto cameraEntity = CoreECSManager->CreateEntity();
 			float aspectRatio = window->GetWidth() / window->GetHeight();
 			cameraEntity.Add<Transform>(Vector3(0, 0, 0));
-			cameraEntity.Add<Camera>(70.0f, aspectRatio, 0.001f, 1000.0f, 30.0f, 30.0f);
+			cameraEntity.Add<Camera>(70.0f, aspectRatio, 0.1f, 100.0f, 30.0f, 30.0f);
 			cameraEntity.Add<MainCamera>();
 
 			//do it after all entities set up

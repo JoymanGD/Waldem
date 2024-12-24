@@ -46,19 +46,6 @@ namespace Waldem
             Slot = slot;
         }
 
-        //constants
-        Resource(String name, ResourceType type, uint32_t numConstants, void* data, uint32_t slot)
-        {
-            Name = name;
-            Type = type;
-            NumResources = 1;
-            Data = data;
-            uint32_t stride = sizeof(uint32_t);
-            Stride = stride;
-            Size = Vector2(stride * numConstants, 1);
-            Slot = slot;
-        }
-
         //textures
         Resource(String name, WArray<Texture2D*> textures, uint32_t slot)
         {
@@ -68,14 +55,32 @@ namespace Waldem
             NumResources = textures.Num();
             Slot = slot;
         }
-
-        //buffers
-        Resource(String name, WArray<StorageBuffer*> buffers, uint32_t slot)
+        
+        Resource(String name, Texture2D* texture, uint32_t slot)
         {
             Name = name;
-            Type = RTYPE_Buffer;
+            Type = RTYPE_Texture;
+            Textures.Add(texture);
+            NumResources = 1;
+            Slot = slot;
+        }
+
+        //buffers
+        Resource(String name, WArray<StorageBuffer*> buffers, uint32_t slot, bool UAV = false)
+        {
+            Name = name;
+            Type = UAV ? RTYPE_RWBuffer : RTYPE_Buffer;
             Buffers = buffers;
             NumResources = buffers.Num();
+            Slot = slot;
+        }
+        
+        Resource(String name, StorageBuffer* buffer, uint32_t slot, bool UAV = false)
+        {
+            Name = name;
+            Type = UAV ? RTYPE_RWBuffer : RTYPE_Buffer;
+            Buffers.Add(buffer);
+            NumResources = 1;
             Slot = slot;
         }
 

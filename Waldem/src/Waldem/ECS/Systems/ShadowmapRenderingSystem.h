@@ -27,7 +27,7 @@ namespace Waldem
             WArray<Resource> resources;
 
             resources.Add(Resource("MyConstantBuffer", RTYPE_ConstantBuffer, nullptr, sizeof(Matrix4), sizeof(Matrix4) * 2, 0));
-            resources.Add(Resource("RootConstants", RTYPE_Constant, 1, nullptr, 1));
+            resources.Add(Resource("RootConstants", RTYPE_Constant, nullptr, sizeof(uint32_t), sizeof(uint32_t), 1));
             resources.Add(Resource("WorldTransforms", RTYPE_Buffer, worldTransforms.GetData(), sizeof(Matrix4), worldTransforms.GetSize(), 0));
             
             ShadowmapRenderingShader = Renderer::LoadPixelShader("Shadowmap");

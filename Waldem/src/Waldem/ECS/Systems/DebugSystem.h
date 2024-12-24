@@ -86,7 +86,7 @@ namespace Waldem
         {
             CacheFrustrumCorners();
 
-            inputManager->SubscribeToMouseButtonEvent(WD_MOUSE_BUTTON_RIGHT, [&](bool isPressed)
+            inputManager->SubscribeToMouseButtonEvent(WD_MOUSE_BUTTON_MIDDLE, [&](bool isPressed)
             {
                 IsRotatingLight = isPressed;
             });

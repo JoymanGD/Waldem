@@ -15,8 +15,6 @@ namespace Waldem
             
         for (uint32_t i = 0; i < resources.Num(); ++i)
         {
-            InitializedDescriptorsAmount += resources[i].NumResources;
-            
             D3D12_ROOT_PARAMETER param = {};
 
             if(resources[i].Type == RTYPE_Constant)
@@ -24,7 +22,7 @@ namespace Waldem
                 param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
                 param.Constants.ShaderRegister = resources[i].Slot;
                 param.Constants.RegisterSpace = 0;
-                param.Constants.Num32BitValues = resources[i].NumResources;
+                param.Constants.Num32BitValues = resources[i].Size.x / sizeof(uint32_t);
                 param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
             }
             else
@@ -39,7 +37,7 @@ namespace Waldem
                     {
                         numDescriptors = MAX_TEXTURES;
                     }
-                    else if(resources[i].Type == RTYPE_Buffer)
+                    else if(resources[i].Type == RTYPE_Buffer || resources[i].Type == RTYPE_RWBuffer)
                     {
                         numDescriptors = MAX_BUFFERS;
                     }
@@ -55,6 +53,8 @@ namespace Waldem
                 param.DescriptorTable.NumDescriptorRanges = 1;
                 param.DescriptorTable.pDescriptorRanges = range;
                 param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+                
+                InitializedDescriptorsAmount += resources[i].NumResources;
             }
 
             rootParams.Add(param);
@@ -150,6 +150,13 @@ namespace Waldem
         defaultHeapProps.CreationNodeMask = 1;
         defaultHeapProps.VisibleNodeMask = 1;
         
+        D3D12_HEAP_PROPERTIES readbackHeapProps = {};
+        readbackHeapProps.Type = D3D12_HEAP_TYPE_READBACK;
+        readbackHeapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+        readbackHeapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+        readbackHeapProps.CreationNodeMask = 1;
+        readbackHeapProps.VisibleNodeMask = 1;
+        
         D3D12_RESOURCE_DESC dummyBufferDesc = {};
         dummyBufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
         dummyBufferDesc.Alignment = 0;
@@ -162,12 +169,15 @@ namespace Waldem
         dummyBufferDesc.Format = DXGI_FORMAT_UNKNOWN;
         dummyBufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
-        for (auto& resourceDesc : resourceDescs)
+        for (uint32_t i = 0; i < resourceDescs.Num(); ++i)
         {
-            for (uint32_t i = 0; i < resourceDesc.NumResources; ++i)
+            auto& resourceDesc = resourceDescs[i];
+            
+            for (uint32_t j = 0; j < resourceDesc.NumResources; ++j)
             {
-                ID3D12Resource* uploadResourceBuffer;
-                ID3D12Resource* defaultResourceBuffer;
+                ID3D12Resource* uploadResourceBuffer = nullptr;
+                ID3D12Resource* defaultResourceBuffer = nullptr;
+                ID3D12Resource* readbackResourceBuffer = nullptr;
 
                 uint32_t size;
 
@@ -175,7 +185,7 @@ namespace Waldem
                 {
                 case RTYPE_Sampler:
                     {
-                        auto& sampler = resourceDesc.Samplers[i];
+                        auto& sampler = resourceDesc.Samplers[j];
                         
                         D3D12_SAMPLER_DESC samplerDesc = {};
                         samplerDesc.Filter = (D3D12_FILTER)sampler.Filter;
@@ -260,8 +270,7 @@ namespace Waldem
                             
                         if(resourceDesc.Buffers.Num() != 0)
                         {
-                            // uploadResourceBuffer = (ID3D12Resource*)resourceDesc.Buffers[i]->GetPlatformResource();
-                            defaultResourceBuffer = (ID3D12Resource*)resourceDesc.Buffers[i]->GetPlatformResource();
+                            defaultResourceBuffer = (ID3D12Resource*)resourceDesc.Buffers[j]->GetPlatformResource();
                         }
                         else
                         {
@@ -288,6 +297,79 @@ namespace Waldem
                         
                         break;
                     }
+                case RTYPE_RWBuffer:
+                    {
+                        size = (uint32_t)resourceDesc.Size.x;
+                        
+                        D3D12_RESOURCE_DESC bufferDescUploadAndReadback = {};
+                        bufferDescUploadAndReadback.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+                        bufferDescUploadAndReadback.Alignment = 0;
+                        bufferDescUploadAndReadback.Width = size;
+                        bufferDescUploadAndReadback.Height = 1;
+                        bufferDescUploadAndReadback.DepthOrArraySize = 1;
+                        bufferDescUploadAndReadback.MipLevels = 1;
+                        bufferDescUploadAndReadback.SampleDesc.Count = 1;
+                        bufferDescUploadAndReadback.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+                        bufferDescUploadAndReadback.Format = DXGI_FORMAT_UNKNOWN;
+                        bufferDescUploadAndReadback.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+                        device->CreateCommittedResource(
+                            &uploadHeapProps,
+                            D3D12_HEAP_FLAG_NONE,
+                            &bufferDescUploadAndReadback,
+                            D3D12_RESOURCE_STATE_GENERIC_READ,
+                            nullptr,
+                            IID_PPV_ARGS(&uploadResourceBuffer));
+                            
+                        if(resourceDesc.Buffers.Num() != 0)
+                        {
+                            // uploadResourceBuffer = (ID3D12Resource*)resourceDesc.Buffers[i]->GetPlatformResource();
+                            defaultResourceBuffer = (ID3D12Resource*)resourceDesc.Buffers[j]->GetPlatformResource();
+                        }
+                        else
+                        {
+                            D3D12_RESOURCE_DESC bufferDesc = {};
+                            bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+                            bufferDesc.Alignment = 0;
+                            bufferDesc.Width = size;
+                            bufferDesc.Height = 1;
+                            bufferDesc.DepthOrArraySize = 1;
+                            bufferDesc.MipLevels = 1;
+                            bufferDesc.SampleDesc.Count = 1;
+                            bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+                            bufferDesc.Format = DXGI_FORMAT_UNKNOWN;
+                            bufferDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;                        
+
+                            device->CreateCommittedResource(
+                                &defaultHeapProps,
+                                D3D12_HEAP_FLAG_NONE,
+                                &bufferDesc,
+                                D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
+                                nullptr,
+                                IID_PPV_ARGS(&defaultResourceBuffer));
+                        
+                            cmdList->ResourceBarrier(defaultResourceBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+                        }
+                        
+                        device->CreateCommittedResource(
+                            &readbackHeapProps,
+                            D3D12_HEAP_FLAG_NONE,
+                            &bufferDescUploadAndReadback,
+                            D3D12_RESOURCE_STATE_COPY_DEST,
+                            nullptr,
+                            IID_PPV_ARGS(&readbackResourceBuffer));
+                        
+                        D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+                        uavDesc.Format = DXGI_FORMAT_UNKNOWN;
+                        uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+                        uavDesc.Buffer.FirstElement = 0;
+                        uavDesc.Buffer.NumElements = (uint32_t)resourceDesc.Size.x / resourceDesc.Stride;
+                        uavDesc.Buffer.StructureByteStride = resourceDesc.Stride;
+                        uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
+                        device->CreateUnorderedAccessView(defaultResourceBuffer, nullptr, &uavDesc, handle);
+                        
+                        break;
+                    }
                 case RTYPE_Texture:
                     {
                         size = resourceDesc.Size.x * resourceDesc.Size.y;
@@ -303,7 +385,7 @@ namespace Waldem
                         if(resourceDesc.Textures.Num() != 0)
                         {
                             // uploadResourceBuffer = (ID3D12Resource*)resourceDesc.Textures[i]->GetPlatformResource();
-                            defaultResourceBuffer = (ID3D12Resource*)resourceDesc.Textures[i]->GetPlatformResource();
+                            defaultResourceBuffer = (ID3D12Resource*)resourceDesc.Textures[j]->GetPlatformResource();
                         }
                         else
                         {
@@ -403,17 +485,18 @@ namespace Waldem
 
                 if(resourceDesc.Type == RTYPE_Sampler)
                 {
+                    ResourcesMap.Add(resourceDesc.Name, new ResourceData(resourceDesc, i ));
                     samplerHandle.ptr += samplerDescriptorSize;
                 }
                 else if(resourceDesc.Type == RTYPE_Constant)
                 {
-                    ResourcesMap[resourceDesc.Name] = new ResourceData{ NULL, NULL, resourceDesc };
+                    ResourcesMap.Add(resourceDesc.Name, new ResourceData(resourceDesc, i));
                 }
                 else
                 {
                     uploadResourceBuffer->SetName(DX12Helper::StringToLPCWSTR(resourceDesc.Name + "_Upload").c_str());
                     defaultResourceBuffer->SetName(DX12Helper::StringToLPCWSTR(resourceDesc.Name + "_Default").c_str());
-                    ResourcesMap[resourceDesc.Name] = new ResourceData{ uploadResourceBuffer, defaultResourceBuffer, resourceDesc };
+                    ResourcesMap.Add(resourceDesc.Name, new ResourceData(uploadResourceBuffer, defaultResourceBuffer, readbackResourceBuffer, resourceDesc, i));
 
                     if(resourceDesc.Data)
                     {
@@ -448,8 +531,8 @@ namespace Waldem
             {
                 if(resourceData->Desc.Type == RTYPE_Constant)
                 {
-                    uint32_t numConstants = resourceData->Desc.Size.x / resourceData->Desc.Stride;
-                    CmdList->SetConstants(resourceData->Desc.Slot, numConstants, data);
+                    uint32_t numConstants = resourceData->Desc.Size.x / sizeof(uint32_t);
+                    CmdList->SetConstants(resourceData->RootParameterIndex, numConstants, data, CurrentPipelineType);
                 }
                 else
                 {
@@ -473,6 +556,42 @@ namespace Waldem
             else
             {
                 throw std::runtime_error("Resource not found!");
+            }
+        }
+    }
+
+    void DX12RootSignature::ReadbackResourceData(String name, void* destinationData)
+    {
+        if(destinationData)
+        {
+            auto resourceData = ResourcesMap[name];
+            
+            if(resourceData)
+            {
+                if(resourceData->Desc.Type == RTYPE_RWBuffer || resourceData->Desc.Type == RTYPE_RWBufferRaw)
+                {
+                    //copy the GPU buffer to the readback buffer
+                    CmdList->ResourceBarrier(resourceData->DX12DefaultResource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
+                    CmdList->CopyResource(resourceData->DX12ReadbackResource, resourceData->DX12DefaultResource);
+                    CmdList->ResourceBarrier(resourceData->DX12DefaultResource, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+                    //map and copy data
+                    UINT8* pMappedData;
+                    HRESULT hr = resourceData->DX12ReadbackResource->Map(0, nullptr, reinterpret_cast<void**>(&pMappedData));
+                    if(FAILED(hr))
+                    {
+                        DX12Helper::PrintHResultError(hr);
+                    }
+                    memcpy(destinationData, pMappedData, resourceData->Desc.Size.x * resourceData->Desc.Size.y);
+                    resourceData->DX12ReadbackResource->Unmap(0, nullptr);
+                }
+                else
+                {
+                    WD_CORE_ERROR("Wrong resource type for readback! Resource name: {0}, Resource type: {1}", name, resourceData->Desc.Type);
+                }
+            }
+            else
+            {
+                WD_CORE_ERROR("Resource not found with name: {0}", name);
             }
         }
     }

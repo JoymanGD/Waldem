@@ -11,9 +11,10 @@ struct PS_INPUT
 
 struct PS_OUTPUT
 {
-    float4 WorldPosition : SV_TARGET0;
-    float4 Normal : SV_TARGET1;
-    float4 Albedo : SV_TARGET2;
+    float4 WorldPositionRT : SV_TARGET0;
+    float4 NormalRT : SV_TARGET1;
+    float4 AlbedoRT : SV_TARGET2;
+    int MeshIDRT : SV_TARGET3;
 };
 
 SamplerState myStaticSampler : register(s0);
@@ -29,9 +30,10 @@ PS_OUTPUT main(PS_INPUT input)
     if(color.a < 0.1f)
         discard;
 
-    output.WorldPosition = input.WorldPosition;
-    output.Normal = float4(input.Normal, 1.0f);
-    output.Albedo = color;
+    output.WorldPositionRT = input.WorldPosition;
+    output.NormalRT = float4(input.Normal, 1.0f);
+    output.AlbedoRT = color;
+    output.MeshIDRT = input.MeshId;
 
     return output;
 }
