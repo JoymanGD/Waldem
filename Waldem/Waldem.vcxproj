@@ -178,6 +178,7 @@
     <ClInclude Include="src\Waldem\ECS\Systems\PostProcessSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\ShadowmapRenderingSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\System.h" />
+    <ClInclude Include="src\Waldem\Editor\Editor.h" />
     <ClInclude Include="src\Waldem\EntryPoint.h" />
     <ClInclude Include="src\Waldem\Events\ApplicationEvent.h" />
     <ClInclude Include="src\Waldem\Events\Event.h" />
@@ -674,6 +675,7 @@
     <ClCompile Include="src\Platform\OS\Windows\WindowsInput.cpp" />
     <ClCompile Include="src\Platform\OS\Windows\WindowsWindow.cpp" />
     <ClCompile Include="src\Waldem\Application.cpp" />
+    <ClCompile Include="src\Waldem\Editor\Editor.cpp" />
     <ClCompile Include="src\Waldem\Import\ModelImporter.cpp" />
     <ClCompile Include="src\Waldem\Input\InputManager.cpp" />
     <ClCompile Include="src\Waldem\Layers\LayerStack.cpp" />
