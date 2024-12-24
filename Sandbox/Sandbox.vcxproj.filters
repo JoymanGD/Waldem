@@ -4,12 +4,6 @@
     <Filter Include="Scenes">
       <UniqueIdentifier>{86EEB3D0-7290-DEA6-5B4B-F2FA478C65F7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shaders">
-      <UniqueIdentifier>{EFAC8DF2-5B8C-0C8E-64A4-9764D00273EF}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Shaders\Test">
-      <UniqueIdentifier>{BE66FCFA-AAC9-8B9F-534F-C4553F915722}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\SandboxApp.h" />
@@ -22,55 +16,5 @@
     <ClCompile Include="src\Scenes\DefaultScene.cpp">
       <Filter>Scenes</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="src\Shaders\Test\Core.hlsl">
-      <Filter>Shaders\Test</Filter>
-    </FxCompile>
-    <FxCompile Include="src\Shaders\Test\DeferredRendering.comp.hlsl">
-      <Filter>Shaders\Test</Filter>
-    </FxCompile>
-    <FxCompile Include="src\Shaders\Test\ForwardRendering.ps.hlsl">
-      <Filter>Shaders\Test</Filter>
-    </FxCompile>
-    <FxCompile Include="src\Shaders\Test\ForwardRendering.vs.hlsl">
-      <Filter>Shaders\Test</Filter>
-    </FxCompile>
-    <FxCompile Include="src\Shaders\Test\GBuffer.ps.hlsl">
-      <Filter>Shaders\Test</Filter>
-    </FxCompile>
-    <FxCompile Include="src\Shaders\Test\GBuffer.vs.hlsl">
-      <Filter>Shaders\Test</Filter>
-    </FxCompile>
-    <FxCompile Include="src\Shaders\Test\Lighting.hlsl">
-      <Filter>Shaders\Test</Filter>
-    </FxCompile>
-    <FxCompile Include="src\Shaders\Test\Line.ps.hlsl">
-      <Filter>Shaders\Test</Filter>
-    </FxCompile>
-    <FxCompile Include="src\Shaders\Test\Line.vs.hlsl">
-      <Filter>Shaders\Test</Filter>
-    </FxCompile>
-    <FxCompile Include="src\Shaders\Test\PostProcess.comp.hlsl">
-      <Filter>Shaders\Test</Filter>
-    </FxCompile>
-    <FxCompile Include="src\Shaders\Test\QuadDraw.ps.hlsl">
-      <Filter>Shaders\Test</Filter>
-    </FxCompile>
-    <FxCompile Include="src\Shaders\Test\QuadDraw.vs.hlsl">
-      <Filter>Shaders\Test</Filter>
-    </FxCompile>
-    <FxCompile Include="src\Shaders\Test\Shadowmap.ps.hlsl">
-      <Filter>Shaders\Test</Filter>
-    </FxCompile>
-    <FxCompile Include="src\Shaders\Test\Shadowmap.vs.hlsl">
-      <Filter>Shaders\Test</Filter>
-    </FxCompile>
-    <FxCompile Include="src\Shaders\Test\Shadows.hlsl">
-      <Filter>Shaders\Test</Filter>
-    </FxCompile>
-    <FxCompile Include="src\Shaders\Test\Types.hlsl">
-      <Filter>Shaders\Test</Filter>
-    </FxCompile>
   </ItemGroup>
 </Project>
