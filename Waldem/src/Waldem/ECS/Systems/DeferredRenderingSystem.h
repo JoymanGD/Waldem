@@ -3,6 +3,7 @@
 #include "Waldem/ECS/Components/MainCamera.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
 #include "Waldem/ECS/Components/Selected.h"
+#include "Waldem/Editor/Editor.h"
 #include "Waldem/Renderer/Light.h"
 #include "Waldem/Renderer/Shader.h"
 #include "Waldem/Renderer/Model/Quad.h"
@@ -45,7 +46,6 @@ namespace Waldem
         PixelShader* QuadDrawPixelShader = nullptr;
         RootSignature* QuadDrawRootSignature = nullptr;
         Quad FullscreenQuad = {};
-        int HoveredMeshId = -1;
         
     public:
         DeferredRenderingSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
@@ -111,7 +111,7 @@ namespace Waldem
             deferredRenderingPassResources.Add(Resource("MeshIDRT", MeshIDRT, 5));
             deferredRenderingPassResources.Add(Resource("DepthRT", DepthRT, 6));
             deferredRenderingPassResources.Add(Resource("DeferredRenderingRenderTarget", DeferredRenderingRenderTarget, 0, true));
-            deferredRenderingPassResources.Add(Resource("HoveredMeshes", RTYPE_RWBuffer, &HoveredMeshId, sizeof(int), sizeof(int), 1));
+            deferredRenderingPassResources.Add(Resource("HoveredMeshes", RTYPE_RWBuffer, nullptr, sizeof(int), sizeof(int), 1));
             deferredRenderingPassResources.Add(constantBufferResource);
             deferredRenderingPassResources.Add(Resource("RootConstants", RTYPE_Constant, nullptr, sizeof(float) * 2, sizeof(float) * 2, 1));
             DeferredRenderingRootSignature = Renderer::CreateRootSignature(deferredRenderingPassResources);
@@ -140,29 +140,6 @@ namespace Waldem
             QuadDrawRootSignature = Renderer::CreateRootSignature(QuadDrawPassResources);
             QuadDrawPixelShader = Renderer::LoadPixelShader("QuadDraw");
             QuadDrawPipeline = Renderer::CreateGraphicPipeline("QuadDrawPipeline", { TextureFormat::R8G8B8A8_UNORM }, WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, QuadDrawRootSignature, QuadDrawPixelShader);
-
-            inputManager->SubscribeToMouseButtonEvent(WD_MOUSE_BUTTON_LEFT, [&](bool isPressed)
-            {
-                if(isPressed)
-                {
-                    for (auto [entity, mesh, transform, selected] : ECSManager->EntitiesWith<MeshComponent, Transform, Selected>())
-                    {
-                        entity.Remove<Selected>();
-                    }
-                    
-                    int meshId = 0;
-                    
-                    for (auto [entity, mesh, transform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
-                    {
-                        if(meshId == HoveredMeshId)
-                        {
-                            entity.Add<Selected>();
-                            break;
-                        }
-                        meshId++;
-                    }
-                }
-            });
         }
 
         void Update(float deltaTime) override
@@ -245,7 +222,7 @@ namespace Waldem
             
             Renderer::Compute(GroupCount);
             
-            DeferredRenderingRootSignature->ReadbackResourceData("HoveredMeshes", &HoveredMeshId);
+            DeferredRenderingRootSignature->ReadbackResourceData("HoveredMeshes", &Editor::HoveredIntityID);
 
             //Post process pass
             Renderer::ResourceBarrier(DeferredRenderingRenderTarget, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);

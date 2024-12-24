@@ -6,8 +6,10 @@
 #include "Waldem/KeyCodes.h"
 #include "Waldem/MouseButtonCodes.h"
 #include "Waldem/ECS/Components/MainCamera.h"
+#include "Waldem/ECS/Components/MeshComponent.h"
 #include "Waldem/ECS/Components/ModelComponent.h"
 #include "Waldem/ECS/Components/Selected.h"
+#include "Waldem/Editor/Editor.h"
 #include "Waldem/World/Camera.h"
 
 namespace Waldem
@@ -61,6 +63,29 @@ namespace Waldem
                 if(isPressed && CanModifyManipulationSettings)
                 {
                     CurrentMode = CurrentMode == ImGuizmo::LOCAL ? ImGuizmo::WORLD : ImGuizmo::LOCAL;
+                }
+            });
+
+            inputManager->SubscribeToMouseButtonEvent(WD_MOUSE_BUTTON_LEFT, [&](bool isPressed)
+            {
+                if(isPressed)
+                {
+                    for (auto [entity, mesh, transform, selected] : ECSManager->EntitiesWith<MeshComponent, Transform, Selected>())
+                    {
+                        entity.Remove<Selected>();
+                    }
+                    
+                    int meshId = 0;
+                    
+                    for (auto [entity, mesh, transform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
+                    {
+                        if(meshId == Editor::HoveredIntityID)
+                        {
+                            entity.Add<Selected>();
+                            break;
+                        }
+                        meshId++;
+                    }
                 }
             });
         }
