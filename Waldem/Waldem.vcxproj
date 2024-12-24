@@ -221,6 +221,8 @@
     <ClInclude Include="src\Waldem\Types\MathTypes.h" />
     <ClInclude Include="src\Waldem\Types\Types.h" />
     <ClInclude Include="src\Waldem\Types\WArray.h" />
+    <ClInclude Include="src\Waldem\Types\WMap.h" />
+    <ClInclude Include="src\Waldem\Types\WPair.h" />
     <ClInclude Include="src\Waldem\Utils\FileUtils.h" />
     <ClInclude Include="src\Waldem\Window.h" />
     <ClInclude Include="src\Waldem\World\Camera.h" />

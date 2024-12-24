@@ -2,7 +2,7 @@
 #include "System.h"
 #include "Waldem/ECS/Components/MainCamera.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
-#include "Waldem/ECS/Components/ModelComponent.h"
+#include "Waldem/ECS/Components/Selected.h"
 #include "Waldem/Renderer/Light.h"
 #include "Waldem/Renderer/Shader.h"
 #include "Waldem/Renderer/Model/Quad.h"
@@ -27,6 +27,8 @@ namespace Waldem
         RenderTarget* WorldPositionRT = nullptr;
         RenderTarget* NormalRT = nullptr;
         RenderTarget* AlbedoRT = nullptr;
+        RenderTarget* DepthRT = nullptr;
+        RenderTarget* MeshIDRT = nullptr;
         //Deferred rendering pass
         Pipeline* DeferredRenderingPipeline = nullptr;
         ComputeShader* DeferredRenderingComputeShader = nullptr;
@@ -43,6 +45,7 @@ namespace Waldem
         PixelShader* QuadDrawPixelShader = nullptr;
         RootSignature* QuadDrawRootSignature = nullptr;
         Quad FullscreenQuad = {};
+        int HoveredMeshId = -1;
         
     public:
         DeferredRenderingSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
@@ -70,7 +73,7 @@ namespace Waldem
             
             WArray<Resource> gBufferPassResources;
             gBufferPassResources.Add(Resource("MyConstantBuffer", RTYPE_ConstantBuffer, nullptr, sizeof(Matrix4), sizeof(Matrix4) * 2, 0));
-            gBufferPassResources.Add(Resource("RootConstants", RTYPE_Constant, 1, nullptr, 1));
+            gBufferPassResources.Add(Resource("RootConstants", RTYPE_Constant, nullptr, sizeof(uint32_t), sizeof(uint32_t), 1));
             if(!worldTransforms.IsEmpty())
                 gBufferPassResources.Add(Resource("WorldTransforms", RTYPE_Buffer, worldTransforms.GetData(), sizeof(Matrix4), worldTransforms.GetSize(), 0));
             if(!textures.IsEmpty())
@@ -79,9 +82,11 @@ namespace Waldem
             WorldPositionRT = Renderer::CreateRenderTarget("WorldPositionRT", resolution.x, resolution.y, TextureFormat::R32G32B32A32_FLOAT);
             NormalRT = Renderer::CreateRenderTarget("NormalRT", resolution.x, resolution.y, TextureFormat::R16G16B16A16_FLOAT);
             AlbedoRT = Renderer::CreateRenderTarget("AlbedoRT", resolution.x, resolution.y, TextureFormat::R8G8B8A8_UNORM);
+            MeshIDRT = Renderer::CreateRenderTarget("MeshIDRT", resolution.x, resolution.y, TextureFormat::R32_SINT);
+            DepthRT = Renderer::CreateRenderTarget("DepthRT", resolution.x, resolution.y, TextureFormat::D32_FLOAT);
             GBufferRootSignature = Renderer::CreateRootSignature(gBufferPassResources);
             GBufferPixelShader = Renderer::LoadPixelShader("GBuffer");
-            GBufferPipeline = Renderer::CreateGraphicPipeline("GBufferPipeline", { WorldPositionRT->GetFormat(), NormalRT->GetFormat(), AlbedoRT->GetFormat() }, WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, GBufferRootSignature, GBufferPixelShader);
+            GBufferPipeline = Renderer::CreateGraphicPipeline("GBufferPipeline", { WorldPositionRT->GetFormat(), NormalRT->GetFormat(), AlbedoRT->GetFormat(), MeshIDRT->GetFormat() }, WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, GBufferRootSignature, GBufferPixelShader);
 
             //Deferred rendering pass
             DeferredRenderingRenderTarget = Renderer::CreateRenderTarget("DeferredRenderingRenderTarget", resolution.x, resolution.y, TextureFormat::R8G8B8A8_UNORM);
@@ -103,8 +108,12 @@ namespace Waldem
             deferredRenderingPassResources.Add(Resource("WorldPosition", WorldPositionRT, 2));
             deferredRenderingPassResources.Add(Resource("Normal", NormalRT, 3));
             deferredRenderingPassResources.Add(Resource("Albedo", AlbedoRT, 4));
+            deferredRenderingPassResources.Add(Resource("MeshIDRT", MeshIDRT, 5));
+            deferredRenderingPassResources.Add(Resource("DepthRT", DepthRT, 6));
             deferredRenderingPassResources.Add(Resource("DeferredRenderingRenderTarget", DeferredRenderingRenderTarget, 0, true));
+            deferredRenderingPassResources.Add(Resource("HoveredMeshes", RTYPE_RWBuffer, &HoveredMeshId, sizeof(int), sizeof(int), 1));
             deferredRenderingPassResources.Add(constantBufferResource);
+            deferredRenderingPassResources.Add(Resource("RootConstants", RTYPE_Constant, nullptr, sizeof(float) * 2, sizeof(float) * 2, 1));
             DeferredRenderingRootSignature = Renderer::CreateRootSignature(deferredRenderingPassResources);
             DeferredRenderingComputeShader = Renderer::LoadComputeShader("DeferredRendering");
             DeferredRenderingPipeline = Renderer::CreateComputePipeline("DeferredLightingPipeline", DeferredRenderingRootSignature, DeferredRenderingComputeShader);
@@ -131,6 +140,29 @@ namespace Waldem
             QuadDrawRootSignature = Renderer::CreateRootSignature(QuadDrawPassResources);
             QuadDrawPixelShader = Renderer::LoadPixelShader("QuadDraw");
             QuadDrawPipeline = Renderer::CreateGraphicPipeline("QuadDrawPipeline", { TextureFormat::R8G8B8A8_UNORM }, WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, QuadDrawRootSignature, QuadDrawPixelShader);
+
+            inputManager->SubscribeToMouseButtonEvent(WD_MOUSE_BUTTON_LEFT, [&](bool isPressed)
+            {
+                if(isPressed)
+                {
+                    for (auto [entity, mesh, transform, selected] : ECSManager->EntitiesWith<MeshComponent, Transform, Selected>())
+                    {
+                        entity.Remove<Selected>();
+                    }
+                    
+                    int meshId = 0;
+                    
+                    for (auto [entity, mesh, transform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
+                    {
+                        if(meshId == HoveredMeshId)
+                        {
+                            entity.Add<Selected>();
+                            break;
+                        }
+                        meshId++;
+                    }
+                }
+            });
         }
 
         void Update(float deltaTime) override
@@ -161,15 +193,20 @@ namespace Waldem
             Renderer::ResourceBarrier(WorldPositionRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
             Renderer::ResourceBarrier(NormalRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
             Renderer::ResourceBarrier(AlbedoRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
-            Renderer::SetRenderTargets({ WorldPositionRT, NormalRT, AlbedoRT });
+            Renderer::ResourceBarrier(MeshIDRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
+            Renderer::ResourceBarrier(DepthRT, ALL_SHADER_RESOURCE, DEPTH_WRITE);
+            Renderer::SetRenderTargets({ WorldPositionRT, NormalRT, AlbedoRT, MeshIDRT }, DepthRT);
             Renderer::ClearRenderTarget(WorldPositionRT);
             Renderer::ClearRenderTarget(NormalRT);
             Renderer::ClearRenderTarget(AlbedoRT);
+            Renderer::ClearRenderTarget(MeshIDRT);
+            Renderer::ClearDepthStencil(DepthRT);
             
-            uint32_t modelID = 0;
+            uint32_t meshId = 0;
+            
             for (auto [entity, mesh, transform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
             {
-                GBufferRootSignature->UpdateResourceData("RootConstants", &modelID);
+                GBufferRootSignature->UpdateResourceData("RootConstants", &meshId);
                 
                 auto transformedBBox = mesh.Mesh->BBox.Transform(transform.Matrix);
 
@@ -178,7 +215,7 @@ namespace Waldem
                 {
                     Renderer::Draw(mesh.Mesh);
                 }
-                modelID++;
+                meshId++;
             }
             Renderer::SetRenderTargets({});
 
@@ -186,6 +223,8 @@ namespace Waldem
             Renderer::ResourceBarrier(WorldPositionRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
             Renderer::ResourceBarrier(NormalRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
             Renderer::ResourceBarrier(AlbedoRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
+            Renderer::ResourceBarrier(MeshIDRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
+            Renderer::ResourceBarrier(DepthRT, DEPTH_WRITE, ALL_SHADER_RESOURCE);
 
             WArray<LightShaderData> LightDatas;
             
@@ -197,9 +236,16 @@ namespace Waldem
 
             if(!LightDatas.IsEmpty())
                 DeferredRenderingRootSignature->UpdateResourceData("LightsBuffer", LightDatas.GetData());
+            
             Renderer::SetPipeline(DeferredRenderingPipeline);
             Renderer::SetRootSignature(DeferredRenderingRootSignature);
+            
+            auto mousePos = Input::GetMousePos();
+            DeferredRenderingRootSignature->UpdateResourceData("RootConstants", &mousePos);
+            
             Renderer::Compute(GroupCount);
+            
+            DeferredRenderingRootSignature->ReadbackResourceData("HoveredMeshes", &HoveredMeshId);
 
             //Post process pass
             Renderer::ResourceBarrier(DeferredRenderingRenderTarget, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);

@@ -52,7 +52,7 @@ namespace Waldem
                 DeltaPos += Vector3(0, -1, 0) * multiplier;
             });
 
-            inputManager->SubscribeToMouseButtonEvent(WD_MOUSE_BUTTON_LEFT, [&](bool isPressed)
+            inputManager->SubscribeToMouseButtonEvent(WD_MOUSE_BUTTON_RIGHT, [&](bool isPressed)
             {
                 IsUnderControl = isPressed;
             });

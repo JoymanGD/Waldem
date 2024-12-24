@@ -381,6 +381,7 @@ namespace Waldem
         auto resourcesHeap = dx12RootSignature->GetResourcesHeap();
         auto samplersHeap = dx12RootSignature->GetSamplersHeap();
         auto rootParamTypes = dx12RootSignature->GetRootParamTypes();
+        auto resourcesMap = dx12RootSignature->GetResourcesMap();
         
         ID3D12DescriptorHeap* heaps[] = { resourcesHeap, samplersHeap };
         CommandList->SetDescriptorHeaps(2, heaps);
@@ -393,7 +394,7 @@ namespace Waldem
         for (uint32_t i = 0; i < rootParamTypes.Num(); ++i)
         {
             auto& rootParamType = rootParamTypes[i];
-
+        
             if(rootParamType == RTYPE_Sampler)
             {
                 if(rootSignature->CurrentPipelineType == PipelineType::Compute)
@@ -404,7 +405,7 @@ namespace Waldem
                 {
                     CommandList->SetGraphicsRootDescriptorTable(i, samplersHandle);
                 }
-
+        
                 samplersHandle.ptr += samplerDescriptorSize;
             }
             else if(rootParamType == RTYPE_Constant)
@@ -421,10 +422,46 @@ namespace Waldem
                 {
                     CommandList->SetGraphicsRootDescriptorTable(i, handle);
                 }
-
+        
                 handle.ptr += descriptorSize;
             }
         }
+
+        // for (auto resourcePair : resourcesMap)
+        // {
+        //     auto resourceData = resourcePair.value;
+        //     
+        //     if(resourceData->Desc.Type == RTYPE_Sampler)
+        //     {
+        //         if(rootSignature->CurrentPipelineType == PipelineType::Compute)
+        //         {
+        //             CommandList->SetComputeRootDescriptorTable(resourceData->RootParameterIndex, samplersHandle);
+        //         }
+        //         else
+        //         {
+        //             CommandList->SetGraphicsRootDescriptorTable(resourceData->RootParameterIndex, samplersHandle);
+        //         }
+        //
+        //         samplersHandle.ptr += samplerDescriptorSize;
+        //     }
+        //     else if(resourceData->Desc.Type == RTYPE_Constant)
+        //     {
+        //         continue;
+        //     }
+        //     else
+        //     {
+        //         if(rootSignature->CurrentPipelineType == PipelineType::Compute)
+        //         {
+        //             CommandList->SetComputeRootDescriptorTable(resourceData->RootParameterIndex, handle);
+        //         }
+        //         else
+        //         {
+        //             CommandList->SetGraphicsRootDescriptorTable(resourceData->RootParameterIndex, handle);
+        //         }
+        //
+        //         handle.ptr += descriptorSize;
+        //     }
+        // }
     }
 
     void DX12CommandList::SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil)
@@ -492,9 +529,16 @@ namespace Waldem
         }
     }
 
-    void DX12CommandList::SetConstants(uint32_t slot, uint32_t numConstants, void* data)
+    void DX12CommandList::SetConstants(uint32_t rootParamIndex, uint32_t numConstants, void* data, PipelineType pipelineType)
     {
-        CommandList->SetGraphicsRoot32BitConstants(slot, numConstants, data, 0);
+        if(pipelineType == PipelineType::Compute)
+        {
+            CommandList->SetComputeRoot32BitConstants(rootParamIndex, numConstants, data, 0);
+        }
+        else
+        {
+            CommandList->SetGraphicsRoot32BitConstants(rootParamIndex, numConstants, data, 0);
+        }
     }
 
     void DX12CommandList::CopyTextureRegion(const D3D12_TEXTURE_COPY_LOCATION* dst, uint32_t dstX, uint32_t dstY, uint32_t dstZ, const D3D12_TEXTURE_COPY_LOCATION* src, const D3D12_BOX* srcBox)

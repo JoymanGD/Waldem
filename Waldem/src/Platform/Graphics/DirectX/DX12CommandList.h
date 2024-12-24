@@ -45,7 +45,7 @@ namespace Waldem
         void ClearRenderTarget(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetHandle);
         void ClearDepthStencil(D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandle);
         void Reset();
-        void SetConstants(uint32_t slot, uint32_t numConstants, void* data);
+        void SetConstants(uint32_t rootParamIndex, uint32_t numConstants, void* data, PipelineType pipelineType);
         void CopyTextureRegion(const D3D12_TEXTURE_COPY_LOCATION* dst, uint32_t dstX, uint32_t dstY, uint32_t dstZ, const D3D12_TEXTURE_COPY_LOCATION* src, const D3D12_BOX* srcBox);
         void CopyResource(ID3D12Resource* dst, ID3D12Resource* src);
         
