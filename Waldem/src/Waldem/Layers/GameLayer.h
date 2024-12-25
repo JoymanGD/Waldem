@@ -16,35 +16,13 @@ namespace Waldem
 	class WALDEM_API GameLayer : public Layer
 	{
 	public:
-		GameLayer(Window* window, ecs::Manager* ecsManager, InputManager* inputManager) : Layer("GameLayer", window, ecsManager, inputManager)
+		GameLayer(Window* window, ecs::Manager* ecsManager) : Layer("GameLayer", window, ecsManager)
 		{
-			auto cameraEntity = CoreECSManager->CreateEntity();
-			float aspectRatio = window->GetWidth() / window->GetHeight();
-			cameraEntity.Add<Transform>(Vector3(0, 0, 0));
-			cameraEntity.Add<Camera>(70.0f, aspectRatio, 0.1f, 100.0f, 30.0f, 30.0f);
-			cameraEntity.Add<MainCamera>();
-
-			//do it after all entities set up
-			CoreECSManager->Refresh();
-        	
-			UpdateSystems.Add((ISystem*)new FreeLookCameraSystem(CoreECSManager));
-			UpdateSystems.Add((ISystem*)new DebugSystem(CoreECSManager));
-        	
-			SceneData sceneData = { window };
-        	
-			for (ISystem* system : UpdateSystems)
-			{
-				system->Initialize(&sceneData, CurrentInputManager);
-			}
+			GameInputManager = {};
 		}
 
 		void OnUpdate(float deltaTime) override
-		{
-			for (ISystem* system : UpdateSystems)
-			{
-				system->Update(deltaTime);
-			}
-        	
+		{        	
 			CurrentScene->Update(deltaTime);
 
 			CurrentScene->Draw(deltaTime);
@@ -65,7 +43,7 @@ namespace Waldem
 			case EventType::MouseScrolled:
 				{
 					event.Handled = true;
-					CurrentInputManager->Broadcast(event);
+					GameInputManager.Broadcast(event);
 				}
 			}
 		}
@@ -78,7 +56,7 @@ namespace Waldem
 		void OpenScene(Scene* scene, SceneData* sceneData)
 		{
 			Renderer::Begin();
-			scene->Initialize(sceneData, CurrentInputManager, CoreECSManager);
+			scene->Initialize(sceneData, &GameInputManager, CoreECSManager);
 			Renderer::End();
             
 			CurrentScene = scene;
@@ -93,7 +71,6 @@ namespace Waldem
 
 	private:
 		Scene* CurrentScene = nullptr;
-    	
-		WArray<ISystem*> UpdateSystems;
+        InputManager GameInputManager;
 	};
 }

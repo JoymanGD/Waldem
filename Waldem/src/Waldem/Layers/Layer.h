@@ -10,7 +10,7 @@ namespace Waldem
     class WALDEM_API Layer
     {
     public:
-        Layer(const String& name = "Layer", Window* window = nullptr, ecs::Manager* ecsManager = nullptr, InputManager* inputManager = nullptr) : DebugName(name), MainWindow(window), CoreECSManager(ecsManager), CurrentInputManager(inputManager) {}
+        Layer(const String& name = "Layer", Window* window = nullptr, ecs::Manager* ecsManager = nullptr) : DebugName(name), MainWindow(window), CoreECSManager(ecsManager) {}
         virtual ~Layer() = default;
         virtual void Begin() {}
         virtual void End() {}
@@ -25,6 +25,5 @@ namespace Waldem
         String DebugName;
         Window* MainWindow;
         ecs::Manager* CoreECSManager;
-        InputManager* CurrentInputManager;
     };
 }
