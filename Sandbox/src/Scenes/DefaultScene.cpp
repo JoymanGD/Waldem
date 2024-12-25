@@ -43,9 +43,6 @@ namespace Sandbox
 
 		//do it after all entities set up
 		ecsManager->Refresh();
-
-		DrawSystems.Add((Waldem::ISystem*)new Waldem::ShadowmapRenderingSystem(ecsManager));
-		DrawSystems.Add((Waldem::ISystem*)new Waldem::DeferredRenderingSystem(ecsManager));
 		
 		for (Waldem::ISystem* system : UpdateSystems)
 		{
