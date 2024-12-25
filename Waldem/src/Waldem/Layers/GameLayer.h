@@ -1,8 +1,7 @@
 #pragma once
 
-#include "Waldem/ECS/Systems/DebugSystem.h"
 #include "Waldem/ECS/Systems/DeferredRenderingSystem.h"
-#include "Waldem/ECS/Systems/FreeLookCameraSystem.h"
+#include "Waldem/ECS/Systems/ShadowmapRenderingSystem.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/Input/InputManager.h"
 #include "Waldem/Layers/Layer.h"
@@ -19,11 +18,19 @@ namespace Waldem
 		GameLayer(Window* window, ecs::Manager* ecsManager) : Layer("GameLayer", window, ecsManager)
 		{
 			GameInputManager = {};
+
+			DrawSystems.Add((ISystem*)new ShadowmapRenderingSystem(ecsManager));
+			DrawSystems.Add((ISystem*)new DeferredRenderingSystem(ecsManager));
 		}
 
 		void OnUpdate(float deltaTime) override
 		{        	
 			CurrentScene->Update(deltaTime);
+			
+			for (ISystem* system : DrawSystems)
+			{
+				system->Update(deltaTime);
+			}
 
 			CurrentScene->Draw(deltaTime);
 		}
@@ -57,6 +64,12 @@ namespace Waldem
 		{
 			Renderer::Begin();
 			scene->Initialize(sceneData, &GameInputManager, CoreECSManager);
+			
+			for (ISystem* system : DrawSystems)
+			{
+				system->Initialize(sceneData, &GameInputManager);
+			}
+			
 			Renderer::End();
             
 			CurrentScene = scene;
@@ -72,5 +85,6 @@ namespace Waldem
 	private:
 		Scene* CurrentScene = nullptr;
         InputManager GameInputManager;
+        WArray<ISystem*> DrawSystems;
 	};
 }
