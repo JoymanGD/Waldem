@@ -104,6 +104,12 @@ project "Waldem"
         runtime "Release"
         optimize "on"
         
+    filter { "files:Waldem/vendor/imgui/**.cpp" }
+         flags { "NoPCH" }
+        
+    filter { "files:Waldem/vendor/ImGuizmo/**.cpp" }
+         flags { "NoPCH" }
+        
     filter { "files:**.hlsl" }
        flags { "ExcludeFromBuild", 'NoPCH' }
        shadermodel "5.1"
