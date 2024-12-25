@@ -2,7 +2,7 @@
 
 #include "Core.h"
 #include "Window.h"
-#include "Layers/ImGuiLayer.h"
+#include "Layers/EditorLayer.h"
 #include "Layers/GameLayer.h"
 #include "Renderer/Renderer.h"
 #include "SceneManagement/SceneManager.h"
@@ -35,10 +35,9 @@ namespace Waldem
 		Renderer CurrentRenderer;
 		bool IsRunning = true;
 		LayerStack LayerStack;
-		ImGuiLayer* UILayer;
+		EditorLayer* UILayer;
 		GameLayer* CurrentGameLayer;
         ecs::Manager CoreECSManager;
-        InputManager CurrentInputManager;
 
 		std::vector<float> FrameTimes;
 		int FrameCount = 0;

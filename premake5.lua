@@ -105,7 +105,7 @@ project "Waldem"
         optimize "on"
         
     filter { "files:**.hlsl" }
-       flags "ExcludeFromBuild"
+       flags { "ExcludeFromBuild", 'NoPCH' }
        shadermodel "5.1"
     filter { "files:**.ps.hlsl" }
        removeflags "ExcludeFromBuild"
@@ -186,7 +186,7 @@ project "Sandbox"
         optimize "on"
         
     filter { "files:**.hlsl" }
-       flags "ExcludeFromBuild"
+       flags { "ExcludeFromBuild", 'NoPCH' }
        shadermodel "5.1"
     filter { "files:**.ps.hlsl" }
        removeflags "ExcludeFromBuild"

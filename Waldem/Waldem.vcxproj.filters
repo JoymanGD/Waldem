@@ -246,10 +246,10 @@
     <ClInclude Include="src\Waldem\KeyCodes.h">
       <Filter>src\Waldem</Filter>
     </ClInclude>
-    <ClInclude Include="src\Waldem\Layers\GameLayer.h">
+    <ClInclude Include="src\Waldem\Layers\EditorLayer.h">
       <Filter>src\Waldem\Layers</Filter>
     </ClInclude>
-    <ClInclude Include="src\Waldem\Layers\ImGuiLayer.h">
+    <ClInclude Include="src\Waldem\Layers\GameLayer.h">
       <Filter>src\Waldem\Layers</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\Layers\Layer.h">
@@ -1705,9 +1705,6 @@
     </ClCompile>
     <ClCompile Include="src\Waldem\Import\ModelImporter.cpp">
       <Filter>src\Waldem\Import</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Waldem\Input\InputManager.cpp">
-      <Filter>src\Waldem\Input</Filter>
     </ClCompile>
     <ClCompile Include="src\Waldem\Layers\LayerStack.cpp">
       <Filter>src\Waldem\Layers</Filter>
