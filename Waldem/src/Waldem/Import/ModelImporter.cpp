@@ -101,7 +101,7 @@ namespace Waldem
                     height = 1;
 
                     // Fake orange texture data for the case when texture is not found
-                    Vector4 fakeData = Vector4(1.f, .5f, 0.f, 1.f);
+                    Vector4 fakeData = normalize(Vector4(1.f, .2f, 0.f, 1.f));
                     image_data = (uint8_t*)&fakeData;
                 }
 
@@ -122,7 +122,14 @@ namespace Waldem
                 uint32_t vertexBufferSize = vertexData.size() * sizeof(Vertex);
                 BoundingBox bBox { Vector3(assimpMesh->mAABB.mMin.x, assimpMesh->mAABB.mMin.y, assimpMesh->mAABB.mMin.z), Vector3(assimpMesh->mAABB.mMax.x, assimpMesh->mAABB.mMax.y, assimpMesh->mAABB.mMax.z)};
                 Mesh* mesh = new Mesh(vertexData.data(), vertexBufferSize, indices.data(), indices.size(), mat, bBox);
-                mesh->ObjectMatrix = AssimpToMatrix4(assimpModel->mRootNode->mChildren[i]->mTransformation);
+                if(assimpModel->mRootNode->mNumChildren > 0)
+                {
+                    mesh->ObjectMatrix = AssimpToMatrix4(assimpModel->mRootNode->mChildren[i]->mTransformation);
+                }
+                else
+                {
+                    mesh->ObjectMatrix = AssimpToMatrix4(assimpModel->mRootNode->mTransformation);
+                }
                 result->AddMesh(mesh);
             }
         }
