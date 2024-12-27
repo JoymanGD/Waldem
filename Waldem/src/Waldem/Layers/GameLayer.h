@@ -22,9 +22,9 @@ namespace Waldem
 
 			Vector2 resolution = Vector2(window->GetWidth(), window->GetHeight());
 
-			auto averageWorldPositionEntity = ecsManager->CreateEntity();
-			averageWorldPositionEntity.Add<Selected>();
-			averageWorldPositionEntity.Add<Transform>(Vector3(0, 0, 0));
+			// auto averageWorldPositionEntity = ecsManager->CreateEntity();
+			// averageWorldPositionEntity.Add<Selected>();
+			// averageWorldPositionEntity.Add<Transform>(Vector3(0, 0, 0));
 
 			Renderer::Begin();
 			resourceManager->CreateRenderTarget("WorldPositionRT", resolution.x, resolution.y, TextureFormat::R32G32B32A32_FLOAT);
