@@ -18,23 +18,35 @@ namespace Sandbox
 
 		//Entities
 		
-		//firstSponza
-		for (Waldem::Mesh* mesh : sponzaModel->GetMeshes())
-		{
-			auto entity = ecsManager->CreateEntity();
-			entity.Add<Waldem::MeshComponent>(mesh);
-			entity.Add<Waldem::Transform>(mesh->ObjectMatrix);
-		}
+		// //firstSponza
+		// for (Waldem::Mesh* mesh : sponzaModel->GetMeshes())
+		// {
+		// 	auto entity = ecsManager->CreateEntity();
+		// 	entity.Add<Waldem::MeshComponent>(mesh);
+		// 	entity.Add<Waldem::Transform>(mesh->ObjectMatrix);
+		// }
+		//
+		// //secondSponza
+		// for (Waldem::Mesh* mesh : sponzaModel->GetMeshes())
+		// {
+		// 	auto entity = ecsManager->CreateEntity();
+		// 	entity.Add<Waldem::MeshComponent>(mesh);
+		// 	Waldem::Transform transform = mesh->ObjectMatrix;
+		// 	transform.Translate({50, 0, 0});
+		// 	entity.Add<Waldem::Transform>(transform);
+		// }
 
-		//secondSponza
-		for (Waldem::Mesh* mesh : sponzaModel->GetMeshes())
+		//water plane
+		auto waterPlaneModel = importer.Import("Content/Models/WaterPlane.glb", true);
+		for (Waldem::Mesh* mesh : waterPlaneModel->GetMeshes())
 		{
-			auto entity = ecsManager->CreateEntity();
-			entity.Add<Waldem::MeshComponent>(mesh);
+			auto waterPlaneEntity = ecsManager->CreateEntity();
+			waterPlaneEntity.Add<Waldem::MeshComponent>(mesh);
 			Waldem::Transform transform = mesh->ObjectMatrix;
 			transform.Translate({50, 0, 0});
-			entity.Add<Waldem::Transform>(transform);
+			waterPlaneEntity.Add<Waldem::Transform>(transform);
 		}
+		
 		// auto sponzaEntity = ecsManager->CreateEntity();
 		// sponzaEntity.Add<Waldem::ModelComponent>(sponzaModel);
 		// sponzaEntity.Add<Waldem::Transform>(Waldem::Vector3(0,0,0));
