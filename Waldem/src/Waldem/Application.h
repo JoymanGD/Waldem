@@ -5,6 +5,7 @@
 #include "Layers/EditorLayer.h"
 #include "Layers/GameLayer.h"
 #include "Renderer/Renderer.h"
+#include "Renderer/Resources/ResourceManager.h"
 #include "SceneManagement/SceneManager.h"
 #include "Waldem/Layers/LayerStack.h"
 #include "Waldem/Events/Event.h"
@@ -38,6 +39,7 @@ namespace Waldem
 		EditorLayer* UILayer;
 		GameLayer* CurrentGameLayer;
         ecs::Manager CoreECSManager;
+		ResourceManager ResourceManager;
 
 		std::vector<float> FrameTimes;
 		int FrameCount = 0;

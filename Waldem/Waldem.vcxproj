@@ -166,6 +166,7 @@
     <ClInclude Include="src\Waldem.h" />
     <ClInclude Include="src\Waldem\Application.h" />
     <ClInclude Include="src\Waldem\Core.h" />
+    <ClInclude Include="src\Waldem\ECS\Components\Guizmo.h" />
     <ClInclude Include="src\Waldem\ECS\Components\MainCamera.h" />
     <ClInclude Include="src\Waldem\ECS\Components\MeshComponent.h" />
     <ClInclude Include="src\Waldem\ECS\Components\ModelComponent.h" />
@@ -732,6 +733,89 @@
     <ClCompile Include="vendor\imgui\misc\fonts\binary_to_compressed_c.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="src\Shaders\AverageWorldPosition.comp.hlsl">
+      <ShaderType>Compute</ShaderType>
+      <ShaderModel>6.6</ShaderModel>
+      <EntryPointName>main</EntryPointName>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Core.hlsl">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+      <ShaderModel>6.6</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\DeferredRendering.comp.hlsl">
+      <ShaderType>Compute</ShaderType>
+      <ShaderModel>6.6</ShaderModel>
+      <EntryPointName>main</EntryPointName>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\ForwardRendering.ps.hlsl">
+      <ShaderType>Pixel</ShaderType>
+      <ShaderModel>6.6</ShaderModel>
+      <EntryPointName>main</EntryPointName>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\ForwardRendering.vs.hlsl">
+      <ShaderType>Vertex</ShaderType>
+      <ShaderModel>6.6</ShaderModel>
+      <EntryPointName>main</EntryPointName>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\GBuffer.ps.hlsl">
+      <ShaderType>Pixel</ShaderType>
+      <ShaderModel>6.6</ShaderModel>
+      <EntryPointName>main</EntryPointName>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\GBuffer.vs.hlsl">
+      <ShaderType>Vertex</ShaderType>
+      <ShaderModel>6.6</ShaderModel>
+      <EntryPointName>main</EntryPointName>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Lighting.hlsl">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+      <ShaderModel>6.6</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Line.ps.hlsl">
+      <ShaderType>Pixel</ShaderType>
+      <ShaderModel>6.6</ShaderModel>
+      <EntryPointName>main</EntryPointName>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Line.vs.hlsl">
+      <ShaderType>Vertex</ShaderType>
+      <ShaderModel>6.6</ShaderModel>
+      <EntryPointName>main</EntryPointName>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\PostProcess.comp.hlsl">
+      <ShaderType>Compute</ShaderType>
+      <ShaderModel>6.6</ShaderModel>
+      <EntryPointName>main</EntryPointName>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\QuadDraw.ps.hlsl">
+      <ShaderType>Pixel</ShaderType>
+      <ShaderModel>6.6</ShaderModel>
+      <EntryPointName>main</EntryPointName>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\QuadDraw.vs.hlsl">
+      <ShaderType>Vertex</ShaderType>
+      <ShaderModel>6.6</ShaderModel>
+      <EntryPointName>main</EntryPointName>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Shadowmap.ps.hlsl">
+      <ShaderType>Pixel</ShaderType>
+      <ShaderModel>6.6</ShaderModel>
+      <EntryPointName>main</EntryPointName>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Shadowmap.vs.hlsl">
+      <ShaderType>Vertex</ShaderType>
+      <ShaderModel>6.6</ShaderModel>
+      <EntryPointName>main</EntryPointName>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Shadows.hlsl">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+      <ShaderModel>6.6</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Types.hlsl">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+      <ShaderModel>6.6</ShaderModel>
+    </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -11,17 +11,29 @@
 
 namespace Sandbox
 {
-	void DefaultScene::Initialize(Waldem::SceneData* sceneData, Waldem::InputManager* inputManager, ecs::Manager* ecsManager)
+	void DefaultScene::Initialize(Waldem::SceneData* sceneData, Waldem::InputManager* inputManager, ecs::Manager* ecsManager, Waldem::ResourceManager* resourceManager)
 	{
 		Waldem::ModelImporter importer;
         auto sponzaModel = importer.Import("Content/Models/Sponza/Sponza2.gltf", true);
 
 		//Entities
+		
+		//firstSponza
 		for (Waldem::Mesh* mesh : sponzaModel->GetMeshes())
 		{
 			auto entity = ecsManager->CreateEntity();
 			entity.Add<Waldem::MeshComponent>(mesh);
 			entity.Add<Waldem::Transform>(mesh->ObjectMatrix);
+		}
+
+		//secondSponza
+		for (Waldem::Mesh* mesh : sponzaModel->GetMeshes())
+		{
+			auto entity = ecsManager->CreateEntity();
+			entity.Add<Waldem::MeshComponent>(mesh);
+			Waldem::Transform transform = mesh->ObjectMatrix;
+			transform.Translate({50, 0, 0});
+			entity.Add<Waldem::Transform>(transform);
 		}
 		// auto sponzaEntity = ecsManager->CreateEntity();
 		// sponzaEntity.Add<Waldem::ModelComponent>(sponzaModel);
@@ -46,12 +58,12 @@ namespace Sandbox
 		
 		for (Waldem::ISystem* system : UpdateSystems)
 		{
-			system->Initialize(sceneData, inputManager);
+			system->Initialize(sceneData, inputManager, resourceManager);
 		}
 		
 		for (Waldem::ISystem* system : DrawSystems)
 		{
-			system->Initialize(sceneData, inputManager);
+			system->Initialize(sceneData, inputManager, resourceManager);
 		}
 	}
 

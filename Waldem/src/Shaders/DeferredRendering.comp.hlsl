@@ -27,20 +27,18 @@ cbuffer RootConstants : register(b1)
 [numthreads(8, 8, 1)]
 void main(uint2 tid : SV_DispatchThreadID)
 {
-    float2 UV = (float2)tid / Resolution;
-    float4 worldPosition = WorldPositionRT.SampleLevel(myStaticSampler, UV, 0);
-    float3 normal = NormalRT.SampleLevel(myStaticSampler, UV, 0).xyz;
-    float4 albedo = AlbedoRT.SampleLevel(myStaticSampler, UV, 0);
+    float4 worldPosition = WorldPositionRT.Load(int3(tid, 0));
+    float3 normal = NormalRT.Load(int3(tid, 0)).xyz;
+    float4 albedo = AlbedoRT.Load(int3(tid, 0));
 
-    float2 mousePosUV = MousePosition / Resolution;
-    float depthMousePos = DepthRT.SampleLevel(myStaticSampler, mousePosUV, 0).x;
+    float depthMousePos = DepthRT.Load(int3(MousePosition, 0)).x;
     if(depthMousePos > 0.999f) //sky
     {
         HoveredMeshes[0] = -1;
     }
     else
     {
-        HoveredMeshes[0] = asint(MeshIDRT.SampleLevel(myStaticSampler, mousePosUV, 0).x);
+        HoveredMeshes[0] = asint(MeshIDRT.Load(int3(MousePosition, 0)).x);
     }
     
     //Combining the lighting and shadowing

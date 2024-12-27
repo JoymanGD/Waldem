@@ -3,6 +3,7 @@
 #include "Waldem/Core.h"
 #include "Waldem/Window.h"
 #include "Waldem/Events/Event.h"
+#include "Waldem/Renderer/Resources/ResourceManager.h"
 #include "Waldem/SceneManagement/SceneManager.h"
 
 namespace Waldem
@@ -10,7 +11,7 @@ namespace Waldem
     class WALDEM_API Layer
     {
     public:
-        Layer(const String& name = "Layer", Window* window = nullptr, ecs::Manager* ecsManager = nullptr) : DebugName(name), MainWindow(window), CoreECSManager(ecsManager) {}
+        Layer(const String& name = "Layer", Window* window = nullptr, ecs::Manager* ecsManager = nullptr, ResourceManager* resourceManager = nullptr) : DebugName(name), MainWindow(window), CurrentECSManager(ecsManager), CurrentResourceManager(resourceManager) {}
         virtual ~Layer() = default;
         virtual void Begin() {}
         virtual void End() {}
@@ -24,6 +25,7 @@ namespace Waldem
     protected:
         String DebugName;
         Window* MainWindow;
-        ecs::Manager* CoreECSManager;
+        ecs::Manager* CurrentECSManager;
+        ResourceManager* CurrentResourceManager;
     };
 }

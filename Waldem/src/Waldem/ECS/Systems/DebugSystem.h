@@ -82,7 +82,7 @@ namespace Waldem
             Renderer::DrawLines(lines);
         }
         
-        void Initialize(SceneData* sceneData, InputManager* inputManager) override
+        void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
         {
             CacheFrustrumCorners();
 

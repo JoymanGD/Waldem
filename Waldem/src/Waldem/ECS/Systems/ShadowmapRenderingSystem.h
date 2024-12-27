@@ -8,24 +8,52 @@ namespace Waldem
 {
     class WALDEM_API ShadowmapRenderingSystem : ISystem
     {
+        //AverageWorldPosition
+        // RenderTarget* WorldPositionRT = nullptr;
+        // RenderTarget* DepthRT = nullptr;
+        // Pipeline* AverageWorldPositionPipeline = nullptr;
+        // RootSignature* AverageWorldPositionRootSignature = nullptr;
+        // ComputeShader* AverageWorldPositionShader = nullptr;
+        // Vector3 AverageWorldPosition;
+        // Point3 GroupCount;
+
+        //ShadowmapRendering
         Pipeline* ShadowmapRenderingPipeline = nullptr;
         RootSignature* ShadowmapRenderingRootSignature = nullptr;
         PixelShader* ShadowmapRenderingShader = nullptr;
+        ResourceManager* resourceManager;
         
     public:
         ShadowmapRenderingSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
         
-        void Initialize(SceneData* sceneData, InputManager* inputManager) override
+        void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
         {
+            this->resourceManager = resourceManager;
+            
             WArray<Matrix4> worldTransforms;
             
             for (auto [entity, mesh, transform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
             {
                 worldTransforms.Add(transform.Matrix);
             }
-            
-            WArray<Resource> resources;
 
+            WArray<Resource> resources;
+            
+            // Vector2 resolution = Vector2(sceneData->Window->GetWidth(), sceneData->Window->GetHeight());
+            // WorldPositionRT = resourceManager->GetRenderTarget("WorldPositionRT");
+            // DepthRT = resourceManager->GetRenderTarget("DepthRT");
+            //
+            // resources.Add(Resource("WorldPositionRT", WorldPositionRT, 0));
+            // resources.Add(Resource("DepthRT", DepthRT, 1));
+            // resources.Add(Resource("AverageWorldPositions", RTYPE_RWBuffer, nullptr, sizeof(Vector3), sizeof(Vector3), 0));
+            //
+            // AverageWorldPositionShader = Renderer::LoadComputeShader("AverageWorldPosition");
+            // AverageWorldPositionRootSignature = Renderer::CreateRootSignature(resources);
+            // AverageWorldPositionPipeline = Renderer::CreateComputePipeline("AverageWorldPositionPipeline", AverageWorldPositionRootSignature, AverageWorldPositionShader);
+            // Point3 numThreads = Renderer::GetNumThreadsPerGroup(AverageWorldPositionShader);
+            // GroupCount = Point3((resolution.x + numThreads.x - 1) / numThreads.x, (resolution.y + numThreads.y - 1) / numThreads.y, 1);
+
+            resources.Clear();
             resources.Add(Resource("MyConstantBuffer", RTYPE_ConstantBuffer, nullptr, sizeof(Matrix4), sizeof(Matrix4) * 2, 0));
             resources.Add(Resource("RootConstants", RTYPE_Constant, nullptr, sizeof(uint32_t), sizeof(uint32_t), 1));
             resources.Add(Resource("WorldTransforms", RTYPE_Buffer, worldTransforms.GetData(), sizeof(Matrix4), worldTransforms.GetSize(), 0));
@@ -48,7 +76,22 @@ namespace Waldem
                         lightTransform.SetPosition(currentPosition);
                         break;
                     }
-
+                    
+                    //Average world position computation
+                    // Renderer::SetPipeline(AverageWorldPositionPipeline);
+                    // Renderer::SetRootSignature(AverageWorldPositionRootSignature);
+                    // Renderer::Compute(GroupCount);
+                    // AverageWorldPositionRootSignature->ReadbackResourceData("AverageWorldPositions", &AverageWorldPosition);
+                    //
+                    // WD_CORE_INFO("AverageWorldPosition: {0}, {1}, {2}", AverageWorldPosition.x, AverageWorldPosition.y, AverageWorldPosition.z);
+                    // // currentPosition.y = lightTransform.GetPosition().y;
+                    //
+                    // for (auto [transformEntity, transform, selected] : ECSManager->EntitiesWith<Transform, Selected>())
+                    // {
+                    //     transform.SetPosition(AverageWorldPosition);
+                    //     break;
+                    // }
+                    
                     Matrix4 matrices[2];
                     matrices[0] = lightTransform.Inverse();
                     matrices[1] = light.Data.Projection;

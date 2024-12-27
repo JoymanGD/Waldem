@@ -1,6 +1,6 @@
 #pragma once
+#include "D3DX12.h"
 #include "Waldem/Renderer/Buffer.h"
-#include "Waldem/Renderer/Resources/ResourceManager.h"
 
 namespace Waldem
 {

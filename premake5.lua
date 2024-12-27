@@ -21,6 +21,22 @@ IncludeDir["SPDLog"] = "Waldem/vendor/spdlog/include"
 IncludeDir["Assimp"] = "Waldem/vendor/assimp/include"
 IncludeDir["stb"] = "Waldem/vendor/stb/include"
 
+filter { "files:**.hlsl" }
+   flags { "ExcludeFromBuild", 'NoPCH' }
+   shadermodel "6.6"
+filter { "files:**.ps.hlsl" }
+   removeflags "ExcludeFromBuild"
+   shadertype "Pixel"
+   shaderentry "main"
+filter { "files:**.vs.hlsl" }
+   removeflags "ExcludeFromBuild"
+   shadertype "Vertex"
+   shaderentry "main"
+filter { "files:**.comp.hlsl" }
+   removeflags "ExcludeFromBuild"
+   shadertype "Compute"
+   shaderentry "main"
+
 project "Waldem"
     location "Waldem"    
     kind "StaticLib"
@@ -50,7 +66,9 @@ project "Waldem"
         "%{prj.name}/vendor/ImGuizmo/**.h",
         "%{prj.name}/vendor/ImGuizmo/**.cpp",
         "%{prj.name}/vendor/glm/glm/**.hpp",
-        "%{prj.name}/vendor/glm/glm/**.inl"
+        "%{prj.name}/vendor/glm/glm/**.inl",
+        "%{prj.name}/src/**.glsl",
+        "%{prj.name}/src/**.hlsl"
     }
     
     includedirs
@@ -109,19 +127,6 @@ project "Waldem"
         
     filter { "files:Waldem/vendor/ImGuizmo/**.cpp" }
          flags { "NoPCH" }
-        
-    filter { "files:**.hlsl" }
-       flags { "ExcludeFromBuild", 'NoPCH' }
-       shadermodel "5.1"
-    filter { "files:**.ps.hlsl" }
-       removeflags "ExcludeFromBuild"
-       shadertype "Pixel"
-       shaderentry "main"
-    filter { "files:**.vs.hlsl" }
-       removeflags "ExcludeFromBuild"
-       shadertype "Vertex"
-       shaderentry "main"
-    filter {}
 
 project "Sandbox"
     location "Sandbox"
@@ -190,16 +195,3 @@ project "Sandbox"
         defines "WD_DIST"
         runtime "Release"
         optimize "on"
-        
-    filter { "files:**.hlsl" }
-       flags { "ExcludeFromBuild", 'NoPCH' }
-       shadermodel "5.1"
-    filter { "files:**.ps.hlsl" }
-       removeflags "ExcludeFromBuild"
-       shadertype "Pixel"
-       shaderentry "main"
-    filter { "files:**.vs.hlsl" }
-       removeflags "ExcludeFromBuild"
-       shadertype "Vertex"
-       shaderentry "main"
-    filter {}

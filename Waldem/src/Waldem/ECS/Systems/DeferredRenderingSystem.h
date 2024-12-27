@@ -50,7 +50,7 @@ namespace Waldem
     public:
         DeferredRenderingSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
         
-        void Initialize(SceneData* sceneData, InputManager* inputManager) override
+        void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
         {
             Vector2 resolution = Vector2(sceneData->Window->GetWidth(), sceneData->Window->GetHeight());
             
@@ -79,17 +79,17 @@ namespace Waldem
             if(!textures.IsEmpty())
                 gBufferPassResources.Add(Resource("TestTextures", textures, 1));
 
-            WorldPositionRT = Renderer::CreateRenderTarget("WorldPositionRT", resolution.x, resolution.y, TextureFormat::R32G32B32A32_FLOAT);
-            NormalRT = Renderer::CreateRenderTarget("NormalRT", resolution.x, resolution.y, TextureFormat::R16G16B16A16_FLOAT);
-            AlbedoRT = Renderer::CreateRenderTarget("AlbedoRT", resolution.x, resolution.y, TextureFormat::R8G8B8A8_UNORM);
-            MeshIDRT = Renderer::CreateRenderTarget("MeshIDRT", resolution.x, resolution.y, TextureFormat::R32_SINT);
-            DepthRT = Renderer::CreateRenderTarget("DepthRT", resolution.x, resolution.y, TextureFormat::D32_FLOAT);
+            WorldPositionRT = resourceManager->GetRenderTarget("WorldPositionRT");
+            NormalRT = resourceManager->GetRenderTarget("NormalRT");
+            AlbedoRT = resourceManager->GetRenderTarget("AlbedoRT");
+            MeshIDRT = resourceManager->GetRenderTarget("MeshIDRT");
+            DepthRT = resourceManager->GetRenderTarget("DepthRT");
             GBufferRootSignature = Renderer::CreateRootSignature(gBufferPassResources);
             GBufferPixelShader = Renderer::LoadPixelShader("GBuffer");
             GBufferPipeline = Renderer::CreateGraphicPipeline("GBufferPipeline", { WorldPositionRT->GetFormat(), NormalRT->GetFormat(), AlbedoRT->GetFormat(), MeshIDRT->GetFormat() }, WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, GBufferRootSignature, GBufferPixelShader);
 
             //Deferred rendering pass
-            DeferredRenderingRenderTarget = Renderer::CreateRenderTarget("DeferredRenderingRenderTarget", resolution.x, resolution.y, TextureFormat::R8G8B8A8_UNORM);
+            DeferredRenderingRenderTarget = resourceManager->CreateRenderTarget("DeferredRenderingRenderTarget", resolution.x, resolution.y, TextureFormat::R8G8B8A8_UNORM);
             Renderer::ResourceBarrier(DeferredRenderingRenderTarget, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
             WArray<Resource> deferredRenderingPassResources;
             RenderTarget* testShadowMap = nullptr;
@@ -121,7 +121,7 @@ namespace Waldem
             GroupCount = Point3((resolution.x + numThreads.x - 1) / numThreads.x, (resolution.y + numThreads.y - 1) / numThreads.y, 1);
 
             //Post process pass
-            PostProcessRenderTarget = Renderer::CreateRenderTarget("PostProcessRenderTarget", resolution.x, resolution.y, TextureFormat::R8G8B8A8_UNORM);
+            PostProcessRenderTarget = resourceManager->CreateRenderTarget("PostProcessRenderTarget", resolution.x, resolution.y, TextureFormat::R8G8B8A8_UNORM);
             Renderer::ResourceBarrier(PostProcessRenderTarget, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
             WArray<Resource> postProcessPassResources;
             postProcessPassResources.Add(Resource("DeferredRenderingRenderTarget", DeferredRenderingRenderTarget, 0));

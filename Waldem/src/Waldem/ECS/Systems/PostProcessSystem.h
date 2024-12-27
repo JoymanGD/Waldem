@@ -14,7 +14,7 @@ namespace Waldem
     public:
         PostProcessSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
         
-        void Initialize(SceneData* sceneData, InputManager* inputManager) override
+        void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
         {
             WArray<Resource> resources;
             TestRenderTarget = Renderer::CreateRenderTarget("TestRenderTarget", 1024, 1024, TextureFormat::R32_FLOAT);
