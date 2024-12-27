@@ -24,7 +24,7 @@ namespace Waldem
     public:
         EditorTransformsManipulationSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
         
-        void Initialize(SceneData* sceneData, InputManager* inputManager) override
+        void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
         {
             Window = sceneData->Window;
 
@@ -94,8 +94,7 @@ namespace Waldem
         {
             ImGuizmo::SetOrthographic(false);
 
-            auto windowPos = Window->GetPosition();
-            ImGuizmo::SetRect(windowPos.x, windowPos.y, Window->GetWidth(), Window->GetHeight());
+            ImGuizmo::SetRect(0, 0, Window->GetWidth(), Window->GetHeight());
             for (auto [cameraEntity, camera, cameraTransform, mainCamera] : ECSManager->EntitiesWith<Camera, Transform, MainCamera>())
             {
                 for (auto [transformEntity, transform, selected] : ECSManager->EntitiesWith<Transform, Selected>())

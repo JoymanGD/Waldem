@@ -35,6 +35,18 @@ namespace Waldem
             return false;
         }
 
+        bool Contains(const T1& key) const
+        {
+            for (size_t i = 0; i < Data.Num(); ++i)
+            {
+                if (Data[i].key == key)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         T2* Find(const T1& key)
         {
             for (size_t i = 0; i < Data.Num(); ++i)
@@ -56,7 +68,9 @@ namespace Waldem
                     return Data[i].value;
                 }
             }
-            throw std::out_of_range("Key not found");
+
+            WD_CORE_ERROR("Key '{0}' not found in WMap", key);
+            throw std::runtime_error("Key not found in WMap");
         }
 
         auto begin() { return Data.begin(); }

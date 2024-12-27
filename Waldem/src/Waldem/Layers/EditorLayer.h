@@ -15,33 +15,33 @@ namespace Waldem
     class WALDEM_API EditorLayer : public Layer
     {
     public:
-        EditorLayer(Window* window, ecs::Manager* ecsManager) : Layer("EditorLayer", window, ecsManager)
+        EditorLayer(Window* window, ecs::Manager* ecsManager, ResourceManager* resourceManager) : Layer("EditorLayer", window, ecsManager, resourceManager)
         {
             EditorInputManager = {};
             
-            auto cameraEntity = CoreECSManager->CreateEntity();
+            auto cameraEntity = CurrentECSManager->CreateEntity();
             float aspectRatio = window->GetWidth() / window->GetHeight();
             cameraEntity.Add<Transform>(Vector3(0, 0, 0));
             cameraEntity.Add<Camera>(70.0f, aspectRatio, 0.1f, 100.0f, 30.0f, 30.0f);
             cameraEntity.Add<MainCamera>();
             
             //do it after all entities set up
-            CoreECSManager->Refresh();
+            CurrentECSManager->Refresh();
             
-            UISystems.Add((ISystem*)new EditorTransformsManipulationSystem(CoreECSManager));
-            UpdateSystems.Add((ISystem*)new FreeLookCameraSystem(CoreECSManager));
-            UpdateSystems.Add((ISystem*)new DebugSystem(CoreECSManager));
+            UISystems.Add((ISystem*)new EditorTransformsManipulationSystem(CurrentECSManager));
+            UpdateSystems.Add((ISystem*)new FreeLookCameraSystem(CurrentECSManager));
+            UpdateSystems.Add((ISystem*)new DebugSystem(CurrentECSManager));
         	
 			SceneData sceneData = { window };
         	
             for (ISystem* system : UISystems)
             {
-                system->Initialize(&sceneData, &EditorInputManager);
+                system->Initialize(&sceneData, &EditorInputManager, CurrentResourceManager);
             }
         	
             for (ISystem* system : UpdateSystems)
             {
-                system->Initialize(&sceneData, &EditorInputManager);
+                system->Initialize(&sceneData, &EditorInputManager, CurrentResourceManager);
             }
         }
         

@@ -1,5 +1,6 @@
 #pragma once
-#include <d3d12.h>
+#include "Waldem/Renderer/RenderTarget.h"
+#include "Waldem/Types/WMap.h"
 
 namespace Waldem
 {
@@ -8,11 +9,10 @@ namespace Waldem
     public:
         ResourceManager() = default;
         
-        void CreateBuffer();
-        void CreateTexture();
-        void DestroyResource();
-
-        private:
-        std::vector<ID3D12Resource*> resources;
+        RenderTarget* CreateRenderTarget(String name, int width, int height, TextureFormat format);
+        RenderTarget* GetRenderTarget(String name) { return RenderTargets[name]; }
+        
+    private:
+        WMap<String, RenderTarget*> RenderTargets;
     };
 }
