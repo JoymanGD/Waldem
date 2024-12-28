@@ -28,30 +28,31 @@ uint xorshift32(uint state)
     return state;
 }
 
-// Generate a random float in the range [0, 1]
-float Random(uint seed)
+uint lcg_rand(uint seed)
 {
-    uint randValue = xorshift32(seed);
-    return (randValue & 0xFFFFFFF) / float(0xFFFFFFF); // Normalize to [0, 1)
+    return (1664525 * seed + 1013904223) % (1u << 31);  // A simple LCG
 }
 
-void GenerateGaussianRandoms(uint seed, out float real, out float imag)
+// Box-Muller transform to generate Gaussian random numbers
+void GenerateGaussianRandom(uint3 dispatchThreadID, out float real, out float imag)
 {
-    // Generate two uniform random values
-    float u1 = Random(seed);
-    float u2 = Random(seed + 1);
+    uint seed = dispatchThreadID.x + dispatchThreadID.y * 12345 + dispatchThreadID.z * 67890;
+    
+    // Generate two uniform random numbers
+    float u1 = (float)(lcg_rand(seed) % (1u << 16)) / (float)(1u << 16);
+    float u2 = (float)(lcg_rand(seed + 1) % (1u << 16)) / (float)(1u << 16);
 
     // Apply the Box-Muller transform
-    float r = sqrt(-2.0f * log(u1));
-    float theta = 2.0f * 3.14159265359f * u2;
+    float z0 = sqrt(-2.0 * log(u1)) * cos(2.0 * 3.141592653589793 * u2);
+    float z1 = sqrt(-2.0 * log(u1)) * sin(2.0 * 3.141592653589793 * u2);
 
-    // Gaussian-distributed random numbers
-    real = r * cos(theta);
-    imag = r * sin(theta);
+    // Return the Gaussian-distributed random numbers
+    real = z0;
+    imag = z1;
 }
 
 [numthreads(8, 8, 1)]
-void main(uint2 tid : SV_DispatchThreadID)
+void main(uint3 tid : SV_DispatchThreadID)
 {
     int x = tid.x;
     int z = tid.y;
@@ -72,17 +73,15 @@ void main(uint2 tid : SV_DispatchThreadID)
 
     float spectrum = PhillipsSpectrum(k);
 
-    SpectrumRenderTarget[tid] = float4(spectrum, 0.0f, 0.0f, 0.0f);
+    SpectrumRenderTarget[tid.xy] = float4(spectrum, 0.0f, 0.0f, 0.0f);
     
-    uint seed = x + z * gridSize; // Using x and z as seed for randomness
-
     // float real = spectrum * Random(seed) * 0.5f;
     // float imag = spectrum * Random(seed + 1) * 0.5f;
 
     float real, imag;
-    GenerateGaussianRandoms(seed, real, imag);
-    // real *= sqrt(spectrum) / sqrt(2.0f);
-    // imag *= sqrt(spectrum) / sqrt(2.0f);
+    GenerateGaussianRandom(tid, real, imag);
+    real *= sqrt(spectrum) / sqrt(2.0f);
+    imag *= sqrt(spectrum) / sqrt(2.0f);
     
-    HeightmapRenderTarget[tid] = float4(real, imag, 0.0f, 0.0f);
+    HeightmapRenderTarget[tid.xy] = float4(real, imag, 0.0f, 0.0f);
 }
