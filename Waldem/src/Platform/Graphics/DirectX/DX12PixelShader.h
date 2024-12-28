@@ -1,6 +1,8 @@
 #pragma once
 #include <d3d12.h>
 #include <d3dcommon.h>
+#include <dxcapi.h>
+
 #include "DX12CommandList.h"
 #include "DX12Resource.h"
 #include "DX12Shader.h"
@@ -24,8 +26,12 @@ namespace Waldem
         void* GetPS() override { return PixelShaderBlob; }
 
     private:
-        ID3DBlob* VertexShaderBlob;
-        ID3DBlob* PixelShaderBlob;
-        ID3DBlob* ErrorBlob;
+        IDxcBlob* VertexShaderBlob;
+        IDxcBlob* PixelShaderBlob;
+        IDxcBlobUtf8* ErrorBlob;
+        IDxcUtils* DxcUtils;
+        IDxcCompiler3* DxcCompiler;
+        IDxcIncludeHandler* DxcIncludeHandler;
+        IDxcBlobEncoding* Source;
     };
 }

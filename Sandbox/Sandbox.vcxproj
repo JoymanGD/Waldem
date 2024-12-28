@@ -79,7 +79,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WD_PLATFORM_WINDOWS;WD_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Waldem\src;..\Waldem\vendor\spdlog\include;..\Waldem\vendor\assimp\include;..\Waldem\vendor\stb\include;..\Waldem\vendor\SDL\include;..\Waldem\vendor\glm;..\Waldem\vendor\imgui;..\Waldem\vendor\ImGuizmo;..\Waldem\vendor\ECS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Waldem\src;..\Waldem\vendor\spdlog\include;..\Waldem\vendor\assimp\include;..\Waldem\vendor\stb\include;..\Waldem\vendor\SDL\include;..\Waldem\vendor\glm;..\Waldem\vendor\imgui;..\Waldem\vendor\ImGuizmo;..\Waldem\vendor\ECS\include;..\Waldem\vendor\dxc\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -97,6 +97,8 @@ echo Copying files...
 IF EXIST $(SolutionDir)$(ProjectName)\src\Shaders\*.hlsl\ (xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\*.hlsl ..\bin\Debug\Sandbox\Shaders &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\*.hlsl ..\bin\Debug\Sandbox\Shaders &gt; nul)
 IF EXIST $(SolutionDir)Waldem\src\Shaders\*.hlsl\ (xcopy /Q /E /Y /I $(SolutionDir)Waldem\src\Shaders\*.hlsl ..\bin\Debug\Sandbox\Shaders &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)Waldem\src\Shaders\*.hlsl ..\bin\Debug\Sandbox\Shaders &gt; nul)
 IF EXIST $(SolutionDir)Waldem\vendor\SDL\lib\SDL2.dll\ (xcopy /Q /E /Y /I $(SolutionDir)Waldem\vendor\SDL\lib\SDL2.dll ..\bin\Debug\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)Waldem\vendor\SDL\lib\SDL2.dll ..\bin\Debug\Sandbox &gt; nul)
+IF EXIST $(SolutionDir)Waldem\vendor\dxc\bin\x64\dxcompiler.dll\ (xcopy /Q /E /Y /I $(SolutionDir)Waldem\vendor\dxc\bin\x64\dxcompiler.dll ..\bin\Debug\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)Waldem\vendor\dxc\bin\x64\dxcompiler.dll ..\bin\Debug\Sandbox &gt; nul)
+IF EXIST $(SolutionDir)Waldem\vendor\dxc\bin\x64\dxil.dll\ (xcopy /Q /E /Y /I $(SolutionDir)Waldem\vendor\dxc\bin\x64\dxil.dll ..\bin\Debug\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)Waldem\vendor\dxc\bin\x64\dxil.dll ..\bin\Debug\Sandbox &gt; nul)
 IF EXIST $(SolutionDir)Waldem\vendor\assimp\lib\assimp-vc142-mt.dll\ (xcopy /Q /E /Y /I $(SolutionDir)Waldem\vendor\assimp\lib\assimp-vc142-mt.dll ..\bin\Debug\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)Waldem\vendor\assimp\lib\assimp-vc142-mt.dll ..\bin\Debug\Sandbox &gt; nul)
 xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Debug\Sandbox\Content</Command>
     </PostBuildEvent>
@@ -106,7 +108,7 @@ xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Debug\Sandbox\Cont
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WD_PLATFORM_WINDOWS;WD_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Waldem\src;..\Waldem\vendor\spdlog\include;..\Waldem\vendor\assimp\include;..\Waldem\vendor\stb\include;..\Waldem\vendor\SDL\include;..\Waldem\vendor\glm;..\Waldem\vendor\imgui;..\Waldem\vendor\ImGuizmo;..\Waldem\vendor\ECS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Waldem\src;..\Waldem\vendor\spdlog\include;..\Waldem\vendor\assimp\include;..\Waldem\vendor\stb\include;..\Waldem\vendor\SDL\include;..\Waldem\vendor\glm;..\Waldem\vendor\imgui;..\Waldem\vendor\ImGuizmo;..\Waldem\vendor\ECS\include;..\Waldem\vendor\dxc\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -128,6 +130,8 @@ echo Copying files...
 IF EXIST $(SolutionDir)$(ProjectName)\src\Shaders\*.hlsl\ (xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\*.hlsl ..\bin\Release\Sandbox\Shaders &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\*.hlsl ..\bin\Release\Sandbox\Shaders &gt; nul)
 IF EXIST $(SolutionDir)Waldem\src\Shaders\*.hlsl\ (xcopy /Q /E /Y /I $(SolutionDir)Waldem\src\Shaders\*.hlsl ..\bin\Release\Sandbox\Shaders &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)Waldem\src\Shaders\*.hlsl ..\bin\Release\Sandbox\Shaders &gt; nul)
 IF EXIST $(SolutionDir)Waldem\vendor\SDL\lib\SDL2.dll\ (xcopy /Q /E /Y /I $(SolutionDir)Waldem\vendor\SDL\lib\SDL2.dll ..\bin\Release\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)Waldem\vendor\SDL\lib\SDL2.dll ..\bin\Release\Sandbox &gt; nul)
+IF EXIST $(SolutionDir)Waldem\vendor\dxc\bin\x64\dxcompiler.dll\ (xcopy /Q /E /Y /I $(SolutionDir)Waldem\vendor\dxc\bin\x64\dxcompiler.dll ..\bin\Release\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)Waldem\vendor\dxc\bin\x64\dxcompiler.dll ..\bin\Release\Sandbox &gt; nul)
+IF EXIST $(SolutionDir)Waldem\vendor\dxc\bin\x64\dxil.dll\ (xcopy /Q /E /Y /I $(SolutionDir)Waldem\vendor\dxc\bin\x64\dxil.dll ..\bin\Release\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)Waldem\vendor\dxc\bin\x64\dxil.dll ..\bin\Release\Sandbox &gt; nul)
 IF EXIST $(SolutionDir)Waldem\vendor\assimp\lib\assimp-vc142-mt.dll\ (xcopy /Q /E /Y /I $(SolutionDir)Waldem\vendor\assimp\lib\assimp-vc142-mt.dll ..\bin\Release\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)Waldem\vendor\assimp\lib\assimp-vc142-mt.dll ..\bin\Release\Sandbox &gt; nul)
 xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Release\Sandbox\Content</Command>
     </PostBuildEvent>
@@ -137,7 +141,7 @@ xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Release\Sandbox\Co
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WD_PLATFORM_WINDOWS;WD_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Waldem\src;..\Waldem\vendor\spdlog\include;..\Waldem\vendor\assimp\include;..\Waldem\vendor\stb\include;..\Waldem\vendor\SDL\include;..\Waldem\vendor\glm;..\Waldem\vendor\imgui;..\Waldem\vendor\ImGuizmo;..\Waldem\vendor\ECS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Waldem\src;..\Waldem\vendor\spdlog\include;..\Waldem\vendor\assimp\include;..\Waldem\vendor\stb\include;..\Waldem\vendor\SDL\include;..\Waldem\vendor\glm;..\Waldem\vendor\imgui;..\Waldem\vendor\ImGuizmo;..\Waldem\vendor\ECS\include;..\Waldem\vendor\dxc\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -159,6 +163,8 @@ echo Copying files...
 IF EXIST $(SolutionDir)$(ProjectName)\src\Shaders\*.hlsl\ (xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\*.hlsl ..\bin\Dist\Sandbox\Shaders &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)$(ProjectName)\src\Shaders\*.hlsl ..\bin\Dist\Sandbox\Shaders &gt; nul)
 IF EXIST $(SolutionDir)Waldem\src\Shaders\*.hlsl\ (xcopy /Q /E /Y /I $(SolutionDir)Waldem\src\Shaders\*.hlsl ..\bin\Dist\Sandbox\Shaders &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)Waldem\src\Shaders\*.hlsl ..\bin\Dist\Sandbox\Shaders &gt; nul)
 IF EXIST $(SolutionDir)Waldem\vendor\SDL\lib\SDL2.dll\ (xcopy /Q /E /Y /I $(SolutionDir)Waldem\vendor\SDL\lib\SDL2.dll ..\bin\Dist\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)Waldem\vendor\SDL\lib\SDL2.dll ..\bin\Dist\Sandbox &gt; nul)
+IF EXIST $(SolutionDir)Waldem\vendor\dxc\bin\x64\dxcompiler.dll\ (xcopy /Q /E /Y /I $(SolutionDir)Waldem\vendor\dxc\bin\x64\dxcompiler.dll ..\bin\Dist\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)Waldem\vendor\dxc\bin\x64\dxcompiler.dll ..\bin\Dist\Sandbox &gt; nul)
+IF EXIST $(SolutionDir)Waldem\vendor\dxc\bin\x64\dxil.dll\ (xcopy /Q /E /Y /I $(SolutionDir)Waldem\vendor\dxc\bin\x64\dxil.dll ..\bin\Dist\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)Waldem\vendor\dxc\bin\x64\dxil.dll ..\bin\Dist\Sandbox &gt; nul)
 IF EXIST $(SolutionDir)Waldem\vendor\assimp\lib\assimp-vc142-mt.dll\ (xcopy /Q /E /Y /I $(SolutionDir)Waldem\vendor\assimp\lib\assimp-vc142-mt.dll ..\bin\Dist\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)Waldem\vendor\assimp\lib\assimp-vc142-mt.dll ..\bin\Dist\Sandbox &gt; nul)
 xcopy /Q /E /Y /I $(SolutionDir)$(ProjectName)\Content ..\bin\Dist\Sandbox\Content</Command>
     </PostBuildEvent>

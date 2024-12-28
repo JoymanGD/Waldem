@@ -77,7 +77,7 @@
       <PrecompiledHeaderFile>wdpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WD_PLATFORM_WINDOWS;WD_BUILD_DLL;WD_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\assimp\include;vendor\stb\include;vendor\SDL\include;vendor\glm;vendor\imgui;vendor\ImGuizmo;vendor\ECS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\assimp\include;vendor\stb\include;vendor\SDL\include;vendor\glm;vendor\imgui;vendor\ImGuizmo;vendor\ECS\include;vendor\dxc\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -89,8 +89,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;opengl32.lib;assimp-vc142-mt.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>vendor\assimp\lib;vendor\SDL\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;opengl32.lib;dxcompiler.lib;assimp-vc142-mt.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>vendor\assimp\lib;vendor\SDL\lib;vendor\dxc\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -99,7 +99,7 @@
       <PrecompiledHeaderFile>wdpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WD_PLATFORM_WINDOWS;WD_BUILD_DLL;WD_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\assimp\include;vendor\stb\include;vendor\SDL\include;vendor\glm;vendor\imgui;vendor\ImGuizmo;vendor\ECS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\assimp\include;vendor\stb\include;vendor\SDL\include;vendor\glm;vendor\imgui;vendor\ImGuizmo;vendor\ECS\include;vendor\dxc\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -115,8 +115,8 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;opengl32.lib;assimp-vc142-mt.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>vendor\assimp\lib;vendor\SDL\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;opengl32.lib;dxcompiler.lib;assimp-vc142-mt.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>vendor\assimp\lib;vendor\SDL\lib;vendor\dxc\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
@@ -125,7 +125,7 @@
       <PrecompiledHeaderFile>wdpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WD_PLATFORM_WINDOWS;WD_BUILD_DLL;WD_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\assimp\include;vendor\stb\include;vendor\SDL\include;vendor\glm;vendor\imgui;vendor\ImGuizmo;vendor\ECS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\assimp\include;vendor\stb\include;vendor\SDL\include;vendor\glm;vendor\imgui;vendor\ImGuizmo;vendor\ECS\include;vendor\dxc\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -141,8 +141,8 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;opengl32.lib;assimp-vc142-mt.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>vendor\assimp\lib;vendor\SDL\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;opengl32.lib;dxcompiler.lib;assimp-vc142-mt.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>vendor\assimp\lib;vendor\SDL\lib;vendor\dxc\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -170,13 +170,14 @@
     <ClInclude Include="src\Waldem\ECS\Components\MainCamera.h" />
     <ClInclude Include="src\Waldem\ECS\Components\MeshComponent.h" />
     <ClInclude Include="src\Waldem\ECS\Components\ModelComponent.h" />
+    <ClInclude Include="src\Waldem\ECS\Components\Ocean.h" />
     <ClInclude Include="src\Waldem\ECS\Components\Selected.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\DebugSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\DeferredRenderingSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\EditorTransformsManipulationSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\ForwardRenderingSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\FreeLookCameraSystem.h" />
-    <ClInclude Include="src\Waldem\ECS\Systems\PostProcessSystem.h" />
+    <ClInclude Include="src\Waldem\ECS\Systems\OceanSimulationSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\ShadowmapRenderingSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\System.h" />
     <ClInclude Include="src\Waldem\Editor\Editor.h" />
@@ -737,84 +738,89 @@
   <ItemGroup>
     <FxCompile Include="src\Shaders\AverageWorldPosition.comp.hlsl">
       <ShaderType>Compute</ShaderType>
-      <ShaderModel>6.6</ShaderModel>
+      <ShaderModel>6.5</ShaderModel>
       <EntryPointName>main</EntryPointName>
     </FxCompile>
     <FxCompile Include="src\Shaders\Core.hlsl">
       <ExcludedFromBuild>true</ExcludedFromBuild>
-      <ShaderModel>6.6</ShaderModel>
+      <ShaderModel>6.5</ShaderModel>
     </FxCompile>
     <FxCompile Include="src\Shaders\DeferredRendering.comp.hlsl">
       <ShaderType>Compute</ShaderType>
-      <ShaderModel>6.6</ShaderModel>
+      <ShaderModel>6.5</ShaderModel>
       <EntryPointName>main</EntryPointName>
     </FxCompile>
     <FxCompile Include="src\Shaders\ForwardRendering.ps.hlsl">
       <ShaderType>Pixel</ShaderType>
-      <ShaderModel>6.6</ShaderModel>
+      <ShaderModel>6.5</ShaderModel>
       <EntryPointName>main</EntryPointName>
     </FxCompile>
     <FxCompile Include="src\Shaders\ForwardRendering.vs.hlsl">
       <ShaderType>Vertex</ShaderType>
-      <ShaderModel>6.6</ShaderModel>
+      <ShaderModel>6.5</ShaderModel>
       <EntryPointName>main</EntryPointName>
     </FxCompile>
     <FxCompile Include="src\Shaders\GBuffer.ps.hlsl">
       <ShaderType>Pixel</ShaderType>
-      <ShaderModel>6.6</ShaderModel>
+      <ShaderModel>6.5</ShaderModel>
       <EntryPointName>main</EntryPointName>
     </FxCompile>
     <FxCompile Include="src\Shaders\GBuffer.vs.hlsl">
       <ShaderType>Vertex</ShaderType>
-      <ShaderModel>6.6</ShaderModel>
+      <ShaderModel>6.5</ShaderModel>
       <EntryPointName>main</EntryPointName>
     </FxCompile>
     <FxCompile Include="src\Shaders\Lighting.hlsl">
       <ExcludedFromBuild>true</ExcludedFromBuild>
-      <ShaderModel>6.6</ShaderModel>
+      <ShaderModel>6.5</ShaderModel>
     </FxCompile>
     <FxCompile Include="src\Shaders\Line.ps.hlsl">
       <ShaderType>Pixel</ShaderType>
-      <ShaderModel>6.6</ShaderModel>
+      <ShaderModel>6.5</ShaderModel>
       <EntryPointName>main</EntryPointName>
     </FxCompile>
     <FxCompile Include="src\Shaders\Line.vs.hlsl">
       <ShaderType>Vertex</ShaderType>
-      <ShaderModel>6.6</ShaderModel>
+      <ShaderModel>6.5</ShaderModel>
+      <EntryPointName>main</EntryPointName>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\OceanSimulation.comp.hlsl">
+      <ShaderType>Compute</ShaderType>
+      <ShaderModel>6.5</ShaderModel>
       <EntryPointName>main</EntryPointName>
     </FxCompile>
     <FxCompile Include="src\Shaders\PostProcess.comp.hlsl">
       <ShaderType>Compute</ShaderType>
-      <ShaderModel>6.6</ShaderModel>
+      <ShaderModel>6.5</ShaderModel>
       <EntryPointName>main</EntryPointName>
     </FxCompile>
     <FxCompile Include="src\Shaders\QuadDraw.ps.hlsl">
       <ShaderType>Pixel</ShaderType>
-      <ShaderModel>6.6</ShaderModel>
+      <ShaderModel>6.5</ShaderModel>
       <EntryPointName>main</EntryPointName>
     </FxCompile>
     <FxCompile Include="src\Shaders\QuadDraw.vs.hlsl">
       <ShaderType>Vertex</ShaderType>
-      <ShaderModel>6.6</ShaderModel>
+      <ShaderModel>6.5</ShaderModel>
       <EntryPointName>main</EntryPointName>
     </FxCompile>
     <FxCompile Include="src\Shaders\Shadowmap.ps.hlsl">
       <ShaderType>Pixel</ShaderType>
-      <ShaderModel>6.6</ShaderModel>
+      <ShaderModel>6.5</ShaderModel>
       <EntryPointName>main</EntryPointName>
     </FxCompile>
     <FxCompile Include="src\Shaders\Shadowmap.vs.hlsl">
       <ShaderType>Vertex</ShaderType>
-      <ShaderModel>6.6</ShaderModel>
+      <ShaderModel>6.5</ShaderModel>
       <EntryPointName>main</EntryPointName>
     </FxCompile>
     <FxCompile Include="src\Shaders\Shadows.hlsl">
       <ExcludedFromBuild>true</ExcludedFromBuild>
-      <ShaderModel>6.6</ShaderModel>
+      <ShaderModel>6.5</ShaderModel>
     </FxCompile>
     <FxCompile Include="src\Shaders\Types.hlsl">
       <ExcludedFromBuild>true</ExcludedFromBuild>
-      <ShaderModel>6.6</ShaderModel>
+      <ShaderModel>6.5</ShaderModel>
     </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

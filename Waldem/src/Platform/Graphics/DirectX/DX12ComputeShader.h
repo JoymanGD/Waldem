@@ -1,10 +1,6 @@
 #pragma once
-#include <d3d12.h>
 #include <d3dcommon.h>
-#include "DX12CommandList.h"
-#include "DX12Resource.h"
-#include "DX12Shader.h"
-#include "Waldem/Renderer/Resource.h"
+#include <dxcapi.h>
 #include "Waldem/Renderer/Shader.h"
 
 namespace Waldem
@@ -22,7 +18,11 @@ namespace Waldem
         void* GetPlatformData() override { return ShaderBlob; }
 
     private:
-        ID3DBlob* ShaderBlob;
-        ID3DBlob* ErrorBlob;
+        IDxcBlob* ShaderBlob;
+        IDxcBlobUtf8* ErrorBlob;
+        IDxcUtils* DxcUtils;
+        IDxcCompiler3* DxcCompiler;
+        IDxcIncludeHandler* DxcIncludeHandler;
+        IDxcBlobEncoding* Source;
     };
 }

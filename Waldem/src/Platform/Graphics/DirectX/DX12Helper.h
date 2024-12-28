@@ -1,6 +1,6 @@
 #pragma once
 #include <comdef.h>
-#include "Waldem/Renderer/Shader.h"
+#include "D3DX12.h"
 
 namespace Waldem
 {

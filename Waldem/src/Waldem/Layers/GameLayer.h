@@ -2,6 +2,7 @@
 
 #include "Waldem/ECS/Components/Guizmo.h"
 #include "Waldem/ECS/Systems/DeferredRenderingSystem.h"
+#include "Waldem/ECS/Systems/OceanSimulationSystem.h"
 #include "Waldem/ECS/Systems/ShadowmapRenderingSystem.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/Input/InputManager.h"
@@ -36,6 +37,7 @@ namespace Waldem
 
 			DrawSystems.Add((ISystem*)new ShadowmapRenderingSystem(ecsManager));
 			DrawSystems.Add((ISystem*)new DeferredRenderingSystem(ecsManager));
+			DrawSystems.Add((ISystem*)new OceanSimulationSystem(ecsManager));
 		}
 
 		void OnUpdate(float deltaTime) override

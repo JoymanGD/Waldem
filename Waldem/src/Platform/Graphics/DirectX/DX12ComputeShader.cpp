@@ -11,6 +11,24 @@ namespace Waldem
     
     DX12ComputeShader::DX12ComputeShader(const String& name) : ComputeShader(name)
     {
+        HRESULT hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&DxcUtils));
+        if (FAILED(hr))
+        {
+            throw std::runtime_error("Failed to create DxcUtils.");
+        }
+
+        hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&DxcCompiler));
+        if (FAILED(hr))
+        {
+            throw std::runtime_error("Failed to create DxcCompiler.");
+        }
+
+        hr = DxcUtils->CreateDefaultIncludeHandler(&DxcIncludeHandler);
+        if (FAILED(hr))
+        {
+            throw std::runtime_error("Failed to create include handler.");
+        }
+        
         CompileFromFile(name);
     }
 
@@ -20,8 +38,6 @@ namespace Waldem
 
     bool DX12ComputeShader::CompileFromFile(const String& shaderName)
     {
-        String entryPoint = "main"; //TODO: make this configurable?
-        
         auto currentPath = GetCurrentFolder();
         
         std::wstring wCurrentPath = std::wstring(currentPath.begin(), currentPath.end());
@@ -29,35 +45,64 @@ namespace Waldem
         
         size_t lastSlash = wShaderName.find_last_of(L"/\\");
 
-        // Extract the directory part
         std::wstring pathToShaders = wCurrentPath + L"/Shaders/";
 
-        // Extract the base name
         std::wstring baseName = wShaderName.substr(lastSlash + 1);
         
         std::wstring shaderPath = pathToShaders + baseName + L".comp.hlsl";
-        String target = "cs_5_1";
 
-        //compute shader
-        HRESULT hr = D3DCompileFromFile(
-            shaderPath.c_str(), // Filename
-            nullptr, // Macros
-            D3D_COMPILE_STANDARD_FILE_INCLUDE,
-            entryPoint.c_str(), // Entry point function (e.g., "main")
-            target.c_str(), // Target profile (e.g., "vs_5_0" for vertex shader, "ps_5_0" for pixel shader)
-            D3DCOMPILE_DEBUG, // Compile flags
-            0,
-            &ShaderBlob, // Output shader bytecode
-            &ErrorBlob); // Output error messages
+        HRESULT hr = DxcUtils->LoadFile(shaderPath.c_str(), nullptr, &Source);
 
         if(FAILED(hr))
         {
-            if (ErrorBlob)
+            WD_CORE_ERROR("Failed to load shader file: {0}", DX12Helper::MBFromW(shaderPath.c_str(), 0));
+        }
+
+        const wchar_t* entryPoint = L"main";
+        const wchar_t* targetProfile = L"cs_6_5";
+
+        // Compiler arguments
+        const wchar_t* arguments[] = {
+            L"-E", entryPoint,
+            L"-T", targetProfile,
+            L"-Zi",
+            L"-Qstrip_debug",
+            L"-I", pathToShaders.c_str()
+        };
+
+        DxcBuffer sourceBuffer;
+        sourceBuffer.Ptr = Source->GetBufferPointer();
+        sourceBuffer.Size = Source->GetBufferSize();
+        sourceBuffer.Encoding = DXC_CP_ACP;
+
+        IDxcResult* result;
+
+        DxcCompiler->Compile(
+            &sourceBuffer,
+            arguments,
+            _countof(arguments),
+            DxcIncludeHandler,
+            IID_PPV_ARGS(&result)
+        );
+
+        HRESULT status;
+        
+        hr = result->GetStatus(&status);
+        
+        if (FAILED(hr) || FAILED(status))
+        {
+            result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&ErrorBlob), nullptr);
+            if (ErrorBlob && ErrorBlob->GetStringLength() > 0)
             {
-                WD_CORE_ERROR("Shader compilation error: {0}", (char*)ErrorBlob->GetBufferPointer());
+                std::cerr << "Shader compilation error: " << ErrorBlob->GetStringPointer() << std::endl;
             }
-            
-            return false;
+            throw std::runtime_error("Shader compilation failed.");
+        }
+
+        hr = result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&ShaderBlob), nullptr);
+        if (FAILED(hr))
+        {
+            throw std::runtime_error("Failed to retrieve compiled shader.");
         }
 
         return true;

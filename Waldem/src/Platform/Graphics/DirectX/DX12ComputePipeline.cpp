@@ -1,13 +1,15 @@
 #include "wdpch.h"
 #include "DX12ComputePipeline.h"
 
+#include <dxcapi.h>
+
 namespace Waldem
 {
     DX12ComputePipeline::DX12ComputePipeline(const String& name, ID3D12Device* device, RootSignature* rootSignature, ComputeShader* shader) : Pipeline(name)
     {
         rootSignature->CurrentPipelineType = PipelineType::Compute;
         
-        ID3DBlob* ComputeShaderBlob = (ID3DBlob*)shader->GetPlatformData();
+        IDxcBlob* ComputeShaderBlob = (IDxcBlob*)shader->GetPlatformData();
         
         PsoDesc = {};
         PsoDesc.pRootSignature = (ID3D12RootSignature*)rootSignature->GetNativeObject();
