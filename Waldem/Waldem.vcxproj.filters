@@ -192,6 +192,9 @@
     <ClInclude Include="src\Waldem\ECS\Components\ModelComponent.h">
       <Filter>src\Waldem\ECS\Components</Filter>
     </ClInclude>
+    <ClInclude Include="src\Waldem\ECS\Components\Ocean.h">
+      <Filter>src\Waldem\ECS\Components</Filter>
+    </ClInclude>
     <ClInclude Include="src\Waldem\ECS\Components\Selected.h">
       <Filter>src\Waldem\ECS\Components</Filter>
     </ClInclude>
@@ -210,7 +213,7 @@
     <ClInclude Include="src\Waldem\ECS\Systems\FreeLookCameraSystem.h">
       <Filter>src\Waldem\ECS\Systems</Filter>
     </ClInclude>
-    <ClInclude Include="src\Waldem\ECS\Systems\PostProcessSystem.h">
+    <ClInclude Include="src\Waldem\ECS\Systems\OceanSimulationSystem.h">
       <Filter>src\Waldem\ECS\Systems</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\ECS\Systems\ShadowmapRenderingSystem.h">
@@ -1817,6 +1820,9 @@
       <Filter>src\Shaders</Filter>
     </FxCompile>
     <FxCompile Include="src\Shaders\Line.vs.hlsl">
+      <Filter>src\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\OceanSimulation.comp.hlsl">
       <Filter>src\Shaders</Filter>
     </FxCompile>
     <FxCompile Include="src\Shaders\PostProcess.comp.hlsl">

@@ -1,14 +1,16 @@
 #include "wdpch.h"
 #include "DX12GraphicPipeline.h"
 
+#include <dxcapi.h>
+
 namespace Waldem
 {
     DX12GraphicPipeline::DX12GraphicPipeline(const String& name, WArray<TextureFormat> RTFormats, PrimitiveTopologyType primitiveTopologyType, ID3D12Device* device, RootSignature* rootSignature, PixelShader* shader) : Pipeline(name)
     {
         rootSignature->CurrentPipelineType = PipelineType::Graphics;
 
-        ID3DBlob* VertexShaderBlob = (ID3DBlob*)shader->GetVS();
-        ID3DBlob* PixelShaderBlob = (ID3DBlob*)shader->GetPS();
+        IDxcBlob* VertexShaderBlob = (IDxcBlob*)shader->GetVS();
+        IDxcBlob* PixelShaderBlob = (IDxcBlob*)shader->GetPS();
         
         PsoDesc = {};
         PsoDesc.pRootSignature = (ID3D12RootSignature*)rootSignature->GetNativeObject();

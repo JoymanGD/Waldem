@@ -262,23 +262,32 @@ namespace Waldem
     {
         ID3D12ShaderReflection* shaderReflection;
 
-        ID3DBlob* computeShaderBytecode = (ID3DBlob*)computeShader->GetPlatformData();
+        IDxcBlob* computeShaderBytecode = (IDxcBlob*)computeShader->GetPlatformData();
         
-        // Reflect the shader bytecode
-        HRESULT hr = D3DReflect(
-            computeShaderBytecode->GetBufferPointer(),
-            computeShaderBytecode->GetBufferSize(),
-            IID_PPV_ARGS(&shaderReflection)
-        );
+        Microsoft::WRL::ComPtr<IDxcUtils> dxUtils;
+        HRESULT hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxUtils));
+        if (FAILED(hr))
+        {
+            throw std::runtime_error("Failed to create DXC Utilities.");
+        }
 
-        if (FAILED(hr)) {
+        DxcBuffer shaderBuffer = {};
+        shaderBuffer.Ptr = computeShaderBytecode->GetBufferPointer();
+        shaderBuffer.Size = computeShaderBytecode->GetBufferSize();
+        shaderBuffer.Encoding = DXC_CP_ACP;
+
+        hr = dxUtils->CreateReflection(&shaderBuffer, IID_PPV_ARGS(&shaderReflection));
+        if (FAILED(hr))
+        {
             throw std::runtime_error("Failed to reflect shader.");
         }
 
         uint32_t threadGroupX = 0, threadGroupY = 0, threadGroupZ = 0;
-
-        // Get thread group size
-        shaderReflection->GetThreadGroupSize(&threadGroupX, &threadGroupY, &threadGroupZ);
+        hr = shaderReflection->GetThreadGroupSize(&threadGroupX, &threadGroupY, &threadGroupZ);
+        if (FAILED(hr))
+        {
+            throw std::runtime_error("Failed to retrieve thread group size.");
+        }
 
         return { threadGroupX, threadGroupY, threadGroupZ };
     }

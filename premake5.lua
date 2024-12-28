@@ -20,10 +20,11 @@ IncludeDir["ECS"] = "Waldem/vendor/ECS/include"
 IncludeDir["SPDLog"] = "Waldem/vendor/spdlog/include"
 IncludeDir["Assimp"] = "Waldem/vendor/assimp/include"
 IncludeDir["stb"] = "Waldem/vendor/stb/include"
+IncludeDir["dxc"] = "Waldem/vendor/dxc/inc"
 
 filter { "files:**.hlsl" }
    flags { "ExcludeFromBuild", 'NoPCH' }
-   shadermodel "6.6"
+   shadermodel "6.5"
 filter { "files:**.ps.hlsl" }
    removeflags "ExcludeFromBuild"
    shadertype "Pixel"
@@ -81,19 +82,22 @@ project "Waldem"
         "%{IncludeDir.glm}",
         "%{IncludeDir.ImGui}",
         "%{IncludeDir.ImGuizmo}",
-        "%{IncludeDir.ECS}"
+        "%{IncludeDir.ECS}",
+        "%{IncludeDir.dxc}"
     }
     
     libdirs
     {
         "%{prj.name}/vendor/assimp/lib",
-        "%{prj.name}/vendor/SDL/lib"
+        "%{prj.name}/vendor/SDL/lib",
+        "%{prj.name}/vendor/dxc/lib"
     }
 
     links
     {
         "SDL2", "SDL2main",
         "opengl32.lib",
+        "dxcompiler.lib",
         "assimp-vc142-mt.lib",
         "d3d12", "dxgi", "d3dcompiler"
     }
@@ -162,7 +166,8 @@ project "Sandbox"
         "%{IncludeDir.glm}",
         "%{IncludeDir.ImGui}",
         "%{IncludeDir.ImGuizmo}",
-        "%{IncludeDir.ECS}"
+        "%{IncludeDir.ECS}",
+        "%{IncludeDir.dxc}"
     }
 
     filter "system:windows"
@@ -177,6 +182,8 @@ project "Sandbox"
             "{COPY} %{wks.location}%{prj.name}\\src\\Shaders\\*.hlsl %{cfg.targetdir}\\Shaders\\",
             "{COPY} %{wks.location}Waldem\\src\\Shaders\\*.hlsl %{cfg.targetdir}\\Shaders\\",
             "{COPY} %{wks.location}Waldem\\vendor\\SDL\\lib\\SDL2.dll %{cfg.targetdir}\\",
+            "{COPY} %{wks.location}Waldem\\vendor\\dxc\\bin\\x64\\dxcompiler.dll %{cfg.targetdir}\\",
+            "{COPY} %{wks.location}Waldem\\vendor\\dxc\\bin\\x64\\dxil.dll %{cfg.targetdir}\\",
             "{COPY} %{wks.location}Waldem\\vendor\\assimp\\lib\\assimp-vc142-mt.dll %{cfg.targetdir}\\",
             "{COPYDIR} %{wks.location}%{prj.name}\\Content\\ %{cfg.targetdir}\\Content\\"
         }

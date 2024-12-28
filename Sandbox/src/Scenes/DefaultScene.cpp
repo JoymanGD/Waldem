@@ -1,23 +1,19 @@
 #include <wdpch.h>
 #include "DefaultScene.h"
-#include "Waldem/ECS/Components/ModelComponent.h"
-#include "Waldem/ECS/Systems/DebugSystem.h"
-#include "Waldem/ECS/Systems/DeferredRenderingSystem.h"
 #include "Waldem/Import/ModelImporter.h"
-#include "imgui.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
-#include "Waldem/ECS/Systems/EditorTransformsManipulationSystem.h"
-#include "Waldem/ECS/Systems/ShadowmapRenderingSystem.h"
+#include "Waldem/ECS/Components/Ocean.h"
+#include "Waldem/Renderer/Light.h"
 
 namespace Sandbox
 {
 	void DefaultScene::Initialize(Waldem::SceneData* sceneData, Waldem::InputManager* inputManager, ecs::Manager* ecsManager, Waldem::ResourceManager* resourceManager)
 	{
 		Waldem::ModelImporter importer;
-        auto sponzaModel = importer.Import("Content/Models/Sponza/Sponza2.gltf", true);
 
 		//Entities
 		
+        // auto sponzaModel = importer.Import("Content/Models/Sponza/Sponza2.gltf", true);
 		// //firstSponza
 		// for (Waldem::Mesh* mesh : sponzaModel->GetMeshes())
 		// {
@@ -42,24 +38,10 @@ namespace Sandbox
 		{
 			auto waterPlaneEntity = ecsManager->CreateEntity();
 			waterPlaneEntity.Add<Waldem::MeshComponent>(mesh);
-			Waldem::Transform transform = mesh->ObjectMatrix;
-			transform.Translate({50, 0, 0});
-			waterPlaneEntity.Add<Waldem::Transform>(transform);
+			waterPlaneEntity.Add<Waldem::Transform>(mesh->ObjectMatrix);
+			waterPlaneEntity.Add<Waldem::Ocean>();
 		}
 		
-		// auto sponzaEntity = ecsManager->CreateEntity();
-		// sponzaEntity.Add<Waldem::ModelComponent>(sponzaModel);
-		// sponzaEntity.Add<Waldem::Transform>(Waldem::Vector3(0,0,0));
-		// sponzaEntity.Add<Waldem::Selected>();
-		//
-		// auto secondSponzaEntity = ecsManager->CreateEntity();
-		// secondSponzaEntity.Add<Waldem::ModelComponent>(sponzaModel);
-		// secondSponzaEntity.Add<Waldem::Transform>(Waldem::Vector3(50,0,0));
-		//
-		// auto thirdSponzaEntity = ecsManager->CreateEntity();
-		// thirdSponzaEntity.Add<Waldem::ModelComponent>(sponzaModel);
-		// thirdSponzaEntity.Add<Waldem::Transform>(Waldem::Vector3(50,50,0));
-
 		auto dirLightEntity = ecsManager->CreateEntity();
 		auto& lightTransform = dirLightEntity.Add<Waldem::Transform>(Waldem::Vector3(0, 0, 0));
 		lightTransform.SetEuler(90, 0, 0);
