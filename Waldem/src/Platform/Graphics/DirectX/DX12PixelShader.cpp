@@ -68,7 +68,7 @@ namespace Waldem
             L"-E", entryPoint,
             L"-T", targetProfile,
             L"-Zi",
-            L"-Qstrip_debug",
+            L"-Qembed_debug",
             L"-I", pathToShaders.c_str()
         };
 
@@ -125,7 +125,7 @@ namespace Waldem
             L"-E", entryPoint,
             L"-T", targetProfile,
             L"-Zi",
-            L"-Qstrip_debug",
+            L"-Qembed_debug",
             L"-I", pathToShaders.c_str()
         };
 
