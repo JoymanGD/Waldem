@@ -127,6 +127,11 @@ namespace Waldem
         return renderTarget;
     }
 
+    void Renderer::CopyRenderTarget(RenderTarget* dstRT, RenderTarget* srcRT)
+    {
+        Instance->PlatformRenderer->CopyRenderTarget(dstRT, srcRT);
+    }
+
     VertexBuffer* Renderer::CreateVertexBuffer(void* data, uint32_t size)
     {
         return Instance->PlatformRenderer->CreateVertexBuffer(data, size);

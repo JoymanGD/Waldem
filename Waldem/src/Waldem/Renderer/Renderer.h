@@ -44,6 +44,7 @@ namespace Waldem
         virtual RootSignature* CreateRootSignature(WArray<Resource> resources) = 0;
         virtual Texture2D* CreateTexture(String name, int width, int height, TextureFormat format, uint8_t* data = nullptr) = 0;
         virtual RenderTarget* CreateRenderTarget(String name, int width, int height, TextureFormat format) = 0;
+        virtual void CopyRenderTarget(RenderTarget* dstRT, RenderTarget* srcRT) = 0;
         virtual VertexBuffer* CreateVertexBuffer(void* data, uint32_t size) = 0;
         virtual IndexBuffer* CreateIndexBuffer(void* data, uint32_t count) = 0;
         virtual void ResourceBarrier(RenderTarget* rt, ResourceStates before, ResourceStates after) = 0;
@@ -82,6 +83,7 @@ namespace Waldem
         static RootSignature* CreateRootSignature(WArray<Resource> resources);
         static Texture2D* CreateTexture(String name, int width, int height, TextureFormat format, uint8_t* data = nullptr);
         static RenderTarget* CreateRenderTarget(String name, int width, int height, TextureFormat format);
+        static void CopyRenderTarget(RenderTarget* dstRT, RenderTarget* srcRT);
         static VertexBuffer* CreateVertexBuffer(void* data, uint32_t size);
         static IndexBuffer* CreateIndexBuffer(void* data, uint32_t count);
         static void ResourceBarrier(RenderTarget* rt, ResourceStates before, ResourceStates after);

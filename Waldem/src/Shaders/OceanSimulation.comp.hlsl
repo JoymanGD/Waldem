@@ -4,7 +4,7 @@ SamplerState myStaticSampler : register(s0);
 
 RWTexture2D<float4> SpectrumRenderTarget : register(u0);
 RWTexture2D<float4> HeightmapRenderTarget : register(u1);
-RWTexture2D<float4> GaussianNoiseRenderTarget : register(u2);
+Texture2D GaussianNoiseRenderTarget : register(t0);
 
 cbuffer MyConstantBuffer : register(b0)
 {

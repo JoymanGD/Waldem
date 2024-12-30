@@ -48,6 +48,7 @@ namespace Waldem
         void SetConstants(uint32_t rootParamIndex, uint32_t numConstants, void* data, PipelineType pipelineType);
         void CopyTextureRegion(const D3D12_TEXTURE_COPY_LOCATION* dst, uint32_t dstX, uint32_t dstY, uint32_t dstZ, const D3D12_TEXTURE_COPY_LOCATION* src, const D3D12_BOX* srcBox);
         void CopyResource(ID3D12Resource* dst, ID3D12Resource* src);
+        void CopyRenderTarget(RenderTarget* dst, RenderTarget* src);
         
         void UpdateSubresoures(ID3D12Resource* destResource, ID3D12Resource* srcResource, uint32_t numSubresources, D3D12_SUBRESOURCE_DATA* subresourceData);
         

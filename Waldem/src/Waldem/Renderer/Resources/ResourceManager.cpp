@@ -20,4 +20,13 @@ namespace Waldem
         
         return rt;
     }
+
+    RenderTarget* ResourceManager::CloneRenderTarget(RenderTarget* renderTarget)
+    {
+        RenderTarget* destRT = CreateRenderTarget(renderTarget->GetName() + "_Clone", renderTarget->GetWidth(), renderTarget->GetHeight(), renderTarget->GetFormat());
+
+        Renderer::CopyRenderTarget(destRT, renderTarget);
+
+        return destRT;
+    }
 }

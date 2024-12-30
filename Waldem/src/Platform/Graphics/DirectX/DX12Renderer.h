@@ -38,6 +38,7 @@ namespace Waldem
         RootSignature* CreateRootSignature(WArray<Resource> resources) override;
         Texture2D* CreateTexture(String name, int width, int height, TextureFormat format, uint8_t* data = nullptr) override;
         RenderTarget* CreateRenderTarget(String name, int width, int height, TextureFormat format) override;
+        void CopyRenderTarget(RenderTarget* dstRT, RenderTarget* srcRT) override;
         VertexBuffer* CreateVertexBuffer(void* data, uint32_t size) override;
         IndexBuffer* CreateIndexBuffer(void* data, uint32_t size) override;
         void ClearRenderTarget(RenderTarget* rt) override;

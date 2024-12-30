@@ -3,6 +3,8 @@
 #include "Waldem/ECS/Components/Guizmo.h"
 #include "Waldem/ECS/Systems/DeferredRenderingSystem.h"
 #include "Waldem/ECS/Systems/OceanSimulationSystem.h"
+#include "Waldem/ECS/Systems/PostProcessSystem.h"
+#include "Waldem/ECS/Systems/ScreenQuadSystem.h"
 #include "Waldem/ECS/Systems/ShadowmapRenderingSystem.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/Input/InputManager.h"
@@ -27,17 +29,26 @@ namespace Waldem
 			// averageWorldPositionEntity.Add<Selected>();
 			// averageWorldPositionEntity.Add<Transform>(Vector3(0, 0, 0));
 
+			Point2 debugRTResolution = Point2(1024, 1024);
+
 			Renderer::Begin();
+			resourceManager->CreateRenderTarget("TargetRT", resolution.x, resolution.y, TextureFormat::R8G8B8A8_UNORM);
 			resourceManager->CreateRenderTarget("WorldPositionRT", resolution.x, resolution.y, TextureFormat::R32G32B32A32_FLOAT);
 			resourceManager->CreateRenderTarget("NormalRT", resolution.x, resolution.y, TextureFormat::R16G16B16A16_FLOAT);
 			resourceManager->CreateRenderTarget("AlbedoRT", resolution.x, resolution.y, TextureFormat::R8G8B8A8_UNORM);
 			resourceManager->CreateRenderTarget("MeshIDRT", resolution.x, resolution.y, TextureFormat::R32_SINT);
 			resourceManager->CreateRenderTarget("DepthRT", resolution.x, resolution.y, TextureFormat::D32_FLOAT);
+			resourceManager->CreateRenderTarget("DebugRT_1", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
+			resourceManager->CreateRenderTarget("DebugRT_2", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
+			resourceManager->CreateRenderTarget("DebugRT_3", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
 			Renderer::End();
 
 			DrawSystems.Add((ISystem*)new ShadowmapRenderingSystem(ecsManager));
 			DrawSystems.Add((ISystem*)new DeferredRenderingSystem(ecsManager));
+			DrawSystems.Add((ISystem*)new PostProcessSystem(ecsManager));
 			DrawSystems.Add((ISystem*)new OceanSimulationSystem(ecsManager));
+            DrawSystems.Add((ISystem*)new DebugSystem(ecsManager));
+			DrawSystems.Add((ISystem*)new ScreenQuadSystem(ecsManager));
 		}
 
 		void OnUpdate(float deltaTime) override
@@ -66,8 +77,7 @@ namespace Waldem
 			case EventType::MouseMoved:
 			case EventType::MouseScrolled:
 				{
-					event.Handled = true;
-					GameInputManager.Broadcast(event);
+					event.Handled = GameInputManager.Broadcast(event);
 				}
 			}
 		}

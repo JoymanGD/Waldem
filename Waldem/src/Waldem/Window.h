@@ -15,8 +15,8 @@ namespace Waldem
 		float Height;
 
 		WindowProps(const String& title = "Waldem Engine",
-					float width = 1280,
-					float height = 720,
+					float width = 1920,
+					float height = 1080,
 					Point2 position = { 50, 50 })
 			: Title(title), Width(width), Height(height), Position(position) {}
 	};

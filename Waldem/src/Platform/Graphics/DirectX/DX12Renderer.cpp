@@ -414,6 +414,11 @@ namespace Waldem
         return renderTarget;
     }
 
+    void DX12Renderer::CopyRenderTarget(RenderTarget* dstRT, RenderTarget* srcRT)
+    {
+        WorldCommandList.first->CopyRenderTarget(dstRT, srcRT);
+    }
+
     VertexBuffer* DX12Renderer::CreateVertexBuffer(void* data, uint32_t size)
     {
         return new DX12VertexBuffer(Device, data, size);

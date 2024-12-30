@@ -1,6 +1,11 @@
 #define PI 3.14159265359f
 
-RWTexture2D<float4> GaussianNoiseRenderTarget : register(u2);
+RWTexture2D<float4> GaussianNoiseRenderTarget : register(u0);
+
+cbuffer MyPushConstants : register(b0)
+{
+    float ElapsedTime;
+}
 
 // MT19937 constants
 #define MT19937_N 624
@@ -62,9 +67,10 @@ void GenerateGaussianRandom(uint2 dispatchThreadID, out float real, out float im
 {
 	uint mtState[MT19937_N];
     uint mtIndex;
+    uint timeInt = asuint(ElapsedTime);
 
     // Initialize the Mersenne Twister state using a unique seed based on dispatchThreadID
-    uint seed = dispatchThreadID.x + dispatchThreadID.y * 12345;
+    uint seed = dispatchThreadID.x + dispatchThreadID.y * 12345 + timeInt;
     mt19937_seed(seed, mtState, mtIndex);
 
     // Generate two uniform random numbers in the range [0, 1)

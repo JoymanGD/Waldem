@@ -1,5 +1,6 @@
 #pragma once
 #include "System.h"
+#include "Waldem/KeyCodes.h"
 #include "Waldem/Input/Input.h"
 #include "Waldem/MouseButtonCodes.h"
 #include "Waldem/ECS/Components/MainCamera.h"
@@ -8,6 +9,13 @@
 
 namespace Waldem
 {
+    struct DebugSystemConstantBuffer
+    {
+        Vector2 TargetResolution;
+        Vector2 DebugResolution;
+        uint32_t DebugRTIndex;
+    };
+    
     class WALDEM_API DebugSystem : ISystem
     {
         Vector3 LightTargetPosition = { 0, -1, 0 };
@@ -17,6 +25,18 @@ namespace Waldem
 
         bool IsRotatingLight = false;
         Vector2 MousePos = { 0, 0 };
+
+        //Displaying debugRTs
+        bool DisplayDebugRTs = false;
+        Pipeline* DebugRenderTargetsPipeline = nullptr;
+        RootSignature* DebugRenderTargetsRootSignature = nullptr;
+        ComputeShader* DebugRenderTargetsComputeShader = nullptr;
+        RenderTarget* TargetRT = nullptr;
+        RenderTarget* DebugRT_1 = nullptr;
+        RenderTarget* DebugRT_2 = nullptr;
+        RenderTarget* DebugRT_3 = nullptr;
+        Point3 GroupCount;
+        DebugSystemConstantBuffer ConstantBufferData;
         
     public:
         DebugSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
@@ -84,6 +104,8 @@ namespace Waldem
         
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
         {
+            Vector2 resolution = Vector2(sceneData->Window->GetWidth(), sceneData->Window->GetHeight());
+            
             CacheFrustrumCorners();
 
             inputManager->SubscribeToMouseButtonEvent(WD_MOUSE_BUTTON_MIDDLE, [&](bool isPressed)
@@ -95,6 +117,60 @@ namespace Waldem
             {
                 MousePos = mousePos;
             });
+
+            inputManager->SubscribeToKeyEvent(KP_0, [&](bool isPressed)
+            {
+                if(isPressed)
+                {
+                    DisplayDebugRTs = !DisplayDebugRTs;
+                }
+            });
+
+            inputManager->SubscribeToKeyEvent(KP_1, [&](bool isPressed)
+            {
+                if(isPressed)
+                {
+                    ConstantBufferData.DebugRTIndex = 1;
+                }
+            });
+
+            inputManager->SubscribeToKeyEvent(KP_2, [&](bool isPressed)
+            {
+                if(isPressed)
+                {
+                    ConstantBufferData.DebugRTIndex = 2;
+                }
+            });
+
+            inputManager->SubscribeToKeyEvent(KP_3, [&](bool isPressed)
+            {
+                if(isPressed)
+                {
+                    ConstantBufferData.DebugRTIndex = 3;
+                }
+            });
+
+            TargetRT = resourceManager->GetRenderTarget("TargetRT");
+            DebugRT_1 = resourceManager->GetRenderTarget("DebugRT_1");
+            DebugRT_2 = resourceManager->GetRenderTarget("DebugRT_2");
+            DebugRT_3 = resourceManager->GetRenderTarget("DebugRT_3");
+            
+            ConstantBufferData.TargetResolution = Vector2(TargetRT->GetWidth(), TargetRT->GetHeight());
+            ConstantBufferData.DebugResolution = Vector2(DebugRT_1->GetWidth(), DebugRT_1->GetHeight());
+            ConstantBufferData.DebugRTIndex = 1;
+            
+            WArray<Resource> resources;
+            resources.Add(Resource("TargetRT", TargetRT, 0, true));
+            resources.Add(Resource("DebugRT_1", DebugRT_1, 0));
+            resources.Add(Resource("DebugRT_2", DebugRT_2, 1));
+            resources.Add(Resource("DebugRT_3", DebugRT_3, 2));
+            resources.Add(Resource("MyConstantBuffer", RTYPE_ConstantBuffer, &ConstantBufferData, sizeof(DebugSystemConstantBuffer), sizeof(DebugSystemConstantBuffer), 0));
+            DebugRenderTargetsRootSignature = Renderer::CreateRootSignature(resources);
+            DebugRenderTargetsComputeShader = Renderer::LoadComputeShader("DebugRenderTargets");
+            DebugRenderTargetsPipeline = Renderer::CreateComputePipeline("DebugRenderTargetsPipeline", DebugRenderTargetsRootSignature, DebugRenderTargetsComputeShader);
+            
+            Point3 numThreads = Renderer::GetNumThreadsPerGroup(DebugRenderTargetsComputeShader);
+            GroupCount = Point3((resolution.x + numThreads.x - 1) / numThreads.x, (resolution.y + numThreads.y - 1) / numThreads.y, 1);
         }
 
         void Update(float deltaTime) override
@@ -130,6 +206,16 @@ namespace Waldem
                     lastMouseX = MousePos.x;
                     lastMouseY = MousePos.y;
                 }
+            }
+
+            if(DisplayDebugRTs)
+            {
+                DebugRenderTargetsRootSignature->UpdateResourceData("MyConstantBuffer", &ConstantBufferData);
+                Renderer::ResourceBarrier(TargetRT, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
+                Renderer::SetPipeline(DebugRenderTargetsPipeline);
+                Renderer::SetRootSignature(DebugRenderTargetsRootSignature);
+                Renderer::Compute(GroupCount);
+                Renderer::ResourceBarrier(TargetRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
             }
 
             // Matrix4 viewProj;

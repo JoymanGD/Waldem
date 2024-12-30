@@ -33,8 +33,10 @@ namespace Waldem
             MouseScrollEventHandlers.Add(handler);
         }
         
-        void Broadcast(Event& event)
+        bool Broadcast(Event& event)
         {
+            bool handled = false;
+            
             auto eventType = event.GetEventType();
             
             switch (eventType)
@@ -47,6 +49,9 @@ namespace Waldem
                     {
                         handler(eventType == EventType::KeyPressed);
                     }
+                                        
+                    handled = !KeyEventHandlers[keyEvent.GetKeyCode()].IsEmpty();
+                    
                     break;
                 }
             case EventType::MouseButtonPressed:
@@ -57,6 +62,9 @@ namespace Waldem
                     {
                         handler(eventType == EventType::MouseButtonPressed);
                     }
+                                        
+                    handled = !MouseButtonEventHandlers[mouseButtonEvent.GetMouseButton()].IsEmpty();
+                    
                     break;
                 }
             case EventType::MouseMoved:
@@ -67,19 +75,27 @@ namespace Waldem
                     {
                         handler(Vector2(mouseMovedEvent.GetX(), mouseMovedEvent.GetY()));
                     }
+
+                    handled = !MouseMoveEventHandlers.IsEmpty();
+                    
                     break;
                 }
             case EventType::MouseScrolled:
                 {
                     MouseScrolledEvent& mouseScrolledEvent = static_cast<MouseScrolledEvent&>(event);
-                    
+
                     for (auto& handler : MouseScrollEventHandlers)
                     {
                         handler(Vector2(mouseScrolledEvent.GetXOffset(), mouseScrolledEvent.GetYOffset()));
                     }
+                    
+                    handled = !MouseMoveEventHandlers.IsEmpty();
+                    
                     break;
                 }
             }
+
+            return handled;
         }
         
     private:
