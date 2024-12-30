@@ -78,11 +78,15 @@ namespace Waldem
             
             switch (eventType)
             {
+            case EventType::MouseMoved:
+                {
+                    EditorInputManager.Broadcast(event);
+                    break;
+                }
+            case EventType::MouseScrolled:
             case EventType::KeyPressed:
             case EventType::KeyReleased:
             case EventType::KeyTyped:
-            case EventType::MouseMoved:
-            case EventType::MouseScrolled:
                 {
                     event.Handled = EditorInputManager.Broadcast(event);
                     break;
