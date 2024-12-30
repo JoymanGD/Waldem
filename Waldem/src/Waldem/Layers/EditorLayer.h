@@ -30,7 +30,6 @@ namespace Waldem
             
             UISystems.Add((ISystem*)new EditorTransformsManipulationSystem(CurrentECSManager));
             UpdateSystems.Add((ISystem*)new FreeLookCameraSystem(CurrentECSManager));
-            UpdateSystems.Add((ISystem*)new DebugSystem(CurrentECSManager));
         	
 			SceneData sceneData = { window };
         	
@@ -85,8 +84,7 @@ namespace Waldem
             case EventType::MouseMoved:
             case EventType::MouseScrolled:
                 {
-                    event.Handled = true;
-                    EditorInputManager.Broadcast(event);
+                    event.Handled = EditorInputManager.Broadcast(event);
                     break;
                 }
             case EventType::MouseButtonPressed:
@@ -97,8 +95,7 @@ namespace Waldem
                         break;
                     }
                     
-                    event.Handled = true;
-                    EditorInputManager.Broadcast(event);
+                    event.Handled = EditorInputManager.Broadcast(event);
                     break;
                 }
             }

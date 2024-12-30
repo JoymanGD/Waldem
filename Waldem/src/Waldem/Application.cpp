@@ -4,6 +4,8 @@
 #include "Waldem/Log.h"
 #include <numeric>
 
+#include "Time.h"
+
 namespace Waldem
 {
 	
@@ -89,6 +91,7 @@ namespace Waldem
 	void Application::Run()
 	{
 		auto lastFrameTime = std::chrono::high_resolution_clock::now();
+		auto startTime = std::chrono::high_resolution_clock::now();
 
 		while (IsRunning)
 		{
@@ -96,20 +99,21 @@ namespace Waldem
 
 			auto currentFrameTime = std::chrono::high_resolution_clock::now();
 			std::chrono::duration<float> deltaTimeDuration = currentFrameTime - lastFrameTime;
-			DeltaTime = deltaTimeDuration.count();
+			Time::DeltaTime = deltaTimeDuration.count();
+			Time::ElapsedTime = (currentFrameTime - startTime).count();
 			lastFrameTime = currentFrameTime;
 
 			Renderer::Begin();
 			
 			for (Layer* layer : LayerStack)
 			{
-				layer->OnUpdate(DeltaTime);
+				layer->OnUpdate(Time::DeltaTime);
 			}
 
 			UILayer->Begin();
 			for (Layer* layer : LayerStack)
 			{
-				layer->OnDrawUI(DeltaTime);
+				layer->OnDrawUI(Time::DeltaTime);
 			}
 			UILayer->End();
 			
@@ -117,7 +121,7 @@ namespace Waldem
 			
 			Renderer::Present();
 
-			float FPS = CalculateAverageFPS(DeltaTime);
+			float FPS = CalculateAverageFPS(Time::DeltaTime);
 			Window->SetTitle(std::to_string(FPS).substr(0, 4));
 		}
 	}

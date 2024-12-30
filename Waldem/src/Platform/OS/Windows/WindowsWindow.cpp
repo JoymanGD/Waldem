@@ -68,8 +68,8 @@ namespace Waldem
         }
 
         NativeWindow = SDL_CreateWindow(Data.Title.c_str(),
-                                    Data.Position.x,
-                                    Data.Position.y,
+                                    SDL_WINDOWPOS_CENTERED,
+                                    SDL_WINDOWPOS_CENTERED,
                                     Data.Width, Data.Height,
                                     SDL_WINDOW_RESIZABLE);
         if (!NativeWindow)

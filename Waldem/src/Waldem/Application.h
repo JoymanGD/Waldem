@@ -6,7 +6,6 @@
 #include "Layers/GameLayer.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/Resources/ResourceManager.h"
-#include "SceneManagement/SceneManager.h"
 #include "Waldem/Layers/LayerStack.h"
 #include "Waldem/Events/Event.h"
 #include "Waldem/Events/ApplicationEvent.h"
@@ -27,8 +26,6 @@ namespace Waldem
 
 		//Singleton
 		static Application* Instance;
-		
-		inline static float DeltaTime;
 	private:
 		bool OnWindowClose(WindowCloseEvent& e);
 		

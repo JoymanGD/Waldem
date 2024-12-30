@@ -8,9 +8,9 @@ struct PS_INPUT
 };
 
 SamplerState myStaticSampler : register(s0);
-Texture2D PostProcessRenderTarget : register(t0);
+Texture2D TargetRT : register(t0);
 
 float4 main(PS_INPUT input) : SV_TARGET
 {
-    return PostProcessRenderTarget.Sample(myStaticSampler, input.UV);
+    return TargetRT.Sample(myStaticSampler, input.UV);
 }

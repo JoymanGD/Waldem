@@ -11,7 +11,7 @@ Texture2D NormalRT : register(t3);
 Texture2D AlbedoRT : register(t4);
 Texture2D MeshIDRT : register(t5);
 Texture2D DepthRT : register(t6);
-RWTexture2D<float4> DeferredRenderingRenderTarget : register(u0);
+RWTexture2D<float4> TargetRT : register(u0);
 RWStructuredBuffer<int> HoveredMeshes : register(u1);
 
 cbuffer MyConstantBuffer : register(b0)
@@ -51,5 +51,5 @@ void main(uint2 tid : SV_DispatchThreadID)
     float3 resultColor = albedo.rgb * AMBIENT + albedo.rgb * light.Color * light.Intensity * saturate(dot(normal, lightDirection)) * saturate(shadowFactor);
 
     //Writing the result to the render target
-    DeferredRenderingRenderTarget[tid] = float4(resultColor, 1.0f);
+    TargetRT[tid] = float4(resultColor, 1.0f);
 }

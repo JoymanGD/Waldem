@@ -10,6 +10,7 @@ namespace Waldem
         ResourceManager() = default;
         
         RenderTarget* CreateRenderTarget(String name, int width, int height, TextureFormat format);
+        RenderTarget* CloneRenderTarget(RenderTarget* renderTarget);
         RenderTarget* GetRenderTarget(String name) { return RenderTargets[name]; }
         
     private:

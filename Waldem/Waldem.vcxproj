@@ -178,6 +178,8 @@
     <ClInclude Include="src\Waldem\ECS\Systems\ForwardRenderingSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\FreeLookCameraSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\OceanSimulationSystem.h" />
+    <ClInclude Include="src\Waldem\ECS\Systems\PostProcessSystem.h" />
+    <ClInclude Include="src\Waldem\ECS\Systems\ScreenQuadSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\ShadowmapRenderingSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\System.h" />
     <ClInclude Include="src\Waldem\Editor\Editor.h" />
@@ -220,6 +222,7 @@
     <ClInclude Include="src\Waldem\Renderer\TextureFormat.h" />
     <ClInclude Include="src\Waldem\SceneManagement\Scene.h" />
     <ClInclude Include="src\Waldem\SceneManagement\SceneManager.h" />
+    <ClInclude Include="src\Waldem\Time.h" />
     <ClInclude Include="src\Waldem\Types\BasicTypes.h" />
     <ClInclude Include="src\Waldem\Types\MathTypes.h" />
     <ClInclude Include="src\Waldem\Types\Types.h" />
@@ -744,6 +747,17 @@
     <FxCompile Include="src\Shaders\Core.hlsl">
       <ExcludedFromBuild>true</ExcludedFromBuild>
       <ShaderModel>6.5</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\DebugRenderTargets.comp.hlsl">
+      <ObjectFileOutput>..\bin\Debug\Waldem\%(Filename).cso</ObjectFileOutput>
+      <TrackerLogDirectory>..\bin-int\Debug\Waldem\Waldem.tlog\</TrackerLogDirectory>
+      <EntryPointName>main</EntryPointName>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <ShaderModel>6.5</ShaderModel>
+      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
+      <DisableOptimizations>true</DisableOptimizations>
+      <EnableDebuggingInformation>true</EnableDebuggingInformation>
+      <ShaderType>Compute</ShaderType>
     </FxCompile>
     <FxCompile Include="src\Shaders\DeferredRendering.comp.hlsl">
       <ShaderType>Compute</ShaderType>

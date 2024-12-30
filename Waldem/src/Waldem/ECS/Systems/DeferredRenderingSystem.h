@@ -12,15 +12,9 @@
 
 namespace Waldem
 {
-    struct BloomParams
-    {
-        float BrightThreshold = 0.5f;
-        float BloomIntensity = .6f;
-        Vector2 TexelSize = Vector2(1.f / 1280.f, 1.f / 720.f);
-    };
-
     class WALDEM_API DeferredRenderingSystem : ISystem
     {
+        RenderTarget* TargetRT = nullptr;
         //GBuffer pass
         Pipeline* GBufferPipeline = nullptr;
         RootSignature* GBufferRootSignature = nullptr;
@@ -34,18 +28,7 @@ namespace Waldem
         Pipeline* DeferredRenderingPipeline = nullptr;
         ComputeShader* DeferredRenderingComputeShader = nullptr;
         RootSignature* DeferredRenderingRootSignature = nullptr;
-        RenderTarget* DeferredRenderingRenderTarget = nullptr;
         Point3 GroupCount;
-        //Post process pass
-        Pipeline* PostProcessPipeline = nullptr;
-        ComputeShader* PostProcessComputeShader = nullptr;
-        RootSignature* PostProcessRootSignature = nullptr;
-        RenderTarget* PostProcessRenderTarget = nullptr;
-        //Quad draw pass
-        Pipeline* QuadDrawPipeline = nullptr;
-        PixelShader* QuadDrawPixelShader = nullptr;
-        RootSignature* QuadDrawRootSignature = nullptr;
-        Quad FullscreenQuad = {};
         
     public:
         DeferredRenderingSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
@@ -53,6 +36,8 @@ namespace Waldem
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
         {
             Vector2 resolution = Vector2(sceneData->Window->GetWidth(), sceneData->Window->GetHeight());
+            
+            TargetRT = resourceManager->GetRenderTarget("TargetRT");
             
             //Common resources
             auto constantBufferResource = Resource("MyConstantBuffer", RTYPE_ConstantBuffer, &resolution, sizeof(Vector2), sizeof(Vector2), 0);
@@ -89,8 +74,6 @@ namespace Waldem
             GBufferPipeline = Renderer::CreateGraphicPipeline("GBufferPipeline", { WorldPositionRT->GetFormat(), NormalRT->GetFormat(), AlbedoRT->GetFormat(), MeshIDRT->GetFormat() }, WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, GBufferRootSignature, GBufferPixelShader);
 
             //Deferred rendering pass
-            DeferredRenderingRenderTarget = resourceManager->CreateRenderTarget("DeferredRenderingRenderTarget", resolution.x, resolution.y, TextureFormat::R8G8B8A8_UNORM);
-            Renderer::ResourceBarrier(DeferredRenderingRenderTarget, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
             WArray<Resource> deferredRenderingPassResources;
             RenderTarget* testShadowMap = nullptr;
             WArray<LightShaderData> LightDatas;
@@ -110,7 +93,7 @@ namespace Waldem
             deferredRenderingPassResources.Add(Resource("Albedo", AlbedoRT, 4));
             deferredRenderingPassResources.Add(Resource("MeshIDRT", MeshIDRT, 5));
             deferredRenderingPassResources.Add(Resource("DepthRT", DepthRT, 6));
-            deferredRenderingPassResources.Add(Resource("DeferredRenderingRenderTarget", DeferredRenderingRenderTarget, 0, true));
+            deferredRenderingPassResources.Add(Resource("TargetRT", TargetRT, 0, true));
             deferredRenderingPassResources.Add(Resource("HoveredMeshes", RTYPE_RWBuffer, nullptr, sizeof(int), sizeof(int), 1));
             deferredRenderingPassResources.Add(constantBufferResource);
             deferredRenderingPassResources.Add(Resource("RootConstants", RTYPE_Constant, nullptr, sizeof(float) * 2, sizeof(float) * 2, 1));
@@ -119,27 +102,6 @@ namespace Waldem
             DeferredRenderingPipeline = Renderer::CreateComputePipeline("DeferredLightingPipeline", DeferredRenderingRootSignature, DeferredRenderingComputeShader);
             Point3 numThreads = Renderer::GetNumThreadsPerGroup(DeferredRenderingComputeShader);
             GroupCount = Point3((resolution.x + numThreads.x - 1) / numThreads.x, (resolution.y + numThreads.y - 1) / numThreads.y, 1);
-
-            //Post process pass
-            PostProcessRenderTarget = resourceManager->CreateRenderTarget("PostProcessRenderTarget", resolution.x, resolution.y, TextureFormat::R8G8B8A8_UNORM);
-            Renderer::ResourceBarrier(PostProcessRenderTarget, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
-            WArray<Resource> postProcessPassResources;
-            postProcessPassResources.Add(Resource("DeferredRenderingRenderTarget", DeferredRenderingRenderTarget, 0));
-            postProcessPassResources.Add(Resource("PostProcessRenderTarget", PostProcessRenderTarget, 0, true));
-            postProcessPassResources.Add(constantBufferResource);
-            BloomParams bloomParams = {};
-            postProcessPassResources.Add(Resource("BloomParams", RTYPE_ConstantBuffer, &bloomParams, sizeof(BloomParams), sizeof(BloomParams), 1));
-            
-            PostProcessRootSignature = Renderer::CreateRootSignature(postProcessPassResources);
-            PostProcessComputeShader = Renderer::LoadComputeShader("PostProcess");
-            PostProcessPipeline = Renderer::CreateComputePipeline("PostProcessPipeline", PostProcessRootSignature, PostProcessComputeShader);
-            
-            //Quad draw pass
-            WArray<Resource> QuadDrawPassResources;
-            QuadDrawPassResources.Add(Resource("PostProcessRenderTarget", PostProcessRenderTarget, 0));
-            QuadDrawRootSignature = Renderer::CreateRootSignature(QuadDrawPassResources);
-            QuadDrawPixelShader = Renderer::LoadPixelShader("QuadDraw");
-            QuadDrawPipeline = Renderer::CreateGraphicPipeline("QuadDrawPipeline", { TextureFormat::R8G8B8A8_UNORM }, WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, QuadDrawRootSignature, QuadDrawPixelShader);
         }
 
         void Update(float deltaTime) override
@@ -156,17 +118,14 @@ namespace Waldem
 
                 break;
             }
-
             WArray<Matrix4> worldTransforms;
             for (auto [entity, mesh, transform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
             {
                 worldTransforms.Add(transform.Matrix);
             }
-
             GBufferRootSignature->UpdateResourceData("WorldTransforms", worldTransforms.GetData());
             Renderer::SetPipeline(GBufferPipeline);
             Renderer::SetRootSignature(GBufferRootSignature);
-
             Renderer::ResourceBarrier(WorldPositionRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
             Renderer::ResourceBarrier(NormalRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
             Renderer::ResourceBarrier(AlbedoRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
@@ -178,9 +137,7 @@ namespace Waldem
             Renderer::ClearRenderTarget(AlbedoRT);
             Renderer::ClearRenderTarget(MeshIDRT);
             Renderer::ClearDepthStencil(DepthRT);
-            
             uint32_t meshId = 0;
-            
             for (auto [entity, mesh, transform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
             {
                 GBufferRootSignature->UpdateResourceData("RootConstants", &meshId);
@@ -202,41 +159,22 @@ namespace Waldem
             Renderer::ResourceBarrier(AlbedoRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
             Renderer::ResourceBarrier(MeshIDRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
             Renderer::ResourceBarrier(DepthRT, DEPTH_WRITE, ALL_SHADER_RESOURCE);
-
+            Renderer::ResourceBarrier(TargetRT, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
+            Renderer::SetPipeline(DeferredRenderingPipeline);
+            Renderer::SetRootSignature(DeferredRenderingRootSignature);
             WArray<LightShaderData> LightDatas;
-            
             for (auto [entity, light, transform] : ECSManager->EntitiesWith<Light, Transform>())
             {
                 LightShaderData lightData(light.Data, transform);
                 LightDatas.Add(lightData);
             }
-
             if(!LightDatas.IsEmpty())
                 DeferredRenderingRootSignature->UpdateResourceData("LightsBuffer", LightDatas.GetData());
-            
-            Renderer::SetPipeline(DeferredRenderingPipeline);
-            Renderer::SetRootSignature(DeferredRenderingRootSignature);
-            
             auto mousePos = Input::GetMousePos();
             DeferredRenderingRootSignature->UpdateResourceData("RootConstants", &mousePos);
-            
             Renderer::Compute(GroupCount);
-            
             DeferredRenderingRootSignature->ReadbackResourceData("HoveredMeshes", &Editor::HoveredIntityID);
-
-            //Post process pass
-            Renderer::ResourceBarrier(DeferredRenderingRenderTarget, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
-            Renderer::SetPipeline(PostProcessPipeline);
-            Renderer::SetRootSignature(PostProcessRootSignature);
-            Renderer::Compute(GroupCount);
-            Renderer::ResourceBarrier(DeferredRenderingRenderTarget, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
-            
-            //Quad drawing pass
-            Renderer::ResourceBarrier(PostProcessRenderTarget, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
-            Renderer::SetPipeline(QuadDrawPipeline);
-            Renderer::SetRootSignature(QuadDrawRootSignature);
-            Renderer::Draw(&FullscreenQuad);
-            Renderer::ResourceBarrier(PostProcessRenderTarget, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
+            Renderer::ResourceBarrier(TargetRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
         }
     };
 }
