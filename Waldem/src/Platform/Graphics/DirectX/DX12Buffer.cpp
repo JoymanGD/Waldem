@@ -5,52 +5,8 @@
 
 namespace Waldem
 {
-    DX12VertexBuffer::DX12VertexBuffer(ID3D12Device* device, void* data, uint32_t size)
+    DX12Buffer::DX12Buffer(ID3D12Device* device, BufferType type, void* data, uint32_t size) : Buffer(type, size)
     {
-        D3D12_HEAP_PROPERTIES heapProps = {};
-        heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
-
-        D3D12_RESOURCE_DESC resourceDesc = {};
-        resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-        resourceDesc.Width = size;
-        resourceDesc.Height = 1;
-        resourceDesc.DepthOrArraySize = 1;
-        resourceDesc.MipLevels = 1;
-        resourceDesc.SampleDesc.Count = 1;
-        resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-
-        HRESULT hr = device->CreateCommittedResource(
-            &heapProps,
-            D3D12_HEAP_FLAG_NONE,
-            &resourceDesc,
-            D3D12_RESOURCE_STATE_GENERIC_READ,
-            nullptr,
-            IID_PPV_ARGS(&BufferResource));
-
-        if (FAILED(hr))
-        {
-            throw std::runtime_error("Failed to create index buffer!");
-        }
-
-        UINT8* pVertexDataBegin;
-        D3D12_RANGE readRange = { 0, 0 };
-        BufferResource->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin));
-        memcpy(pVertexDataBegin, data, size);
-        BufferResource->Unmap(0, nullptr);
-
-        BufferView.BufferLocation = BufferResource->GetGPUVirtualAddress();
-        BufferView.StrideInBytes = sizeof(Vertex);
-        BufferView.SizeInBytes = size;
-
-        Count = BufferView.SizeInBytes / BufferView.StrideInBytes;
-    }
-
-    DX12IndexBuffer::DX12IndexBuffer(ID3D12Device* device, void* data, uint32_t count)
-    {
-        Count = count;
-
-        uint32_t size = count * sizeof(uint32_t);
-        
         D3D12_HEAP_PROPERTIES heapProps = {};
         heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
         
@@ -82,8 +38,20 @@ namespace Waldem
         memcpy(pIndexDataBegin, data, size);
         BufferResource->Unmap(0, nullptr);
 
-        BufferView.BufferLocation = BufferResource->GetGPUVirtualAddress();
-        BufferView.SizeInBytes = size;
-        BufferView.Format = DXGI_FORMAT_R32_UINT;
+        switch (type)
+        {
+        case VertexBuffer:
+            VertexBufferView.BufferLocation = BufferResource->GetGPUVirtualAddress();
+            VertexBufferView.StrideInBytes = sizeof(Vertex);
+            VertexBufferView.SizeInBytes = size;
+            Count = VertexBufferView.SizeInBytes / VertexBufferView.StrideInBytes;
+            break;
+        case IndexBuffer:
+            IndexBufferView.BufferLocation = BufferResource->GetGPUVirtualAddress();
+            IndexBufferView.SizeInBytes = size;
+            IndexBufferView.Format = DXGI_FORMAT_R32_UINT;
+            Count = IndexBufferView.SizeInBytes / sizeof(uint32_t);
+            break;
+        }
     }
 }

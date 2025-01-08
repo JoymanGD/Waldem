@@ -38,17 +38,17 @@ namespace Waldem
             {
                 auto assimpMesh = assimpModel->mMeshes[i];
 
-                std::vector<uint32_t> indices;
+                std::vector<uint32_t> indexBufferData;
                 
                 for (int j = 0; j < assimpMesh->mNumFaces; ++j)
                 {
                     for (int k = 0; k < assimpMesh->mFaces[j].mNumIndices; ++k)
                     {
-                        indices.push_back(assimpMesh->mFaces[j].mIndices[k]);
+                        indexBufferData.push_back(assimpMesh->mFaces[j].mIndices[k]);
                     }
                 }
 
-                std::vector<Vertex> vertexData;
+                std::vector<Vertex> vertexBufferData;
 
                 for (uint32_t j = 0; j < assimpMesh->mNumVertices; ++j)
                 {
@@ -66,7 +66,7 @@ namespace Waldem
                         vertex.UV = Vector2(0, 0);
                     }
                     
-                    vertexData.push_back(vertex);
+                    vertexBufferData.push_back(vertex);
                 }
 
                 auto material = assimpModel->mMaterials[i];
@@ -119,9 +119,10 @@ namespace Waldem
                 Texture2D* texture = Renderer::CreateTexture("DiffuseTexture", width, height, format, image_data);
                 Material mat(texture);
 
-                uint32_t vertexBufferSize = vertexData.size() * sizeof(Vertex);
+                uint32_t vertexBufferSize = vertexBufferData.size() * sizeof(Vertex);
+                uint32_t indexBufferSize = indexBufferData.size() * sizeof(uint32_t);
                 BoundingBox bBox { Vector3(assimpMesh->mAABB.mMin.x, assimpMesh->mAABB.mMin.y, assimpMesh->mAABB.mMin.z), Vector3(assimpMesh->mAABB.mMax.x, assimpMesh->mAABB.mMax.y, assimpMesh->mAABB.mMax.z)};
-                Mesh* mesh = new Mesh(vertexData.data(), vertexBufferSize, indices.data(), indices.size(), mat, bBox);
+                Mesh* mesh = new Mesh(vertexBufferData.data(), vertexBufferSize, indexBufferData.data(), indexBufferSize, mat, bBox);
                 if(assimpModel->mRootNode->mNumChildren > 0)
                 {
                     mesh->ObjectMatrix = AssimpToMatrix4(assimpModel->mRootNode->mChildren[i]->mTransformation);

@@ -132,14 +132,9 @@ namespace Waldem
         Instance->PlatformRenderer->CopyRenderTarget(dstRT, srcRT);
     }
 
-    VertexBuffer* Renderer::CreateVertexBuffer(void* data, uint32_t size)
+    Buffer* Renderer::CreateBuffer(BufferType type, void* data, uint32_t size)
     {
-        return Instance->PlatformRenderer->CreateVertexBuffer(data, size);
-    }
-
-    IndexBuffer* Renderer::CreateIndexBuffer(void* data, uint32_t count)
-    {
-        return Instance->PlatformRenderer->CreateIndexBuffer(data, count);
+        return Instance->PlatformRenderer->CreateBuffer(type, data, size);
     }
 
     void Renderer::ResourceBarrier(RenderTarget* rt, ResourceStates before, ResourceStates after)
