@@ -7,7 +7,7 @@ namespace Waldem
     class WALDEM_API DX12Helper
     {
     public:
-        static String MBFromW(LPCWSTR pwsz, UINT cp)
+        static String MBFromW(LPCWSTR pwsz, UINT cp = 0)
         {
             int cch = WideCharToMultiByte(cp, 0, pwsz, -1, 0, 0, NULL, NULL);
 
@@ -21,12 +21,15 @@ namespace Waldem
             return st;
         }
 
-        static LPCWSTR WFromMB(const String& str)
+        static LPCWSTR WFromMB(const std::string& str, UINT cp = 0)
         {
-            int size_needed = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), NULL, 0);
-            std::wstring wstrTo(size_needed, 0);
-            MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), &wstrTo[0], size_needed);
-            return wstrTo.c_str();
+            int cch = MultiByteToWideChar(cp, 0, str.c_str(), -1, NULL, 0);
+
+            wchar_t* pwsz = new wchar_t[cch];
+
+            MultiByteToWideChar(cp, 0, str.c_str(), -1, pwsz, cch);
+
+            return pwsz;
         }
 
         static std::wstring StringToLPCWSTR(const String& str)

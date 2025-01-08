@@ -34,8 +34,8 @@ namespace Waldem
         virtual void Wait() = 0;
         virtual Point3 GetNumThreadsPerGroup(ComputeShader* computeShader) = 0;
         virtual void Compute(Point3 groupCount) = 0;
-        virtual PixelShader* LoadPixelShader(String shaderName) = 0;
-        virtual ComputeShader* LoadComputeShader(String shaderName) = 0;
+        virtual PixelShader* LoadPixelShader(String shaderName, String entryPoint) = 0;
+        virtual ComputeShader* LoadComputeShader(String shaderName, String entryPoint) = 0;
         virtual void SetPipeline(Pipeline* pipeline) = 0;
         virtual void SetRootSignature(RootSignature* rootSignature) = 0;
         virtual void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr) = 0;
@@ -73,8 +73,8 @@ namespace Waldem
         static void Wait();
         static Point3 GetNumThreadsPerGroup(ComputeShader* computeShader);
         static void Compute(Point3 groupCount);
-        static PixelShader* LoadPixelShader(String shaderName);
-        static ComputeShader* LoadComputeShader(String shaderName);
+        static PixelShader* LoadPixelShader(String shaderName, String entryPoint = "main");
+        static ComputeShader* LoadComputeShader(String shaderName, String entryPoint = "main");
         static void SetPipeline(Pipeline* pipeline);
         static void SetRootSignature(RootSignature* rootSignature);
         static void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr);

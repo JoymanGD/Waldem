@@ -100,7 +100,8 @@ namespace Waldem
 			auto currentFrameTime = std::chrono::high_resolution_clock::now();
 			std::chrono::duration<float> deltaTimeDuration = currentFrameTime - lastFrameTime;
 			Time::DeltaTime = deltaTimeDuration.count();
-			Time::ElapsedTime = (currentFrameTime - startTime).count();
+			std::chrono::duration<float> elapsedTimeDuration = currentFrameTime - startTime;
+			Time::ElapsedTime = elapsedTimeDuration.count();
 			lastFrameTime = currentFrameTime;
 
 			Renderer::Begin();

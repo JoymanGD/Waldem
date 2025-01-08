@@ -27,8 +27,8 @@ namespace Waldem
         void Present() override;
         D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentRenderTargetHandle() const { return CurrentRenderTargetHandle; }
         D3D12_CPU_DESCRIPTOR_HANDLE GetDepthStencilHandle() const { return DSVHandle; }
-        PixelShader* LoadPixelShader(String shaderName) override;
-        ComputeShader* LoadComputeShader(String shaderName) override;
+        PixelShader* LoadPixelShader(String shaderName, String entryPoint) override;
+        ComputeShader* LoadComputeShader(String shaderName, String entryPoint) override;
         void SetPipeline(Pipeline* pipeline) override;
         void SetRootSignature(RootSignature* rootSignature) override;
         void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr) override;

@@ -114,18 +114,18 @@ namespace Waldem
                     if (ImGui::MenuItem("New scene")) {}
                     if (ImGui::MenuItem("Open scene", "Ctrl+O")) {}
                     if (ImGui::MenuItem("Save scene")) {}
-
+            
                     ImGui::Separator();
-					
+					       
                     if (ImGui::BeginMenu("Options"))
                     {
                         ImGui::EndMenu();
                     }
-					
+					       
                     ImGui::EndMenu();
                 }
                 ImGui::EndMainMenuBar();
-            }
+            } 
             
             for (ISystem* system : UISystems)
             {

@@ -744,20 +744,18 @@
       <ShaderModel>6.5</ShaderModel>
       <EntryPointName>main</EntryPointName>
     </FxCompile>
+    <FxCompile Include="src\Shaders\Complex.hlsl">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+      <ShaderModel>6.5</ShaderModel>
+    </FxCompile>
     <FxCompile Include="src\Shaders\Core.hlsl">
       <ExcludedFromBuild>true</ExcludedFromBuild>
       <ShaderModel>6.5</ShaderModel>
     </FxCompile>
     <FxCompile Include="src\Shaders\DebugRenderTargets.comp.hlsl">
-      <ObjectFileOutput>..\bin\Debug\Waldem\%(Filename).cso</ObjectFileOutput>
-      <TrackerLogDirectory>..\bin-int\Debug\Waldem\Waldem.tlog\</TrackerLogDirectory>
-      <EntryPointName>main</EntryPointName>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ShaderModel>6.5</ShaderModel>
-      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
-      <DisableOptimizations>true</DisableOptimizations>
-      <EnableDebuggingInformation>true</EnableDebuggingInformation>
       <ShaderType>Compute</ShaderType>
+      <ShaderModel>6.5</ShaderModel>
+      <EntryPointName>main</EntryPointName>
     </FxCompile>
     <FxCompile Include="src\Shaders\DeferredRendering.comp.hlsl">
       <ShaderType>Compute</ShaderType>
@@ -773,17 +771,6 @@
       <ShaderType>Vertex</ShaderType>
       <ShaderModel>6.5</ShaderModel>
       <EntryPointName>main</EntryPointName>
-    </FxCompile>
-    <FxCompile Include="src\Shaders\GaussianNoise.comp.hlsl">
-      <ObjectFileOutput>..\bin\Debug\Waldem\%(Filename).cso</ObjectFileOutput>
-      <TrackerLogDirectory>..\bin-int\Debug\Waldem\Waldem.tlog\</TrackerLogDirectory>
-      <EntryPointName>main</EntryPointName>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ShaderModel>6.5</ShaderModel>
-      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
-      <DisableOptimizations>true</DisableOptimizations>
-      <EnableDebuggingInformation>true</EnableDebuggingInformation>
-      <ShaderType>Compute</ShaderType>
     </FxCompile>
     <FxCompile Include="src\Shaders\GBuffer.ps.hlsl">
       <ShaderType>Pixel</ShaderType>
@@ -809,7 +796,38 @@
       <ShaderModel>6.5</ShaderModel>
       <EntryPointName>main</EntryPointName>
     </FxCompile>
-    <FxCompile Include="src\Shaders\OceanSimulation.comp.hlsl">
+    <FxCompile Include="src\Shaders\OceanSimulation\Butterfly.comp.hlsl">
+      <ShaderType>Compute</ShaderType>
+      <ShaderModel>6.5</ShaderModel>
+      <EntryPointName>main</EntryPointName>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\OceanSimulation\ButterflyTextureGeneration.comp.hlsl">
+      <ShaderType>Compute</ShaderType>
+      <ShaderModel>6.5</ShaderModel>
+      <EntryPointName>main</EntryPointName>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\OceanSimulation\OceanDisplacement.comp.hlsl">
+      <ObjectFileOutput>..\bin\Debug\Waldem\%(Filename).cso</ObjectFileOutput>
+      <TrackerLogDirectory>..\bin-int\Debug\Waldem\Waldem.tlog\</TrackerLogDirectory>
+      <EntryPointName>main</EntryPointName>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <ShaderModel>6.5</ShaderModel>
+      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
+      <DisableOptimizations>true</DisableOptimizations>
+      <EnableDebuggingInformation>true</EnableDebuggingInformation>
+      <ShaderType>Compute</ShaderType>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\OceanSimulation\GaussianNoise.comp.hlsl">
+      <ShaderType>Compute</ShaderType>
+      <ShaderModel>6.5</ShaderModel>
+      <EntryPointName>main</EntryPointName>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\OceanSimulation\Spectrum.comp.hlsl">
+      <ShaderType>Compute</ShaderType>
+      <ShaderModel>6.5</ShaderModel>
+      <EntryPointName>main</EntryPointName>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\OceanSimulation\iFFT.comp.hlsl">
       <ShaderType>Compute</ShaderType>
       <ShaderModel>6.5</ShaderModel>
       <EntryPointName>main</EntryPointName>

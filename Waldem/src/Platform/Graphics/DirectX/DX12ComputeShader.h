@@ -8,11 +8,11 @@ namespace Waldem
     class WALDEM_API DX12ComputeShader : public ComputeShader
     {
     public:
-        DX12ComputeShader(const String& name);
+        DX12ComputeShader(const String& name, const String& entryPoint);
         ~DX12ComputeShader() override;
 
     private:
-        bool CompileFromFile(const String& filepath) override;
+        bool CompileFromFile(const String& filepath, const String& entryPoint) override;
 
     public:
         void* GetPlatformData() override { return ShaderBlob; }
