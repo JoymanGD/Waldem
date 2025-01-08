@@ -17,7 +17,7 @@ namespace Waldem
         Vector2 Size;
         uint32_t Slot = 0;
         WArray<Texture2D*> Textures;
-        WArray<StorageBuffer*> Buffers;
+        WArray<Buffer*> Buffers;
         WArray<Sampler> Samplers;
         RenderTarget* RT = nullptr;
 
@@ -66,7 +66,7 @@ namespace Waldem
         }
 
         //buffers
-        Resource(String name, WArray<StorageBuffer*> buffers, uint32_t slot, bool UAV = false)
+        Resource(String name, WArray<Buffer*> buffers, uint32_t slot, bool UAV = false)
         {
             Name = name;
             Type = UAV ? RTYPE_RWBuffer : RTYPE_Buffer;
@@ -75,7 +75,7 @@ namespace Waldem
             Slot = slot;
         }
         
-        Resource(String name, StorageBuffer* buffer, uint32_t slot, bool UAV = false)
+        Resource(String name, Buffer* buffer, uint32_t slot, bool UAV = false)
         {
             Name = name;
             Type = UAV ? RTYPE_RWBuffer : RTYPE_Buffer;

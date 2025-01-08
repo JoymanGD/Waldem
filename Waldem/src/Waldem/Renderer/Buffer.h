@@ -111,32 +111,27 @@ namespace Waldem
         std::vector<BufferElement> Elements;
         int Stride = 0;
     };
-    
-    class VertexBuffer
-    {
-    public:
-        virtual ~VertexBuffer() {}
-        virtual uint32_t GetCount() const = 0;
-    };
-    
-    class IndexBuffer
-    {
-    public:
-        virtual ~IndexBuffer() {}
-        virtual uint32_t GetCount() const = 0;
 
-        void SetIndices(uint32_t* indices) { Indices = indices; }
-
-        uint32_t* Indices;
+    enum BufferType
+    {
+        VertexBuffer = 0,
+        IndexBuffer = 1,
+        StorageBuffer = 2
     };
 
-    class StorageBuffer
+    class Buffer
     {
     public:
-        virtual ~StorageBuffer() {}
+        Buffer(BufferType type, size_t size) : Type(type), Size(size) {}
+        virtual ~Buffer() {}
 
         virtual void* GetPlatformResource() const = 0;
-        
-        static StorageBuffer* Create(void* data, size_t size);
+        virtual uint32_t GetCount() const = 0;
+        size_t GetSize() { return Size; }
+        BufferType GetType() { return Type; }
+
+    protected:
+        size_t Size;
+        BufferType Type;
     };
 }

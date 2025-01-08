@@ -5,13 +5,14 @@
 
 namespace Waldem
 {
-	Mesh::Mesh(void* vertexBufferData, uint32_t vertexBufferDataSize, uint32_t* indices, uint32_t indicesAmount, Material material, BoundingBox bBox)
+	Mesh::Mesh(void* vertexBufferData, uint32_t vertexBufferDataSize, uint32_t* indexBufferData, uint32_t indexBufferDataSize, Material material, BoundingBox bBox)
 	{
-		VB = Renderer::CreateVertexBuffer(vertexBufferData, vertexBufferDataSize);
-		IB = Renderer::CreateIndexBuffer(indices, indicesAmount);
-		IB->SetIndices(indices);
+		VertexBuffer = Renderer::CreateBuffer(BufferType::VertexBuffer, vertexBufferData, vertexBufferDataSize);
+		IndexBuffer = Renderer::CreateBuffer(BufferType::IndexBuffer, indexBufferData, indexBufferDataSize);
 		BBox = bBox;
 
 		MeshMaterial = material;
+
+		ObjectMatrix = glm::identity<Matrix4>();
 	}
 }

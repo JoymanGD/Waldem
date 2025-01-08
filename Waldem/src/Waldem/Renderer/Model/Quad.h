@@ -6,14 +6,6 @@ namespace Waldem
 {
     class WALDEM_API Quad : public Mesh
     {
-    public:
-        Quad() : Mesh(QuadVertices, sizeof(QuadVertices), QuadIndices, sizeof(QuadIndices) / sizeof(uint32_t), nullptr, CalculateBoundingBox())
-        {
-            VB = Renderer::CreateVertexBuffer(QuadVertices, sizeof(QuadVertices));
-            IB = Renderer::CreateIndexBuffer(QuadIndices, 6);
-            IB->SetIndices(QuadIndices);
-        }
-
     private:
         Vertex QuadVertices[4] =
         {
@@ -30,6 +22,18 @@ namespace Waldem
             bBox.Min = Vector3(-0.5f, -0.5f, 0.0f);
             bBox.Max = Vector3(0.5f, 0.5f, 0.0f);
             return bBox;
+        }
+
+    public:
+        Quad()
+        {
+            VertexBuffer = Renderer::CreateBuffer(BufferType::VertexBuffer, QuadVertices, sizeof(QuadVertices));
+            IndexBuffer = Renderer::CreateBuffer(BufferType::IndexBuffer, QuadIndices, sizeof(QuadIndices));
+            BBox = CalculateBoundingBox();
+
+            MeshMaterial = nullptr;
+
+            ObjectMatrix = glm::identity<Matrix4>();
         }
     };
 }

@@ -17,10 +17,11 @@ namespace Waldem
     class WALDEM_API Mesh
     {
     public:
-        Mesh(void* vertexBufferData, uint32_t vertexBufferDataSize, uint32_t* indices, uint32_t indicesAmount, Material material, BoundingBox bBox);
+        Mesh() = default;
+        Mesh(void* vertexBufferData, uint32_t vertexBufferDataSize, uint32_t* indexBufferData, uint32_t indexBufferDataSize, Material material, BoundingBox bBox);
 
-        IndexBuffer* IB;
-        VertexBuffer* VB;
+        Buffer* VertexBuffer;
+        Buffer* IndexBuffer;
         Material MeshMaterial;
         BoundingBox BBox;
         Matrix4 ObjectMatrix;

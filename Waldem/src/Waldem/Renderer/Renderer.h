@@ -45,8 +45,7 @@ namespace Waldem
         virtual Texture2D* CreateTexture(String name, int width, int height, TextureFormat format, uint8_t* data = nullptr) = 0;
         virtual RenderTarget* CreateRenderTarget(String name, int width, int height, TextureFormat format) = 0;
         virtual void CopyRenderTarget(RenderTarget* dstRT, RenderTarget* srcRT) = 0;
-        virtual VertexBuffer* CreateVertexBuffer(void* data, uint32_t size) = 0;
-        virtual IndexBuffer* CreateIndexBuffer(void* data, uint32_t count) = 0;
+        virtual Buffer* CreateBuffer(BufferType type, void* data, uint32_t size) = 0;
         virtual void ResourceBarrier(RenderTarget* rt, ResourceStates before, ResourceStates after) = 0;
         virtual void ClearRenderTarget(RenderTarget* rt) = 0;
         virtual void ClearDepthStencil(RenderTarget* ds) = 0;
@@ -84,8 +83,7 @@ namespace Waldem
         static Texture2D* CreateTexture(String name, int width, int height, TextureFormat format, uint8_t* data = nullptr);
         static RenderTarget* CreateRenderTarget(String name, int width, int height, TextureFormat format);
         static void CopyRenderTarget(RenderTarget* dstRT, RenderTarget* srcRT);
-        static VertexBuffer* CreateVertexBuffer(void* data, uint32_t size);
-        static IndexBuffer* CreateIndexBuffer(void* data, uint32_t count);
+        static Buffer* CreateBuffer(BufferType type, void* data, uint32_t size);
         static void ResourceBarrier(RenderTarget* rt, ResourceStates before, ResourceStates after);
         static void ClearRenderTarget(RenderTarget* rt);
         static void ClearDepthStencil(RenderTarget* ds);

@@ -284,11 +284,11 @@ namespace Waldem
     void DX12CommandList::Draw(Mesh* mesh)
     {
         //Draw mesh
-        auto& indexBufferView = ((DX12IndexBuffer*)mesh->IB)->GetBufferView();
-        auto& vertexBufferView = ((DX12VertexBuffer*)mesh->VB)->GetBufferView();
+        auto& indexBufferView = ((DX12Buffer*)mesh->IndexBuffer)->GetIndexBufferView();
+        auto& vertexBufferView = ((DX12Buffer*)mesh->VertexBuffer)->GetVertexBufferView();
         CommandList->IASetVertexBuffers(0, 1, &vertexBufferView);
         CommandList->IASetIndexBuffer(&indexBufferView);
-        CommandList->DrawIndexedInstanced(mesh->IB->GetCount(), 1, 0, 0, 0);
+        CommandList->DrawIndexedInstanced(mesh->IndexBuffer->GetCount(), 1, 0, 0, 0);
     }
 
     void DX12CommandList::AddLine(Line line)
