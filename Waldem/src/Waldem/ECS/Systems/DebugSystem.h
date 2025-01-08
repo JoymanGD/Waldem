@@ -35,6 +35,12 @@ namespace Waldem
         RenderTarget* DebugRT_1 = nullptr;
         RenderTarget* DebugRT_2 = nullptr;
         RenderTarget* DebugRT_3 = nullptr;
+        RenderTarget* DebugRT_4 = nullptr;
+        RenderTarget* DebugRT_5 = nullptr;
+        RenderTarget* DebugRT_6 = nullptr;
+        RenderTarget* DebugRT_7 = nullptr;
+        RenderTarget* DebugRT_8 = nullptr;
+        RenderTarget* DebugRT_9 = nullptr;
         Point3 GroupCount;
         DebugSystemConstantBuffer ConstantBufferData;
         
@@ -150,10 +156,64 @@ namespace Waldem
                 }
             });
 
+            inputManager->SubscribeToKeyEvent(KP_4, [&](bool isPressed)
+            {
+                if(isPressed)
+                {
+                    ConstantBufferData.DebugRTIndex = 4;
+                }
+            });
+
+            inputManager->SubscribeToKeyEvent(KP_5, [&](bool isPressed)
+            {
+                if(isPressed)
+                {
+                    ConstantBufferData.DebugRTIndex = 5;
+                }
+            });
+
+            inputManager->SubscribeToKeyEvent(KP_6, [&](bool isPressed)
+            {
+                if(isPressed)
+                {
+                    ConstantBufferData.DebugRTIndex = 6;
+                }
+            });
+
+            inputManager->SubscribeToKeyEvent(KP_7, [&](bool isPressed)
+            {
+                if(isPressed)
+                {
+                    ConstantBufferData.DebugRTIndex = 7;
+                }
+            });
+
+            inputManager->SubscribeToKeyEvent(KP_8, [&](bool isPressed)
+            {
+                if(isPressed)
+                {
+                    ConstantBufferData.DebugRTIndex = 8;
+                }
+            });
+
+            inputManager->SubscribeToKeyEvent(KP_9, [&](bool isPressed)
+            {
+                if(isPressed)
+                {
+                    ConstantBufferData.DebugRTIndex = 9;
+                }
+            });
+
             TargetRT = resourceManager->GetRenderTarget("TargetRT");
             DebugRT_1 = resourceManager->GetRenderTarget("DebugRT_1");
             DebugRT_2 = resourceManager->GetRenderTarget("DebugRT_2");
             DebugRT_3 = resourceManager->GetRenderTarget("DebugRT_3");
+            DebugRT_4 = resourceManager->GetRenderTarget("DebugRT_4");
+            DebugRT_5 = resourceManager->GetRenderTarget("DebugRT_5");
+            DebugRT_6 = resourceManager->GetRenderTarget("DebugRT_6");
+            DebugRT_7 = resourceManager->GetRenderTarget("DebugRT_7");
+            DebugRT_8 = resourceManager->GetRenderTarget("DebugRT_8");
+            DebugRT_9 = resourceManager->GetRenderTarget("DebugRT_9");
             
             ConstantBufferData.TargetResolution = Vector2(TargetRT->GetWidth(), TargetRT->GetHeight());
             ConstantBufferData.DebugResolution = Vector2(DebugRT_1->GetWidth(), DebugRT_1->GetHeight());
@@ -164,6 +224,12 @@ namespace Waldem
             resources.Add(Resource("DebugRT_1", DebugRT_1, 0));
             resources.Add(Resource("DebugRT_2", DebugRT_2, 1));
             resources.Add(Resource("DebugRT_3", DebugRT_3, 2));
+            resources.Add(Resource("DebugRT_4", DebugRT_4, 3));
+            resources.Add(Resource("DebugRT_5", DebugRT_5, 4));
+            resources.Add(Resource("DebugRT_6", DebugRT_6, 5));
+            resources.Add(Resource("DebugRT_7", DebugRT_7, 6));
+            resources.Add(Resource("DebugRT_8", DebugRT_8, 7));
+            resources.Add(Resource("DebugRT_9", DebugRT_9, 8));
             resources.Add(Resource("MyConstantBuffer", RTYPE_ConstantBuffer, &ConstantBufferData, sizeof(DebugSystemConstantBuffer), sizeof(DebugSystemConstantBuffer), 0));
             DebugRenderTargetsRootSignature = Renderer::CreateRootSignature(resources);
             DebugRenderTargetsComputeShader = Renderer::LoadComputeShader("DebugRenderTargets");

@@ -75,14 +75,14 @@ namespace Waldem
         Instance->PlatformRenderer->Compute(groupCount);
     }
 
-    PixelShader* Renderer::LoadPixelShader(String shaderName)
+    PixelShader* Renderer::LoadPixelShader(String shaderName, String entryPoint)
     {
-        return Instance->PlatformRenderer->LoadPixelShader(shaderName);
+        return Instance->PlatformRenderer->LoadPixelShader(shaderName, entryPoint);
     }
 
-    ComputeShader* Renderer::LoadComputeShader(String shaderName)
+    ComputeShader* Renderer::LoadComputeShader(String shaderName, String entryPoint)
     {
-        return Instance->PlatformRenderer->LoadComputeShader(shaderName);
+        return Instance->PlatformRenderer->LoadComputeShader(shaderName, entryPoint);
     }
 
     void Renderer::SetPipeline(Pipeline* pipeline)

@@ -15,11 +15,11 @@ namespace Waldem
     class WALDEM_API DX12PixelShader : public PixelShader
     {
     public:
-        DX12PixelShader(const String& name);
+        DX12PixelShader(const String& name, const String& entryPoint);
         ~DX12PixelShader() override;
 
     private:
-        bool CompileFromFile(const String& filepath) override;
+        bool CompileFromFile(const String& filepath, const String& entryPoint) override;
 
     public:
         void* GetVS() override { return VertexShaderBlob; }

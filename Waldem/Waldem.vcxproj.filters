@@ -22,6 +22,9 @@
     <Filter Include="src\Shaders">
       <UniqueIdentifier>{06ADC7FB-7262-40F1-FB56-3AC8670B37F5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Shaders\OceanSimulation">
+      <UniqueIdentifier>{00BEB1ED-6CCB-DFD3-F5B1-DBBE61BEAB8A}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Waldem">
       <UniqueIdentifier>{56E54637-429D-8884-ABA4-61E0977B2375}</UniqueIdentifier>
     </Filter>
@@ -216,6 +219,12 @@
     <ClInclude Include="src\Waldem\ECS\Systems\OceanSimulationSystem.h">
       <Filter>src\Waldem\ECS\Systems</Filter>
     </ClInclude>
+    <ClInclude Include="src\Waldem\ECS\Systems\PostProcessSystem.h">
+      <Filter>src\Waldem\ECS\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\ECS\Systems\ScreenQuadSystem.h">
+      <Filter>src\Waldem\ECS\Systems</Filter>
+    </ClInclude>
     <ClInclude Include="src\Waldem\ECS\Systems\ShadowmapRenderingSystem.h">
       <Filter>src\Waldem\ECS\Systems</Filter>
     </ClInclude>
@@ -341,6 +350,9 @@
     </ClInclude>
     <ClInclude Include="src\Waldem\SceneManagement\SceneManager.h">
       <Filter>src\Waldem\SceneManagement</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\Time.h">
+      <Filter>src\Waldem</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\Types\BasicTypes.h">
       <Filter>src\Waldem\Types</Filter>
@@ -1795,7 +1807,13 @@
     <FxCompile Include="src\Shaders\AverageWorldPosition.comp.hlsl">
       <Filter>src\Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="src\Shaders\Complex.hlsl">
+      <Filter>src\Shaders</Filter>
+    </FxCompile>
     <FxCompile Include="src\Shaders\Core.hlsl">
+      <Filter>src\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\DebugRenderTargets.comp.hlsl">
       <Filter>src\Shaders</Filter>
     </FxCompile>
     <FxCompile Include="src\Shaders\DeferredRendering.comp.hlsl">
@@ -1822,8 +1840,23 @@
     <FxCompile Include="src\Shaders\Line.vs.hlsl">
       <Filter>src\Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="src\Shaders\OceanSimulation.comp.hlsl">
-      <Filter>src\Shaders</Filter>
+    <FxCompile Include="src\Shaders\OceanSimulation\Butterfly.comp.hlsl">
+      <Filter>src\Shaders\OceanSimulation</Filter>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\OceanSimulation\ButterflyTextureGeneration.comp.hlsl">
+      <Filter>src\Shaders\OceanSimulation</Filter>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\OceanSimulation\DxDyDz.comp.hlsl">
+      <Filter>src\Shaders\OceanSimulation</Filter>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\OceanSimulation\GaussianNoise.comp.hlsl">
+      <Filter>src\Shaders\OceanSimulation</Filter>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\OceanSimulation\Spectrum.comp.hlsl">
+      <Filter>src\Shaders\OceanSimulation</Filter>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\OceanSimulation\iFFT.comp.hlsl">
+      <Filter>src\Shaders\OceanSimulation</Filter>
     </FxCompile>
     <FxCompile Include="src\Shaders\PostProcess.comp.hlsl">
       <Filter>src\Shaders</Filter>

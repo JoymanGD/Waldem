@@ -2,6 +2,12 @@ RWTexture2D<float4> RenderTarget : register(u0);
 Texture2D DebugRT_1 : register(t0);
 Texture2D DebugRT_2 : register(t1);
 Texture2D DebugRT_3 : register(t2);
+Texture2D DebugRT_4 : register(t3);
+Texture2D DebugRT_5 : register(t4);
+Texture2D DebugRT_6 : register(t5);
+Texture2D DebugRT_7 : register(t6);
+Texture2D DebugRT_8 : register(t7);
+Texture2D DebugRT_9 : register(t8);
 
 cbuffer MyConstantBuffer : register(b0)
 {
@@ -29,5 +35,29 @@ void main(uint2 tid : SV_DispatchThreadID)
     else if(DebugRTIndex == 3)
     {
         RenderTarget[debugRTStartPos] = DebugRT_3.Load(uint3(debugPixelPos, 0));
+    }
+    else if(DebugRTIndex == 4)
+    {
+        RenderTarget[debugRTStartPos] = DebugRT_4.Load(uint3(debugPixelPos, 0));
+    }
+    else if(DebugRTIndex == 5)
+    {
+        RenderTarget[debugRTStartPos] = DebugRT_5.Load(uint3(debugPixelPos, 0));
+    }
+    else if(DebugRTIndex == 6)
+    {
+        RenderTarget[debugRTStartPos] = DebugRT_6.Load(uint3(debugPixelPos, 0));
+    }
+    else if(DebugRTIndex == 7)
+    {
+        RenderTarget[debugRTStartPos] = DebugRT_7.Load(uint3(debugPixelPos, 0));
+    }
+    else if(DebugRTIndex == 8)
+    {
+        RenderTarget[debugRTStartPos] = DebugRT_8.Load(uint3(debugPixelPos, 0));
+    }
+    else if(DebugRTIndex == 9)
+    {
+        RenderTarget[debugRTStartPos] = DebugRT_9.Load(uint3(debugPixelPos, 0));
     }
 }

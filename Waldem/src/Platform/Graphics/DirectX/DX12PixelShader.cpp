@@ -9,7 +9,7 @@ namespace Waldem
 #define MAX_TEXTURES 1024
 #define MAX_BUFFERS 128
     
-    DX12PixelShader::DX12PixelShader(const String& name) : PixelShader(name)
+    DX12PixelShader::DX12PixelShader(const String& name, const String& entryPoint) : PixelShader(name, entryPoint)
     {
         HRESULT hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&DxcUtils));
         if (FAILED(hr))
@@ -29,29 +29,24 @@ namespace Waldem
             throw std::runtime_error("Failed to create include handler.");
         }
         
-        CompileFromFile(name);
+        CompileFromFile(name, entryPoint);
     }
 
     DX12PixelShader::~DX12PixelShader()
     {
     }
 
-    bool DX12PixelShader::CompileFromFile(const String& shaderName)
+    bool DX12PixelShader::CompileFromFile(const String& shaderName, const String& entryPoint)
     {
         auto currentPath = GetCurrentFolder();
         
         std::wstring wCurrentPath = std::wstring(currentPath.begin(), currentPath.end());
         std::wstring wShaderName = std::wstring(shaderName.begin(), shaderName.end());
         
-        size_t lastSlash = wShaderName.find_last_of(L"/\\");
-
         // Extract the directory part
         std::wstring pathToShaders = wCurrentPath + L"/Shaders/";
 
-        // Extract the base name
-        std::wstring baseName = wShaderName.substr(lastSlash + 1);
-        
-        std::wstring shaderPath = pathToShaders + baseName + L".vs.hlsl";
+        std::wstring shaderPath = pathToShaders + wShaderName + L".vs.hlsl";
         
         HRESULT hr = DxcUtils->LoadFile(shaderPath.c_str(), nullptr, &Source);
 
@@ -60,16 +55,17 @@ namespace Waldem
             WD_CORE_ERROR("Failed to load shader file: {0}", DX12Helper::MBFromW(shaderPath.c_str(), 0));
         }
 
-        const wchar_t* entryPoint = L"main";
+        const wchar_t* entryPointW = DX12Helper::WFromMB(entryPoint);
         const wchar_t* targetProfile = L"vs_6_5";
 
         // Compiler arguments
         const wchar_t* arguments[] = {
-            L"-E", entryPoint,
+            L"-E", entryPointW,
             L"-T", targetProfile,
             L"-Zi",
             L"-Qembed_debug",
-            L"-I", pathToShaders.c_str()
+            L"-I", pathToShaders.c_str(),
+            L"-D", L"_DXC_COMPILER"
         };
 
         DxcBuffer sourceBuffer;
@@ -108,7 +104,7 @@ namespace Waldem
         }
 
         //pixel shader
-        shaderPath = pathToShaders + baseName + L".ps.hlsl";
+        shaderPath = pathToShaders + wShaderName + L".ps.hlsl";
         
         hr = DxcUtils->LoadFile(shaderPath.c_str(), nullptr, &Source);
 
@@ -117,16 +113,17 @@ namespace Waldem
             WD_CORE_ERROR("Failed to load shader file: {0}", DX12Helper::MBFromW(shaderPath.c_str(), 0));
         }
 
-        entryPoint = L"main";
+        entryPointW = DX12Helper::WFromMB(entryPoint);
         targetProfile = L"ps_6_5";
 
         // Compiler arguments
         const wchar_t* psArguments[] = {
-            L"-E", entryPoint,
+            L"-E", entryPointW,
             L"-T", targetProfile,
             L"-Zi",
             L"-Qembed_debug",
-            L"-I", pathToShaders.c_str()
+            L"-I", pathToShaders.c_str(),
+            L"-D", L"_DXC_COMPILER"
         };
 
         sourceBuffer.Ptr = Source->GetBufferPointer();

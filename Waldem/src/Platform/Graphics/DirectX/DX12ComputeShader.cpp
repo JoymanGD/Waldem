@@ -9,7 +9,7 @@ namespace Waldem
 #define MAX_TEXTURES 1024
 #define MAX_BUFFERS 128
     
-    DX12ComputeShader::DX12ComputeShader(const String& name) : ComputeShader(name)
+    DX12ComputeShader::DX12ComputeShader(const String& name, const String& entryPoint) : ComputeShader(name, entryPoint)
     {
         HRESULT hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&DxcUtils));
         if (FAILED(hr))
@@ -29,27 +29,23 @@ namespace Waldem
             throw std::runtime_error("Failed to create include handler.");
         }
         
-        CompileFromFile(name);
+        CompileFromFile(name, entryPoint);
     }
 
     DX12ComputeShader::~DX12ComputeShader()
     {
     }
 
-    bool DX12ComputeShader::CompileFromFile(const String& shaderName)
+    bool DX12ComputeShader::CompileFromFile(const String& shaderName, const String& entryPoint)
     {
         auto currentPath = GetCurrentFolder();
         
         std::wstring wCurrentPath = std::wstring(currentPath.begin(), currentPath.end());
         std::wstring wShaderName = std::wstring(shaderName.begin(), shaderName.end());
-        
-        size_t lastSlash = wShaderName.find_last_of(L"/\\");
 
         std::wstring pathToShaders = wCurrentPath + L"/Shaders/";
-
-        std::wstring baseName = wShaderName.substr(lastSlash + 1);
         
-        std::wstring shaderPath = pathToShaders + baseName + L".comp.hlsl";
+        std::wstring shaderPath = pathToShaders + wShaderName + L".comp.hlsl";
 
         HRESULT hr = DxcUtils->LoadFile(shaderPath.c_str(), nullptr, &Source);
 
@@ -58,16 +54,17 @@ namespace Waldem
             WD_CORE_ERROR("Failed to load shader file: {0}", DX12Helper::MBFromW(shaderPath.c_str(), 0));
         }
 
-        const wchar_t* entryPoint = L"main";
+        const wchar_t* entryPointW = DX12Helper::WFromMB(entryPoint);
         const wchar_t* targetProfile = L"cs_6_5";
 
         // Compiler arguments
         const wchar_t* arguments[] = {
-            L"-E", entryPoint,
+            L"-E", entryPointW,
             L"-T", targetProfile,
             L"-Zi",
             L"-Qembed_debug",
-            L"-I", pathToShaders.c_str()
+            L"-I", pathToShaders.c_str(),
+            L"-D", L"_DXC_COMPILER"
         };
 
         DxcBuffer sourceBuffer;

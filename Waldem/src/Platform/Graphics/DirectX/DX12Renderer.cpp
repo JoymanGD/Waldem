@@ -362,14 +362,14 @@ namespace Waldem
         FrameIndex %= SWAPCHAIN_SIZE;
     }
 
-    PixelShader* DX12Renderer::LoadPixelShader(String shaderName)
+    PixelShader* DX12Renderer::LoadPixelShader(String shaderName, String entryPoint)
     {
-        return new DX12PixelShader(shaderName);
+        return new DX12PixelShader(shaderName, entryPoint);
     }
 
-    ComputeShader* DX12Renderer::LoadComputeShader(String shaderName)
+    ComputeShader* DX12Renderer::LoadComputeShader(String shaderName, String entryPoint)
     {
-        return new DX12ComputeShader(shaderName);
+        return new DX12ComputeShader(shaderName, entryPoint);
     }
 
     void DX12Renderer::SetPipeline(Pipeline* pipeline)

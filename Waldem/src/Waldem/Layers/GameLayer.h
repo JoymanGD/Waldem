@@ -11,6 +11,7 @@
 #include "Waldem/Layers/Layer.h"
 #include "Waldem/SceneManagement/Scene.h"
 #include "Waldem/Renderer/Renderer.h"
+#include <glm/gtc/integer.hpp>
 
 namespace Waldem
 {
@@ -29,7 +30,7 @@ namespace Waldem
 			// averageWorldPositionEntity.Add<Selected>();
 			// averageWorldPositionEntity.Add<Transform>(Vector3(0, 0, 0));
 
-			Point2 debugRTResolution = Point2(1024, 1024);
+			Point2 debugRTResolution = Point2(512, 512);
 
 			Renderer::Begin();
 			resourceManager->CreateRenderTarget("TargetRT", resolution.x, resolution.y, TextureFormat::R8G8B8A8_UNORM);
@@ -41,6 +42,12 @@ namespace Waldem
 			resourceManager->CreateRenderTarget("DebugRT_1", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
 			resourceManager->CreateRenderTarget("DebugRT_2", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
 			resourceManager->CreateRenderTarget("DebugRT_3", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
+			resourceManager->CreateRenderTarget("DebugRT_4", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
+			resourceManager->CreateRenderTarget("DebugRT_5", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
+			resourceManager->CreateRenderTarget("DebugRT_6", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
+			resourceManager->CreateRenderTarget("DebugRT_7", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
+			resourceManager->CreateRenderTarget("DebugRT_8", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
+			resourceManager->CreateRenderTarget("DebugRT_9", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT); 
 			Renderer::End();
 
 			DrawSystems.Add((ISystem*)new ShadowmapRenderingSystem(ecsManager));

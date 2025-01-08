@@ -13,7 +13,7 @@ namespace Sandbox
 
 		//Entities
 		
-  //       auto sponzaModel = importer.Import("Content/Models/Sponza/Sponza2.gltf", true);
+		// auto sponzaModel = importer.Import("Content/Models/Sponza/Sponza2.gltf", true);
 		// //firstSponza
 		// for (Waldem::Mesh* mesh : sponzaModel->GetMeshes())
 		// {
