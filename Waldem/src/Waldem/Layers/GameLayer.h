@@ -32,7 +32,7 @@ namespace Waldem
 
 			Point2 debugRTResolution = Point2(512, 512);
 
-			Renderer::Begin();
+		Renderer::Begin();
 			resourceManager->CreateRenderTarget("TargetRT", resolution.x, resolution.y, TextureFormat::R8G8B8A8_UNORM);
 			resourceManager->CreateRenderTarget("WorldPositionRT", resolution.x, resolution.y, TextureFormat::R32G32B32A32_FLOAT);
 			resourceManager->CreateRenderTarget("NormalRT", resolution.x, resolution.y, TextureFormat::R16G16B16A16_FLOAT);
@@ -47,15 +47,15 @@ namespace Waldem
 			resourceManager->CreateRenderTarget("DebugRT_6", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
 			resourceManager->CreateRenderTarget("DebugRT_7", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
 			resourceManager->CreateRenderTarget("DebugRT_8", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
-			resourceManager->CreateRenderTarget("DebugRT_9", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT); 
-			Renderer::End();
+			resourceManager->CreateRenderTarget("DebugRT_9", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
 
+			DrawSystems.Add((ISystem*)new OceanSimulationSystem(ecsManager));
 			DrawSystems.Add((ISystem*)new ShadowmapRenderingSystem(ecsManager));
 			DrawSystems.Add((ISystem*)new DeferredRenderingSystem(ecsManager));
 			DrawSystems.Add((ISystem*)new PostProcessSystem(ecsManager));
-			DrawSystems.Add((ISystem*)new OceanSimulationSystem(ecsManager));
             DrawSystems.Add((ISystem*)new DebugSystem(ecsManager));
 			DrawSystems.Add((ISystem*)new ScreenQuadSystem(ecsManager));
+		Renderer::End();
 		}
 
 		void OnUpdate(float deltaTime) override

@@ -47,6 +47,7 @@ namespace Waldem
         virtual void CopyRenderTarget(RenderTarget* dstRT, RenderTarget* srcRT) = 0;
         virtual Buffer* CreateBuffer(BufferType type, void* data, uint32_t size) = 0;
         virtual void ResourceBarrier(RenderTarget* rt, ResourceStates before, ResourceStates after) = 0;
+        virtual void ResourceBarrier(Buffer* buffer, ResourceStates before, ResourceStates after) = 0;
         virtual void ClearRenderTarget(RenderTarget* rt) = 0;
         virtual void ClearDepthStencil(RenderTarget* ds) = 0;
         virtual void InitializeUI() = 0;
@@ -85,6 +86,7 @@ namespace Waldem
         static void CopyRenderTarget(RenderTarget* dstRT, RenderTarget* srcRT);
         static Buffer* CreateBuffer(BufferType type, void* data, uint32_t size);
         static void ResourceBarrier(RenderTarget* rt, ResourceStates before, ResourceStates after);
+        static void ResourceBarrier(Buffer* buffer, ResourceStates before, ResourceStates after);
         static void ClearRenderTarget(RenderTarget* rt);
         static void ClearDepthStencil(RenderTarget* ds);
         static void InitializeUI();
