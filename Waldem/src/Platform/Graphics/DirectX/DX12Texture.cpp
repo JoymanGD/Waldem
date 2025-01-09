@@ -57,7 +57,6 @@ namespace Waldem
             uploadHeapProps.VisibleNodeMask = 1;
             
             UINT64 uploadBufferSize;
-            D3D12_PLACED_SUBRESOURCE_FOOTPRINT layout;
             device->GetCopyableFootprints(&textureDesc, 0, 1, 0, nullptr, nullptr, nullptr, &uploadBufferSize);
 
             D3D12_RESOURCE_DESC uploadBufferDesc = {};

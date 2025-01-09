@@ -421,7 +421,7 @@ namespace Waldem
 
     Buffer* DX12Renderer::CreateBuffer(BufferType type, void* data, uint32_t size)
     {
-        return new DX12Buffer(Device, type, data, size);
+        return new DX12Buffer(Device, WorldCommandList.first, type, data, size);
     }
 
     void DX12Renderer::ClearRenderTarget(RenderTarget* rt)
@@ -439,6 +439,12 @@ namespace Waldem
     void DX12Renderer::ResourceBarrier(RenderTarget* rt, ResourceStates before, ResourceStates after)
     {
         ID3D12Resource* resource = (ID3D12Resource*)rt->GetPlatformResource();
+        WorldCommandList.first->ResourceBarrier(resource, (D3D12_RESOURCE_STATES)before, (D3D12_RESOURCE_STATES)after);
+    }
+
+    void DX12Renderer::ResourceBarrier(Buffer* buffer, ResourceStates before, ResourceStates after)
+    {
+        ID3D12Resource* resource = (ID3D12Resource*)buffer->GetPlatformResource();
         WorldCommandList.first->ResourceBarrier(resource, (D3D12_RESOURCE_STATES)before, (D3D12_RESOURCE_STATES)after);
     }
 

@@ -33,6 +33,7 @@ namespace Waldem
         void SetRootSignature(RootSignature* rootSignature) override;
         void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr) override;
         void ResourceBarrier(RenderTarget* rt, ResourceStates before, ResourceStates after) override;
+        void ResourceBarrier(Buffer* buffer, ResourceStates before, ResourceStates after) override;
         Pipeline* CreateGraphicPipeline(const String& name, WArray<TextureFormat> RTFormats, PrimitiveTopologyType primitiveTopologyType, RootSignature* rootSignature, PixelShader* shader) override;
         Pipeline* CreateComputePipeline(const String& name, RootSignature* rootSignature, ComputeShader* shader) override;
         RootSignature* CreateRootSignature(WArray<Resource> resources) override;

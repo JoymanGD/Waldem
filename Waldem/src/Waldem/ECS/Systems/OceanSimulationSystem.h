@@ -79,9 +79,6 @@ namespace Waldem
         Pipeline* ButterflyZPipeline = nullptr;
         RootSignature* ButterflyZRootSignature = nullptr;
         ComputeShader* ButterflyZComputeShader = nullptr;
-
-        //Inversion
-        RenderTarget* Displacement = nullptr;
         
         //Inversion X
         Pipeline* InversionXPipeline = nullptr;
@@ -101,6 +98,13 @@ namespace Waldem
         WArray<ButterflyPushConstants> HorizontalPushConstants;
         WArray<ButterflyPushConstants> VerticalPushConstants;
         int Stages;
+
+        //Normal and displacement
+        Pipeline* NormalAndDisplacementPipeline = nullptr;
+        RootSignature* NormalAndDisplacementRootSignature = nullptr;
+        ComputeShader* NormalAndDisplacementComputeShader = nullptr;
+        RenderTarget* Normal = nullptr;
+        RenderTarget* Displacement = nullptr;
 
         //Ocean displacement
         Pipeline* OceanDisplacementPipeline = nullptr;
@@ -138,13 +142,15 @@ namespace Waldem
                 DxCoefficients = resourceManager->GetRenderTarget("DebugRT_1");
                 DyCoefficients = resourceManager->GetRenderTarget("DebugRT_2");
                 DzCoefficients = resourceManager->GetRenderTarget("DebugRT_3");
-                DxPingPong = resourceManager->GetRenderTarget("DebugRT_4");
-                DyPingPong = resourceManager->GetRenderTarget("DebugRT_5");
-                DzPingPong = resourceManager->GetRenderTarget("DebugRT_6");
+                Normal = resourceManager->GetRenderTarget("DebugRT_4");
+                Displacement = resourceManager->GetRenderTarget("DebugRT_5");
+                DxPingPong = resourceManager->CreateRenderTarget("DxPingPong", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
+                DyPingPong = resourceManager->CreateRenderTarget("DyPingPong", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
+                DzPingPong = resourceManager->CreateRenderTarget("DzPingPong", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
                 Dx = resourceManager->GetRenderTarget("DebugRT_7");
                 Dy = resourceManager->GetRenderTarget("DebugRT_8");
                 Dz = resourceManager->GetRenderTarget("DebugRT_9");
-                ButterflyTexture512 = resourceManager->CreateRenderTarget("ButterflyTexture512", Stages, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT); 
+                ButterflyTexture512 = resourceManager->CreateRenderTarget("ButterflyTexture512", Stages, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
                 
                 //Gaussian noise initialization
                 WArray<Resource> resources;
@@ -276,14 +282,26 @@ namespace Waldem
                 InversionZPipeline = Renderer::CreateComputePipeline("InversionZPipeline", InversionZRootSignature, InversionZComputeShader);
                 resources.Clear();
 
-                //Ocean displacement initialization
+                //Normal and displacement initialization
                 resources.Add(Resource("Dx", Dx, 0));
                 resources.Add(Resource("Dy", Dy, 1));
                 resources.Add(Resource("Dz", Dz, 2));
-                //TODO: add ocean mesh vertex buffer as resource
+                resources.Add(Resource("Normal", Normal, 0, true));
+                resources.Add(Resource("Displacement", Displacement, 1, true));
+                resources.Add(Resource("MyConstantBuffer", RTYPE_ConstantBuffer, &N, sizeof(uint32_t), sizeof(uint32_t), 0));
+                NormalAndDisplacementRootSignature = Renderer::CreateRootSignature(resources);
+                NormalAndDisplacementComputeShader = Renderer::LoadComputeShader("OceanSimulation/NormalAndDisplacement");
+                NormalAndDisplacementPipeline = Renderer::CreateComputePipeline("NormalAndDisplacementPipeline", NormalAndDisplacementRootSignature, NormalAndDisplacementComputeShader);
+                resources.Clear();
+
+                //Ocean displacement initialization
+                resources.Add(Resource("Normal", Normal, 0));
+                resources.Add(Resource("Displacement", Displacement, 1));
+                resources.Add(Resource("VertexBuffer", meshComponent.Mesh->VertexBuffer, 0, true));
                 OceanDisplacementRootSignature = Renderer::CreateRootSignature(resources);
                 OceanDisplacementComputeShader = Renderer::LoadComputeShader("OceanSimulation/OceanDisplacement");
                 OceanDisplacementPipeline = Renderer::CreateComputePipeline("OceanDisplacementPipeline", OceanDisplacementRootSignature, OceanDisplacementComputeShader);
+                resources.Clear();
                 
                 //Gaussian noise generation
                 Renderer::ResourceBarrier(GaussianNoiseRenderTarget, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
@@ -400,6 +418,22 @@ namespace Waldem
                 Renderer::ResourceBarrier(Dx, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
                 Renderer::ResourceBarrier(Dy, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
                 Renderer::ResourceBarrier(Dz, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
+
+                //Normal and displacement
+                Renderer::ResourceBarrier(Normal, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
+                Renderer::ResourceBarrier(Displacement, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
+                Renderer::SetPipeline(NormalAndDisplacementPipeline);
+                Renderer::SetRootSignature(NormalAndDisplacementRootSignature);
+                Renderer::Compute(ButterflyGroupCount);
+                Renderer::ResourceBarrier(Normal, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
+                Renderer::ResourceBarrier(Displacement, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
+
+                //Ocean displacement
+                Renderer::ResourceBarrier(meshComponent.Mesh->VertexBuffer, (ResourceStates)(ALL_SHADER_RESOURCE | VERTEX_AND_CONSTANT_BUFFER), UNORDERED_ACCESS);
+                Renderer::SetPipeline(OceanDisplacementPipeline);
+                Renderer::SetRootSignature(OceanDisplacementRootSignature);
+                Renderer::Compute(ButterflyGroupCount);
+                Renderer::ResourceBarrier(meshComponent.Mesh->VertexBuffer, UNORDERED_ACCESS, (ResourceStates)(ALL_SHADER_RESOURCE | VERTEX_AND_CONSTANT_BUFFER));
             }
         }
     };

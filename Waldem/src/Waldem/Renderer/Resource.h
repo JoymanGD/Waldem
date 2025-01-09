@@ -71,6 +71,8 @@ namespace Waldem
             Name = name;
             Type = UAV ? RTYPE_RWBuffer : RTYPE_Buffer;
             Buffers = buffers;
+            Size = Vector2(buffers[0]->GetSize(), 1);
+            Stride = Size.x / buffers[0]->GetCount();
             NumResources = buffers.Num();
             Slot = slot;
         }
@@ -80,6 +82,8 @@ namespace Waldem
             Name = name;
             Type = UAV ? RTYPE_RWBuffer : RTYPE_Buffer;
             Buffers.Add(buffer);
+            Size = Vector2(buffer->GetSize(), 1);
+            Stride = Size.x / buffer->GetCount();
             NumResources = 1;
             Slot = slot;
         }

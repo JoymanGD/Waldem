@@ -1,5 +1,5 @@
 #pragma once
-#include "D3DX12.h"
+#include "DX12CommandList.h"
 #include "Waldem/Renderer/Buffer.h"
 
 namespace Waldem
@@ -7,7 +7,7 @@ namespace Waldem
     class WALDEM_API DX12Buffer : public Buffer
     {
     public:
-        DX12Buffer(ID3D12Device* device, BufferType type, void* data, uint32_t size);
+        DX12Buffer(ID3D12Device* device, DX12CommandList* cmdList, BufferType type, void* data, uint32_t size);
         void* GetPlatformResource() const override { return BufferResource; }
         D3D12_INDEX_BUFFER_VIEW& GetIndexBufferView() { return IndexBufferView; }
         D3D12_VERTEX_BUFFER_VIEW& GetVertexBufferView() { return VertexBufferView; }

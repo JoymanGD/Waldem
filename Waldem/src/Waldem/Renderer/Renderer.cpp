@@ -142,6 +142,11 @@ namespace Waldem
         Instance->PlatformRenderer->ResourceBarrier(rt, before, after);
     }
 
+    void Renderer::ResourceBarrier(Buffer* buffer, ResourceStates before, ResourceStates after)
+    {
+        Instance->PlatformRenderer->ResourceBarrier(buffer, before, after);
+    }
+
     void Renderer::ClearRenderTarget(RenderTarget* rt)
     {
         Instance->PlatformRenderer->ClearRenderTarget(rt);
