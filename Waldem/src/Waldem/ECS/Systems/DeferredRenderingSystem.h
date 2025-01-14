@@ -46,7 +46,7 @@ namespace Waldem
             WArray<Texture2D*> textures;
             for (auto [entity, mesh, transform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
             {
-                textures.Add(mesh.Mesh->MeshMaterial.GetDiffuseTexture());
+                textures.Add(mesh.Mesh->CurrentMaterial.GetDiffuseTexture());
             }
 
             WArray<Matrix4> worldTransforms;

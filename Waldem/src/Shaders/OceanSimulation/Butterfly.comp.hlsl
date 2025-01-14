@@ -1,8 +1,4 @@
-#ifdef _DXC_COMPILER
-#include "Complex.hlsl"
-#else
 #include "../Complex.hlsl"
-#endif
 
 Texture2D ButterflyTexture512 : register(t0);
 RWTexture2D<float4> PingPong0 : register(u0);

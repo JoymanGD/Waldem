@@ -3,6 +3,7 @@
 #include "DX12ComputeShader.h"
 #include "DX12Helper.h"
 #include "Waldem/Utils/FileUtils.h"
+#include <regex>
 
 namespace Waldem
 {
@@ -41,11 +42,13 @@ namespace Waldem
         auto currentPath = GetCurrentFolder();
         
         std::wstring wCurrentPath = std::wstring(currentPath.begin(), currentPath.end());
-        std::wstring wShaderName = std::wstring(shaderName.begin(), shaderName.end());
+        std::wstring wShaderFolder = shaderName.find_last_of('/') != std::string::npos ? std::wstring(shaderName.begin(), shaderName.begin() + shaderName.find_last_of('/')) : L"";
+        std::wstring wShaderName = wShaderFolder.empty() ? std::wstring(shaderName.begin(), shaderName.end()) : std::wstring(shaderName.begin() + shaderName.find_last_of('/') + 1, shaderName.end());
 
-        std::wstring pathToShaders = wCurrentPath + L"/Shaders/";
-        
-        std::wstring shaderPath = pathToShaders + wShaderName + L".comp.hlsl";
+        std::wstring pathToShaders = wCurrentPath + L"\\" + L"Shaders";
+        pathToShaders = std::regex_replace(pathToShaders, std::wregex(L"[\\/\\\\]"), L"\\\\");
+        std::wstring currentShaderFolderPath = pathToShaders + L"\\\\" + wShaderFolder;
+        std::wstring shaderPath = currentShaderFolderPath + (wShaderFolder.empty() ? L"" : L"\\\\") + wShaderName + L".comp.hlsl";
 
         HRESULT hr = DxcUtils->LoadFile(shaderPath.c_str(), nullptr, &Source);
 
@@ -64,6 +67,7 @@ namespace Waldem
             L"-Zi",
             L"-Qembed_debug",
             L"-I", pathToShaders.c_str(),
+            L"-I", currentShaderFolderPath.c_str(),
             L"-D", L"_DXC_COMPILER"
         };
 
@@ -73,7 +77,6 @@ namespace Waldem
         sourceBuffer.Encoding = DXC_CP_ACP;
 
         IDxcResult* result;
-
         DxcCompiler->Compile(
             &sourceBuffer,
             arguments,
@@ -81,7 +84,7 @@ namespace Waldem
             DxcIncludeHandler,
             IID_PPV_ARGS(&result)
         );
-
+        
         HRESULT status;
         
         hr = result->GetStatus(&status);

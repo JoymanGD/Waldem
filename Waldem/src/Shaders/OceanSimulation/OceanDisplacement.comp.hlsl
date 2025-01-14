@@ -1,30 +1,31 @@
-#ifdef _DXC_COMPILER
-    #include "Types.hlsl"
-#else
-    #include "../Types.hlsl"
-#endif
-
-SamplerState myStaticSampler : register(s0);
+#include "OceanResources.hlsl"
+#include "../Types.hlsl"
 
 Texture2D Normal : register(t0);
 Texture2D Displacement : register(t1);
+StructuredBuffer<Vertex> VertexBufferOriginal : register(t2);
 RWStructuredBuffer<Vertex> VertexBuffer : register(u0);
 
 [numthreads(16, 16, 1)]
 void main(uint2 tid : SV_DispatchThreadID)
 {
-    float3 displacement = Displacement[tid].rgb;
-    float3 normal = Normal[tid].rgb * 2.0f - 1.0f;
+    float2 UV = float2(tid) / float2(N, N);
+    float motion = 0.00002f;
+    float2 MovedUV = UV + normalize(W) * motion;
+    uint2 MovedTid = uint2(MovedUV * float2(N, N));
+    float3 displacement = Displacement[MovedTid].rgb;
+    float3 normal = Normal[MovedTid].rgb * 2.0f - 1.0f;
     
-    uint index = tid.y * 512 + tid.x;
+    uint index = tid.y * N + tid.x;
 
     Vertex vertex = VertexBuffer[index];
+    Vertex originalVertex = VertexBufferOriginal[index];
 
-    vertex.Position.x += displacement.x * 0.02f;
-    vertex.Position.y = displacement.y * 1.5f;
-    vertex.Position.z += displacement.z * 0.02f;
+    vertex.Position.y = originalVertex.Position.y + displacement.y * WaveHeight;
+    vertex.Position.x = originalVertex.Position.x - displacement.x * WaveChoppiness;
+    vertex.Position.z = originalVertex.Position.z - displacement.z * WaveChoppiness;
 
-    vertex.Normal = normal;
+    vertex.Normal = float3(normal.x, normal.z, normal.y);
 
     VertexBuffer[index] = vertex;
 }

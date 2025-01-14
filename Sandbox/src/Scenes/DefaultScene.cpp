@@ -12,33 +12,36 @@ namespace Sandbox
 		Waldem::ModelImporter importer;
 
 		//Entities
+		auto sponzaModel = importer.Import("Content/Models/Sponza/Sponza2.gltf", true);
+		//firstSponza
+		for (Waldem::Mesh* mesh : sponzaModel->GetMeshes())
+		{
+			auto entity = ecsManager->CreateEntity();
+			entity.Add<Waldem::MeshComponent>(mesh);
+			entity.Add<Waldem::Transform>(mesh->ObjectMatrix);
+		}
 		
-		// auto sponzaModel = importer.Import("Content/Models/Sponza/Sponza2.gltf", true);
-		// //firstSponza
-		// for (Waldem::Mesh* mesh : sponzaModel->GetMeshes())
-		// {
-		// 	auto entity = ecsManager->CreateEntity();
-		// 	entity.Add<Waldem::MeshComponent>(mesh);
-		// 	entity.Add<Waldem::Transform>(mesh->ObjectMatrix);
-		// }
-		//
-		// //secondSponza
-		// for (Waldem::Mesh* mesh : sponzaModel->GetMeshes())
-		// {
-		// 	auto entity = ecsManager->CreateEntity();
-		// 	entity.Add<Waldem::MeshComponent>(mesh);
-		// 	Waldem::Transform transform = mesh->ObjectMatrix;
-		// 	transform.Translate({50, 0, 0});
-		// 	entity.Add<Waldem::Transform>(transform);
-		// }
+		//secondSponza
+		for (Waldem::Mesh* mesh : sponzaModel->GetMeshes())
+		{
+			auto entity = ecsManager->CreateEntity();
+			entity.Add<Waldem::MeshComponent>(mesh);
+			Waldem::Transform transform = mesh->ObjectMatrix;
+			transform.Translate({50, 0, 0});
+			entity.Add<Waldem::Transform>(transform);
+		}
 
 		//water plane
+		auto waterTexture = resourceManager->LoadTexture("Content/Textures/WaterColor.png");
 		auto waterPlaneModel = importer.Import("Content/Models/WaterPlane.glb", true);
 		for (Waldem::Mesh* mesh : waterPlaneModel->GetMeshes())
 		{
+			mesh->SetMaterial(Waldem::Material(waterTexture));
 			auto waterPlaneEntity = ecsManager->CreateEntity();
 			waterPlaneEntity.Add<Waldem::MeshComponent>(mesh);
-			waterPlaneEntity.Add<Waldem::Transform>(mesh->ObjectMatrix);
+			Waldem::Transform transform = mesh->ObjectMatrix;
+			transform.Translate({0,20,0});
+			waterPlaneEntity.Add<Waldem::Transform>(transform);
 			waterPlaneEntity.Add<Waldem::Ocean>();
 		}
 		

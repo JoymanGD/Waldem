@@ -1,6 +1,8 @@
 #include "wdpch.h"
 #include <d3dcompiler.h>
 #include "DX12PixelShader.h"
+
+#include <regex>
 #include "DX12Helper.h"
 #include "Waldem/Utils/FileUtils.h"
 
@@ -40,13 +42,15 @@ namespace Waldem
     {
         auto currentPath = GetCurrentFolder();
         
-        std::wstring wCurrentPath = std::wstring(currentPath.begin(), currentPath.end());
-        std::wstring wShaderName = std::wstring(shaderName.begin(), shaderName.end());
-        
         // Extract the directory part
-        std::wstring pathToShaders = wCurrentPath + L"/Shaders/";
+        std::wstring wCurrentPath = std::wstring(currentPath.begin(), currentPath.end());
+        std::wstring wShaderFolder = shaderName.find_last_of('/') != std::string::npos ? std::wstring(shaderName.begin(), shaderName.begin() + shaderName.find_last_of('/')) : L"";
+        std::wstring wShaderName = wShaderFolder.empty() ? std::wstring(shaderName.begin(), shaderName.end()) : std::wstring(shaderName.begin() + shaderName.find_last_of('/') + 1, shaderName.end());
 
-        std::wstring shaderPath = pathToShaders + wShaderName + L".vs.hlsl";
+        std::wstring pathToShaders = wCurrentPath + L"\\" + L"Shaders";
+        pathToShaders = std::regex_replace(pathToShaders, std::wregex(L"[\\/\\\\]"), L"\\\\");
+        std::wstring currentShaderFolderPath = pathToShaders + L"\\\\" + wShaderFolder;
+        std::wstring shaderPath = currentShaderFolderPath + (wShaderFolder.empty() ? L"" : L"\\\\") + wShaderName + L".vs.hlsl";
         
         HRESULT hr = DxcUtils->LoadFile(shaderPath.c_str(), nullptr, &Source);
 
@@ -104,7 +108,7 @@ namespace Waldem
         }
 
         //pixel shader
-        shaderPath = pathToShaders + wShaderName + L".ps.hlsl";
+        shaderPath = currentShaderFolderPath + (wShaderFolder.empty() ? L"" : L"\\\\") + wShaderName + L".ps.hlsl";
         
         hr = DxcUtils->LoadFile(shaderPath.c_str(), nullptr, &Source);
 

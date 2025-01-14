@@ -1,9 +1,4 @@
-#ifdef _DXC_COMPILER
-#include "Complex.hlsl"
-#else
 #include "../Complex.hlsl"
-#endif
-
 #define PI 3.14159265359f
 
 StructuredBuffer<int> bitReversedIndices : register(t0);

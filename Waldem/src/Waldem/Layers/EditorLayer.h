@@ -6,6 +6,7 @@
 #include "Waldem/ECS/Systems/DebugSystem.h"
 #include "Waldem/ECS/Systems/EditorTransformsManipulationSystem.h"
 #include "Waldem/ECS/Systems/FreeLookCameraSystem.h"
+#include "Waldem/ECS/Systems/OceanSimulationEditorSystem.h"
 #include "Waldem/Input/InputManager.h"
 #include "Waldem/Layers/Layer.h"
 #include "Waldem/Renderer/Renderer.h"
@@ -29,6 +30,7 @@ namespace Waldem
             CurrentECSManager->Refresh();
             
             UISystems.Add((ISystem*)new EditorTransformsManipulationSystem(CurrentECSManager));
+            UISystems.Add((ISystem*)new OceanSimulationEditorSystem(CurrentECSManager));
             UpdateSystems.Add((ISystem*)new FreeLookCameraSystem(CurrentECSManager));
         	
 			SceneData sceneData = { window };

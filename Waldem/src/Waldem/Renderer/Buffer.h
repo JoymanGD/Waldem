@@ -122,16 +122,18 @@ namespace Waldem
     class Buffer
     {
     public:
-        Buffer(BufferType type, size_t size) : Type(type), Size(size) {}
+        Buffer(String name, BufferType type, size_t size) : Name(name), Type(type), Size(size) {}
         virtual ~Buffer() {}
 
         virtual void* GetPlatformResource() const = 0;
         virtual uint32_t GetCount() const = 0;
         size_t GetSize() { return Size; }
         BufferType GetType() { return Type; }
+        String GetName() { return Name; }
 
     protected:
-        size_t Size;
+        String Name;
         BufferType Type;
+        size_t Size;
     };
 }

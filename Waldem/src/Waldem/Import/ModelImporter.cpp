@@ -1,11 +1,13 @@
 #include "wdpch.h"
 #include "ModelImporter.h"
-#define STB_IMAGE_IMPLEMENTATION
+#ifndef STB_IMAGE_IMPLEMENTATION
+    #define STB_IMAGE_IMPLEMENTATION
+#endif
 #include "stb_image.h"
 #include "Waldem/Renderer/Texture.h"
 #include <filesystem>
 #include <fstream>
-
+#include "assimp/scene.h"
 #include "Waldem/Application.h"
 
 namespace Waldem
@@ -22,13 +24,6 @@ namespace Waldem
     Model* ModelImporter::Import(String path, bool relative)
     {
         Model* result = new Model();
-
-        BufferLayout bufferLayout = {
-            { ShaderDataType::Float3, "Position", false },
-            { ShaderDataType::Float3, "Normal", false },
-            { ShaderDataType::Float2, "UV", true },
-            { ShaderDataType::Int, "MeshId", true },
-        };
         
         auto assimpModel = ImportInternal(path, ModelImportFlags::CalcTangentSpace | ModelImportFlags::Triangulate | ModelImportFlags::GenBoundingBoxes | ModelImportFlags::FlipUVs | ModelImportFlags::MakeLeftHanded | ModelImportFlags::FlipWindingOrder, relative);
 
@@ -55,6 +50,7 @@ namespace Waldem
                     Vertex vertex = {};
                     vertex.Position = Vector3(assimpMesh->mVertices[j].x, assimpMesh->mVertices[j].y, assimpMesh->mVertices[j].z);
                     vertex.Normal = Vector3(assimpMesh->mNormals[j].x, assimpMesh->mNormals[j].y, assimpMesh->mNormals[j].z);
+                    vertex.Tangent = Vector3(assimpMesh->mTangents[j].x, assimpMesh->mTangents[j].y, assimpMesh->mTangents[j].z);
                     vertex.MeshId = i;
 
                     if(assimpMesh->HasTextureCoords(0))

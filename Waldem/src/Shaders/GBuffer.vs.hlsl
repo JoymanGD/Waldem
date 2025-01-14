@@ -2,9 +2,9 @@ struct VS_INPUT
 {
     float3 Position : POSITION;
     float3 Normal : NORMAL;
+    float3 Tangent : TANGENT;
     float2 UV : TEXCOORD;
     uint MeshId : MESH_ID;
-    uint VertexID : SV_VertexID;
 };
 
 struct PS_INPUT

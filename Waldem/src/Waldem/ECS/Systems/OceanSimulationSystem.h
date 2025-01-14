@@ -10,12 +10,6 @@
 
 namespace Waldem
 {
-    struct OceanSimulationConstantBuffer
-    {
-        Vector2 Resolution;
-        uint32_t N;
-    };
-
     struct ButterflyPushConstants
     {
         uint32_t Stage;
@@ -134,14 +128,16 @@ namespace Waldem
         {
             for (auto [entity, transform, meshComponent, ocean] : ECSManager->EntitiesWith<Transform, MeshComponent, Ocean>())
             {
-			    Point2 fftResolution = Point2(512, 512);
+                auto oceanParametersCBResource = Resource("OceanParameters", RTYPE_ConstantBuffer, &ocean, sizeof(Ocean), sizeof(Ocean), 0);
+                
+			    Point2 fftResolution = Point2(ocean.N, ocean.N);
                 Stages = glm::log2(fftResolution.x);
-                GaussianNoiseRenderTarget = resourceManager->CreateRenderTarget("GaussianNoiseRenderTarget", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
-                H0 = resourceManager->CreateRenderTarget("H0", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
+                GaussianNoiseRenderTarget = resourceManager->GetRenderTarget("DebugRT_1");
+                H0 = resourceManager->GetRenderTarget("DebugRT_2");
                 H0Inverse = resourceManager->CreateRenderTarget("H0Inverse", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
-                DxCoefficients = resourceManager->GetRenderTarget("DebugRT_1");
-                DyCoefficients = resourceManager->GetRenderTarget("DebugRT_2");
-                DzCoefficients = resourceManager->GetRenderTarget("DebugRT_3");
+                DxCoefficients = resourceManager->CreateRenderTarget("DxCoefficients", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
+                DyCoefficients = resourceManager->CreateRenderTarget("DyCoefficients", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
+                DzCoefficients = resourceManager->CreateRenderTarget("DzCoefficients", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
                 Normal = resourceManager->GetRenderTarget("DebugRT_4");
                 Displacement = resourceManager->GetRenderTarget("DebugRT_5");
                 DxPingPong = resourceManager->CreateRenderTarget("DxPingPong", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
@@ -162,8 +158,7 @@ namespace Waldem
                 resources.Clear();
 
                 //Spectrum generation initialization
-                OceanSimulationConstantBuffer constantBuffer { fftResolution, (uint32_t)fftResolution.x };
-                resources.Add(Resource("MyConstantBuffer", RTYPE_ConstantBuffer, &constantBuffer, sizeof(OceanSimulationConstantBuffer), sizeof(OceanSimulationConstantBuffer), 0));
+                resources.Add(oceanParametersCBResource);
                 resources.Add(Resource("MyPushConstants", RTYPE_Constant, nullptr, sizeof(float), sizeof(float), 1));
                 resources.Add(Resource("H0", H0, 0, true));
                 resources.Add(Resource("H0Inverse", H0Inverse, 1, true));
@@ -288,16 +283,20 @@ namespace Waldem
                 resources.Add(Resource("Dz", Dz, 2));
                 resources.Add(Resource("Normal", Normal, 0, true));
                 resources.Add(Resource("Displacement", Displacement, 1, true));
-                resources.Add(Resource("MyConstantBuffer", RTYPE_ConstantBuffer, &N, sizeof(uint32_t), sizeof(uint32_t), 0));
+                resources.Add(oceanParametersCBResource);
                 NormalAndDisplacementRootSignature = Renderer::CreateRootSignature(resources);
                 NormalAndDisplacementComputeShader = Renderer::LoadComputeShader("OceanSimulation/NormalAndDisplacement");
                 NormalAndDisplacementPipeline = Renderer::CreateComputePipeline("NormalAndDisplacementPipeline", NormalAndDisplacementRootSignature, NormalAndDisplacementComputeShader);
                 resources.Clear();
 
+                auto vertexBufferOriginal = resourceManager->CloneBuffer(meshComponent.Mesh->VertexBuffer);
+
                 //Ocean displacement initialization
                 resources.Add(Resource("Normal", Normal, 0));
                 resources.Add(Resource("Displacement", Displacement, 1));
+                resources.Add(Resource("VertexBufferOriginal", vertexBufferOriginal, 2));
                 resources.Add(Resource("VertexBuffer", meshComponent.Mesh->VertexBuffer, 0, true));
+                resources.Add(oceanParametersCBResource);
                 OceanDisplacementRootSignature = Renderer::CreateRootSignature(resources);
                 OceanDisplacementComputeShader = Renderer::LoadComputeShader("OceanSimulation/OceanDisplacement");
                 OceanDisplacementPipeline = Renderer::CreateComputePipeline("OceanDisplacementPipeline", OceanDisplacementRootSignature, OceanDisplacementComputeShader);
@@ -323,6 +322,11 @@ namespace Waldem
     
         void Update(float deltaTime) override
         {
+            Vector3 camPos = Vector3(0, 0, 0);
+            for (auto [entity, transform, camera, mainCamera] : ECSManager->EntitiesWith<Transform, Camera, MainCamera>())
+            {
+                camPos = transform.GetPosition();
+            }
             for (auto [entity, transform, meshComponent, ocean] : ECSManager->EntitiesWith<Transform, MeshComponent, Ocean>())
             {
                 //Spectrum generation
@@ -334,6 +338,7 @@ namespace Waldem
                 Renderer::ResourceBarrier(DzCoefficients, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
                 Renderer::SetPipeline(SpectrumGenerationPipeline);
                 Renderer::SetRootSignature(SpectrumGenerationRootSignature);
+                SpectrumGenerationRootSignature->UpdateResourceData("OceanParameters", &ocean);
                 SpectrumGenerationRootSignature->UpdateResourceData("MyPushConstants", &Time::ElapsedTime);
                 Renderer::Compute(GroupCount);
                 Renderer::ResourceBarrier(H0, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
@@ -424,6 +429,7 @@ namespace Waldem
                 Renderer::ResourceBarrier(Displacement, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
                 Renderer::SetPipeline(NormalAndDisplacementPipeline);
                 Renderer::SetRootSignature(NormalAndDisplacementRootSignature);
+                NormalAndDisplacementRootSignature->UpdateResourceData("OceanParameters", &ocean);
                 Renderer::Compute(ButterflyGroupCount);
                 Renderer::ResourceBarrier(Normal, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
                 Renderer::ResourceBarrier(Displacement, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
@@ -432,6 +438,7 @@ namespace Waldem
                 Renderer::ResourceBarrier(meshComponent.Mesh->VertexBuffer, (ResourceStates)(ALL_SHADER_RESOURCE | VERTEX_AND_CONSTANT_BUFFER), UNORDERED_ACCESS);
                 Renderer::SetPipeline(OceanDisplacementPipeline);
                 Renderer::SetRootSignature(OceanDisplacementRootSignature);
+                OceanDisplacementRootSignature->UpdateResourceData("OceanParameters", &ocean);
                 Renderer::Compute(ButterflyGroupCount);
                 Renderer::ResourceBarrier(meshComponent.Mesh->VertexBuffer, UNORDERED_ACCESS, (ResourceStates)(ALL_SHADER_RESOURCE | VERTEX_AND_CONSTANT_BUFFER));
             }
