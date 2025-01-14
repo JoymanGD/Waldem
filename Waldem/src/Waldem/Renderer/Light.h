@@ -52,7 +52,7 @@ namespace Waldem
             Data.Range = Range;
             Data.Projection = glm::orthoZO(-40.0f, 40.0f, -40.0f, 40.0f, -200.f, 200.0f);
             
-            Shadowmap = Renderer::CreateRenderTarget("ShadowmapRT", 2048, 2048, TextureFormat::D32_FLOAT);
+            Shadowmap = Renderer::CreateRenderTarget("ShadowmapRT", 4096, 4096, TextureFormat::D32_FLOAT);
         }
         
         LightData Data;
