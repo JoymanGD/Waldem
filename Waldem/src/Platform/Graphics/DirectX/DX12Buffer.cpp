@@ -5,7 +5,7 @@
 
 namespace Waldem
 {
-    DX12Buffer::DX12Buffer(ID3D12Device* device, DX12CommandList* cmdList, BufferType type, void* data, uint32_t size) : Buffer(type, size)
+    DX12Buffer::DX12Buffer(ID3D12Device* device, DX12CommandList* cmdList, String name, BufferType type, void* data, uint32_t size) : Buffer(name, type, size)
     {
         D3D12_HEAP_PROPERTIES heapProps = {};
         heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;

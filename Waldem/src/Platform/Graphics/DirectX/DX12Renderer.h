@@ -40,7 +40,8 @@ namespace Waldem
         Texture2D* CreateTexture(String name, int width, int height, TextureFormat format, uint8_t* data = nullptr) override;
         RenderTarget* CreateRenderTarget(String name, int width, int height, TextureFormat format) override;
         void CopyRenderTarget(RenderTarget* dstRT, RenderTarget* srcRT) override;
-        Buffer* CreateBuffer(BufferType type, void* data, uint32_t size) override;
+        void CopyBuffer(Buffer* dstBuffer, Buffer* srcBuffer) override;
+        Buffer* CreateBuffer(String name, BufferType type, void* data, uint32_t size) override;
         void ClearRenderTarget(RenderTarget* rt) override;
         void ClearDepthStencil(RenderTarget* ds) override;
         void BeginUI() override;

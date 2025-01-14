@@ -45,7 +45,8 @@ namespace Waldem
         virtual Texture2D* CreateTexture(String name, int width, int height, TextureFormat format, uint8_t* data = nullptr) = 0;
         virtual RenderTarget* CreateRenderTarget(String name, int width, int height, TextureFormat format) = 0;
         virtual void CopyRenderTarget(RenderTarget* dstRT, RenderTarget* srcRT) = 0;
-        virtual Buffer* CreateBuffer(BufferType type, void* data, uint32_t size) = 0;
+        virtual void CopyBuffer(Buffer* dstBuffer, Buffer* srcBuffer) = 0;
+        virtual Buffer* CreateBuffer(String name, BufferType type, void* data, uint32_t size) = 0;
         virtual void ResourceBarrier(RenderTarget* rt, ResourceStates before, ResourceStates after) = 0;
         virtual void ResourceBarrier(Buffer* buffer, ResourceStates before, ResourceStates after) = 0;
         virtual void ClearRenderTarget(RenderTarget* rt) = 0;
@@ -84,7 +85,8 @@ namespace Waldem
         static Texture2D* CreateTexture(String name, int width, int height, TextureFormat format, uint8_t* data = nullptr);
         static RenderTarget* CreateRenderTarget(String name, int width, int height, TextureFormat format);
         static void CopyRenderTarget(RenderTarget* dstRT, RenderTarget* srcRT);
-        static Buffer* CreateBuffer(BufferType type, void* data, uint32_t size);
+        static void CopyBuffer(Buffer* dstBuffer, Buffer* srcBuffer);
+        static Buffer* CreateBuffer(String name, BufferType type, void* data, uint32_t size);
         static void ResourceBarrier(RenderTarget* rt, ResourceStates before, ResourceStates after);
         static void ResourceBarrier(Buffer* buffer, ResourceStates before, ResourceStates after);
         static void ClearRenderTarget(RenderTarget* rt);

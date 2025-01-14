@@ -5,4 +5,5 @@
 namespace Waldem
 {
     using String = std::string;
+    using uint = uint32_t;
 }

@@ -1,8 +1,5 @@
-#ifdef _DXC_COMPILER
-	#include "Complex.hlsl"
-#else
-	#include "../Complex.hlsl"
-#endif
+#include "../Complex.hlsl"
+#include "OceanResources.hlsl"
 
 #define PI 3.14159265359f
 
@@ -13,12 +10,6 @@ RWTexture2D<float4> HDx : register(u2);
 RWTexture2D<float4> HDy : register(u3);
 RWTexture2D<float4> HDz : register(u4);
 
-cbuffer MyConstantBuffer : register(b0)
-{
-	float2 Resolution;
-	uint N;
-}
-
 cbuffer MyPushConstants : register(b1)
 {
 	float t;
@@ -27,50 +18,33 @@ cbuffer MyPushConstants : register(b1)
 float PhillipsSpectrum(float2 k, float kM)
 {
     // Compute the Phillips spectrum
-    float A = 4.f;  // Amplitude scaling factor (tuned based on wind speed)
-	float V = 40.0f; // Wind speed
-	float2 W = float2(1.f, 1.f); // Wind direction
-	float g = 9.80665f; // Gravitational constant
-    float L = V*V/g;  // Large-scale wave length parameter (dependent on the environment)
+    float L = V*V/G;  // Large-scale wave length parameter (dependent on the environment)
 	float L2 = L*L;
-	float damping = 0.001f;
-	float l2 = L2 * damping * damping;
+	float l2 = Damping * Damping;
     float kML2 = kM * kM * L2;
 	float kW = dot(normalize(k), normalize(W));
 	float kW2 = kW*kW;
+	float kW4 = kW2*kW2;
 	float kMl2 = kM*kM*l2;
 	float kM4 = kM * kM * kM * kM;
-    float spectrum = A / kM4 * kW2 * exp(-1.0f / kML2) * exp(-kMl2);
+    // float spectrum = A / kM4 * kW4 * exp(-1.0f / kML2) * exp(-kMl2);
+    float spectrum = A * kW4 * exp(-1.0f / kML2) * exp(-kMl2) / kM4;
     return spectrum;
 }
 
 void GenerateInitialSpectrum(uint2 tid, out float4 h0, out float4 h0Inverse)
 {
-	int x = tid.x;
-	int z = tid.y;
-
-	int gridSize = Resolution.x;
-    
-	// Compute the wave vector components (kx, kz)
-	float kx = (2 * PI * (x - gridSize / 2)) / gridSize;
-	float kz = (2 * PI * (z - gridSize / 2)) / gridSize;
-    
-	// Compute the magnitude of the wave vector
-	float2 k = float2(kx, kz);
-	float kM = length(k);
-    
-	if (kM == 0.0f)
-	{
-		return;  // Skip for zero-frequency component (DC component)
-	}
+	float2 coords = tid - float(N)/2.0f;
+	float2 k = 2*PI*coords/L;
+	float kM = max(length(k), 0.0001f);
 
 	float spectrum = PhillipsSpectrum(k, kM);
 	float spectrumInverse = PhillipsSpectrum(-k, kM);
 
 	float4 noise = GaussianNoiseRenderTarget[tid];
 	
-	float halfSpectrumSqrt = sqrt(spectrum/2.0f);
-	float halfSpectrumInverseSqrt = sqrt(spectrumInverse/2.0f);
+	float halfSpectrumSqrt = clamp(sqrt(spectrum)/sqrt(2.0f), -4000, 14000);
+	float halfSpectrumInverseSqrt = clamp(sqrt(spectrumInverse)/sqrt(2.0f), -4000, 14000);
     
 	h0 = float4(noise.x * halfSpectrumSqrt, noise.y * halfSpectrumSqrt, 0, 1);
 	h0Inverse = float4(noise.x * halfSpectrumInverseSqrt, noise.y * halfSpectrumInverseSqrt, 0, 1);
@@ -78,22 +52,21 @@ void GenerateInitialSpectrum(uint2 tid, out float4 h0, out float4 h0Inverse)
 
 void GenerateAxesSpectrums(uint2 tid, float2 h0, float2 h0Inverse, out float4 hDx, out float4 hDy, out float4 hDz)
 {
-	uint L = 1000;
-	
 	float2 coords = tid - float(N)/2.0f;
-	float2 k = 2.0f * PI * coords / float(L);
+	float2 k = 2*PI*coords/L;
 	float kM = max(length(k), 0.0001f);
-	float w = sqrt(9.81f * kM);
+	
+	float w = sqrt(G * kM);
 
-	complex fourier = { h0.x, h0.y };
+	complex fourier = ccreate(h0.x, h0.y);
 	complex fourierConj = cconj(ccreate(h0Inverse.x, h0Inverse.y));
 
-	float cosWt = cos(w * t);
-	float sinWt = sin(w * t);
+	float cosWt = cos(w * t * SimulationSpeed);
+	float sinWt = sin(w * t * SimulationSpeed);
 
 	//euler formula
-	complex e = { cosWt, sinWt };
-	complex eInv = { cosWt, -sinWt };
+	complex e = ccreate(cosWt, sinWt);
+	complex eInv = ccreate(cosWt, -sinWt);
 
 	//dy
 	complex dy = cadd(cmul(fourier, e), cmul(fourierConj, eInv));

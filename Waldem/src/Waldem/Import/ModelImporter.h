@@ -1,7 +1,6 @@
 #pragma once
 
 #include "assimp/Importer.hpp"
-#include "assimp/scene.h"
 #include "Waldem/Interfaces/Importer.h"
 #include "Waldem/Renderer/Model/Model.h"
 

@@ -558,6 +558,13 @@ namespace Waldem
         CommandList->CopyResource(dst, src);
     }
 
+    void DX12CommandList::CopyBuffer(Buffer* dstBuffer, Buffer* srcBuffer)
+    {
+        ID3D12Resource* dst = (ID3D12Resource*)dstBuffer->GetPlatformResource();
+        ID3D12Resource* src = (ID3D12Resource*)srcBuffer->GetPlatformResource();
+        CommandList->CopyResource(dst, src);
+    }
+
     void DX12CommandList::UpdateSubresoures(ID3D12Resource* destResource, ID3D12Resource* srcResource, uint32_t numSubresources, D3D12_SUBRESOURCE_DATA* subresourceData)
     {
         UpdateSubresources(CommandList, destResource, srcResource, 0, 0, numSubresources, subresourceData);

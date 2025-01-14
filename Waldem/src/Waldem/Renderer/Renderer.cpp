@@ -132,9 +132,14 @@ namespace Waldem
         Instance->PlatformRenderer->CopyRenderTarget(dstRT, srcRT);
     }
 
-    Buffer* Renderer::CreateBuffer(BufferType type, void* data, uint32_t size)
+    void Renderer::CopyBuffer(Buffer* dstBuffer, Buffer* srcBuffer)
     {
-        return Instance->PlatformRenderer->CreateBuffer(type, data, size);
+        Instance->PlatformRenderer->CopyBuffer(dstBuffer, srcBuffer);
+    }
+
+    Buffer* Renderer::CreateBuffer(String name, BufferType type, void* data, uint32_t size)
+    {
+        return Instance->PlatformRenderer->CreateBuffer(name, type, data, size);
     }
 
     void Renderer::ResourceBarrier(RenderTarget* rt, ResourceStates before, ResourceStates after)

@@ -419,9 +419,14 @@ namespace Waldem
         WorldCommandList.first->CopyRenderTarget(dstRT, srcRT);
     }
 
-    Buffer* DX12Renderer::CreateBuffer(BufferType type, void* data, uint32_t size)
+    void DX12Renderer::CopyBuffer(Buffer* dstBuffer, Buffer* srcBuffer)
     {
-        return new DX12Buffer(Device, WorldCommandList.first, type, data, size);
+        WorldCommandList.first->CopyBuffer(dstBuffer, srcBuffer);
+    }
+
+    Buffer* DX12Renderer::CreateBuffer(String name, BufferType type, void* data, uint32_t size)
+    {
+        return new DX12Buffer(Device, WorldCommandList.first, name, type, data, size);
     }
 
     void DX12Renderer::ClearRenderTarget(RenderTarget* rt)

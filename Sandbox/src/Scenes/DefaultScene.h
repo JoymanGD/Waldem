@@ -9,13 +9,6 @@
 
 namespace Sandbox
 {
-    struct SceneConstantBuffer
-    {
-        Waldem::Matrix4 ViewProjectionMatrix;
-        Waldem::Matrix4 ModelMatrix;
-        uint32_t LightCount;
-    };
-    
     class DefaultScene : public Waldem::Scene
     {
     public:

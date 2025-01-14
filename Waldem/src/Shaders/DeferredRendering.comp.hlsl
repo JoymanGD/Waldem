@@ -49,6 +49,7 @@ void main(uint2 tid : SV_DispatchThreadID)
     float shadowFactor = CalculateShadowFactor(Shadowmap, cmpSampler, worldPosition, normal, light.View, light.Projection);
 
     float3 resultColor = albedo.rgb * AMBIENT + albedo.rgb * light.Color * light.Intensity * saturate(dot(normal, lightDirection)) * saturate(shadowFactor);
+    // float3 resultColor = normal;
 
     //Writing the result to the render target
     TargetRT[tid] = float4(resultColor, 1.0f);
