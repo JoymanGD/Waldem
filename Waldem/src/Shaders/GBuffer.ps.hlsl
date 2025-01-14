@@ -19,7 +19,7 @@ struct PS_OUTPUT
 
 SamplerState myStaticSampler : register(s0);
 
-Texture2D DiffuseTextures[MAX_TEXTURES] : register(t1);
+Texture2D DiffuseTextures[] : register(t1);
 
 PS_OUTPUT main(PS_INPUT input)
 {

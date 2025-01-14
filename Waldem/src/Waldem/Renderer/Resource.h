@@ -21,6 +21,8 @@ namespace Waldem
         WArray<Sampler> Samplers;
         RenderTarget* RT = nullptr;
 
+        Resource() = default;
+        
         //constant buffers
         Resource(String name, ResourceType type, void* data, uint32_t stride, Vector2 size, uint32_t slot)
         {

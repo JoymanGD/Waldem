@@ -24,17 +24,18 @@ float PhillipsSpectrum(float2 k, float kM)
     float kML2 = kM * kM * L2;
 	float kW = dot(normalize(k), normalize(W));
 	float kW2 = kW*kW;
-	float kW4 = kW2*kW2;
+	float kW6 = kW2*kW2*kW2;
 	float kMl2 = kM*kM*l2;
 	float kM4 = kM * kM * kM * kM;
     // float spectrum = A / kM4 * kW4 * exp(-1.0f / kML2) * exp(-kMl2);
-    float spectrum = A * kW4 * exp(-1.0f / kML2) * exp(-kMl2) / kM4;
+    float spectrum = A * exp(-1.0f / kML2) / kM4 * kW6 * exp(-kMl2);
     return spectrum;
 }
 
 void GenerateInitialSpectrum(uint2 tid, out float4 h0, out float4 h0Inverse)
 {
 	float2 coords = tid - float(N)/2.0f;
+
 	float2 k = 2*PI*coords/L;
 	float kM = max(length(k), 0.0001f);
 
@@ -43,16 +44,17 @@ void GenerateInitialSpectrum(uint2 tid, out float4 h0, out float4 h0Inverse)
 
 	float4 noise = GaussianNoiseRenderTarget[tid];
 	
-	float halfSpectrumSqrt = clamp(sqrt(spectrum)/sqrt(2.0f), -4000, 14000);
-	float halfSpectrumInverseSqrt = clamp(sqrt(spectrumInverse)/sqrt(2.0f), -4000, 14000);
+	float halfSpectrumSqrt = clamp(sqrt(spectrum)/sqrt(2.0f), -4000.f, 140000.f);
+	float halfSpectrumInverseSqrt = clamp(sqrt(spectrumInverse)/sqrt(2.0f), -4000.f, 140000.f);
     
-	h0 = float4(noise.x * halfSpectrumSqrt, noise.y * halfSpectrumSqrt, 0, 1);
-	h0Inverse = float4(noise.x * halfSpectrumInverseSqrt, noise.y * halfSpectrumInverseSqrt, 0, 1);
+	h0 = float4(noise.xy * halfSpectrumSqrt, 0, 1);
+	h0Inverse = float4(noise.zw * halfSpectrumInverseSqrt, 0, 1);
 }
 
 void GenerateAxesSpectrums(uint2 tid, float2 h0, float2 h0Inverse, out float4 hDx, out float4 hDy, out float4 hDz)
 {
 	float2 coords = tid - float(N)/2.0f;
+
 	float2 k = 2*PI*coords/L;
 	float kM = max(length(k), 0.0001f);
 	

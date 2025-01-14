@@ -33,11 +33,14 @@ namespace Waldem
 
                 if(resources[i].Type == RTYPE_Texture)
                 {
-                    numDescriptors = MAX_TEXTURES;
+                    if(resources[i].NumResources > 1)
+                    {
+                        numDescriptors = MAX_TEXTURES;
+                    }
                 }
                 else if(resources[i].Type == RTYPE_Buffer || resources[i].Type == RTYPE_RWBuffer)
                 {
-                    if(numDescriptors > 1)
+                    if(resources[i].NumResources > 1)
                     {
                         numDescriptors = MAX_BUFFERS;
                     }

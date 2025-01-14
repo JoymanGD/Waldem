@@ -11,10 +11,5 @@ cbuffer OceanParameters : register(b0)
     float WaveChoppiness;
     float NormalStrength;
     float SimulationSpeed;
-}
-
-cbuffer OceanExtraParameters : register(b2)
-{
-    float Motion;
-    float Distortion;
+    uint2 PatchesGridSize;
 }

@@ -8,9 +8,6 @@
 
 namespace Waldem
 {
-#define MAX_TEXTURES 1024
-#define MAX_BUFFERS 128
-    
     DX12PixelShader::DX12PixelShader(const String& name, const String& entryPoint) : PixelShader(name, entryPoint)
     {
         HRESULT hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&DxcUtils));
