@@ -4,7 +4,8 @@ RWTexture2D<float4> GaussianNoiseRenderTarget : register(u0);
 
 cbuffer MyPushConstants : register(b0)
 {
-    float ElapsedTime;
+    float RandomValue1;
+    float RandomValue2;
 }
 
 // MT19937 constants
@@ -63,14 +64,14 @@ float mt19937_random_float(inout uint mtState[MT19937_N], inout uint mtIndex)
 }
 
 // Box-Muller transform to generate Gaussian random numbers
-void GenerateGaussianRandom(uint2 dispatchThreadID, out float real, out float imag)
+void GenerateGaussianRandom(uint2 dispatchThreadID, float random, out float real, out float imag)
 {
 	uint mtState[MT19937_N];
     uint mtIndex;
-    uint timeInt = asuint(ElapsedTime);
+    uint r = asuint(random);
 
     // Initialize the Mersenne Twister state using a unique seed based on dispatchThreadID
-    uint seed = dispatchThreadID.x + dispatchThreadID.y * 12345 + timeInt;
+    uint seed = dispatchThreadID.x + dispatchThreadID.y * 12345 + r;
     mt19937_seed(seed, mtState, mtIndex);
 
     // Generate two uniform random numbers in the range [0, 1)
@@ -91,8 +92,9 @@ void GenerateGaussianRandom(uint2 dispatchThreadID, out float real, out float im
 [numthreads(8, 8, 1)]
 void main(uint2 tid : SV_DispatchThreadID)
 {
-    float real, imag;
-    GenerateGaussianRandom(tid, real, imag);
+    float real1, imag1, real2, imag2;
+    GenerateGaussianRandom(tid, RandomValue1, real1, imag1);
+    GenerateGaussianRandom(tid, RandomValue1, real2, imag2);
     
-    GaussianNoiseRenderTarget[tid] = float4(real, imag, 0.0f, 0.0f); 
+    GaussianNoiseRenderTarget[tid] = float4(real1, imag1, real2, imag2); 
 }

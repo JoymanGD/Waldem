@@ -22,7 +22,7 @@ SamplerComparisonState cmpSampler : register(s1);
 
 StructuredBuffer<Light> Lights : register(t0);
 Texture2D<float> Shadowmap : register(t1);
-Texture2D DiffuseTextures[MAX_TEXTURES] : register(t3);
+Texture2D DiffuseTextures[] : register(t3);
 
 float4 main(PS_INPUT input) : SV_TARGET
 {

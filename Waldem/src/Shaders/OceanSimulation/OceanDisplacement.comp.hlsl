@@ -1,10 +1,11 @@
 #include "OceanResources.hlsl"
+#include "../Core.hlsl"
 #include "../Types.hlsl"
 
 Texture2D Normal : register(t0);
 Texture2D Displacement : register(t1);
 StructuredBuffer<Vertex> VertexBufferOriginal : register(t2);
-RWStructuredBuffer<Vertex> VertexBuffer : register(u0);
+RWStructuredBuffer<Vertex> VertexBuffers[] : register(u0);
 
 [numthreads(16, 16, 1)]
 void main(uint2 tid : SV_DispatchThreadID)
@@ -18,14 +19,19 @@ void main(uint2 tid : SV_DispatchThreadID)
     
     uint index = tid.y * N + tid.x;
 
-    Vertex vertex = VertexBuffer[index];
-    Vertex originalVertex = VertexBufferOriginal[index];
+    int vertexBufferArraySize = PatchesGridSize.x * PatchesGridSize.y;
 
-    vertex.Position.y = originalVertex.Position.y + displacement.y * WaveHeight;
-    vertex.Position.x = originalVertex.Position.x - displacement.x * WaveChoppiness;
-    vertex.Position.z = originalVertex.Position.z - displacement.z * WaveChoppiness;
+    for (int i = 0; i < vertexBufferArraySize; ++i)
+    {
+        Vertex vertex = VertexBuffers[i][index];
+        Vertex originalVertex = VertexBufferOriginal[index];
 
-    vertex.Normal = float3(normal.x, normal.z, normal.y);
+        vertex.Position.y = originalVertex.Position.y + displacement.y * WaveHeight;
+        vertex.Position.x = originalVertex.Position.x - displacement.x * WaveChoppiness;
+        vertex.Position.z = originalVertex.Position.z - displacement.z * WaveChoppiness;
 
-    VertexBuffer[index] = vertex;
+        vertex.Normal = float3(normal.x, normal.z, normal.y);
+
+        VertexBuffers[i][index] = vertex;
+    }
 }
