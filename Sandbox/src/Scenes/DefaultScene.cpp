@@ -14,17 +14,19 @@ namespace Sandbox
 		//Entities
 		auto sponzaModel = importer.Import("Content/Models/Sponza/Sponza2.gltf", true);
 		//firstSponza
+		int index = 0;
 		for (Waldem::Mesh* mesh : sponzaModel->GetMeshes())
 		{
-			auto entity = ecsManager->CreateEntity();
+			auto entity = ecsManager->CreateEntity("Sponza1_" + std::to_string(index++));
 			entity.Add<Waldem::MeshComponent>(mesh);
 			entity.Add<Waldem::Transform>(mesh->ObjectMatrix);
 		}
 		
 		//secondSponza
+		index = 0;
 		for (Waldem::Mesh* mesh : sponzaModel->GetMeshes())
 		{
-			auto entity = ecsManager->CreateEntity();
+			auto entity = ecsManager->CreateEntity("Sponza2_" + std::to_string(index++));
 			entity.Add<Waldem::MeshComponent>(mesh);
 			Waldem::Transform transform = mesh->ObjectMatrix;
 			transform.Translate({50, 0, 0});
@@ -37,7 +39,7 @@ namespace Sandbox
 		for (Waldem::Mesh* mesh : waterPlaneModel->GetMeshes())
 		{
 			mesh->SetMaterial(Waldem::Material(waterTexture));
-			auto waterPlaneEntity = ecsManager->CreateEntity();
+			auto waterPlaneEntity = ecsManager->CreateEntity("WaterPlane");
 			waterPlaneEntity.Add<Waldem::MeshComponent>(mesh);
 			Waldem::Transform transform = mesh->ObjectMatrix;
 			transform.Translate({0,20,0});
@@ -45,7 +47,7 @@ namespace Sandbox
 			waterPlaneEntity.Add<Waldem::Ocean>();
 		}
 		
-		auto dirLightEntity = ecsManager->CreateEntity();
+		auto dirLightEntity = ecsManager->CreateEntity("DirectionalLight");
 		auto& lightTransform = dirLightEntity.Add<Waldem::Transform>(Waldem::Vector3(0, 0, 0));
 		lightTransform.SetEuler(90, 0, 0);
 		dirLightEntity.Add<Waldem::Light>(Waldem::Vector3(1, 1, 1), 2.0f, Waldem::LightType::Directional, 100.0f);

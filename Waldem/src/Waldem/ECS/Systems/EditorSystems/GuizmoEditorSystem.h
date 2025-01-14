@@ -1,20 +1,19 @@
 #pragma once
 
 #include "ImGuizmo.h"
-#include "System.h"
 #include "glm/gtc/type_ptr.hpp"
 #include "Waldem/KeyCodes.h"
 #include "Waldem/MouseButtonCodes.h"
 #include "Waldem/ECS/Components/MainCamera.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
-#include "Waldem/ECS/Components/ModelComponent.h"
 #include "Waldem/ECS/Components/Selected.h"
+#include "Waldem/ECS/Systems/System.h"
 #include "Waldem/Editor/Editor.h"
 #include "Waldem/World/Camera.h"
 
 namespace Waldem
 {
-    class WALDEM_API EditorTransformsManipulationSystem : ISystem
+    class WALDEM_API GuizmoEditorSystem : public ISystem
     {
         Window* Window;
         ImGuizmo::OPERATION CurrentOperation = ImGuizmo::TRANSLATE;
@@ -22,7 +21,7 @@ namespace Waldem
         bool CanModifyManipulationSettings = false;
         
     public:
-        EditorTransformsManipulationSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
+        GuizmoEditorSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
         
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
         {
@@ -70,7 +69,7 @@ namespace Waldem
             {
                 if(isPressed)
                 {
-                    for (auto [entity, mesh, transform, selected] : ECSManager->EntitiesWith<MeshComponent, Transform, Selected>())
+                    for (auto [entity, transform, selected] : ECSManager->EntitiesWith<Transform, Selected>())
                     {
                         entity.Remove<Selected>();
                     }

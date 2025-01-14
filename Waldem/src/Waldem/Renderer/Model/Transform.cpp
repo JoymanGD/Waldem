@@ -11,7 +11,7 @@ namespace Waldem
         Rotation = { 1, 0, 0, 0 };
         LocalScale = Vector3(1.0f);
 
-        CompileMatrix();
+        Update();
     }
 
     Transform::Transform(Vector3 position, Quaternion rotation, Vector3 localScale)
@@ -20,7 +20,7 @@ namespace Waldem
         Rotation = rotation;
         LocalScale = localScale;
 
-        CompileMatrix();
+        Update();
     }
 
     Transform::Transform(Matrix4 matrix)
@@ -34,14 +34,14 @@ namespace Waldem
         Position = { 0, 0, 0 };
         Rotation = { 1, 0, 0, 0 };
         
-        CompileMatrix();
+        Update();
     }
 
     void Transform::SetPosition(Vector3 newPosition)
     {
         Position = newPosition;
         
-        CompileMatrix();
+        Update();
     }
 
     void Transform::SetPosition(float x, float y, float z)
@@ -53,14 +53,14 @@ namespace Waldem
     {
         Position += translation;
 
-        CompileMatrix();
+        Update();
     }
 
     void Transform::Rotate(Quaternion rotation)
     {
         Rotation = rotation * Rotation;
         
-        CompileMatrix();
+        Update();
     }
 
     void Transform::Rotate(float yaw, float pitch, float roll)
@@ -73,7 +73,7 @@ namespace Waldem
         Rotation = horizontalRotation * Rotation;
         Rotation = rollRotation * Rotation;
 
-        CompileMatrix();
+        Update();
     }
 
     void Transform::LookAt(Vector3 target)
@@ -98,7 +98,7 @@ namespace Waldem
         euler = radians(euler);
         Rotation = Quaternion(euler);
         
-        CompileMatrix();
+        Update();
     }
 
     void Transform::SetEuler(float eulerX, float eulerY, float eulerZ)
@@ -112,14 +112,14 @@ namespace Waldem
     {
         Rotation = newRotation;
 
-        CompileMatrix();
+        Update();
     }
 
     void Transform::Scale(Vector3 localScale)
     {
         LocalScale = localScale;
         
-        CompileMatrix();
+        Update();
     }
 
     void Transform::SetMatrix(Matrix4 matrix)
@@ -142,12 +142,7 @@ namespace Waldem
         Rotation = rotation;
     }
 
-    Matrix4 Transform::Inverse()
-    {
-        return inverse(Matrix);
-    }
-
-    void Transform::CompileMatrix()
+    void Transform::Update()
     {
         //TODO: Optimize this
         Matrix = Matrix4(translate(Matrix4(1.0f), Position) * mat4_cast(Rotation) * scale(Matrix4(1.0f), LocalScale));

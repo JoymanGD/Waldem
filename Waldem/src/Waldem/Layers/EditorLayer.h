@@ -1,12 +1,15 @@
 #pragma once
 
-#include <SDL_mouse.h>
 #include "imgui.h"
 #include "backends/imgui_impl_sdl2.h"
 #include "Waldem/ECS/Systems/DebugSystem.h"
-#include "Waldem/ECS/Systems/EditorTransformsManipulationSystem.h"
+#include "Waldem/ECS/Systems/EditorSystems/GuizmoEditorSystem.h"
 #include "Waldem/ECS/Systems/FreeLookCameraSystem.h"
-#include "Waldem/ECS/Systems/OceanSimulationEditorSystem.h"
+#include "Waldem/ECS/Systems/EditorSystems/EntityDetailsWidgetContainer.h"
+#include "Waldem/ECS/Systems/EditorSystems/MainWidgetContainer.h"
+#include "Waldem/ECS/Systems/EditorSystems/Widgets/HierarchyWidget.h"
+#include "Waldem/ECS/Systems/EditorSystems/Widgets/ComponentWidgets/OceanComponentWidget.h"
+#include "Waldem/ECS/Systems/EditorSystems/Widgets/ComponentWidgets/TransformComponentWidget.h"
 #include "Waldem/Input/InputManager.h"
 #include "Waldem/Layers/Layer.h"
 #include "Waldem/Renderer/Renderer.h"
@@ -15,12 +18,14 @@ namespace Waldem
 {
     class WALDEM_API EditorLayer : public Layer
     {
+    private:
+        MainWidgetContainer* MainWidgetContainerSystem;
     public:
         EditorLayer(Window* window, ecs::Manager* ecsManager, ResourceManager* resourceManager) : Layer("EditorLayer", window, ecsManager, resourceManager)
         {
             EditorInputManager = {};
             
-            auto cameraEntity = CurrentECSManager->CreateEntity();
+            auto cameraEntity = CurrentECSManager->CreateEntity("Camera");
             float aspectRatio = window->GetWidth() / window->GetHeight();
             cameraEntity.Add<Transform>(Vector3(0, 0, 0));
             cameraEntity.Add<Camera>(70.0f, aspectRatio, 0.1f, 100.0f, 30.0f, 30.0f);
@@ -28,12 +33,23 @@ namespace Waldem
             
             //do it after all entities set up
             CurrentECSManager->Refresh();
+
+            MainWidgetContainerSystem = new MainWidgetContainer(CurrentECSManager,
+            {
+                new EntityDetailsWidgetContainer(CurrentECSManager,
+                {
+                    new OceanComponentWidget(CurrentECSManager),
+                    new TransformComponentWidget(CurrentECSManager)
+                }),
+                new HierarchyWidget(CurrentECSManager)
+            });
             
-            UISystems.Add((ISystem*)new EditorTransformsManipulationSystem(CurrentECSManager));
-            UISystems.Add((ISystem*)new OceanSimulationEditorSystem(CurrentECSManager));
+            UISystems.Add(new GuizmoEditorSystem(CurrentECSManager));
             UpdateSystems.Add((ISystem*)new FreeLookCameraSystem(CurrentECSManager));
         	
 			SceneData sceneData = { window };
+
+            MainWidgetContainerSystem->Initialize(&sceneData, &EditorInputManager, CurrentResourceManager);
         	
             for (ISystem* system : UISystems)
             {
@@ -127,7 +143,9 @@ namespace Waldem
                     ImGui::EndMenu();
                 }
                 ImGui::EndMainMenuBar();
-            } 
+            }
+            
+            MainWidgetContainerSystem->Update(deltaTime);
             
             for (ISystem* system : UISystems)
             {
