@@ -266,7 +266,7 @@ namespace Waldem
                         Matrix4 rotationMatrix = rotate(Matrix4(1.0f), deltaX, cameraUp) * rotate(Matrix4(1.0f), deltaY, cameraRight);
                         LightTargetDirection = normalize(Vector3(rotationMatrix * Vector4(LightTargetDirection, 0.0f)));
 
-                        transform.LookAt(transform.GetPosition() + LightTargetDirection);
+                        transform.LookAt(transform.Position + LightTargetDirection);
                     }
                 
                     lastMouseX = MousePos.x;

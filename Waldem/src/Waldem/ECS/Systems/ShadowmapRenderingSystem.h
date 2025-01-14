@@ -71,8 +71,8 @@ namespace Waldem
                 {
                     for (auto [cameraEntity, camera, cameraTransform, mainCamera] : ECSManager->EntitiesWith<Camera, Transform, MainCamera>())
                     {
-                        auto currentPosition = cameraTransform.GetPosition();
-                        currentPosition.y = lightTransform.GetPosition().y;
+                        auto currentPosition = cameraTransform.Position;
+                        currentPosition.y = lightTransform.Position.y;
                         lightTransform.SetPosition(currentPosition);
                         break;
                     }
