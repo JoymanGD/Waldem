@@ -31,6 +31,7 @@ namespace Waldem
         void SetMatrix(Matrix4 matrix);
         Matrix4 Inverse() { return inverse(Matrix); }
         void Update();
+        void DecompileMatrix();
         
         Matrix4 Matrix;
         Vector3 Position;
