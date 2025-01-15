@@ -99,6 +99,7 @@ namespace Waldem
                 for (auto [transformEntity, transform, selected] : ECSManager->EntitiesWith<Transform, Selected>())
                 {
                     ImGuizmo::Manipulate(value_ptr(camera.ViewMatrix), value_ptr(camera.ProjectionMatrix), CurrentOperation, CurrentMode, value_ptr(transform.Matrix));
+                    transform.DecompileMatrix();
                 }
             }
         }

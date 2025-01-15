@@ -147,4 +147,21 @@ namespace Waldem
         //TODO: Optimize this
         Matrix = Matrix4(translate(Matrix4(1.0f), Position) * mat4_cast(Rotation) * scale(Matrix4(1.0f), LocalScale));
     }
+
+    void Transform::DecompileMatrix()
+    {
+        Position = Matrix[3];
+
+        Vector3 scale;
+        scale.x = length(Vector3(Matrix[0]));
+        scale.y = length(Vector3(Matrix[1]));
+        scale.z = length(Vector3(Matrix[2]));
+        LocalScale = scale;
+
+        Matrix4 rotationMatrix = Matrix;
+        rotationMatrix[0] /= scale.x;
+        rotationMatrix[1] /= scale.y;
+        rotationMatrix[2] /= scale.z;
+        Rotation = quat_cast(rotationMatrix);
+    }
 }
