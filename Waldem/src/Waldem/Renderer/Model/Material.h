@@ -7,14 +7,15 @@ namespace Waldem
     {
     public:
         Material() = default;
-        Material(Texture2D* diffuseTexture)
-        {
-            DiffuseTexture = diffuseTexture;
-        }
+        Material(Texture2D* diffuse, Texture2D* normal, Texture2D* metalRoughness) : Diffuse(diffuse), Normal(normal), MetalRoughness(metalRoughness) {}
 
-        Texture2D* GetDiffuseTexture() { return DiffuseTexture; }
+        Texture2D* GetDiffuseTexture() { return Diffuse; }
+        Texture2D* GetNormalTexture() { return Normal; }
+        Texture2D* GetMetalRoughnessTexture() { return MetalRoughness; }
         
     private:
-        Texture2D* DiffuseTexture;
+        Texture2D* Diffuse;
+        Texture2D* Normal;
+        Texture2D* MetalRoughness;
     };
 }

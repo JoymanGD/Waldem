@@ -11,6 +11,8 @@ namespace Waldem
     
     DX12RootSignature::DX12RootSignature(ID3D12Device* device, DX12CommandList* cmdList, WArray<Resource> resources) : CmdList(cmdList)
     {
+        uint32_t initializedDescriptorsAmount = 0;
+        
         WArray<D3D12_ROOT_PARAMETER> rootParams;
             
         for (uint32_t i = 0; i < resources.Num(); ++i)
@@ -47,7 +49,7 @@ namespace Waldem
                 }
             
                 range->NumDescriptors = numDescriptors;
-                range->OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+                range->OffsetInDescriptorsFromTableStart = 0;
                 range->RegisterSpace = 0;
                 range->RangeType = DX12Helper::ResourceTypeToRangeType(resources[i].Type);
                 range->BaseShaderRegister = resources[i].Slot;
@@ -57,11 +59,11 @@ namespace Waldem
                 param.DescriptorTable.pDescriptorRanges = range;
                 param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
                 
-                InitializedDescriptorsAmount += resources[i].NumResources;
+                initializedDescriptorsAmount += resources[i].NumResources;
             }
 
             rootParams.Add(param);
-            RootParamTypes.Add(resources[i].Type);
+            RootParamDatas.Add({ resources[i].Type, resources[i].NumResources });
         }
         
         D3D12_STATIC_SAMPLER_DESC staticSampler = {};
@@ -102,7 +104,7 @@ namespace Waldem
             throw std::runtime_error("Failed to create root signature!");
         }
 
-        SetResources(device, cmdList, resources, InitializedDescriptorsAmount);
+        SetResources(device, cmdList, resources, initializedDescriptorsAmount);
     }
 
     DX12RootSignature::~DX12RootSignature()
@@ -183,7 +185,8 @@ namespace Waldem
                 ID3D12Resource* readbackResourceBuffer = nullptr;
 
                 uint32_t size;
-
+                
+#pragma region SwitchStatement
                 switch (resourceDesc.Type)
                 {
                 case RTYPE_Sampler:
@@ -326,7 +329,6 @@ namespace Waldem
                             
                         if(resourceDesc.Buffers.Num() != 0)
                         {
-                            // uploadResourceBuffer = (ID3D12Resource*)resourceDesc.Buffers[i]->GetPlatformResource();
                             defaultResourceBuffer = (ID3D12Resource*)resourceDesc.Buffers[j]->GetPlatformResource();
                         }
                         else
@@ -387,7 +389,6 @@ namespace Waldem
                         
                         if(resourceDesc.Textures.Num() != 0)
                         {
-                            // uploadResourceBuffer = (ID3D12Resource*)resourceDesc.Textures[i]->GetPlatformResource();
                             defaultResourceBuffer = (ID3D12Resource*)resourceDesc.Textures[j]->GetPlatformResource();
                         }
                         else
@@ -428,7 +429,6 @@ namespace Waldem
                             nullptr,
                             IID_PPV_ARGS(&uploadResourceBuffer));
                         
-                        // uploadResourceBuffer = (ID3D12Resource*)resourceDesc.RT->GetPlatformResource();
                         defaultResourceBuffer = (ID3D12Resource*)resourceDesc.RT->GetPlatformResource();
                         
                         D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -463,7 +463,6 @@ namespace Waldem
                             nullptr,
                             IID_PPV_ARGS(&uploadResourceBuffer));
                         
-                        // uploadResourceBuffer = (ID3D12Resource*)resourceDesc.RT->GetPlatformResource();
                         defaultResourceBuffer = (ID3D12Resource*)resourceDesc.RT->GetPlatformResource();
                         
                         D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
@@ -486,6 +485,8 @@ namespace Waldem
                     break;
                 }
 
+#pragma endregion
+
                 if(resourceDesc.Type == RTYPE_Sampler)
                 {
                     ResourcesMap.Add(resourceDesc.Name, new ResourceData(resourceDesc, i ));
@@ -497,8 +498,8 @@ namespace Waldem
                 }
                 else
                 {
-                    uploadResourceBuffer->SetName(DX12Helper::StringToLPCWSTR(resourceDesc.Name + "_Upload").c_str());
-                    defaultResourceBuffer->SetName(DX12Helper::StringToLPCWSTR(resourceDesc.Name + "_Default").c_str());
+                    uploadResourceBuffer->SetName(DX12Helper::StringToLPCWSTR(resourceDesc.Name + "_Upload_" + std::to_string(j)).c_str());
+                    defaultResourceBuffer->SetName(DX12Helper::StringToLPCWSTR(resourceDesc.Name + "_Default_" + std::to_string(j)).c_str());
                     ResourcesMap.Add(resourceDesc.Name, new ResourceData(uploadResourceBuffer, defaultResourceBuffer, readbackResourceBuffer, resourceDesc, i));
 
                     if(resourceDesc.Data)

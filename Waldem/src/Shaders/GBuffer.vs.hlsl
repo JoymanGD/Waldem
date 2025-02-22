@@ -12,6 +12,7 @@ struct PS_INPUT
     float4 Position : SV_POSITION;
     float4 WorldPosition : POSITION;
     float3 Normal : NORMAL;
+    float3 Tangent : TANGENT;
     float2 UV : TEXCOORD;
     uint MeshId : MESH_ID;
 };
@@ -33,12 +34,13 @@ PS_INPUT main(VS_INPUT input)
 {
     PS_INPUT output;
 
-    output.WorldPosition = mul(WorldTransforms[MeshId], float4(input.Position, 1));
+    output.WorldPosition = mul(WorldTransforms[input.MeshId], float4(input.Position, 1));
     output.Position = mul(view, output.WorldPosition);
     output.Position = mul(proj, output.Position);
-    output.Normal = normalize(mul(WorldTransforms[MeshId], float4(input.Normal, 0)).xyz);
+    output.Normal = normalize(mul(WorldTransforms[input.MeshId], float4(input.Normal, 0)).xyz);
+    output.Tangent = normalize(mul(WorldTransforms[input.MeshId], float4(input.Tangent, 0)).xyz);
     output.UV = input.UV;
-    output.MeshId = MeshId;
+    output.MeshId = input.MeshId;
 
     return output;
 }

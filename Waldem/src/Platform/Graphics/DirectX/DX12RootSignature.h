@@ -11,6 +11,12 @@
 
 namespace Waldem
 {
+    struct RootParamData
+    {
+        ResourceType Type;
+        uint32_t NumDescriptors;
+    };
+    
     class WALDEM_API DX12RootSignature : public RootSignature
     {
     public:
@@ -21,17 +27,15 @@ namespace Waldem
         void ReadbackResourceData(String name, void* destinationData) override;
         ID3D12DescriptorHeap* GetResourcesHeap() const { return ResourcesHeap; }
         ID3D12DescriptorHeap* GetSamplersHeap() const { return SamplersHeap; }
-        WArray<ResourceType> GetRootParamTypes() { return RootParamTypes; }
-        WMap<String, ResourceData*>& GetResourcesMap() { return ResourcesMap; }
+        WArray<RootParamData> GetRootParamDatas() { return RootParamDatas; }
         
     private:
         void SetResources(ID3D12Device* device, DX12CommandList* cmdList, WArray<Resource> resourceDescs, uint32_t numDescriptors);
 
         DX12CommandList* CmdList;
         ID3D12RootSignature* NativeRootSignature;
-        WArray<ResourceType> RootParamTypes;
+        WArray<RootParamData> RootParamDatas;
         WMap<String, ResourceData*> ResourcesMap;
-        uint32_t InitializedDescriptorsAmount = 0;
         ID3D12DescriptorHeap* ResourcesHeap;
         ID3D12DescriptorHeap* SamplersHeap;
     };

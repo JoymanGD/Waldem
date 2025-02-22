@@ -229,6 +229,7 @@
     <ClInclude Include="src\Waldem\Renderer\Shader.h" />
     <ClInclude Include="src\Waldem\Renderer\Texture.h" />
     <ClInclude Include="src\Waldem\Renderer\TextureFormat.h" />
+    <ClInclude Include="src\Waldem\Renderer\TextureType.h" />
     <ClInclude Include="src\Waldem\SceneManagement\Scene.h" />
     <ClInclude Include="src\Waldem\SceneManagement\SceneManager.h" />
     <ClInclude Include="src\Waldem\Time.h" />
@@ -936,6 +937,17 @@
       <ShaderType>Compute</ShaderType>
       <ShaderModel>6.5</ShaderModel>
       <EntryPointName>main</EntryPointName>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\PBR.hlsl">
+      <ObjectFileOutput>..\bin\Debug\Waldem\%(Filename).cso</ObjectFileOutput>
+      <TrackerLogDirectory>..\bin-int\Debug\Waldem\Waldem.tlog\</TrackerLogDirectory>
+      <EntryPointName>main</EntryPointName>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <ShaderModel>6.5</ShaderModel>
+      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
+      <DisableOptimizations>true</DisableOptimizations>
+      <EnableDebuggingInformation>true</EnableDebuggingInformation>
+      <ExcludedFromBuild>true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="src\Shaders\PostProcess.comp.hlsl">
       <ShaderType>Compute</ShaderType>

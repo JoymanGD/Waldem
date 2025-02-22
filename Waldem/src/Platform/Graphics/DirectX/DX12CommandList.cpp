@@ -380,8 +380,7 @@ namespace Waldem
 
         auto resourcesHeap = dx12RootSignature->GetResourcesHeap();
         auto samplersHeap = dx12RootSignature->GetSamplersHeap();
-        auto rootParamTypes = dx12RootSignature->GetRootParamTypes();
-        auto resourcesMap = dx12RootSignature->GetResourcesMap();
+        auto rootParamDatas = dx12RootSignature->GetRootParamDatas();
         
         ID3D12DescriptorHeap* heaps[] = { resourcesHeap, samplersHeap };
         CommandList->SetDescriptorHeaps(2, heaps);
@@ -391,11 +390,11 @@ namespace Waldem
         UINT samplerDescriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
         D3D12_GPU_DESCRIPTOR_HANDLE samplersHandle = samplersHeap->GetGPUDescriptorHandleForHeapStart();
 
-        for (uint32_t i = 0; i < rootParamTypes.Num(); ++i)
+        for (uint32_t i = 0; i < rootParamDatas.Num(); ++i)
         {
-            auto& rootParamType = rootParamTypes[i];
+            auto& rootParamData = rootParamDatas[i];
         
-            if(rootParamType == RTYPE_Sampler)
+            if(rootParamData.Type == RTYPE_Sampler)
             {
                 if(rootSignature->CurrentPipelineType == PipelineType::Compute)
                 {
@@ -408,7 +407,7 @@ namespace Waldem
         
                 samplersHandle.ptr += samplerDescriptorSize;
             }
-            else if(rootParamType == RTYPE_Constant)
+            else if(rootParamData.Type == RTYPE_Constant)
             {
                 continue;
             }
@@ -423,45 +422,9 @@ namespace Waldem
                     CommandList->SetGraphicsRootDescriptorTable(i, handle);
                 }
         
-                handle.ptr += descriptorSize;
+                handle.ptr += descriptorSize * rootParamData.NumDescriptors;
             }
         }
-
-        // for (auto resourcePair : resourcesMap)
-        // {
-        //     auto resourceData = resourcePair.value;
-        //     
-        //     if(resourceData->Desc.Type == RTYPE_Sampler)
-        //     {
-        //         if(rootSignature->CurrentPipelineType == PipelineType::Compute)
-        //         {
-        //             CommandList->SetComputeRootDescriptorTable(resourceData->RootParameterIndex, samplersHandle);
-        //         }
-        //         else
-        //         {
-        //             CommandList->SetGraphicsRootDescriptorTable(resourceData->RootParameterIndex, samplersHandle);
-        //         }
-        //
-        //         samplersHandle.ptr += samplerDescriptorSize;
-        //     }
-        //     else if(resourceData->Desc.Type == RTYPE_Constant)
-        //     {
-        //         continue;
-        //     }
-        //     else
-        //     {
-        //         if(rootSignature->CurrentPipelineType == PipelineType::Compute)
-        //         {
-        //             CommandList->SetComputeRootDescriptorTable(resourceData->RootParameterIndex, handle);
-        //         }
-        //         else
-        //         {
-        //             CommandList->SetGraphicsRootDescriptorTable(resourceData->RootParameterIndex, handle);
-        //         }
-        //
-        //         handle.ptr += descriptorSize;
-        //     }
-        // }
     }
 
     void DX12CommandList::SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil)

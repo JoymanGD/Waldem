@@ -17,7 +17,7 @@ namespace Waldem
 
             for (auto mesh : Meshes)
             {
-                textures.push_back(mesh->CurrentMaterial.GetDiffuseTexture());
+                textures.push_back(mesh->CurrentMaterial->GetDiffuseTexture());
             }
 
             return textures;
