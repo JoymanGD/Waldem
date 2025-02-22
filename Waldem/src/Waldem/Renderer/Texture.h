@@ -2,7 +2,7 @@
 #include "TextureFormat.h"
 
 namespace Waldem
-{    
+{
     class Texture2D
     {
     public:

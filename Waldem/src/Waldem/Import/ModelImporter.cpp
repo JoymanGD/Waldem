@@ -9,6 +9,7 @@
 #include <fstream>
 #include "assimp/scene.h"
 #include "Waldem/Application.h"
+#include "Waldem/Renderer/TextureType.h"
 
 namespace Waldem
 {
@@ -21,6 +22,69 @@ namespace Waldem
             matrix.a4, matrix.b4, matrix.c4, matrix.d4
         );
     }
+
+    Texture2D* CreateTexture(String path, String name, TextureType textureType, const aiScene* assimpModel, aiMaterial* assimpMaterial)
+    {
+        uint8_t* image_data;
+
+        int width = 0;
+        int height = 0;
+        int componentsCount = 0;
+
+        aiString texturePath;
+        
+        if (assimpMaterial->GetTexture((aiTextureType)textureType, 0, &texturePath) == aiReturn_SUCCESS)
+        {
+            //texture is embedded
+            if (const aiTexture* assimpTexture = assimpModel->GetEmbeddedTexture(texturePath.C_Str()))
+            {
+                image_data = stbi_load_from_memory((uint8_t const*)assimpTexture->pcData, assimpTexture->mWidth, &width, &height, &componentsCount, 4);
+            }
+            //texture is external
+            else
+            {
+                std::filesystem::path pathObj(path);
+                std::filesystem::path parentPath = pathObj.parent_path();
+                auto externalTexturePath = parentPath.append(texturePath.C_Str());
+                image_data = stbi_load(externalTexturePath.string().c_str(), &width, &height, &componentsCount, 4);
+            }
+        }
+        else
+        {
+            width = 1;
+            height = 1;
+
+            // Fake orange texture data for the case when texture is not found
+            Vector4 fakeData = normalize(Vector4(1.f, .2f, 0.f, 1.f));
+            image_data = (uint8_t*)&fakeData;
+        }
+
+        TextureFormat format;
+        
+        if(componentsCount == 3)
+        {
+            format = TextureFormat::R32G32B32_FLOAT; //TODO: check if its workable
+        }
+        else
+        {
+            format = TextureFormat::R8G8B8A8_UNORM;
+        }
+
+        auto texture = Renderer::CreateTexture(name, width, height, format, image_data);
+
+        return texture;
+    }
+
+    Material* CreateMaterial(String path, const aiScene* assimpModel, aiMaterial* assimpMaterial)
+    {
+        auto diffuse = CreateTexture(path, "DiffuseTexture", DIFFUSE, assimpModel, assimpMaterial);
+        auto normal = CreateTexture(path, "NormalTexture", NORMALS, assimpModel, assimpMaterial);
+        // auto metal = CreateTexture(path, "MetalTexture", METALNESS, assimpModel, assimpMaterial);
+        // auto roughness = CreateTexture(path, "RoughnessTexture", DIFFUSE_ROUGHNESS, assimpModel, assimpMaterial);
+        auto metalRoughness = CreateTexture(path, "MetalRoughnessTexture", DIFFUSE_ROUGHNESS, assimpModel, assimpMaterial);
+        return new Material(diffuse, normal, metalRoughness);
+    }
+    
     Model* ModelImporter::Import(String path, bool relative)
     {
         Model* result = new Model();
@@ -66,54 +130,7 @@ namespace Waldem
                 }
 
                 auto material = assimpModel->mMaterials[i];
-
-                uint8_t* image_data = nullptr;
-
-                int width = 0;
-                int height = 0;
-                int componentsCount = 0;
-
-                aiString texturePath;
-
-                if (material->GetTexture(aiTextureType_DIFFUSE, 0, &texturePath) == aiReturn_SUCCESS)
-                {
-                    //texture is embedded
-                    if (const aiTexture* assimpTexture = assimpModel->GetEmbeddedTexture(texturePath.C_Str()))
-                    {
-                        image_data = stbi_load_from_memory((uint8_t const*)assimpTexture->pcData, assimpTexture->mWidth, &width, &height, &componentsCount, 4);
-                    }
-                    //texture is external
-                    else
-                    {
-                        std::filesystem::path pathObj(path);
-                        std::filesystem::path parentPath = pathObj.parent_path();
-                        auto externalTexturePath = parentPath.append(texturePath.C_Str());
-                        image_data = stbi_load(externalTexturePath.string().c_str(), &width, &height, &componentsCount, 4);
-                    }
-                }
-                else
-                {
-                    width = 1;
-                    height = 1;
-
-                    // Fake orange texture data for the case when texture is not found
-                    Vector4 fakeData = normalize(Vector4(1.f, .2f, 0.f, 1.f));
-                    image_data = (uint8_t*)&fakeData;
-                }
-
-                TextureFormat format;
-                
-                if(componentsCount == 3)
-                {
-                    format = TextureFormat::R32G32B32_FLOAT; //TODO: check if its workable
-                }
-                else
-                {
-                    format = TextureFormat::R8G8B8A8_UNORM;
-                }
-
-                Texture2D* texture = Renderer::CreateTexture("DiffuseTexture", width, height, format, image_data);
-                Material mat(texture);
+                auto mat = CreateMaterial(path, assimpModel, material);
 
                 uint32_t vertexBufferSize = vertexBufferData.size() * sizeof(Vertex);
                 uint32_t indexBufferSize = indexBufferData.size() * sizeof(uint32_t);

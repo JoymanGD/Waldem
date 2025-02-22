@@ -22,12 +22,12 @@ namespace Waldem
     {
     public:
         Mesh() = default;
-        Mesh(void* vertexBufferData, uint32_t vertexBufferDataSize, uint32_t* indexBufferData, uint32_t indexBufferDataSize, Material material, BoundingBox bBox);
-        void SetMaterial(Material material) { CurrentMaterial = material; }
+        Mesh(void* vertexBufferData, uint32_t vertexBufferDataSize, uint32_t* indexBufferData, uint32_t indexBufferDataSize, Material* material, BoundingBox bBox);
+        void SetMaterial(Material* material) { CurrentMaterial = material; }
 
         Buffer* VertexBuffer;
         Buffer* IndexBuffer;
-        Material CurrentMaterial;
+        Material* CurrentMaterial;
         BoundingBox BBox;
         Matrix4 ObjectMatrix;
     };

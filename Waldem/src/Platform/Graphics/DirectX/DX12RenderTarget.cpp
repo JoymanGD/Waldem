@@ -85,13 +85,20 @@ namespace Waldem
             heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
             heapProperties.CreationNodeMask = 1;
             heapProperties.VisibleNodeMask = 1;
+
+            D3D12_CLEAR_VALUE clearValue = {};
+            clearValue.Format = (DXGI_FORMAT)format;
+            clearValue.Color[0] = 0.0f;
+            clearValue.Color[1] = 0.0f;
+            clearValue.Color[2] = 0.0f;
+            clearValue.Color[3] = 1.0f;
             
             hr = device->CreateCommittedResource(
                 &heapProperties,
                 D3D12_HEAP_FLAG_NONE,
                 &textureDesc,
                 D3D12_RESOURCE_STATE_COMMON,
-                nullptr,
+                &clearValue,
                 IID_PPV_ARGS(&Resource));
 
             if(FAILED(hr))

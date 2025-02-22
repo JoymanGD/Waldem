@@ -23,34 +23,34 @@ namespace Sandbox
 		}
 		
 		//secondSponza
-		index = 0;
-		for (Waldem::Mesh* mesh : sponzaModel->GetMeshes())
-		{
-			auto entity = ecsManager->CreateEntity("Sponza2_" + std::to_string(index++));
-			entity.Add<Waldem::MeshComponent>(mesh);
-			Waldem::Transform transform = mesh->ObjectMatrix;
-			transform.Translate({50, 0, 0});
-			entity.Add<Waldem::Transform>(transform);
-		}
+		// index = 0;
+		// for (Waldem::Mesh* mesh : sponzaModel->GetMeshes())
+		// {
+		// 	auto entity = ecsManager->CreateEntity("Sponza2_" + std::to_string(index++));
+		// 	entity.Add<Waldem::MeshComponent>(mesh);
+		// 	Waldem::Transform transform = mesh->ObjectMatrix;
+		// 	transform.Translate({50, 0, 0});
+		// 	entity.Add<Waldem::Transform>(transform);
+		// }
 
 		//water plane
-		auto waterTexture = resourceManager->LoadTexture("Content/Textures/WaterColor.png");
-		auto waterPlaneModel = importer.Import("Content/Models/WaterPlane.glb", true);
-		for (Waldem::Mesh* mesh : waterPlaneModel->GetMeshes())
-		{
-			mesh->SetMaterial(Waldem::Material(waterTexture));
-			auto waterPlaneEntity = ecsManager->CreateEntity("WaterPlane");
-			waterPlaneEntity.Add<Waldem::MeshComponent>(mesh);
-			Waldem::Transform transform = mesh->ObjectMatrix;
-			transform.Translate({0,20,0});
-			waterPlaneEntity.Add<Waldem::Transform>(transform);
-			waterPlaneEntity.Add<Waldem::Ocean>();
-		}
+		// auto waterTexture = resourceManager->LoadTexture("Content/Textures/WaterColor.png");
+		// auto waterPlaneModel = importer.Import("Content/Models/WaterPlane.glb", true);
+		// for (Waldem::Mesh* mesh : waterPlaneModel->GetMeshes())
+		// {
+		// 	mesh->SetMaterial(new Waldem::Material(waterTexture, nullptr, nullptr, nullptr));
+		// 	auto waterPlaneEntity = ecsManager->CreateEntity("WaterPlane");
+		// 	waterPlaneEntity.Add<Waldem::MeshComponent>(mesh);
+		// 	Waldem::Transform transform = mesh->ObjectMatrix;
+		// 	transform.Translate({0,20,0});
+		// 	waterPlaneEntity.Add<Waldem::Transform>(transform);
+		// 	waterPlaneEntity.Add<Waldem::Ocean>();
+		// }
 		
 		auto dirLightEntity = ecsManager->CreateEntity("DirectionalLight");
 		auto& lightTransform = dirLightEntity.Add<Waldem::Transform>(Waldem::Vector3(0, 0, 0));
 		lightTransform.SetEuler(90, 0, 0);
-		dirLightEntity.Add<Waldem::Light>(Waldem::Vector3(1, 1, 1), 2.0f, Waldem::LightType::Directional, 100.0f);
+		dirLightEntity.Add<Waldem::Light>(Waldem::Vector3(1, 1, 1), 20.0f, Waldem::LightType::Directional, 100.0f);
 
 		//do it after all entities set up
 		ecsManager->Refresh();
