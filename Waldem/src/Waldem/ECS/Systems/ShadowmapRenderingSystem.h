@@ -116,11 +116,11 @@ namespace Waldem
                     Renderer::SetRenderTargets({}, light.Shadowmap);
                     Renderer::ClearDepthStencil(light.Shadowmap);
 
-                    uint32_t modelID = 0;
+                    uint32_t meshID = 0;
 
                     for (auto [modelEtity, meshComponent, modelTransform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
                     {
-                        ShadowmapRenderingRootSignature->UpdateResourceData("RootConstants", &modelID);
+                        ShadowmapRenderingRootSignature->UpdateResourceData("RootConstants", &meshID);
                         
                         auto transformedBBox = meshComponent.Mesh->BBox.Transform(modelTransform.Matrix);
 
@@ -130,7 +130,7 @@ namespace Waldem
                             Renderer::Draw(meshComponent.Mesh);
                         }
 
-                        modelID++;
+                        meshID++;
                     }
                     
                     Renderer::ResourceBarrier(light.Shadowmap, DEPTH_WRITE, ALL_SHADER_RESOURCE);

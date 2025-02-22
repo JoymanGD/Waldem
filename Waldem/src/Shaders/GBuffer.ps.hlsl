@@ -19,6 +19,11 @@ struct PS_OUTPUT
     int MeshIDRT : SV_TARGET4;
 };
 
+cbuffer RootConstants : register(b1)
+{
+    uint MeshId;
+};
+
 SamplerState myStaticSampler : register(s0);
 
 Texture2D DiffuseTextures[MAX_TEXTURES] : register(t1);
@@ -36,9 +41,9 @@ PS_OUTPUT main(PS_INPUT input)
 {
     PS_OUTPUT output;
     
-    float4 color = DiffuseTextures[input.MeshId].Sample(myStaticSampler, input.UV);
-    float4 normalMap = NormalTextures[input.MeshId].Sample(myStaticSampler, input.UV);
-    float4 metalRoughness = MetalRoughnessTextures[input.MeshId].Sample(myStaticSampler, input.UV);
+    float4 color = DiffuseTextures[MeshId].Sample(myStaticSampler, input.UV);
+    float4 normalMap = NormalTextures[MeshId].Sample(myStaticSampler, input.UV);
+    float4 metalRoughness = MetalRoughnessTextures[MeshId].Sample(myStaticSampler, input.UV);
     
     if(color.a < 0.1f)
         discard;
@@ -47,7 +52,7 @@ PS_OUTPUT main(PS_INPUT input)
     output.NormalRT = float4(GetNormal(input.Normal, input.Tangent, normalMap), 1.0f);
     output.ColorRT = color;
     output.MetalRoughnessRT = metalRoughness;
-    output.MeshIDRT = input.MeshId;
+    output.MeshIDRT = MeshId;
 
     return output;
 }
