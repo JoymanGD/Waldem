@@ -1,6 +1,4 @@
-#include "Shadows.hlsl"
-#include "Lighting.hlsl"
-#include "PBR.hlsl"
+#include "Shading.hlsl"
 
 SamplerState myStaticSampler : register(s0);
 SamplerComparisonState cmpSampler : register(s1);
@@ -20,33 +18,14 @@ cbuffer MyConstantBuffer : register(b0)
 {
     matrix view;
     matrix proj;
+    matrix invView;
+    matrix invProj;
 };
 
 cbuffer RootConstants : register(b1)
 {
     float2 MousePosition;
 };
-
-float3 GetCameraToPixelDirection(float4x4 viewMatrix, float3 pixelWorldPosition)
-{
-    // Extract camera position from the view matrix
-    // The inverse of the view matrix's translation part gives us the camera's world position
-    float3 cameraPosition = -float3(viewMatrix[3][0], viewMatrix[3][1], viewMatrix[3][2]);
-    
-    // Compute the direction from camera to pixel
-    float3 direction = normalize(pixelWorldPosition - cameraPosition);
-    
-    return direction;
-}
-
-float3 GetForwardVector(float4x4 viewMatrix)
-{
-    // Extract forward vector from the view matrix
-    // The third row of the view matrix represents the forward direction in view space
-    float3 forward = -float3(viewMatrix[2][0], viewMatrix[2][1], viewMatrix[2][2]);
-    
-    return normalize(forward);
-}
 
 [numthreads(8, 8, 1)]
 void main(uint2 tid : SV_DispatchThreadID)
@@ -65,21 +44,9 @@ void main(uint2 tid : SV_DispatchThreadID)
     {
         HoveredMeshes[0] = asint(MeshIDRT.Load(int3(MousePosition, 0)).x);
     }
+
+    float3 resultColor = GetResultColor(Lights[0], Shadowmap, cmpSampler, worldPosition, normal, albedo, roughnessMetallic, invView);
     
-    //Combining the lighting and shadowing
-    Light light = Lights[0];
-    float3 lightDir = -GetLightDirection(light);
-
-    float shadowFactor = CalculateShadowFactor(Shadowmap, cmpSampler, worldPosition, normal, light.View, light.Projection);
-    // float3 viewPosition = mul(view, worldPosition).xyz;
-    float3 viewDirection = GetForwardVector(view);
-    float3 radiance = light.Color * light.Intensity * M_1_PI_F * saturate(dot(lightDir, normal));
-    float3 ambient = AMBIENT * albedo.rgb;
-    float3 diffuse = CookTorrenceBRDF(normal, viewDirection, lightDir, albedo.rgb, roughnessMetallic.g, roughnessMetallic.b);
-
-    float3 resultColor = ambient + diffuse * radiance * saturate(shadowFactor);
-    // float3 resultColor = viewPosition;
-
     //Writing the result to the render target
     TargetRT[tid] = float4(resultColor, 1.0f);
 }

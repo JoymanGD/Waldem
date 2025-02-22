@@ -40,7 +40,7 @@ namespace Waldem
             TargetRT = resourceManager->GetRenderTarget("TargetRT");
             
             //Common resources
-            auto constantBufferResource = Resource("MyConstantBuffer", RTYPE_ConstantBuffer, nullptr, sizeof(Matrix4), sizeof(Matrix4) * 2, 0);
+            auto constantBufferResource = Resource("MyConstantBuffer", RTYPE_ConstantBuffer, nullptr, sizeof(Matrix4), sizeof(Matrix4) * 4, 0);
             
             //GBuffer pass
             WArray<Texture2D*> diffuseTextures;
@@ -67,6 +67,7 @@ namespace Waldem
             WArray<Resource> gBufferPassResources;
             gBufferPassResources.Add(constantBufferResource);
             gBufferPassResources.Add(Resource("RootConstants", RTYPE_Constant, nullptr, sizeof(uint32_t), sizeof(uint32_t), 1));
+            
             if(!worldTransforms.IsEmpty())
                 gBufferPassResources.Add(Resource("WorldTransforms", RTYPE_Buffer, worldTransforms.GetData(), sizeof(Matrix4), worldTransforms.GetSize(), 0));
             if(!diffuseTextures.IsEmpty())
@@ -122,11 +123,13 @@ namespace Waldem
         {
             //GBuffer pass
             WArray<FrustumPlane> frustrumPlanes;
-            Matrix4 matrices[2];
+            Matrix4 matrices[4];
             for (auto [entity, camera, mainCamera, cameraTransform] : ECSManager->EntitiesWith<Camera, MainCamera, Transform>())
             {
                 matrices[0] = camera.ViewMatrix;
                 matrices[1] = camera.ProjectionMatrix;
+                matrices[2] = cameraTransform.Matrix;
+                matrices[3] = inverse(camera.ProjectionMatrix);
                 GBufferRootSignature->UpdateResourceData("MyConstantBuffer", matrices);
                 DeferredRenderingRootSignature->UpdateResourceData("MyConstantBuffer", matrices);
                 frustrumPlanes = camera.ExtractFrustumPlanes();
@@ -154,20 +157,23 @@ namespace Waldem
             Renderer::ClearRenderTarget(MetalRoughnessRT);
             Renderer::ClearRenderTarget(MeshIDRT);
             Renderer::ClearDepthStencil(DepthRT);
-            uint32_t meshId = 0;
+            
+            uint32_t meshID = 0;
+
             for (auto [entity, mesh, transform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
             {
-                GBufferRootSignature->UpdateResourceData("RootConstants", &meshId);
-                
                 auto transformedBBox = mesh.Mesh->BBox.Transform(transform.Matrix);
 
                 //Frustrum culling
                 if(transformedBBox.IsInFrustum(frustrumPlanes))
                 {
+                    GBufferRootSignature->UpdateResourceData("RootConstants", &meshID); 
                     Renderer::Draw(mesh.Mesh);
                 }
-                meshId++;
+
+                meshID++;
             }
+            
             Renderer::SetRenderTargets({});
 
             //Deferred rendering pass

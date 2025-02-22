@@ -12,7 +12,7 @@ namespace Sandbox
 		Waldem::ModelImporter importer;
 
 		//Entities
-		auto sponzaModel = importer.Import("Content/Models/Sponza/Sponza2.gltf", true);
+		auto sponzaModel = importer.Import("Content/Models/Sponza/Sponza2.gltf");
 		//firstSponza
 		int index = 0;
 		for (Waldem::Mesh* mesh : sponzaModel->GetMeshes())
@@ -23,15 +23,15 @@ namespace Sandbox
 		}
 		
 		//secondSponza
-		// index = 0;
-		// for (Waldem::Mesh* mesh : sponzaModel->GetMeshes())
-		// {
-		// 	auto entity = ecsManager->CreateEntity("Sponza2_" + std::to_string(index++));
-		// 	entity.Add<Waldem::MeshComponent>(mesh);
-		// 	Waldem::Transform transform = mesh->ObjectMatrix;
-		// 	transform.Translate({50, 0, 0});
-		// 	entity.Add<Waldem::Transform>(transform);
-		// }
+		index = 0;
+		for (Waldem::Mesh* mesh : sponzaModel->GetMeshes())
+		{
+			auto entity = ecsManager->CreateEntity("Sponza2_" + std::to_string(index++));
+			entity.Add<Waldem::MeshComponent>(mesh);
+			Waldem::Transform transform = mesh->ObjectMatrix;
+			transform.Translate({50, 0, 0});
+			entity.Add<Waldem::Transform>(transform);
+		}
 
 		//water plane
 		// auto waterTexture = resourceManager->LoadTexture("Content/Textures/WaterColor.png");
