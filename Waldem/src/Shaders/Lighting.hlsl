@@ -1,4 +1,4 @@
-#define AMBIENT 0.2f
+#define AMBIENT 0.1f
 
 struct Light
 {

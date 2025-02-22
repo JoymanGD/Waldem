@@ -37,7 +37,7 @@ namespace Waldem
 			resourceManager->CreateRenderTarget("WorldPositionRT", resolution.x, resolution.y, TextureFormat::R32G32B32A32_FLOAT);
 			resourceManager->CreateRenderTarget("NormalRT", resolution.x, resolution.y, TextureFormat::R16G16B16A16_FLOAT);
 			resourceManager->CreateRenderTarget("ColorRT", resolution.x, resolution.y, TextureFormat::R8G8B8A8_UNORM);
-			resourceManager->CreateRenderTarget("MetalRoughnessRT", resolution.x, resolution.y, TextureFormat::R32G32B32A32_FLOAT);
+			resourceManager->CreateRenderTarget("ORMRT", resolution.x, resolution.y, TextureFormat::R32G32B32A32_FLOAT);
 			resourceManager->CreateRenderTarget("MeshIDRT", resolution.x, resolution.y, TextureFormat::R32_SINT);
 			resourceManager->CreateRenderTarget("DepthRT", resolution.x, resolution.y, TextureFormat::D32_FLOAT);
 			resourceManager->CreateRenderTarget("DebugRT_1", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
