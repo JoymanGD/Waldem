@@ -19,7 +19,6 @@ namespace Waldem
         PsoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
         PsoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
         PsoDesc.RasterizerState.FrontCounterClockwise = FALSE;
-        PsoDesc.RasterizerState.SlopeScaledDepthBias = 1.5f;
         PsoDesc.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
         PsoDesc.DepthStencilState.StencilEnable = FALSE;
         PsoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
