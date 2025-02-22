@@ -115,6 +115,7 @@ namespace Waldem
                     vertex.Position = Vector3(assimpMesh->mVertices[j].x, assimpMesh->mVertices[j].y, assimpMesh->mVertices[j].z);
                     vertex.Normal = Vector3(assimpMesh->mNormals[j].x, assimpMesh->mNormals[j].y, assimpMesh->mNormals[j].z);
                     vertex.Tangent = Vector3(assimpMesh->mTangents[j].x, assimpMesh->mTangents[j].y, assimpMesh->mTangents[j].z);
+                    vertex.Bitangent = Vector3(assimpMesh->mBitangents[j].x, assimpMesh->mBitangents[j].y, assimpMesh->mBitangents[j].z);
                     vertex.MeshId = i;
 
                     if(assimpMesh->HasTextureCoords(0))

@@ -11,7 +11,7 @@ namespace Waldem
 
         Texture2D* GetDiffuseTexture() { return Diffuse; }
         Texture2D* GetNormalTexture() { return Normal; }
-        Texture2D* GetMetalRoughnessTexture() { return MetalRoughness; }
+        Texture2D* GetORMTexture() { return MetalRoughness; }
         
     private:
         Texture2D* Diffuse;

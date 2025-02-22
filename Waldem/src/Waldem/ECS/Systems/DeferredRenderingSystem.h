@@ -21,7 +21,7 @@ namespace Waldem
         RenderTarget* WorldPositionRT = nullptr;
         RenderTarget* NormalRT = nullptr;
         RenderTarget* ColorRT = nullptr;
-        RenderTarget* MetalRoughnessRT = nullptr;
+        RenderTarget* ORMRT = nullptr;
         RenderTarget* DepthRT = nullptr;
         RenderTarget* MeshIDRT = nullptr;
         //Deferred rendering pass
@@ -45,7 +45,7 @@ namespace Waldem
             //GBuffer pass
             WArray<Texture2D*> diffuseTextures;
             WArray<Texture2D*> normalTextures;
-            WArray<Texture2D*> metalRoughnessTextures;
+            WArray<Texture2D*> ormTextures;
             for (auto [entity, mesh, transform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
             {
                 if(mesh.Mesh->CurrentMaterial->GetDiffuseTexture() == nullptr)
@@ -53,8 +53,8 @@ namespace Waldem
                     diffuseTextures.Add(mesh.Mesh->CurrentMaterial->GetDiffuseTexture());
                 if(mesh.Mesh->CurrentMaterial->GetNormalTexture() != nullptr)
                     normalTextures.Add(mesh.Mesh->CurrentMaterial->GetNormalTexture());
-                if(mesh.Mesh->CurrentMaterial->GetMetalRoughnessTexture() != nullptr)
-                    metalRoughnessTextures.Add(mesh.Mesh->CurrentMaterial->GetMetalRoughnessTexture());
+                if(mesh.Mesh->CurrentMaterial->GetORMTexture() != nullptr)
+                    ormTextures.Add(mesh.Mesh->CurrentMaterial->GetORMTexture());
             }
 
             WArray<Matrix4> worldTransforms;
@@ -74,18 +74,18 @@ namespace Waldem
                 gBufferPassResources.Add(Resource("DiffuseTextures", diffuseTextures, 1));
             if(!normalTextures.IsEmpty())
                 gBufferPassResources.Add(Resource("NormalTextures", normalTextures, 1025));
-            if(!metalRoughnessTextures.IsEmpty())
-                gBufferPassResources.Add(Resource("MetalRoughnessTextures", metalRoughnessTextures, 2049));
+            if(!ormTextures.IsEmpty())
+                gBufferPassResources.Add(Resource("ORMTextures", ormTextures, 2049));
 
             WorldPositionRT = resourceManager->GetRenderTarget("WorldPositionRT");
             NormalRT = resourceManager->GetRenderTarget("NormalRT");
             ColorRT = resourceManager->GetRenderTarget("ColorRT");
-            MetalRoughnessRT = resourceManager->GetRenderTarget("MetalRoughnessRT");
+            ORMRT = resourceManager->GetRenderTarget("ORMRT");
             MeshIDRT = resourceManager->GetRenderTarget("MeshIDRT");
             DepthRT = resourceManager->GetRenderTarget("DepthRT");
             GBufferRootSignature = Renderer::CreateRootSignature(gBufferPassResources);
             GBufferPixelShader = Renderer::LoadPixelShader("GBuffer");
-            GBufferPipeline = Renderer::CreateGraphicPipeline("GBufferPipeline", { WorldPositionRT->GetFormat(), NormalRT->GetFormat(), ColorRT->GetFormat(), MetalRoughnessRT->GetFormat(), MeshIDRT->GetFormat() }, WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, GBufferRootSignature, GBufferPixelShader);
+            GBufferPipeline = Renderer::CreateGraphicPipeline("GBufferPipeline", { WorldPositionRT->GetFormat(), NormalRT->GetFormat(), ColorRT->GetFormat(), ORMRT->GetFormat(), MeshIDRT->GetFormat() }, WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, GBufferRootSignature, GBufferPixelShader);
 
             //Deferred rendering pass
             WArray<Resource> deferredRenderingPassResources;
@@ -105,7 +105,7 @@ namespace Waldem
             deferredRenderingPassResources.Add(Resource("WorldPosition", WorldPositionRT, 2));
             deferredRenderingPassResources.Add(Resource("Normal", NormalRT, 3));
             deferredRenderingPassResources.Add(Resource("Color", ColorRT, 4));
-            deferredRenderingPassResources.Add(Resource("MetalRoughness", MetalRoughnessRT, 5));
+            deferredRenderingPassResources.Add(Resource("ORMRT", ORMRT, 5));
             deferredRenderingPassResources.Add(Resource("MeshIDRT", MeshIDRT, 6));
             deferredRenderingPassResources.Add(Resource("DepthRT", DepthRT, 7));
             deferredRenderingPassResources.Add(Resource("TargetRT", TargetRT, 0, true));
@@ -147,14 +147,14 @@ namespace Waldem
             Renderer::ResourceBarrier(WorldPositionRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
             Renderer::ResourceBarrier(NormalRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
             Renderer::ResourceBarrier(ColorRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
-            Renderer::ResourceBarrier(MetalRoughnessRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
+            Renderer::ResourceBarrier(ORMRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
             Renderer::ResourceBarrier(MeshIDRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
             Renderer::ResourceBarrier(DepthRT, ALL_SHADER_RESOURCE, DEPTH_WRITE);
-            Renderer::SetRenderTargets({ WorldPositionRT, NormalRT, ColorRT, MetalRoughnessRT, MeshIDRT }, DepthRT);
+            Renderer::SetRenderTargets({ WorldPositionRT, NormalRT, ColorRT, ORMRT, MeshIDRT }, DepthRT);
             Renderer::ClearRenderTarget(WorldPositionRT);
             Renderer::ClearRenderTarget(NormalRT);
             Renderer::ClearRenderTarget(ColorRT);
-            Renderer::ClearRenderTarget(MetalRoughnessRT);
+            Renderer::ClearRenderTarget(ORMRT);
             Renderer::ClearRenderTarget(MeshIDRT);
             Renderer::ClearDepthStencil(DepthRT);
             
@@ -180,7 +180,7 @@ namespace Waldem
             Renderer::ResourceBarrier(WorldPositionRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
             Renderer::ResourceBarrier(NormalRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
             Renderer::ResourceBarrier(ColorRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
-            Renderer::ResourceBarrier(MetalRoughnessRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
+            Renderer::ResourceBarrier(ORMRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
             Renderer::ResourceBarrier(MeshIDRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
             Renderer::ResourceBarrier(DepthRT, DEPTH_WRITE, ALL_SHADER_RESOURCE);
             Renderer::ResourceBarrier(TargetRT, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
