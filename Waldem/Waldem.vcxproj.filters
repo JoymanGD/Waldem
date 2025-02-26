@@ -25,6 +25,9 @@
     <Filter Include="src\Shaders\OceanSimulation">
       <UniqueIdentifier>{00BEB1ED-6CCB-DFD3-F5B1-DBBE61BEAB8A}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Shaders\Physics">
+      <UniqueIdentifier>{7856BF0F-E4B7-9C1D-6D25-E3CFD985D3DC}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Waldem">
       <UniqueIdentifier>{56E54637-429D-8884-ABA4-61E0977B2375}</UniqueIdentifier>
     </Filter>
@@ -36,6 +39,15 @@
     </Filter>
     <Filter Include="src\Waldem\ECS\Systems">
       <UniqueIdentifier>{A78A5537-9384-7E89-7CF1-149A688AE4F5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Waldem\ECS\Systems\EditorSystems">
+      <UniqueIdentifier>{15682AA8-014F-EC9F-AA9F-52BD96656506}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Waldem\ECS\Systems\EditorSystems\Widgets">
+      <UniqueIdentifier>{7BDCA1D3-67EF-A12C-10D9-7E19FCCA3E7A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Waldem\ECS\Systems\EditorSystems\Widgets\ComponentWidgets">
+      <UniqueIdentifier>{14329E5B-80FA-6BDF-498B-74F1B5129C1A}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\Waldem\Editor">
       <UniqueIdentifier>{CC054398-381C-412E-8193-CC4FEDE811B6}</UniqueIdentifier>
@@ -195,7 +207,13 @@
     <ClInclude Include="src\Waldem\ECS\Components\ModelComponent.h">
       <Filter>src\Waldem\ECS\Components</Filter>
     </ClInclude>
+    <ClInclude Include="src\Waldem\ECS\Components\NameComponent.h">
+      <Filter>src\Waldem\ECS\Components</Filter>
+    </ClInclude>
     <ClInclude Include="src\Waldem\ECS\Components\Ocean.h">
+      <Filter>src\Waldem\ECS\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\ECS\Components\PhysicsComponent.h">
       <Filter>src\Waldem\ECS\Components</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\ECS\Components\Selected.h">
@@ -207,8 +225,29 @@
     <ClInclude Include="src\Waldem\ECS\Systems\DeferredRenderingSystem.h">
       <Filter>src\Waldem\ECS\Systems</Filter>
     </ClInclude>
-    <ClInclude Include="src\Waldem\ECS\Systems\EditorTransformsManipulationSystem.h">
-      <Filter>src\Waldem\ECS\Systems</Filter>
+    <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\EntityDetailsWidgetContainer.h">
+      <Filter>src\Waldem\ECS\Systems\EditorSystems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\GuizmoEditorSystem.h">
+      <Filter>src\Waldem\ECS\Systems\EditorSystems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\IWidgetContainerSystem.h">
+      <Filter>src\Waldem\ECS\Systems\EditorSystems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\MainWidgetContainer.h">
+      <Filter>src\Waldem\ECS\Systems\EditorSystems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\WidgetSystem.h">
+      <Filter>src\Waldem\ECS\Systems\EditorSystems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\Widgets\ComponentWidgets\OceanComponentWidget.h">
+      <Filter>src\Waldem\ECS\Systems\EditorSystems\Widgets\ComponentWidgets</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\Widgets\ComponentWidgets\TransformComponentWidget.h">
+      <Filter>src\Waldem\ECS\Systems\EditorSystems\Widgets\ComponentWidgets</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\Widgets\HierarchyWidget.h">
+      <Filter>src\Waldem\ECS\Systems\EditorSystems\Widgets</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\ECS\Systems\ForwardRenderingSystem.h">
       <Filter>src\Waldem\ECS\Systems</Filter>
@@ -217,6 +256,9 @@
       <Filter>src\Waldem\ECS\Systems</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\ECS\Systems\OceanSimulationSystem.h">
+      <Filter>src\Waldem\ECS\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\ECS\Systems\PhysicsSystem.h">
       <Filter>src\Waldem\ECS\Systems</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\ECS\Systems\PostProcessSystem.h">
@@ -248,6 +290,9 @@
     </ClInclude>
     <ClInclude Include="src\Waldem\Events\MouseEvent.h">
       <Filter>src\Waldem\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\Import\ImageImporter.h">
+      <Filter>src\Waldem\Import</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\Import\ModelImporter.h">
       <Filter>src\Waldem\Import</Filter>
@@ -343,6 +388,9 @@
       <Filter>src\Waldem\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\Renderer\TextureFormat.h">
+      <Filter>src\Waldem\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\Renderer\TextureType.h">
       <Filter>src\Waldem\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\SceneManagement\Scene.h">
@@ -1724,6 +1772,9 @@
     <ClCompile Include="src\Waldem\Editor\Editor.cpp">
       <Filter>src\Waldem\Editor</Filter>
     </ClCompile>
+    <ClCompile Include="src\Waldem\Import\ImageImporter.cpp">
+      <Filter>src\Waldem\Import</Filter>
+    </ClCompile>
     <ClCompile Include="src\Waldem\Import\ModelImporter.cpp">
       <Filter>src\Waldem\Import</Filter>
     </ClCompile>
@@ -1846,10 +1897,16 @@
     <FxCompile Include="src\Shaders\OceanSimulation\ButterflyTextureGeneration.comp.hlsl">
       <Filter>src\Shaders\OceanSimulation</Filter>
     </FxCompile>
-    <FxCompile Include="src\Shaders\OceanSimulation\DxDyDz.comp.hlsl">
+    <FxCompile Include="src\Shaders\OceanSimulation\GaussianNoise.comp.hlsl">
       <Filter>src\Shaders\OceanSimulation</Filter>
     </FxCompile>
-    <FxCompile Include="src\Shaders\OceanSimulation\GaussianNoise.comp.hlsl">
+    <FxCompile Include="src\Shaders\OceanSimulation\NormalAndDisplacement.comp.hlsl">
+      <Filter>src\Shaders\OceanSimulation</Filter>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\OceanSimulation\OceanDisplacement.comp.hlsl">
+      <Filter>src\Shaders\OceanSimulation</Filter>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\OceanSimulation\OceanResources.hlsl">
       <Filter>src\Shaders\OceanSimulation</Filter>
     </FxCompile>
     <FxCompile Include="src\Shaders\OceanSimulation\Spectrum.comp.hlsl">
@@ -1858,6 +1915,15 @@
     <FxCompile Include="src\Shaders\OceanSimulation\iFFT.comp.hlsl">
       <Filter>src\Shaders\OceanSimulation</Filter>
     </FxCompile>
+    <FxCompile Include="src\Shaders\PBR.hlsl">
+      <Filter>src\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Physics\Collision.comp.hlsl">
+      <Filter>src\Shaders\Physics</Filter>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Physics\PhysicsTypes.hlsl">
+      <Filter>src\Shaders\Physics</Filter>
+    </FxCompile>
     <FxCompile Include="src\Shaders\PostProcess.comp.hlsl">
       <Filter>src\Shaders</Filter>
     </FxCompile>
@@ -1865,6 +1931,9 @@
       <Filter>src\Shaders</Filter>
     </FxCompile>
     <FxCompile Include="src\Shaders\QuadDraw.vs.hlsl">
+      <Filter>src\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Shading.hlsl">
       <Filter>src\Shaders</Filter>
     </FxCompile>
     <FxCompile Include="src\Shaders\Shadowmap.ps.hlsl">

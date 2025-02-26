@@ -3,6 +3,7 @@
 #include "Waldem/Import/ModelImporter.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
 #include "Waldem/ECS/Components/Ocean.h"
+#include "Waldem/ECS/Components/PhysicsComponent.h"
 #include "Waldem/Renderer/Light.h"
 
 namespace Sandbox
@@ -31,6 +32,7 @@ namespace Sandbox
 			Waldem::Transform transform = mesh->ObjectMatrix;
 			transform.Translate({50, 0, 0});
 			entity.Add<Waldem::Transform>(transform);
+			entity.Add<Waldem::PhysicsComponent>();
 		}
 
 		//water plane

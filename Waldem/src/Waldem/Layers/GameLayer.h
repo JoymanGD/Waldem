@@ -12,6 +12,7 @@
 #include "Waldem/SceneManagement/Scene.h"
 #include "Waldem/Renderer/Renderer.h"
 #include <glm/gtc/integer.hpp>
+#include "Waldem/ECS/Systems/PhysicsSystem.h"
 
 namespace Waldem
 {
@@ -56,6 +57,7 @@ namespace Waldem
 				DrawSystems.Add((ISystem*)new PostProcessSystem(ecsManager));
 	            DrawSystems.Add((ISystem*)new DebugSystem(ecsManager));
 				DrawSystems.Add((ISystem*)new ScreenQuadSystem(ecsManager));
+				DrawSystems.Add((ISystem*)new PhysicsSystem(ecsManager));
 			Renderer::End();
 		}
 
@@ -119,7 +121,7 @@ namespace Waldem
 
 	private:
 		Scene* CurrentScene = nullptr;
-        InputManager GameInputManager;
-        WArray<ISystem*> DrawSystems;
+		InputManager GameInputManager;
+		WArray<ISystem*> DrawSystems;
 	};
 }
