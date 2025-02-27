@@ -55,7 +55,7 @@ PS_OUTPUT main(PS_INPUT input)
     output.NormalRT = normalize(mul(WorldTransforms[MeshId], normal));
     output.ColorRT = color;
     output.ORM = orm;
-    output.MeshIDRT = MeshId;
+    output.MeshIDRT = MeshId+1;
 
     return output;
 }
