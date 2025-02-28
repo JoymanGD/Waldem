@@ -197,7 +197,9 @@ namespace Waldem
             auto mousePos = Input::GetMousePos();
             DeferredRenderingRootSignature->UpdateResourceData("RootConstants", &mousePos);
             Renderer::Compute(GroupCount);
-            DeferredRenderingRootSignature->ReadbackResourceData("HoveredMeshes", &Editor::HoveredIntityID);
+            int hoveredEntityId = 0;
+            DeferredRenderingRootSignature->ReadbackResourceData("HoveredMeshes", &hoveredEntityId);
+            Editor::HoveredIntityID = hoveredEntityId - 1;
             Renderer::ResourceBarrier(TargetRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
         }
     };
