@@ -58,8 +58,15 @@ namespace Waldem
         T* GetData() { return ArrayInternal.data(); }
         size_t GetSize() const { return ArrayInternal.size() * sizeof(T); }
         
-        void Add(const T& value) { ArrayInternal.push_back(value); }           
-        void Add(T&& value) { ArrayInternal.push_back(std::move(value)); }     
+        void Add(const T& value) { ArrayInternal.push_back(value); }
+
+        void Add(T&& value) { ArrayInternal.push_back(std::move(value)); }
+
+        void AddRange(const WArray<T>& other)
+        {
+            ArrayInternal.insert(ArrayInternal.end(), other.begin(), other.end());
+        }
+        
         void AddAt(const T& value, size_t index)
         {
             if (index > ArrayInternal.size()) throw std::out_of_range("Index out of bounds");

@@ -2,6 +2,7 @@
 
 #include "Core.h"
 #include "Window.h"
+#include "Layers/DebugLayer.h"
 #include "Layers/EditorLayer.h"
 #include "Layers/GameLayer.h"
 #include "Renderer/Renderer.h"
@@ -31,16 +32,18 @@ namespace Waldem
 		
 		Window* Window;
 		Renderer CurrentRenderer;
-		bool IsRunning = true;
-		LayerStack LayerStack;
-		EditorLayer* UILayer;
-		GameLayer* CurrentGameLayer;
         ecs::Manager CoreECSManager;
 		ResourceManager ResourceManager;
-
+		bool IsRunning = true;
+		LayerStack LayerStack;
 		std::vector<float> FrameTimes;
 		int FrameCount = 0;
 		const int MaxFrames = 100;
+
+		//Layers
+		EditorLayer* Editor;
+		DebugLayer* Debug;
+		GameLayer* Game;
 
 		float CalculateAverageFPS(float deltaTime);
 	};

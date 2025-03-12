@@ -24,6 +24,7 @@ namespace Waldem
         ~DX12RootSignature() override;
         void* GetNativeObject() const override { return NativeRootSignature; }
         void UpdateResourceData(String name, void* data) override;
+        void ClearResource(String name) override;
         void ReadbackResourceData(String name, void* destinationData) override;
         ID3D12DescriptorHeap* GetResourcesHeap() const { return ResourcesHeap; }
         ID3D12DescriptorHeap* GetSamplersHeap() const { return SamplersHeap; }
@@ -32,11 +33,11 @@ namespace Waldem
     private:
         void SetResources(ID3D12Device* device, DX12CommandList* cmdList, WArray<Resource> resourceDescs, uint32_t numDescriptors);
 
-        DX12CommandList* CmdList;
-        ID3D12RootSignature* NativeRootSignature;
+        DX12CommandList* CmdList = nullptr;
+        ID3D12RootSignature* NativeRootSignature = nullptr;
         WArray<RootParamData> RootParamDatas;
         WMap<String, ResourceData*> ResourcesMap;
-        ID3D12DescriptorHeap* ResourcesHeap;
-        ID3D12DescriptorHeap* SamplersHeap;
+        ID3D12DescriptorHeap* ResourcesHeap = nullptr;
+        ID3D12DescriptorHeap* SamplersHeap = nullptr;
     };
 }

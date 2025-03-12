@@ -8,7 +8,7 @@ namespace Waldem
         float Padding0;
         Vector3 Acceleration = { 2, 2, 2 };
         float Padding1;
-        Vector3 Padding2; 
+        Vector3 Padding2;
         float Drag = 3.0f; //size 48
     };
     

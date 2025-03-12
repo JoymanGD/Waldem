@@ -1,5 +1,5 @@
 #pragma once
-#include "System.h"
+#include "Waldem/ECS/Systems/System.h"
 #include "Waldem/ECS/Components/MainCamera.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
 #include "Waldem/Editor/Editor.h"
@@ -85,7 +85,14 @@ namespace Waldem
             DepthRT = resourceManager->GetRenderTarget("DepthRT");
             GBufferRootSignature = Renderer::CreateRootSignature(gBufferPassResources);
             GBufferPixelShader = Renderer::LoadPixelShader("GBuffer");
-            GBufferPipeline = Renderer::CreateGraphicPipeline("GBufferPipeline", { WorldPositionRT->GetFormat(), NormalRT->GetFormat(), ColorRT->GetFormat(), ORMRT->GetFormat(), MeshIDRT->GetFormat() }, WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, GBufferRootSignature, GBufferPixelShader);
+            GBufferPipeline = Renderer::CreateGraphicPipeline("GBufferPipeline",
+                                                            GBufferRootSignature,
+                                                            GBufferPixelShader,
+                                                            { WorldPositionRT->GetFormat(), NormalRT->GetFormat(), ColorRT->GetFormat(), ORMRT->GetFormat(), MeshIDRT->GetFormat() },
+                                                            DEFAULT_RASTERIZER_DESC,
+                                                            DEFAULT_DEPTH_STENCIL_DESC,
+                                                            WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
+                                                            DEFAULT_INPUT_LAYOUT_DESC);
 
             //Deferred rendering pass
             WArray<Resource> deferredRenderingPassResources;
@@ -162,7 +169,7 @@ namespace Waldem
 
             for (auto [entity, mesh, transform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
             {
-                auto transformedBBox = mesh.Mesh->BBox.Transform(transform.Matrix);
+                auto transformedBBox = mesh.Mesh->BBox.GetTransformed(transform.Matrix);
 
                 //Frustrum culling
                 if(transformedBBox.IsInFrustum(frustrumPlanes))

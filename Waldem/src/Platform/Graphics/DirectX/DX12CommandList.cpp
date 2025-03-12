@@ -10,8 +10,10 @@
 #include "DX12PixelShader.h"
 #include "DX12RenderTarget.h"
 #include "DX12RootSignature.h"
-#include "Waldem/Renderer/Line.h"
+#include "Waldem/Renderer/Model/Line.h"
 #include "Waldem/Utils/FileUtils.h"
+
+#define MAX_LINES 1000u
 
 namespace Waldem
 {
@@ -52,196 +54,11 @@ namespace Waldem
         {
             throw std::runtime_error("Failed to create fence event!");
         }
-
-        InitializeLineRendering();
     }
 
     DX12CommandList::~DX12CommandList()
     {
         CloseHandle(FenceEvent);
-    }
-
-    bool DX12CommandList::CompileFromFile(const String& shaderName)
-    {
-        String entryPoint = "main"; //TODO: make this configurable?
-        
-        auto currentPath = GetCurrentFolder();
-        
-        std::wstring wCurrentPath = std::wstring(currentPath.begin(), currentPath.end());
-        std::wstring wShaderName = std::wstring(shaderName.begin(), shaderName.end());
-        
-        size_t lastSlash = wShaderName.find_last_of(L"/\\");
-
-        // Extract the directory part
-        std::wstring pathToShaders = wCurrentPath + L"/Shaders/";
-
-        // Extract the base name
-        std::wstring baseName = wShaderName.substr(lastSlash + 1);
-        
-        std::wstring shaderPath = pathToShaders + baseName + L".vs.hlsl";
-        String target = "vs_5_1";
-
-        //vertex shader
-        HRESULT hr = D3DCompileFromFile(
-            shaderPath.c_str(), // Filename
-            nullptr, // Macros
-            D3D_COMPILE_STANDARD_FILE_INCLUDE,
-            entryPoint.c_str(), // Entry point function (e.g., "main")
-            target.c_str(), // Target profile (e.g., "vs_5_0" for vertex shader, "ps_5_0" for pixel shader)
-            D3DCOMPILE_DEBUG, // Compile flags
-            0,
-            &LineVertexShaderBlob, // Output shader bytecode
-            &LineShaderErrorBlob); // Output error messages
-
-        if(FAILED(hr))
-        {
-            if (LineShaderErrorBlob)
-            {
-                WD_CORE_ERROR("Shader compilation error: {0}", (char*)LineShaderErrorBlob->GetBufferPointer());
-            }
-            
-            return false;
-        }
-
-        //pixel shader
-        shaderPath = pathToShaders + baseName + L".ps.hlsl";
-        target = "ps_5_1";
-        
-        hr = D3DCompileFromFile(
-            shaderPath.c_str(), // Filename
-            nullptr, // Macros
-            D3D_COMPILE_STANDARD_FILE_INCLUDE,
-            entryPoint.c_str(), // Entry point function (e.g., "main")
-            target.c_str(), // Target profile (e.g., "vs_5_0" for vertex shader, "ps_5_0" for pixel shader)
-            D3DCOMPILE_DEBUG, // Compile flags
-            0,
-            &LinePixelShaderBlob, // Output shader bytecode
-            &LineShaderErrorBlob); // Output error messages
-
-        if(FAILED(hr))
-        {
-            if (LineShaderErrorBlob)
-            {
-                WD_CORE_ERROR("Shader compilation error: {0}", (char*)LineShaderErrorBlob->GetBufferPointer());
-            }
-            
-            return false;
-        }
-
-        return true;
-    }
-
-    void DX12CommandList::InitializeLineRendering()
-    {
-        if(CompileFromFile("Line"))
-        {
-            D3D12_ROOT_PARAMETER rootParameters[1] = {};
-
-            rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-            rootParameters[0].Descriptor.ShaderRegister = 0;
-            rootParameters[0].Descriptor.RegisterSpace = 0;
-            rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-
-            D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
-            rootSignatureDesc.NumParameters = 1;
-            rootSignatureDesc.pParameters = rootParameters;
-            rootSignatureDesc.NumStaticSamplers = 0;
-            rootSignatureDesc.pStaticSamplers = nullptr;
-            rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-
-            ID3DBlob* signatureBlob;
-            ID3DBlob* errorBlob;
-            HRESULT hr = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errorBlob);
-            if (FAILED(hr))
-            {
-            }
-
-            hr = Device->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&LineRootSignature));
-            if (FAILED(hr))
-            {
-            }
-            
-            D3D12_HEAP_PROPERTIES uploadHeapProps = {};
-            uploadHeapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
-            uploadHeapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-            uploadHeapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-            uploadHeapProps.CreationNodeMask = 1;
-            uploadHeapProps.VisibleNodeMask = 1;
-        
-            D3D12_HEAP_PROPERTIES defaultHeapProps = {};
-            defaultHeapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
-            defaultHeapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-            defaultHeapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-            defaultHeapProps.CreationNodeMask = 1;
-            defaultHeapProps.VisibleNodeMask = 1;
-            
-            D3D12_RESOURCE_DESC vertexBufferDesc = {};
-            vertexBufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-            vertexBufferDesc.Width = sizeof(Line) * 100;
-            vertexBufferDesc.Height = 1;
-            vertexBufferDesc.DepthOrArraySize = 1;
-            vertexBufferDesc.MipLevels = 1;
-            vertexBufferDesc.Format = DXGI_FORMAT_UNKNOWN;
-            vertexBufferDesc.SampleDesc.Count = 1;
-            vertexBufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-            vertexBufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-
-            Device->CreateCommittedResource(
-                &defaultHeapProps,
-                D3D12_HEAP_FLAG_NONE,
-                &vertexBufferDesc,
-                D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
-                nullptr,
-                IID_PPV_ARGS(&LineVertexBuffer)
-            );
-
-            Device->CreateCommittedResource(
-                &uploadHeapProps,
-                D3D12_HEAP_FLAG_NONE,
-                &vertexBufferDesc,
-                D3D12_RESOURCE_STATE_GENERIC_READ,
-                nullptr,
-                IID_PPV_ARGS(&LineVertexBufferUpload)
-            );
-
-            D3D12_INPUT_ELEMENT_DESC inputLayout[] =
-            {
-                { "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-                { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-            };
-
-            D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-            psoDesc.pRootSignature = LineRootSignature;
-            psoDesc.InputLayout = { inputLayout, _countof(inputLayout) };
-            psoDesc.VS = { LineVertexShaderBlob->GetBufferPointer(), LineVertexShaderBlob->GetBufferSize() };
-            psoDesc.PS = { LinePixelShaderBlob->GetBufferPointer(), LinePixelShaderBlob->GetBufferSize() };
-            psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-            psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
-            psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
-            psoDesc.RasterizerState.SlopeScaledDepthBias = 0.0f;
-            psoDesc.RasterizerState.DepthBias = 0;
-            psoDesc.RasterizerState.DepthBiasClamp = 0.0f;
-            psoDesc.RasterizerState.FrontCounterClockwise = FALSE;
-            psoDesc.RasterizerState.MultisampleEnable = FALSE;
-            psoDesc.RasterizerState.AntialiasedLineEnable = FALSE;
-            psoDesc.RasterizerState.DepthClipEnable = TRUE;
-            psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-            psoDesc.BlendState.RenderTarget[0].BlendEnable = FALSE;
-            psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-            psoDesc.DepthStencilState.DepthEnable = TRUE;
-            psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-            psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
-            psoDesc.DepthStencilState.StencilEnable = FALSE;
-            psoDesc.SampleMask = UINT_MAX;
-            psoDesc.NumRenderTargets = 1;
-            psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-            psoDesc.SampleDesc.Count = 1;
-            psoDesc.SampleDesc.Quality = 0;
-            psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
-            psoDesc.NumRenderTargets = 1;
-            psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
-            Device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&LinePipeline));
-        }
     }
 
     void DX12CommandList::BeginInternal(D3D12_VIEWPORT* viewport, D3D12_RECT* scissor, D3D12_CPU_DESCRIPTOR_HANDLE renderTargetHandle, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandle)
@@ -261,12 +78,6 @@ namespace Waldem
 
     void DX12CommandList::EndInternal()
     {
-        if(!Lines.IsEmpty())
-        {
-            DrawLines(Lines);
-            Lines.Clear();
-        }
-        
         CurrentExecutableShader = nullptr;
     }
 
@@ -284,42 +95,22 @@ namespace Waldem
     void DX12CommandList::Draw(Mesh* mesh)
     {
         //Draw mesh
-        auto& indexBufferView = ((DX12Buffer*)mesh->IndexBuffer)->GetIndexBufferView();
-        auto& vertexBufferView = ((DX12Buffer*)mesh->VertexBuffer)->GetVertexBufferView();
-        CommandList->IASetVertexBuffers(0, 1, &vertexBufferView);
-        CommandList->IASetIndexBuffer(&indexBufferView);
-        CommandList->DrawIndexedInstanced(mesh->IndexBuffer->GetCount(), 1, 0, 0, 0);
-    }
+        if(mesh->VertexBuffer)
+        {
+            auto& vertexBufferView = ((DX12Buffer*)mesh->VertexBuffer)->GetVertexBufferView();
+            CommandList->IASetVertexBuffers(0, 1, &vertexBufferView);
+        }
 
-    void DX12CommandList::AddLine(Line line)
-    {
-        Lines.Add(line);
-    }
-
-    void DX12CommandList::DrawLines(WArray<Line> lines)
-    {
-        auto vertexBufferSize = lines.GetSize();
-        void* mappedData = nullptr;
-        LineVertexBufferUpload->Map(0, nullptr, &mappedData);
-        memcpy(mappedData, lines.GetData(), vertexBufferSize);
-        LineVertexBufferUpload->Unmap(0, nullptr);
-
-        ResourceBarrier(LineVertexBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, D3D12_RESOURCE_STATE_COPY_DEST);
-
-        CommandList->CopyBufferRegion(LineVertexBuffer, 0, LineVertexBufferUpload, 0, vertexBufferSize);
-
-        ResourceBarrier(LineVertexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
-        
-        D3D12_VERTEX_BUFFER_VIEW vbView;
-        vbView.BufferLocation = LineVertexBuffer->GetGPUVirtualAddress(); 
-        vbView.SizeInBytes = vertexBufferSize;
-        vbView.StrideInBytes = sizeof(LineVertex);
-        
-        CommandList->SetPipelineState(LinePipeline);
-        CommandList->SetGraphicsRootSignature(LineRootSignature);
-        CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
-        CommandList->IASetVertexBuffers(0, 1, &vbView);
-        CommandList->DrawInstanced(lines.Num() * 2, 1, 0, 0);
+        if(mesh->IndexBuffer)
+        {
+            auto& indexBufferView = ((DX12Buffer*)mesh->IndexBuffer)->GetIndexBufferView();
+            CommandList->IASetIndexBuffer(&indexBufferView);
+            CommandList->DrawIndexedInstanced(mesh->IndexBuffer->GetCount(), 1, 0, 0, 0);
+        }
+        else
+        {
+            CommandList->DrawInstanced(mesh->VertexBuffer->GetCount(), 1, 0, 0);
+        }
     }
 
     void DX12CommandList::Dispatch(Point3 groupCount)
@@ -377,52 +168,75 @@ namespace Waldem
         {
             CommandList->SetGraphicsRootSignature(rootSignatureObject);
         }
+        
+        auto rootParamDatas = dx12RootSignature->GetRootParamDatas();
+
+        WArray<ID3D12DescriptorHeap*> heaps;
 
         auto resourcesHeap = dx12RootSignature->GetResourcesHeap();
-        auto samplersHeap = dx12RootSignature->GetSamplersHeap();
-        auto rootParamDatas = dx12RootSignature->GetRootParamDatas();
-        
-        ID3D12DescriptorHeap* heaps[] = { resourcesHeap, samplersHeap };
-        CommandList->SetDescriptorHeaps(2, heaps);
-        
-        UINT descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-        D3D12_GPU_DESCRIPTOR_HANDLE handle = resourcesHeap->GetGPUDescriptorHandleForHeapStart();
-        UINT samplerDescriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
-        D3D12_GPU_DESCRIPTOR_HANDLE samplersHandle = samplersHeap->GetGPUDescriptorHandleForHeapStart();
-
-        for (uint32_t i = 0; i < rootParamDatas.Num(); ++i)
+        if(resourcesHeap)
         {
-            auto& rootParamData = rootParamDatas[i];
+            heaps.Add(resourcesHeap);
+        }
         
-            if(rootParamData.Type == RTYPE_Sampler)
+        auto samplersHeap = dx12RootSignature->GetSamplersHeap();
+        if(samplersHeap)
+        {
+            heaps.Add(samplersHeap);
+        }
+
+        if(!heaps.IsEmpty())
+        {
+            CommandList->SetDescriptorHeaps(heaps.Num(), heaps.GetData());
+        }
+
+        if(resourcesHeap)
+        {
+            UINT descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+            D3D12_GPU_DESCRIPTOR_HANDLE handle = resourcesHeap->GetGPUDescriptorHandleForHeapStart();
+
+            for (uint32_t i = 0; i < rootParamDatas.Num(); ++i)
             {
-                if(rootSignature->CurrentPipelineType == PipelineType::Compute)
+                auto& rootParamData = rootParamDatas[i];
+                
+                if(rootParamData.Type != RTYPE_Sampler && rootParamData.Type != RTYPE_Constant)
                 {
-                    CommandList->SetComputeRootDescriptorTable(i, samplersHandle);
-                }
-                else
-                {
-                    CommandList->SetGraphicsRootDescriptorTable(i, samplersHandle);
-                }
+                    if(rootSignature->CurrentPipelineType == PipelineType::Compute)
+                    {
+                        CommandList->SetComputeRootDescriptorTable(i, handle);
+                    }
+                    else
+                    {
+                        CommandList->SetGraphicsRootDescriptorTable(i, handle);
+                    }
         
-                samplersHandle.ptr += samplerDescriptorSize;
+                    handle.ptr += descriptorSize * rootParamData.NumDescriptors;
+                }
             }
-            else if(rootParamData.Type == RTYPE_Constant)
+        }
+
+        if(samplersHeap)
+        {
+            UINT samplerDescriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+            D3D12_GPU_DESCRIPTOR_HANDLE samplersHandle = samplersHeap->GetGPUDescriptorHandleForHeapStart();
+
+            for (uint32_t i = 0; i < rootParamDatas.Num(); ++i)
             {
-                continue;
-            }
-            else
-            {
-                if(rootSignature->CurrentPipelineType == PipelineType::Compute)
-                {
-                    CommandList->SetComputeRootDescriptorTable(i, handle);
-                }
-                else
-                {
-                    CommandList->SetGraphicsRootDescriptorTable(i, handle);
-                }
+                auto& rootParamData = rootParamDatas[i];
         
-                handle.ptr += descriptorSize * rootParamData.NumDescriptors;
+                if(rootParamData.Type == RTYPE_Sampler)
+                {
+                    if(rootSignature->CurrentPipelineType == PipelineType::Compute)
+                    {
+                        CommandList->SetComputeRootDescriptorTable(i, samplersHandle);
+                    }
+                    else
+                    {
+                        CommandList->SetGraphicsRootDescriptorTable(i, samplersHandle);
+                    }
+        
+                    samplersHandle.ptr += samplerDescriptorSize;
+                }
             }
         }
     }
@@ -526,6 +340,25 @@ namespace Waldem
         ID3D12Resource* dst = (ID3D12Resource*)dstBuffer->GetPlatformResource();
         ID3D12Resource* src = (ID3D12Resource*)srcBuffer->GetPlatformResource();
         CommandList->CopyResource(dst, src);
+    }
+
+    void DX12CommandList::UpdateBuffer(Buffer* buffer, void* data, uint32_t size)
+    {
+        DX12Buffer* dx12Buffer = (DX12Buffer*)buffer;
+        ID3D12Resource* uploadResource = dx12Buffer->GetUploadResource();
+        ID3D12Resource* defaultResource = dx12Buffer->GetDefaultResource();
+        void* mappedData;
+        uploadResource->Map(0, nullptr, &mappedData);
+        memcpy(mappedData, data, size);
+        uploadResource->Unmap(0, nullptr);
+
+        ResourceBarrier(defaultResource, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, D3D12_RESOURCE_STATE_COPY_DEST);
+
+        CommandList->CopyBufferRegion(defaultResource, 0, uploadResource, 0, size);
+
+        ResourceBarrier(defaultResource, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+
+        buffer->SetCount(size / buffer->GetStride());
     }
 
     void DX12CommandList::UpdateSubresoures(ID3D12Resource* destResource, ID3D12Resource* srcResource, uint32_t numSubresources, D3D12_SUBRESOURCE_DATA* subresourceData)

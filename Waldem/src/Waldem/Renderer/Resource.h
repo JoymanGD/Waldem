@@ -36,6 +36,7 @@ namespace Waldem
         }
 
         //constant buffers
+        //TODO: remove size, make it always 1
         Resource(String name, ResourceType type, void* data, uint32_t stride, float size, uint32_t slot)
         {
             Name = name;

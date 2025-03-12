@@ -12,7 +12,7 @@ namespace Waldem
         ResourceManager() = default;
         
         RenderTarget* CreateRenderTarget(String name, int width, int height, TextureFormat format);
-        Buffer* CreateBuffer(String name, BufferType type, void* data, uint32_t size);
+        Buffer* CreateBuffer(String name, BufferType type, void* data, uint32_t size, uint32_t stride);
         RenderTarget* CloneRenderTarget(RenderTarget* renderTarget);
         Buffer* CloneBuffer(Buffer* buffer);
         Texture2D* LoadTexture(String path);

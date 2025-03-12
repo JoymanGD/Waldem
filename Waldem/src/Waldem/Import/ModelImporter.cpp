@@ -96,7 +96,7 @@ namespace Waldem
             for (int i = 0; i < assimpModel->mNumMeshes; ++i)
             {
                 auto assimpMesh = assimpModel->mMeshes[i];
-
+                
                 std::vector<uint32_t> indexBufferData;
                 
                 for (int j = 0; j < assimpMesh->mNumFaces; ++j)
@@ -133,18 +133,20 @@ namespace Waldem
                 auto material = assimpModel->mMaterials[i];
                 auto mat = CreateMaterial(path, assimpModel, material);
 
-                uint32_t vertexBufferSize = vertexBufferData.size() * sizeof(Vertex);
-                uint32_t indexBufferSize = indexBufferData.size() * sizeof(uint32_t);
-                BoundingBox bBox { Vector3(assimpMesh->mAABB.mMin.x, assimpMesh->mAABB.mMin.y, assimpMesh->mAABB.mMin.z), Vector3(assimpMesh->mAABB.mMax.x, assimpMesh->mAABB.mMax.y, assimpMesh->mAABB.mMax.z)};
-                Mesh* mesh = new Mesh(vertexBufferData.data(), vertexBufferSize, indexBufferData.data(), indexBufferSize, mat, bBox);
+                Matrix4 modelMatrix;
                 if(assimpModel->mRootNode->mNumChildren > 0)
                 {
-                    mesh->ObjectMatrix = AssimpToMatrix4(assimpModel->mRootNode->mChildren[i]->mTransformation);
+                    modelMatrix = AssimpToMatrix4(assimpModel->mRootNode->mChildren[i]->mTransformation);
                 }
                 else
                 {
-                    mesh->ObjectMatrix = AssimpToMatrix4(assimpModel->mRootNode->mTransformation);
+                    modelMatrix = AssimpToMatrix4(assimpModel->mRootNode->mTransformation);
                 }
+                
+                uint32_t vertexBufferSize = vertexBufferData.size() * sizeof(Vertex);
+                uint32_t indexBufferSize = indexBufferData.size() * sizeof(uint32_t);
+                BoundingBox bBox { Vector3(assimpMesh->mAABB.mMin.x, assimpMesh->mAABB.mMin.y, assimpMesh->mAABB.mMin.z), Vector3(assimpMesh->mAABB.mMax.x, assimpMesh->mAABB.mMax.y, assimpMesh->mAABB.mMax.z)};
+                Mesh* mesh = new Mesh(vertexBufferData.data(), vertexBufferSize, indexBufferData.data(), indexBufferSize, mat, bBox, assimpMesh->mName.C_Str(), modelMatrix);
                 result->AddMesh(mesh);
             }
         }

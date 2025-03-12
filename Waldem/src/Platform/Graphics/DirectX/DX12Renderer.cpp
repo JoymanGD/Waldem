@@ -194,7 +194,7 @@ namespace Waldem
 
         DSVHandle = DSVHeap->GetCPUDescriptorHandleForHeapStart();
         Device->CreateDepthStencilView(DepthStencilBuffer, &dsvDesc, DSVHandle);
-
+        
         WorldCommandList.first = new DX12CommandList(Device);
         
         Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&WaitFence));
@@ -225,23 +225,6 @@ namespace Waldem
         auto& cmd = WorldCommandList.first;
 
         cmd->Draw(mesh);
-    }
-
-    void DX12Renderer::DrawLine(Line line)
-    {
-        auto& cmd = WorldCommandList.first;
-
-        cmd->AddLine(line);
-    }
-
-    void DX12Renderer::DrawLines(WArray<Line> lines)
-    {
-        auto& cmd = WorldCommandList.first;
-
-        for (auto line : lines)
-        {
-            cmd->AddLine(line);
-        }
     }
 
     void DX12Renderer::Wait()
@@ -387,9 +370,9 @@ namespace Waldem
         WorldCommandList.first->SetRenderTargets(renderTargets, depthStencil);
     }
 
-    Pipeline* DX12Renderer::CreateGraphicPipeline(const String& name, WArray<TextureFormat> RTFormats, PrimitiveTopologyType primitiveTopologyType, RootSignature* rootSignature, PixelShader* shader)
+    Pipeline* DX12Renderer::CreateGraphicPipeline(const String& name, RootSignature* rootSignature, PixelShader* shader, WArray<TextureFormat> RTFormats, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout)
     {
-        return new DX12GraphicPipeline(name, RTFormats, primitiveTopologyType, Device, rootSignature, shader);
+        return new DX12GraphicPipeline(name, Device, rootSignature, shader, RTFormats, rasterizerDesc, depthStencilDesc, primitiveTopologyType, inputLayout);
     }
 
     Pipeline* DX12Renderer::CreateComputePipeline(const String& name, RootSignature* rootSignature, ComputeShader* shader)
@@ -424,9 +407,14 @@ namespace Waldem
         WorldCommandList.first->CopyBuffer(dstBuffer, srcBuffer);
     }
 
-    Buffer* DX12Renderer::CreateBuffer(String name, BufferType type, void* data, uint32_t size)
+    Buffer* DX12Renderer::CreateBuffer(String name, BufferType type, void* data, uint32_t size, uint32_t stride)
     {
-        return new DX12Buffer(Device, WorldCommandList.first, name, type, data, size);
+        return new DX12Buffer(Device, WorldCommandList.first, name, type, data, size, stride);
+    }
+
+    void DX12Renderer::UpdateBuffer(Buffer* buffer, void* data, uint32_t size)
+    {
+        WorldCommandList.first->UpdateBuffer(buffer, data, size);
     }
 
     void DX12Renderer::ClearRenderTarget(RenderTarget* rt)

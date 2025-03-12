@@ -1,4 +1,5 @@
 #pragma once
+#include "TextureFormat.h"
 
 namespace Waldem
 {
@@ -21,24 +22,73 @@ namespace Waldem
         WD_CONSERVATIVE_RASTERIZATION_MODE_ON	= 1
     };
     
+    enum DepthWriteMask
+    {
+        WD_DEPTH_WRITE_MASK_ZERO	= 0,
+        WD_DEPTH_WRITE_MASK_ALL	= 1
+    };
+    
+    enum ComparisonFunc
+    {
+        WD_COMPARISON_FUNC_NONE	= 0,
+        WD_COMPARISON_FUNC_NEVER	= 1,
+        WD_COMPARISON_FUNC_LESS	= 2,
+        WD_COMPARISON_FUNC_EQUAL	= 3,
+        WD_COMPARISON_FUNC_LESS_EQUAL	= 4,
+        WD_COMPARISON_FUNC_GREATER	= 5,
+        WD_COMPARISON_FUNC_NOT_EQUAL	= 6,
+        WD_COMPARISON_FUNC_GREATER_EQUAL	= 7,
+        WD_COMPARISON_FUNC_ALWAYS	= 8
+    };
+
+    enum StencilOp
+    {
+        WD_STENCIL_OP_KEEP	= 1,
+        WD_STENCIL_OP_ZERO	= 2,
+        WD_STENCIL_OP_REPLACE	= 3,
+        WD_STENCIL_OP_INCR_SAT	= 4,
+        WD_STENCIL_OP_DECR_SAT	= 5,
+        WD_STENCIL_OP_INVERT	= 6,
+        WD_STENCIL_OP_INCR	= 7,
+        WD_STENCIL_OP_DECR	= 8
+    };
+
+    struct DepthStencilOpDesc
+    {
+        StencilOp StencilFailOp;
+        StencilOp StencilDepthFailOp;
+        StencilOp StencilPassOp;
+        ComparisonFunc StencilFunc;
+    };
+    
     struct DepthStencilDesc
     {
+        bool DepthEnable;
+        DepthWriteMask DepthWriteMask;
+        ComparisonFunc DepthFunc;
+        bool StencilEnable;
+        uint8_t StencilReadMask;
+        uint8_t StencilWriteMask;
+        DepthStencilOpDesc FrontFace;
+        DepthStencilOpDesc BackFace;
     };
+    #define DEFAULT_DEPTH_STENCIL_DESC { true, WD_DEPTH_WRITE_MASK_ALL, WD_COMPARISON_FUNC_LESS, false, 0, 0, { WD_STENCIL_OP_KEEP, WD_STENCIL_OP_KEEP, WD_STENCIL_OP_KEEP, WD_COMPARISON_FUNC_ALWAYS }, { WD_STENCIL_OP_KEEP, WD_STENCIL_OP_KEEP, WD_STENCIL_OP_KEEP, WD_COMPARISON_FUNC_ALWAYS } }
     
     struct RasterizerDesc
     {
         FillMode FillMode = WD_FILL_MODE_SOLID;
         CullMode CullMode = WD_CULL_MODE_BACK;
-        BOOL FrontCounterClockwise = FALSE;
-        INT DepthBias;
-        FLOAT DepthBiasClamp;
-        FLOAT SlopeScaledDepthBias;
-        BOOL DepthClipEnable;
-        BOOL MultisampleEnable;
-        BOOL AntialiasedLineEnable;
-        UINT ForcedSampleCount;
+        bool FrontCounterClockwise = false;
+        int DepthBias;
+        float DepthBiasClamp;
+        float SlopeScaledDepthBias;
+        bool DepthClipEnable;
+        bool MultisampleEnable;
+        bool AntialiasedLineEnable;
+        uint32_t ForcedSampleCount;
         ConservativeRasterizationMode ConservativeRaster;
     };
+    #define DEFAULT_RASTERIZER_DESC { WD_FILL_MODE_SOLID, WD_CULL_MODE_BACK, false, 0, 0.0f, 0.0f, false, false, false, 0, ConservativeRasterizationMode::WD_CONSERVATIVE_RASTERIZATION_MODE_OFF }
     
     struct BlendDesc
     {
@@ -51,9 +101,22 @@ namespace Waldem
     struct SampleDesc
     {
     };
+
+    enum InputClassification
+    {
+        WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA	= 0,
+        WD_INPUT_CLASSIFICATION_PER_INSTANCE_DATA = 1
+    };
     
     struct InputLayoutDesc
     {
+        String SemanticName;
+        uint32_t SemanticIndex;
+        TextureFormat Format;
+        uint32_t InputSlot;
+        uint32_t AlignedByteOffset;
+        InputClassification InputSlotClass;
+        uint32_t InstanceDataStepRate;
     };
 
     enum PrimitiveTopologyType
@@ -100,4 +163,12 @@ namespace Waldem
         VIDEO_ENCODE_READ	= 0x200000,
         VIDEO_ENCODE_WRITE	= 0x800000
     };
+
+    #define DEFAULT_INPUT_LAYOUT_DESC \
+    {{ "POSITION", 0, TextureFormat::R32G32B32_FLOAT, 0, 0, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }, \
+    { "NORMAL", 0, TextureFormat::R32G32B32_FLOAT, 0, 12, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }, \
+    { "TANGENT", 0, TextureFormat::R32G32B32_FLOAT, 0, 24, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }, \
+    { "BITANGENT", 0, TextureFormat::R32G32B32_FLOAT, 0, 36, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }, \
+    { "TEXCOORD", 0, TextureFormat::R32G32_FLOAT, 0, 48, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }, \
+    { "MESH_ID", 0, TextureFormat::R16_UINT, 0, 56, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }}
 }

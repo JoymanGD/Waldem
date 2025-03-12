@@ -23,13 +23,14 @@ namespace Waldem
     {
     public:
         Mesh() = default;
-        Mesh(void* vertexBufferData, uint32_t vertexBufferDataSize, uint32_t* indexBufferData, uint32_t indexBufferDataSize, Material* material, BoundingBox bBox);
+        Mesh(void* vertexBufferData, uint32_t vertexBufferDataSize, uint32_t* indexBufferData, uint32_t indexBufferDataSize, Material* material, BoundingBox bBox, String name = "", Matrix4 objectMatrix = glm::identity<Matrix4>());
         void SetMaterial(Material* material) { CurrentMaterial = material; }
 
-        Buffer* VertexBuffer;
-        Buffer* IndexBuffer;
-        Material* CurrentMaterial;
+        Buffer* VertexBuffer = nullptr;
+        Buffer* IndexBuffer = nullptr;
+        Material* CurrentMaterial = nullptr;
         BoundingBox BBox;
         Matrix4 ObjectMatrix;
+        String Name;
     };
 }

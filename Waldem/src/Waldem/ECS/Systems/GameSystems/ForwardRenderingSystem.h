@@ -1,5 +1,5 @@
 #pragma once
-#include "System.h"
+#include "Waldem/ECS/Systems/System.h"
 #include "Waldem/ECS/Components/ModelComponent.h"
 #include "Waldem/Renderer/Light.h"
 #include "Waldem/Renderer/Shader.h"
@@ -56,11 +56,18 @@ namespace Waldem
             if(!textures.IsEmpty())
                 resources.Add(Resource("TestTextures", textures, 3));
             resources.Add(Resource("ComparisonSampler", { Sampler( COMPARISON_MIN_MAG_MIP_LINEAR, WRAP, WRAP, WRAP, LESS_EQUAL) }, 1));
-
+        
             DefaultRenderTarget = Renderer::CreateRenderTarget("DefaultRenderTarget", sceneData->Window->GetWidth(), sceneData->Window->GetHeight(), TextureFormat::R8G8B8A8_UNORM);
             DefaultRootSignature = Renderer::CreateRootSignature(resources);
             DefaultPixelShader = Renderer::LoadPixelShader("ForwardRendering");
-            DefaultPipeline = Renderer::CreateGraphicPipeline("ForwardRenderingPipeline", { TextureFormat::R8G8B8A8_UNORM }, WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, DefaultRootSignature, DefaultPixelShader);
+            DefaultPipeline = Renderer::CreateGraphicPipeline("ForwardRenderingPipeline",
+                                                            DefaultRootSignature,
+                                                            DefaultPixelShader,
+                                                            { TextureFormat::R8G8B8A8_UNORM },
+                                                            DEFAULT_RASTERIZER_DESC,
+                                                            DEFAULT_DEPTH_STENCIL_DESC,
+                                                            WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
+                                                            DEFAULT_INPUT_LAYOUT_DESC);
         }
 
         void Update(float deltaTime) override
@@ -92,13 +99,12 @@ namespace Waldem
             WArray<Matrix4> worldTransforms;
             for (auto [entity, model, transform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
             {
-                worldTransforms.Add(transform.GetMatrix());
+                worldTransforms.Add(transform);
             }
 
             DefaultRootSignature->UpdateResourceData("WorldTransforms", worldTransforms.GetData());
             Renderer::SetPipeline(DefaultPipeline);
             Renderer::SetRootSignature(DefaultRootSignature);
-            // Renderer::SetRenderTargets({ DefaultRenderTarget });
             
             uint32_t modelID = 0;
             for (auto [entity, modelComponent, transform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
@@ -106,7 +112,7 @@ namespace Waldem
                 DefaultRootSignature->UpdateResourceData("RootConstants", &modelID);
                 for (auto mesh : modelComponent.Model->GetMeshes())
                 {
-                    auto transformedBBox = mesh->BBox.Transform(transform.GetMatrix());
+                    auto transformedBBox = mesh->BBox.GetTransformed(transform.Matrix);
 
                     //Frustrum culling
                     if(transformedBBox.IsInFrustum(frustrumPlanes))
@@ -116,13 +122,6 @@ namespace Waldem
                 }
                 modelID++;
             }
-            // Renderer::SetRenderTargets({});
-
-            Matrix4 viewProj = matrices[1] * matrices[0];
-
-            Line line = { { 50.f, 0.0f, .0f }, { 55.f, 5.f, .0f }, { 1.0f, 0.0f, 0.0f, 1.0f } };
-            line.ToClipSpace(viewProj);
-            Renderer::DrawLine(line);
         }
     };
 }

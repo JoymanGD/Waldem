@@ -37,7 +37,7 @@ namespace Waldem
 
             D3D12_CLEAR_VALUE clearValue = {};
             clearValue.Format = DXGI_FORMAT_D32_FLOAT;
-            clearValue.DepthStencil.Depth = 0.0f;
+            clearValue.DepthStencil.Depth = 1.0f;
             clearValue.DepthStencil.Stencil = 0;
         
             D3D12_HEAP_PROPERTIES dsvHeapProperties = {};

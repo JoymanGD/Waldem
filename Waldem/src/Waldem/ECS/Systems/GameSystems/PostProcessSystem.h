@@ -1,5 +1,5 @@
 #pragma once
-#include "System.h"
+#include "Waldem/ECS/Systems/System.h"
 #include "Waldem/Renderer/Light.h"
 #include "Waldem/Renderer/Shader.h"
 

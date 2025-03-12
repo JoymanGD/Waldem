@@ -17,3 +17,17 @@ struct PhysicsComponent
     uint IsGravity;
     uint Padding0;
 };
+
+struct AABB
+{
+    float3 min;
+    float3 max;
+};
+
+struct BVHNode
+{
+    AABB Box;
+    uint Left;
+    uint Right;
+    uint ObjectIndex;
+};

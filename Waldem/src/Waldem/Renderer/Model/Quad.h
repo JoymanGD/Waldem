@@ -4,15 +4,24 @@
 
 namespace Waldem
 {
+    struct QuadVertex
+    {
+        Vector3 Position;
+        Vector2 UV;
+
+        QuadVertex(float x, float y, float z, float u, float v) : Position(x, y, z), UV(u,v) {}
+        QuadVertex(Vector3 position, Vector2 uv) : Position(position), UV(uv) {}
+    };
+    
     class WALDEM_API Quad : public Mesh
     {
     private:
-        Vertex QuadVertices[4] =
+        QuadVertex QuadVertices[4] =
         {
-            {{-1.0f, -1.0f, 0.0f}, {0.0f, 0.0f, -1.0f}, {0.0f, -1.0f, 0.0f}, {-1.0f, 0.0f, 0.0f}, {0.0f, 1.0f}, 0},
-            {{1.0f, -1.0f, 0.0f}, {0.0f, 0.0f, -1.0f}, {0.0f, -1.0f, 0.0f}, {-1.0f, 0.0f, 0.0f}, {1.0f, 1.0f}, 0},
-            {{-1.0f, 1.0f, 0.0f}, {0.0f, 0.0f, -1.0f}, {0.0f, -1.0f, 0.0f}, {-1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}, 0},
-            {{1.0f, 1.0f, 0.0f}, {0.0f, 0.0f, -1.0f}, {0.0f, -1.0f, 0.0f}, {-1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, 0}
+            {{-1.0f, -1.0f, 0.0f}, {0.0f, 1.0f}},
+            {{1.0f, -1.0f, 0.0f}, {1.0f, 1.0f}},
+            {{-1.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+            {{1.0f, 1.0f, 0.0f}, {1.0f, 0.0f}}
         };
         uint32_t QuadIndices[6] = { 0, 2, 1, 1, 2, 3 };
 
@@ -27,8 +36,8 @@ namespace Waldem
     public:
         Quad()
         {
-            VertexBuffer = Renderer::CreateBuffer("QuadVertexBuffer", BufferType::VertexBuffer, QuadVertices, sizeof(QuadVertices));
-            IndexBuffer = Renderer::CreateBuffer("QuadIndexBuffer", BufferType::IndexBuffer, QuadIndices, sizeof(QuadIndices));
+            VertexBuffer = Renderer::CreateBuffer("QuadVertexBuffer", BufferType::VertexBuffer, QuadVertices, sizeof(QuadVertices), sizeof(QuadVertex));
+            IndexBuffer = Renderer::CreateBuffer("QuadIndexBuffer", BufferType::IndexBuffer, QuadIndices, sizeof(QuadIndices), sizeof(uint32_t));
             BBox = CalculateBoundingBox();
 
             CurrentMaterial = nullptr;

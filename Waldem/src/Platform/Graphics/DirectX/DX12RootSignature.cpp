@@ -113,6 +113,24 @@ namespace Waldem
 
     void DX12RootSignature::SetResources(ID3D12Device* device, DX12CommandList* cmdList, WArray<Resource> resourceDescs, uint32_t numDescriptors)
     {
+        if(numDescriptors == 0)
+        {
+            if(resourceDescs.Num() > 0)
+            {
+                for (int i = 0; i < resourceDescs.Num(); ++i)
+                {
+                    auto& resourceDesc = resourceDescs[i];
+                    
+                    if(resourceDesc.Type == RTYPE_Constant)
+                    {
+                        ResourcesMap.Add(resourceDesc.Name, new ResourceData(resourceDesc, i, D3D12_RESOURCE_STATE_COMMON));
+                    }
+                }
+            }
+            
+            return;
+        }
+        
         D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
         heapDesc.NumDescriptors = numDescriptors;
         heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
@@ -177,6 +195,8 @@ namespace Waldem
         for (uint32_t i = 0; i < resourceDescs.Num(); ++i)
         {
             auto& resourceDesc = resourceDescs[i];
+
+            D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
             
             for (uint32_t j = 0; j < resourceDesc.NumResources; ++j)
             {
@@ -241,7 +261,7 @@ namespace Waldem
                             nullptr,
                             IID_PPV_ARGS(&defaultResourceBuffer));
 
-                        cmdList->ResourceBarrier(defaultResourceBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+                        cmdList->ResourceBarrier(defaultResourceBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, initialState);
                         
                         D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
                         cbvDesc.BufferLocation = defaultResourceBuffer->GetGPUVirtualAddress();
@@ -288,7 +308,7 @@ namespace Waldem
                                 nullptr,
                                 IID_PPV_ARGS(&defaultResourceBuffer));
                         
-                            cmdList->ResourceBarrier(defaultResourceBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+                            cmdList->ResourceBarrier(defaultResourceBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, initialState);
                         }
                         
                         D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -352,8 +372,10 @@ namespace Waldem
                                 D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
                                 nullptr,
                                 IID_PPV_ARGS(&defaultResourceBuffer));
+
+                            initialState = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
                         
-                            cmdList->ResourceBarrier(defaultResourceBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+                            cmdList->ResourceBarrier(defaultResourceBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, initialState);
                         }
                         
                         device->CreateCommittedResource(
@@ -403,7 +425,7 @@ namespace Waldem
                                 nullptr,
                                 IID_PPV_ARGS(&defaultResourceBuffer));
                         
-                            cmdList->ResourceBarrier(defaultResourceBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+                            cmdList->ResourceBarrier(defaultResourceBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, initialState);
                         }
                         
                         D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -489,18 +511,18 @@ namespace Waldem
 
                 if(resourceDesc.Type == RTYPE_Sampler)
                 {
-                    ResourcesMap.Add(resourceDesc.Name, new ResourceData(resourceDesc, i ));
+                    ResourcesMap.Add(resourceDesc.Name, new ResourceData(resourceDesc, i, initialState));
                     samplerHandle.ptr += samplerDescriptorSize;
                 }
                 else if(resourceDesc.Type == RTYPE_Constant)
                 {
-                    ResourcesMap.Add(resourceDesc.Name, new ResourceData(resourceDesc, i));
+                    ResourcesMap.Add(resourceDesc.Name, new ResourceData(resourceDesc, i, initialState));
                 }
                 else
                 {
                     uploadResourceBuffer->SetName(DX12Helper::StringToLPCWSTR(resourceDesc.Name + "_Upload_" + std::to_string(j)).c_str());
                     defaultResourceBuffer->SetName(DX12Helper::StringToLPCWSTR(resourceDesc.Name + "_Default_" + std::to_string(j)).c_str());
-                    ResourcesMap.Add(resourceDesc.Name, new ResourceData(uploadResourceBuffer, defaultResourceBuffer, readbackResourceBuffer, resourceDesc, i));
+                    ResourcesMap.Add(resourceDesc.Name, new ResourceData(uploadResourceBuffer, defaultResourceBuffer, readbackResourceBuffer, resourceDesc, i, initialState));
 
                     if(resourceDesc.Data)
                     {
@@ -514,9 +536,9 @@ namespace Waldem
                         memcpy(pMappedData, resourceDesc.Data, size);
                         uploadResourceBuffer->Unmap(0, nullptr);
                         
-                        cmdList->ResourceBarrier(defaultResourceBuffer, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, D3D12_RESOURCE_STATE_COPY_DEST);
+                        cmdList->ResourceBarrier(defaultResourceBuffer, initialState, D3D12_RESOURCE_STATE_COPY_DEST);
                         cmdList->CopyResource(defaultResourceBuffer, uploadResourceBuffer);
-                        cmdList->ResourceBarrier(defaultResourceBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+                        cmdList->ResourceBarrier(defaultResourceBuffer, D3D12_RESOURCE_STATE_COPY_DEST, initialState);
                     }
 
                     handle.ptr += descriptorSize;
@@ -552,15 +574,51 @@ namespace Waldem
 
                     //copy data to default resource
                     //barrier
-                    CmdList->ResourceBarrier(resourceData->DX12DefaultResource, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, D3D12_RESOURCE_STATE_COPY_DEST);
+                    CmdList->ResourceBarrier(resourceData->DX12DefaultResource, resourceData->CurrentState, D3D12_RESOURCE_STATE_COPY_DEST);
                     CmdList->CopyResource(resourceData->DX12DefaultResource, resourceData->DX12UploadResource);
-                    CmdList->ResourceBarrier(resourceData->DX12DefaultResource, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+                    CmdList->ResourceBarrier(resourceData->DX12DefaultResource, D3D12_RESOURCE_STATE_COPY_DEST, resourceData->CurrentState);
                 }
             }
             else
             {
                 throw std::runtime_error("Resource not found!");
             }
+        }
+    }
+
+    void DX12RootSignature::ClearResource(String name)
+    {
+        auto resourceData = ResourcesMap[name];
+            
+        if(resourceData)
+        {
+            if(resourceData->Desc.Type == RTYPE_Constant)
+            {
+                uint32_t numConstants = resourceData->Desc.Size.x / sizeof(uint32_t);
+                CmdList->SetConstants(resourceData->RootParameterIndex, numConstants, nullptr, CurrentPipelineType);
+            }
+            else
+            {
+                //map and copy data
+                UINT8* pMappedData;
+                HRESULT hr = resourceData->DX12UploadResource->Map(0, nullptr, reinterpret_cast<void**>(&pMappedData));
+                if(FAILED(hr))
+                {
+                    DX12Helper::PrintHResultError(hr);
+                }
+                memset(pMappedData, NULL, resourceData->Desc.Size.x * resourceData->Desc.Size.y);
+                resourceData->DX12UploadResource->Unmap(0, nullptr);
+
+                //copy data to default resource
+                //barrier
+                CmdList->ResourceBarrier(resourceData->DX12DefaultResource, resourceData->CurrentState, D3D12_RESOURCE_STATE_COPY_DEST);
+                CmdList->CopyResource(resourceData->DX12DefaultResource, resourceData->DX12UploadResource);
+                CmdList->ResourceBarrier(resourceData->DX12DefaultResource, D3D12_RESOURCE_STATE_COPY_DEST, resourceData->CurrentState);
+            }
+        }
+        else
+        {
+            throw std::runtime_error("Resource not found!");
         }
     }
 

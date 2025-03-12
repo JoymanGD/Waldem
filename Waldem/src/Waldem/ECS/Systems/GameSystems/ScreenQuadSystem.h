@@ -1,14 +1,9 @@
 #pragma once
-#include "System.h"
-#include "Waldem/ECS/Components/MainCamera.h"
+#include "Waldem/ECS/Systems/System.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
-#include "Waldem/ECS/Components/Selected.h"
-#include "Waldem/Editor/Editor.h"
 #include "Waldem/Renderer/Light.h"
 #include "Waldem/Renderer/Shader.h"
 #include "Waldem/Renderer/Model/Quad.h"
-#include "Waldem/Renderer/Model/Transform.h"
-#include "Waldem/World/Camera.h"
 
 namespace Waldem
 {
@@ -25,13 +20,24 @@ namespace Waldem
         
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
         {
-            Vector2 resolution = Vector2(sceneData->Window->GetWidth(), sceneData->Window->GetHeight());
+            WArray<InputLayoutDesc> inputElementDescs = {
+                { "POSITION", 0, TextureFormat::R32G32B32_FLOAT, 0, 0, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+                { "TEXCOORD", 0, TextureFormat::R32G32_FLOAT, 0, 12, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+            };
+            
             TargetRT = resourceManager->GetRenderTarget("TargetRT");
             WArray<Resource> QuadDrawPassResources;
             QuadDrawPassResources.Add(Resource("TargetRT", TargetRT, 0));
             QuadDrawRootSignature = Renderer::CreateRootSignature(QuadDrawPassResources);
             QuadDrawPixelShader = Renderer::LoadPixelShader("QuadDraw");
-            QuadDrawPipeline = Renderer::CreateGraphicPipeline("QuadDrawPipeline", { TextureFormat::R8G8B8A8_UNORM }, WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, QuadDrawRootSignature, QuadDrawPixelShader);
+            QuadDrawPipeline = Renderer::CreateGraphicPipeline("QuadDrawPipeline",
+                                                            QuadDrawRootSignature,
+                                                            QuadDrawPixelShader,
+                                                            { TextureFormat::R8G8B8A8_UNORM },
+                                                            DEFAULT_RASTERIZER_DESC,
+                                                            DEFAULT_DEPTH_STENCIL_DESC,
+                                                            WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
+                                                            inputElementDescs);
         }
 
         void Update(float deltaTime) override
