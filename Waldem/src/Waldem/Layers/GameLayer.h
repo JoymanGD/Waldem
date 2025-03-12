@@ -1,18 +1,17 @@
 #pragma once
 
-#include "Waldem/ECS/Components/Guizmo.h"
-#include "Waldem/ECS/Systems/DeferredRenderingSystem.h"
-#include "Waldem/ECS/Systems/OceanSimulationSystem.h"
-#include "Waldem/ECS/Systems/PostProcessSystem.h"
-#include "Waldem/ECS/Systems/ScreenQuadSystem.h"
-#include "Waldem/ECS/Systems/ShadowmapRenderingSystem.h"
+#include "Waldem/ECS/Systems/GameSystems/DeferredRenderingSystem.h"
+#include "Waldem/ECS/Systems/GameSystems/OceanSimulationSystem.h"
+#include "Waldem/ECS/Systems/GameSystems/PostProcessSystem.h"
+#include "Waldem/ECS/Systems/GameSystems/ScreenQuadSystem.h"
+#include "Waldem/ECS/Systems/GameSystems/ShadowmapRenderingSystem.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/Input/InputManager.h"
 #include "Waldem/Layers/Layer.h"
 #include "Waldem/SceneManagement/Scene.h"
 #include "Waldem/Renderer/Renderer.h"
 #include <glm/gtc/integer.hpp>
-#include "Waldem/ECS/Systems/PhysicsSystem.h"
+#include "Waldem/ECS/Systems/GameSystems/PhysicsSystem.h"
 
 namespace Waldem
 {
@@ -31,34 +30,19 @@ namespace Waldem
 			// averageWorldPositionEntity.Add<Selected>();
 			// averageWorldPositionEntity.Add<Transform>(Vector3(0, 0, 0));
 
-			Point2 debugRTResolution = Point2(512, 512);
+			resourceManager->CreateRenderTarget("WorldPositionRT", resolution.x, resolution.y, TextureFormat::R32G32B32A32_FLOAT);
+			resourceManager->CreateRenderTarget("NormalRT", resolution.x, resolution.y, TextureFormat::R16G16B16A16_FLOAT);
+			resourceManager->CreateRenderTarget("ColorRT", resolution.x, resolution.y, TextureFormat::R8G8B8A8_UNORM);
+			resourceManager->CreateRenderTarget("ORMRT", resolution.x, resolution.y, TextureFormat::R32G32B32A32_FLOAT);
+			resourceManager->CreateRenderTarget("MeshIDRT", resolution.x, resolution.y, TextureFormat::R32_SINT);
+			resourceManager->CreateRenderTarget("DepthRT", resolution.x, resolution.y, TextureFormat::D32_FLOAT);
 
-			Renderer::Begin();
-				resourceManager->CreateRenderTarget("TargetRT", resolution.x, resolution.y, TextureFormat::R8G8B8A8_UNORM);
-				resourceManager->CreateRenderTarget("WorldPositionRT", resolution.x, resolution.y, TextureFormat::R32G32B32A32_FLOAT);
-				resourceManager->CreateRenderTarget("NormalRT", resolution.x, resolution.y, TextureFormat::R16G16B16A16_FLOAT);
-				resourceManager->CreateRenderTarget("ColorRT", resolution.x, resolution.y, TextureFormat::R8G8B8A8_UNORM);
-				resourceManager->CreateRenderTarget("ORMRT", resolution.x, resolution.y, TextureFormat::R32G32B32A32_FLOAT);
-				resourceManager->CreateRenderTarget("MeshIDRT", resolution.x, resolution.y, TextureFormat::R32_SINT);
-				resourceManager->CreateRenderTarget("DepthRT", resolution.x, resolution.y, TextureFormat::D32_FLOAT);
-				resourceManager->CreateRenderTarget("DebugRT_1", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
-				resourceManager->CreateRenderTarget("DebugRT_2", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
-				resourceManager->CreateRenderTarget("DebugRT_3", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
-				resourceManager->CreateRenderTarget("DebugRT_4", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
-				resourceManager->CreateRenderTarget("DebugRT_5", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
-				resourceManager->CreateRenderTarget("DebugRT_6", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
-				resourceManager->CreateRenderTarget("DebugRT_7", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
-				resourceManager->CreateRenderTarget("DebugRT_8", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
-				resourceManager->CreateRenderTarget("DebugRT_9", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
-
-				// DrawSystems.Add((ISystem*)new OceanSimulationSystem(ecsManager));
-				DrawSystems.Add((ISystem*)new ShadowmapRenderingSystem(ecsManager));
-				DrawSystems.Add((ISystem*)new DeferredRenderingSystem(ecsManager));
-				DrawSystems.Add((ISystem*)new PostProcessSystem(ecsManager));
-	            DrawSystems.Add((ISystem*)new DebugSystem(ecsManager));
-				DrawSystems.Add((ISystem*)new ScreenQuadSystem(ecsManager));
-				DrawSystems.Add((ISystem*)new PhysicsSystem(ecsManager));
-			Renderer::End();
+			// DrawSystems.Add((ISystem*)new OceanSimulationSystem(ecsManager));
+			DrawSystems.Add((ISystem*)new ShadowmapRenderingSystem(ecsManager));
+			DrawSystems.Add((ISystem*)new DeferredRenderingSystem(ecsManager));
+			DrawSystems.Add((ISystem*)new PostProcessSystem(ecsManager));
+			DrawSystems.Add((ISystem*)new ScreenQuadSystem(ecsManager));
+			DrawSystems.Add((ISystem*)new PhysicsSystem(ecsManager));
 		}
 
 		void OnUpdate(float deltaTime) override

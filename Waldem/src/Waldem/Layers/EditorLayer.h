@@ -2,9 +2,8 @@
 
 #include "imgui.h"
 #include "backends/imgui_impl_sdl2.h"
-#include "Waldem/ECS/Systems/DebugSystem.h"
 #include "Waldem/ECS/Systems/EditorSystems/GuizmoEditorSystem.h"
-#include "Waldem/ECS/Systems/FreeLookCameraSystem.h"
+#include "Waldem/ECS/Systems/GameSystems/FreeLookCameraSystem.h"
 #include "Waldem/ECS/Systems/EditorSystems/EntityDetailsWidgetContainer.h"
 #include "Waldem/ECS/Systems/EditorSystems/MainWidgetContainer.h"
 #include "Waldem/ECS/Systems/EditorSystems/Widgets/HierarchyWidget.h"

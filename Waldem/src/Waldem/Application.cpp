@@ -25,18 +25,28 @@ namespace Waldem
 
 		CurrentRenderer = {};
 		CurrentRenderer.Initialize(Window);
+
+		Renderer::Begin();
 		
-		UILayer = new EditorLayer(Window, &CoreECSManager, &ResourceManager);
-		PushOverlay(UILayer);
+		Vector2 resolution = Vector2(Window->GetWidth(), Window->GetHeight());
+		ResourceManager.CreateRenderTarget("TargetRT", resolution.x, resolution.y, TextureFormat::R8G8B8A8_UNORM);
 		
-		CurrentGameLayer = new GameLayer(Window, &CoreECSManager, &ResourceManager);
-		PushLayer(CurrentGameLayer);
+		Editor = new EditorLayer(Window, &CoreECSManager, &ResourceManager);
+		PushOverlay(Editor);
+		
+		Game = new GameLayer(Window, &CoreECSManager, &ResourceManager);
+		PushLayer(Game);
+		
+		Debug = new DebugLayer(Window, &CoreECSManager, &ResourceManager);
+		PushLayer(Debug);
+		
+		Renderer::End();
 	}
 	
 	void Application::OpenScene(Scene* scene)
 	{
 		SceneData sceneData = { Window };
-		CurrentGameLayer->OpenScene(scene, &sceneData);
+		Game->OpenScene(scene, &sceneData);
 	}
 
 	Application::~Application()
@@ -111,12 +121,12 @@ namespace Waldem
 				layer->OnUpdate(Time::DeltaTime);
 			}
 
-			UILayer->Begin();
+			Editor->Begin();
 			for (Layer* layer : LayerStack)
 			{
 				layer->OnDrawUI(Time::DeltaTime);
 			}
-			UILayer->End();
+			Editor->End();
 			
 			Renderer::End();
 			

@@ -55,16 +55,6 @@ namespace Waldem
         Instance->PlatformRenderer->Draw(model);
     }
 
-    void Renderer::DrawLine(Line line)
-    {
-        Instance->PlatformRenderer->DrawLine(line);
-    }
-
-    void Renderer::DrawLines(WArray<Line> lines)
-    {
-        Instance->PlatformRenderer->DrawLines(lines);
-    }
-
     void Renderer::Wait()
     {
         Instance->PlatformRenderer->Wait();
@@ -100,9 +90,16 @@ namespace Waldem
         Instance->PlatformRenderer->SetRenderTargets(renderTargets, depthStencil);
     }
 
-    Pipeline* Renderer::CreateGraphicPipeline(const String& name, WArray<TextureFormat> RTFormats, PrimitiveTopologyType primitiveTopologyType, RootSignature* rootSignature, PixelShader* shader)
+    Pipeline* Renderer::CreateGraphicPipeline(const String& name,
+                                                RootSignature* rootSignature,
+                                                PixelShader* shader,
+                                                WArray<TextureFormat> RTFormats = { TextureFormat::R8G8B8A8_UNORM },
+                                                RasterizerDesc rasterizerDesc = DEFAULT_RASTERIZER_DESC,
+                                                DepthStencilDesc depthStencilDesc = DEFAULT_DEPTH_STENCIL_DESC,
+                                                PrimitiveTopologyType primitiveTopologyType = WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
+                                                const WArray<InputLayoutDesc>& inputLayout = DEFAULT_INPUT_LAYOUT_DESC)
     {
-        return Instance->PlatformRenderer->CreateGraphicPipeline(name, RTFormats, primitiveTopologyType, rootSignature, shader);
+        return Instance->PlatformRenderer->CreateGraphicPipeline(name, rootSignature, shader, RTFormats, rasterizerDesc, depthStencilDesc, primitiveTopologyType, inputLayout);
     }
 
     Pipeline* Renderer::CreateComputePipeline(const String& name, RootSignature* rootSignature, ComputeShader* shader)
@@ -137,9 +134,14 @@ namespace Waldem
         Instance->PlatformRenderer->CopyBuffer(dstBuffer, srcBuffer);
     }
 
-    Buffer* Renderer::CreateBuffer(String name, BufferType type, void* data, uint32_t size)
+    Buffer* Renderer::CreateBuffer(String name, BufferType type, void* data, uint32_t size, uint32_t stride)
     {
-        return Instance->PlatformRenderer->CreateBuffer(name, type, data, size);
+        return Instance->PlatformRenderer->CreateBuffer(name, type, data, size, stride);
+    }
+
+    void Renderer::UpdateBuffer(Buffer* buffer, void* data, uint32_t size)
+    {
+        Instance->PlatformRenderer->UpdateBuffer(buffer, data, size);
     }
 
     void Renderer::ResourceBarrier(RenderTarget* rt, ResourceStates before, ResourceStates after)

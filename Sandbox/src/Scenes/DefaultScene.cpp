@@ -2,7 +2,6 @@
 #include "DefaultScene.h"
 #include "Waldem/Import/ModelImporter.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
-#include "Waldem/ECS/Components/Ocean.h"
 #include "Waldem/ECS/Components/PhysicsComponent.h"
 #include "Waldem/Renderer/Light.h"
 

@@ -21,9 +21,9 @@ namespace Waldem
         return rt;
     }
     
-    Buffer* ResourceManager::CreateBuffer(String name, BufferType type, void* data, uint32_t size)
+    Buffer* ResourceManager::CreateBuffer(String name, BufferType type, void* data, uint32_t size, uint32_t stride)
     {
-        Buffer* buffer = Renderer::CreateBuffer(name, type, data, size);
+        Buffer* buffer = Renderer::CreateBuffer(name, type, data, size, stride);
 
         if(Buffers.Contains(name))
         {
@@ -52,7 +52,7 @@ namespace Waldem
 
     Buffer* ResourceManager::CloneBuffer(Buffer* buffer)
     {
-        Buffer* destBuffer = CreateBuffer(buffer->GetName() + "_Clone", buffer->GetType(), nullptr, buffer->GetSize());
+        Buffer* destBuffer = CreateBuffer(buffer->GetName() + "_Clone", buffer->GetType(), nullptr, buffer->GetSize(), buffer->GetStride());
 
         Renderer::ResourceBarrier(buffer, VERTEX_AND_CONSTANT_BUFFER, COPY_SOURCE);
         Renderer::ResourceBarrier(destBuffer, VERTEX_AND_CONSTANT_BUFFER, COPY_DEST);

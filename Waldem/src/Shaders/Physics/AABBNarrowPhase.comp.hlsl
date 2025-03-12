@@ -3,7 +3,7 @@
 RWStructuredBuffer<PhysicsComponent> PhysicsComponents : register(u0);
 StructuredBuffer<float4x4> Transforms : register(t0);
 
-cbuffer ComponentBuffer : register(b0)
+cbuffer CollisionConstantsCB : register(b0)
 {
     int ComponentCount;
 }

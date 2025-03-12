@@ -1,9 +1,10 @@
 #pragma once
-#include "System.h"
+#include "Waldem/ECS/Systems/System.h"
 #include "Waldem/KeyCodes.h"
-#include "Waldem/Input/Input.h"
 #include "Waldem/MouseButtonCodes.h"
 #include "Waldem/ECS/Components/MainCamera.h"
+#include "Waldem/ECS/Components/MeshComponent.h"
+#include "Waldem/ECS/Components/PhysicsComponent.h"
 #include "Waldem/Renderer/Light.h"
 #include "Waldem/Renderer/Model/Transform.h"
 
@@ -78,35 +79,33 @@ namespace Waldem
             }
         }
 
-        void DrawFrustum(Vector4 color, Matrix4 viewProjMatrix)
-        {
-            WArray<Line> lines;
-
-            //near plane
-            lines.Add({ frustumCorners[0], frustumCorners[1], color }); //top
-            lines.Add({ frustumCorners[1], frustumCorners[3], color }); //right
-            lines.Add({ frustumCorners[3], frustumCorners[2], color }); //bottom
-            lines.Add({ frustumCorners[2], frustumCorners[0], color }); //left
-
-            //far plane
-            lines.Add({ frustumCorners[4], frustumCorners[5], color }); //top
-            lines.Add({ frustumCorners[5], frustumCorners[7], color }); //right
-            lines.Add({ frustumCorners[7], frustumCorners[6], color }); //bottom
-            lines.Add({ frustumCorners[6], frustumCorners[4], color }); //left
-
-            //connect near plane to far plane
-            lines.Add({ frustumCorners[0], frustumCorners[4], color }); //top-left
-            lines.Add({ frustumCorners[1], frustumCorners[5], color }); //top-right
-            lines.Add({ frustumCorners[2], frustumCorners[6], color }); //bottom-left
-            lines.Add({ frustumCorners[3], frustumCorners[7], color }); //bottom-right
-
-            for (auto& line : lines)
-            {
-                line.ToClipSpace(viewProjMatrix);
-            }
-            
-            Renderer::DrawLines(lines);
-        }
+        // void DrawFrustum(Vector4 color, Matrix4 viewProjMatrix)
+        // {
+        //     WArray<LineData> lines;
+        //
+        //     //near plane
+        //     lines.Add({ frustumCorners[0], frustumCorners[1], color }); //top
+        //     lines.Add({ frustumCorners[1], frustumCorners[3], color }); //right
+        //     lines.Add({ frustumCorners[3], frustumCorners[2], color }); //bottom
+        //     lines.Add({ frustumCorners[2], frustumCorners[0], color }); //left
+        //
+        //     //far plane
+        //     lines.Add({ frustumCorners[4], frustumCorners[5], color }); //top
+        //     lines.Add({ frustumCorners[5], frustumCorners[7], color }); //right
+        //     lines.Add({ frustumCorners[7], frustumCorners[6], color }); //bottom
+        //     lines.Add({ frustumCorners[6], frustumCorners[4], color }); //left
+        //
+        //     //connect near plane to far plane
+        //     lines.Add({ frustumCorners[0], frustumCorners[4], color }); //top-left
+        //     lines.Add({ frustumCorners[1], frustumCorners[5], color }); //top-right
+        //     lines.Add({ frustumCorners[2], frustumCorners[6], color }); //bottom-left
+        //     lines.Add({ frustumCorners[3], frustumCorners[7], color }); //bottom-right
+        //
+        //     // for (auto& line : lines)
+        //     // {
+        //     //     line.ToClipSpace(viewProjMatrix);
+        //     // }
+        // }
         
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
         {
@@ -283,21 +282,6 @@ namespace Waldem
                 Renderer::Compute(GroupCount);
                 Renderer::ResourceBarrier(TargetRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
             }
-
-            // Matrix4 viewProj;
-            //
-            // for (auto [entity, camera, mainCamera, cameraTransform] : ECSManager->EntitiesWith<Camera, MainCamera, Transform>())
-            // {
-            //     viewProj = camera.GetProjectionMatrix() * camera.GetViewMatrix();
-            //     break;
-            // }
-            //
-            // if(Input::IsMouseButtonPressed(WD_MOUSE_BUTTON_MIDDLE))
-            // {
-            //     CacheFrustrumCorners();
-            // }
-            
-            // DrawFrustum({ 0.0f, 1.0f, 0.0f, 1.0f }, viewProj);
         }
     };
 }

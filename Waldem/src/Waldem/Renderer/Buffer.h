@@ -122,12 +122,14 @@ namespace Waldem
     class Buffer
     {
     public:
-        Buffer(String name, BufferType type, size_t size) : Name(name), Type(type), Size(size) {}
+        Buffer(String name, BufferType type, size_t size, uint32_t stride) : Name(name), Type(type), Size(size), Stride(stride) {}
         virtual ~Buffer() {}
 
         virtual void* GetPlatformResource() const = 0;
         virtual uint32_t GetCount() const = 0;
+        virtual void SetCount(uint32_t value) = 0;
         size_t GetSize() { return Size; }
+        uint32_t GetStride() { return Stride; }
         BufferType GetType() { return Type; }
         String GetName() { return Name; }
 
@@ -135,5 +137,7 @@ namespace Waldem
         String Name;
         BufferType Type;
         size_t Size;
+        uint32_t Stride;
+        uint32_t Count;
     };
 }

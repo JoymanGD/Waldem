@@ -1,5 +1,4 @@
 #pragma once
-#include "Line.h"
 #include "Pipeline.h"
 #include "RenderTarget.h"
 #include "Model/Mesh.h"
@@ -29,8 +28,6 @@ namespace Waldem
         virtual void Present() = 0;
         virtual void Draw(Model* model) = 0;
         virtual void Draw(Mesh* mesh) = 0;
-        virtual void DrawLine(Line line) = 0;
-        virtual void DrawLines(WArray<Line> lines) = 0;
         virtual void Wait() = 0;
         virtual Point3 GetNumThreadsPerGroup(ComputeShader* computeShader) = 0;
         virtual void Compute(Point3 groupCount) = 0;
@@ -39,16 +36,17 @@ namespace Waldem
         virtual void SetPipeline(Pipeline* pipeline) = 0;
         virtual void SetRootSignature(RootSignature* rootSignature) = 0;
         virtual void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr) = 0;
-        virtual Pipeline* CreateGraphicPipeline(const String& name, WArray<TextureFormat> RTFormats, PrimitiveTopologyType primitiveTopologyType, RootSignature* rootSignature, PixelShader* shader) = 0;
+        virtual Pipeline* CreateGraphicPipeline(const String& name, RootSignature* rootSignature, PixelShader* shader, WArray<TextureFormat> RTFormats, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout) = 0;
         virtual Pipeline* CreateComputePipeline(const String& name, RootSignature* rootSignature, ComputeShader* shader) = 0;
         virtual RootSignature* CreateRootSignature(WArray<Resource> resources) = 0;
         virtual Texture2D* CreateTexture(String name, int width, int height, TextureFormat format, uint8_t* data = nullptr) = 0;
         virtual RenderTarget* CreateRenderTarget(String name, int width, int height, TextureFormat format) = 0;
         virtual void CopyRenderTarget(RenderTarget* dstRT, RenderTarget* srcRT) = 0;
         virtual void CopyBuffer(Buffer* dstBuffer, Buffer* srcBuffer) = 0;
-        virtual Buffer* CreateBuffer(String name, BufferType type, void* data, uint32_t size) = 0;
+        virtual Buffer* CreateBuffer(String name, BufferType type, void* data, uint32_t size, uint32_t stride) = 0;
         virtual void ResourceBarrier(RenderTarget* rt, ResourceStates before, ResourceStates after) = 0;
         virtual void ResourceBarrier(Buffer* buffer, ResourceStates before, ResourceStates after) = 0;
+        virtual void UpdateBuffer(Buffer* buffer, void* data, uint32_t size) = 0;
         virtual void ClearRenderTarget(RenderTarget* rt) = 0;
         virtual void ClearDepthStencil(RenderTarget* ds) = 0;
         virtual void InitializeUI() = 0;
@@ -69,8 +67,6 @@ namespace Waldem
 
         static void Draw(Mesh* mesh);
         static void Draw(Model* model);
-        static void DrawLine(Line line);
-        static void DrawLines(WArray<Line> lines);
         static void Wait();
         static Point3 GetNumThreadsPerGroup(ComputeShader* computeShader);
         static void Compute(Point3 groupCount);
@@ -79,16 +75,17 @@ namespace Waldem
         static void SetPipeline(Pipeline* pipeline);
         static void SetRootSignature(RootSignature* rootSignature);
         static void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr);
-        static Pipeline* CreateGraphicPipeline(const String& name, WArray<TextureFormat> RTFormats, PrimitiveTopologyType primitiveTopologyType, RootSignature* rootSignature, PixelShader* shader);
+        static Pipeline* CreateGraphicPipeline(const String& name, RootSignature* rootSignature, PixelShader* shader, WArray<TextureFormat> RTFormats, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout);
         static Pipeline* CreateComputePipeline(const String& name, RootSignature* rootSignature, ComputeShader* shader);
         static RootSignature* CreateRootSignature(WArray<Resource> resources);
         static Texture2D* CreateTexture(String name, int width, int height, TextureFormat format, uint8_t* data = nullptr);
         static RenderTarget* CreateRenderTarget(String name, int width, int height, TextureFormat format);
         static void CopyRenderTarget(RenderTarget* dstRT, RenderTarget* srcRT);
         static void CopyBuffer(Buffer* dstBuffer, Buffer* srcBuffer);
-        static Buffer* CreateBuffer(String name, BufferType type, void* data, uint32_t size);
+        static Buffer* CreateBuffer(String name, BufferType type, void* data, uint32_t size, uint32_t stride);
         static void ResourceBarrier(RenderTarget* rt, ResourceStates before, ResourceStates after);
         static void ResourceBarrier(Buffer* buffer, ResourceStates before, ResourceStates after);
+        static void UpdateBuffer(Buffer* buffer, void* data, uint32_t size);
         static void ClearRenderTarget(RenderTarget* rt);
         static void ClearDepthStencil(RenderTarget* ds);
         static void InitializeUI();

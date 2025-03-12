@@ -1,5 +1,5 @@
 #pragma once
-#include "System.h"
+#include "Waldem/ECS/Systems/System.h"
 #include "Waldem/Application.h"
 #include "Waldem/Input/Input.h"
 #include "Waldem/KeyCodes.h"

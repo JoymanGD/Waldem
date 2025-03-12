@@ -167,6 +167,7 @@
     <ClInclude Include="src\Waldem\Application.h" />
     <ClInclude Include="src\Waldem\Core.h" />
     <ClInclude Include="src\Waldem\ECS\Components\Guizmo.h" />
+    <ClInclude Include="src\Waldem\ECS\Components\LineComponent.h" />
     <ClInclude Include="src\Waldem\ECS\Components\MainCamera.h" />
     <ClInclude Include="src\Waldem\ECS\Components\MeshComponent.h" />
     <ClInclude Include="src\Waldem\ECS\Components\ModelComponent.h" />
@@ -174,8 +175,8 @@
     <ClInclude Include="src\Waldem\ECS\Components\Ocean.h" />
     <ClInclude Include="src\Waldem\ECS\Components\PhysicsComponent.h" />
     <ClInclude Include="src\Waldem\ECS\Components\Selected.h" />
-    <ClInclude Include="src\Waldem\ECS\Systems\DebugSystem.h" />
-    <ClInclude Include="src\Waldem\ECS\Systems\DeferredRenderingSystem.h" />
+    <ClInclude Include="src\Waldem\ECS\Systems\DebugSystems\DebugSystem.h" />
+    <ClInclude Include="src\Waldem\ECS\Systems\DebugSystems\LinesRenderingSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\EntityDetailsWidgetContainer.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\GuizmoEditorSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\IWidgetContainerSystem.h" />
@@ -184,13 +185,14 @@
     <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\Widgets\ComponentWidgets\OceanComponentWidget.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\Widgets\ComponentWidgets\TransformComponentWidget.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\Widgets\HierarchyWidget.h" />
-    <ClInclude Include="src\Waldem\ECS\Systems\ForwardRenderingSystem.h" />
-    <ClInclude Include="src\Waldem\ECS\Systems\FreeLookCameraSystem.h" />
-    <ClInclude Include="src\Waldem\ECS\Systems\OceanSimulationSystem.h" />
-    <ClInclude Include="src\Waldem\ECS\Systems\PhysicsSystem.h" />
-    <ClInclude Include="src\Waldem\ECS\Systems\PostProcessSystem.h" />
-    <ClInclude Include="src\Waldem\ECS\Systems\ScreenQuadSystem.h" />
-    <ClInclude Include="src\Waldem\ECS\Systems\ShadowmapRenderingSystem.h" />
+    <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\DeferredRenderingSystem.h" />
+    <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\ForwardRenderingSystem.h" />
+    <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\FreeLookCameraSystem.h" />
+    <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\OceanSimulationSystem.h" />
+    <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\PhysicsSystem.h" />
+    <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\PostProcessSystem.h" />
+    <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\ScreenQuadSystem.h" />
+    <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\ShadowmapRenderingSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\System.h" />
     <ClInclude Include="src\Waldem\Editor\Editor.h" />
     <ClInclude Include="src\Waldem\EntryPoint.h" />
@@ -204,6 +206,7 @@
     <ClInclude Include="src\Waldem\Input\InputManager.h" />
     <ClInclude Include="src\Waldem\Interfaces\Importer.h" />
     <ClInclude Include="src\Waldem\KeyCodes.h" />
+    <ClInclude Include="src\Waldem\Layers\DebugLayer.h" />
     <ClInclude Include="src\Waldem\Layers\EditorLayer.h" />
     <ClInclude Include="src\Waldem\Layers\GameLayer.h" />
     <ClInclude Include="src\Waldem\Layers\Layer.h" />
@@ -215,7 +218,8 @@
     <ClInclude Include="src\Waldem\Renderer\GraphicTypes.h" />
     <ClInclude Include="src\Waldem\Renderer\Interfaces\IGraphicObject.h" />
     <ClInclude Include="src\Waldem\Renderer\Light.h" />
-    <ClInclude Include="src\Waldem\Renderer\Line.h" />
+    <ClInclude Include="src\Waldem\Renderer\Model\Line.h" />
+    <ClInclude Include="src\Waldem\Renderer\Model\LineMesh.h" />
     <ClInclude Include="src\Waldem\Renderer\Model\Material.h" />
     <ClInclude Include="src\Waldem\Renderer\Model\Mesh.h" />
     <ClInclude Include="src\Waldem\Renderer\Model\Model.h" />
@@ -697,7 +701,6 @@
     <ClCompile Include="src\Waldem\Import\ModelImporter.cpp" />
     <ClCompile Include="src\Waldem\Layers\LayerStack.cpp" />
     <ClCompile Include="src\Waldem\Log.cpp" />
-    <ClCompile Include="src\Waldem\Renderer\Buffer.cpp" />
     <ClCompile Include="src\Waldem\Renderer\Interfaces\IGraphicObject.cpp" />
     <ClCompile Include="src\Waldem\Renderer\Model\Mesh.cpp" />
     <ClCompile Include="src\Waldem\Renderer\Model\Transform.cpp" />
@@ -852,10 +855,21 @@
       <ExcludedFromBuild>true</ExcludedFromBuild>
       <ShaderModel>6.5</ShaderModel>
     </FxCompile>
-    <FxCompile Include="src\Shaders\Physics\Collision.comp.hlsl">
+    <FxCompile Include="src\Shaders\Physics\AABBBroadPhase.comp.hlsl">
       <ShaderType>Compute</ShaderType>
       <ShaderModel>6.5</ShaderModel>
       <EntryPointName>main</EntryPointName>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Physics\AABBNarrowPhase.comp.hlsl">
+      <ObjectFileOutput>..\bin\Debug\Waldem\%(Filename).cso</ObjectFileOutput>
+      <TrackerLogDirectory>..\bin-int\Debug\Waldem\Waldem.tlog\</TrackerLogDirectory>
+      <EntryPointName>main</EntryPointName>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <ShaderModel>6.5</ShaderModel>
+      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
+      <DisableOptimizations>true</DisableOptimizations>
+      <EnableDebuggingInformation>true</EnableDebuggingInformation>
+      <ShaderType>Compute</ShaderType>
     </FxCompile>
     <FxCompile Include="src\Shaders\Physics\PhysicsTypes.hlsl">
       <ExcludedFromBuild>true</ExcludedFromBuild>

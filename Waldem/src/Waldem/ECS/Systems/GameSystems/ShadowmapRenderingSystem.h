@@ -1,5 +1,5 @@
 #pragma once
-#include "System.h"
+#include "Waldem/ECS/Systems/System.h"
 #include "Waldem/Renderer/Light.h"
 #include "Waldem/Renderer/Shader.h"
 #include "Waldem/Renderer/Model/Transform.h"
@@ -57,10 +57,26 @@ namespace Waldem
             resources.Add(Resource("MyConstantBuffer", RTYPE_ConstantBuffer, nullptr, sizeof(Matrix4), sizeof(Matrix4) * 2, 0));
             resources.Add(Resource("RootConstants", RTYPE_Constant, nullptr, sizeof(uint32_t), sizeof(uint32_t), 1));
             resources.Add(Resource("WorldTransforms", RTYPE_Buffer, worldTransforms.GetData(), sizeof(Matrix4), worldTransforms.GetSize(), 0));
+
+            WArray<InputLayoutDesc> inputElementDescs = {
+                { "POSITION", 0, TextureFormat::R32G32B32_FLOAT, 0, 0, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+                { "NORMAL", 0, TextureFormat::R32G32B32_FLOAT, 0, 12, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+                { "TANGENT", 0, TextureFormat::R32G32B32_FLOAT, 0, 24, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+                { "BITANGENT", 0, TextureFormat::R32G32B32_FLOAT, 0, 36, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+                { "TEXCOORD", 0, TextureFormat::R32G32_FLOAT, 0, 48, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+                { "MESH_ID", 0, TextureFormat::R16_UINT, 0, 56, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+            };
             
             ShadowmapRenderingShader = Renderer::LoadPixelShader("Shadowmap");
             ShadowmapRenderingRootSignature = Renderer::CreateRootSignature(resources);
-            ShadowmapRenderingPipeline = Renderer::CreateGraphicPipeline("ShadowmapRenderingPipeline", { TextureFormat::R8G8B8A8_UNORM }, WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, ShadowmapRenderingRootSignature, ShadowmapRenderingShader);
+            ShadowmapRenderingPipeline = Renderer::CreateGraphicPipeline("ShadowmapRenderingPipeline",
+                                                                        ShadowmapRenderingRootSignature,
+                                                                        ShadowmapRenderingShader,
+                                                                        { TextureFormat::R8G8B8A8_UNORM },
+                                                                        DEFAULT_RASTERIZER_DESC,
+                                                                        DEFAULT_DEPTH_STENCIL_DESC,
+                                                                        WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
+                                                                        DEFAULT_INPUT_LAYOUT_DESC);
         }
 
         void Update(float deltaTime) override
@@ -122,7 +138,7 @@ namespace Waldem
                     {
                         ShadowmapRenderingRootSignature->UpdateResourceData("RootConstants", &meshID);
                         
-                        auto transformedBBox = meshComponent.Mesh->BBox.Transform(modelTransform.Matrix);
+                        auto transformedBBox = meshComponent.Mesh->BBox.GetTransformed(modelTransform.Matrix);
 
                         //Frustrum culling
                         if(transformedBBox.IsInFrustum(frustrumPlanes))
