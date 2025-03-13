@@ -11,6 +11,8 @@ namespace Waldem
     class WALDEM_API DebugLayer : public Layer
     {
     private:
+        bool EnableDebug = false;
+        
     public:
         DebugLayer(Window* window, ecs::Manager* ecsManager, ResourceManager* resourceManager) : Layer("DebugLayer", window, ecsManager, resourceManager)
         {
@@ -40,6 +42,14 @@ namespace Waldem
             {
                 system->Initialize(&sceneData, &DebugInputManager, CurrentResourceManager);
             }
+
+            DebugInputManager.SubscribeToKeyEvent(WD_KeyCode::F1, [&](bool isPressed)
+            {
+                if(isPressed)
+                {
+                    EnableDebug = !EnableDebug;
+                }
+            });
         }
         
         void Begin() override
@@ -83,9 +93,12 @@ namespace Waldem
 
         void OnUpdate(float deltaTime) override
         {
-            for (ISystem* system : UpdateSystems)
+            if(EnableDebug)
             {
-                system->Update(deltaTime);
+                for (ISystem* system : UpdateSystems)
+                {
+                    system->Update(deltaTime);
+                }
             }
         }
 
