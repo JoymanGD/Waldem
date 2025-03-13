@@ -30,6 +30,7 @@ namespace Waldem
         //
         // uint MaxCollisions = 10000;
         // uint MaxObjectsPerThread = 3;
+        BVHNode* RootNode;
 
     private:
         BVHNode* BuildBVH(WArray<BoundingBox>& objects, WArray<String>& names, int start, int end)
@@ -75,45 +76,128 @@ namespace Waldem
             return node;
         }
 
+        void UpdateBVH(BVHNode* node, WArray<BoundingBox>& objects)
+        {
+            // Leaf node: update the bounding box from the object directly
+            if (node->IsLeaf()) 
+            {
+                node->Box = objects[node->ObjectIndex];
+                return;
+            }
+
+            // Update child nodes
+            if (node->Left) UpdateBVH(node->Left, objects);
+            if (node->Right) UpdateBVH(node->Right, objects);
+
+            // Recompute the bounding box to encompass both children
+            node->Box = node->Left ? node->Left->Box : BoundingBox();
+            if (node->Right) node->Box.Expand(node->Right->Box);
+        }
+
         void NarrowPhaseCollision(BVHNode* node1, BVHNode* node2)
         {
             WD_CORE_INFO("NP collision detected: {0} and {1}", node1->ObjectIndex, node2->ObjectIndex);
         }
-        
+
+        struct CollisionPairHash
+        {
+            size_t operator()(const std::pair<int, int>& p) const
+            {
+                return std::hash<int>()(p.first) ^ std::hash<int>()(p.second);
+            }
+        };
+
+        // void BroadPhaseCollision(BVHNode* node1, BVHNode* node2, std::unordered_set<std::pair<int, int>, CollisionPairHash>& collisions)
+        // {
+        //     // Null check to ensure nodes are valid
+        //     if (node1 == nullptr || node2 == nullptr)
+        //         return;
+        //     
+        //     // Early exit if bounding boxes do not intersect
+        //     if (!node1->Box.Intersects(node2->Box))
+        //         return;
+        //
+        //     // If both nodes are leaves, check for collision
+        //     if (node1->IsLeaf() && node2->IsLeaf())
+        //     {
+        //         if (node1->ObjectIndex != node2->ObjectIndex)
+        //         {
+        //             int minIndex = std::min(node1->ObjectIndex, node2->ObjectIndex);
+        //             int maxIndex = std::max(node1->ObjectIndex, node2->ObjectIndex);
+        //             std::pair<int, int> pair = {minIndex, maxIndex};
+        //
+        //             // Insert the collision pair directly
+        //             collisions.insert(pair);
+        //         }
+        //         return;
+        //     }
+        //
+        //     // Prioritize traversal based on surface area (if available)
+        //     float areaLeftRight = 0;
+        //     float areaRightLeft = 0;
+        //
+        //     if (!node1->IsLeaf() && !node2->IsLeaf())
+        //     {
+        //         areaLeftRight = node1->Left->Box.SurfaceArea() + node2->Right->Box.SurfaceArea();
+        //         areaRightLeft = node1->Right->Box.SurfaceArea() + node2->Left->Box.SurfaceArea();
+        //     }
+        //
+        //     // Check the best combination first (more likely to intersect)
+        //     if (areaLeftRight < areaRightLeft)
+        //     {
+        //         BroadPhaseCollision(node1->Left, node2->Left, collisions);
+        //         BroadPhaseCollision(node1->Left, node2->Right, collisions);
+        //         BroadPhaseCollision(node1->Right, node2->Left, collisions);
+        //         BroadPhaseCollision(node1->Right, node2->Right, collisions);
+        //     }
+        //     else
+        //     {
+        //         BroadPhaseCollision(node1->Right, node2->Left, collisions);
+        //         BroadPhaseCollision(node1->Right, node2->Right, collisions);
+        //         BroadPhaseCollision(node1->Left, node2->Left, collisions);
+        //         BroadPhaseCollision(node1->Left, node2->Right, collisions);
+        //     }
+        // }
+
         void BroadPhaseCollision(BVHNode* node1, BVHNode* node2, WArray<CollisionPair>& collisions)
         {
+            // Perform the bounding box intersection check first
             if (!node1->Box.Intersects(node2->Box))
             {
-                return;
+                return; // No need to continue if the boxes don't intersect
             }
 
-            if(node1->IsLeaf() && node2->IsLeaf())
+            // If both nodes are leaf nodes, check for collisions between the objects they contain
+            if (node1->IsLeaf() && node2->IsLeaf())
             {
-                if(node1->ObjectIndex != node2->ObjectIndex)
+                if (node1->ObjectIndex != node2->ObjectIndex)
                 {
                     int minIndex = std::min(node1->ObjectIndex, node2->ObjectIndex);
                     int maxIndex = std::max(node1->ObjectIndex, node2->ObjectIndex);
-                    if(!collisions.Contains({minIndex, maxIndex}))
+
+                    std::pair<int, int> pair = {minIndex, maxIndex}; // Store the pair of objects
+                    if (std::find(collisions.begin(), collisions.end(), pair) == collisions.end()) // Avoid duplicate collisions
                     {
-                        collisions.Add({minIndex, maxIndex});
+                        collisions.Add(pair);
                     }
-                    NarrowPhaseCollision(node1, node2);
                 }
                 return;
             }
 
-            if(node1->IsLeaf())
+            // If one of the nodes is a leaf, check the children of the other node
+            if (node1->IsLeaf())
             {
                 BroadPhaseCollision(node1, node2->Left, collisions);
                 BroadPhaseCollision(node1, node2->Right, collisions);
             }
-            else if(node2->IsLeaf())
+            else if (node2->IsLeaf())
             {
                 BroadPhaseCollision(node1->Left, node2, collisions);
                 BroadPhaseCollision(node1->Right, node2, collisions);
             }
             else
             {
+                // If both nodes are internal, recursively check their children without prioritizing based on SAH
                 BroadPhaseCollision(node1->Left, node2->Left, collisions);
                 BroadPhaseCollision(node1->Left, node2->Right, collisions);
                 BroadPhaseCollision(node1->Right, node2->Left, collisions);
@@ -128,56 +212,48 @@ namespace Waldem
         {
             WArray<BoundingBox> boundingBoxes;
             WArray<String> names;
+            WArray<PhysicsComponent*> physicsComponents;
 
             for (auto [transformEntity, transform, physicsComponent, meshComponent] : ECSManager->EntitiesWith<Transform, PhysicsComponent, MeshComponent>())
             {
                 boundingBoxes.Add(meshComponent.Mesh->BBox);
                 names.Add(meshComponent.Mesh->Name);
+                physicsComponents.Add(&physicsComponent);
             }
             
-            BVHNode* rootNode = BuildBVH(boundingBoxes, names, 0, boundingBoxes.Num());
-            WArray<CollisionPair> collisions;
-            
-            BroadPhaseCollision(rootNode, rootNode, collisions);
-
-            // WArray<BVHNode> bvhNodes;
-            // struct CollisionConstantsCB
-            // {
-            //     uint ComponentCount;
-            //     uint MaxObjectsPerThread;
-            // } shaderCBuffer;
-            //
-            // shaderCBuffer.ComponentCount = boundingBoxes.Num();
-            // shaderCBuffer.MaxObjectsPerThread = MaxObjectsPerThread;
-            //
-            // WArray<Resource> CollisionResources;
-            // CollisionResources.Add(Resource("AABBs", RTYPE_Buffer, boundingBoxes.GetData(), sizeof(BoundingBox), boundingBoxes.GetSize(), 0));
-            // CollisionResources.Add(Resource("BVHNodes", RTYPE_RWBuffer, nullptr, sizeof(BVHNode), bvhNodes.GetSize(), 0));
-            // CollisionResources.Add(Resource("ConstantBuffer", RTYPE_ConstantBuffer, &shaderCBuffer, sizeof(CollisionConstantsCB), 1, 0));
-            // CollisionBPSignature = Renderer::CreateRootSignature(CollisionResources);
-            // CollisionBPComputeShader = Renderer::LoadComputeShader("Physics/AABBBroadPhase");
-            // CollisionBPPipeline = Renderer::CreateComputePipeline("CollisionBPPipeline", CollisionBPSignature, CollisionBPComputeShader);
+            RootNode = BuildBVH(boundingBoxes, names, 0, boundingBoxes.Num());
         }
 
         void Update(float deltaTime) override
         {
-            // WArray<Transform> transforms;
-            // WArray<PhysicsComponent*> physicsComponents;
-            //
-            // for (auto [transformEntity, transform, physicsComponent] : ECSManager->EntitiesWith<Transform, PhysicsComponent>())
-            // {
-            //     physicsComponents.Add(&physicsComponent);
-            // }
-            //
-            // //Clear buffers
-            // //CollisionBPSignature->ClearResource("BVHNodes");
-            //
-            // //Quad drawing pass
-            // Renderer::SetPipeline(CollisionBPPipeline);
-            // Renderer::SetRootSignature(CollisionBPSignature);
-            // Point3 numThreads = Renderer::GetNumThreadsPerGroup(CollisionBPComputeShader);
-            // Point3 groupCount = Point3(glm::ceil(physicsComponents.Num() / (float)numThreads.x), 1, 1);
-            // Renderer::Compute(groupCount);
+            WArray<BoundingBox> boundingBoxes;
+            WArray<String> names;
+            WArray<PhysicsComponent*> physicsComponents;
+
+            for (auto [transformEntity, transform, physicsComponent, meshComponent] : ECSManager->EntitiesWith<Transform, PhysicsComponent, MeshComponent>())
+            {
+                boundingBoxes.Add(meshComponent.Mesh->BBox.GetTransformed(transform));
+                names.Add(meshComponent.Mesh->Name);
+                physicsComponents.Add(&physicsComponent);
+            }
+
+            UpdateBVH(RootNode, boundingBoxes);
+            
+            // std::unordered_set<std::pair<int, int>, CollisionPairHash> collisions;
+
+            WArray<CollisionPair> collisions;
+            BroadPhaseCollision(RootNode, RootNode, collisions);
+
+            for (auto physicsComponent : physicsComponents)
+            {
+                physicsComponent->IsColliding = false;
+            }
+
+            for (auto collision : collisions)
+            {
+                physicsComponents[collision.first]->IsColliding = true;
+                physicsComponents[collision.second]->IsColliding = true;
+            }
         }
     };
 }

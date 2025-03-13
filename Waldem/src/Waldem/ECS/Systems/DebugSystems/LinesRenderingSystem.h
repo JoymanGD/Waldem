@@ -59,7 +59,8 @@ namespace Waldem
 
             for (auto [transformEntity, transform, physicsComponent, meshComponent] : ECSManager->EntitiesWith<Transform, PhysicsComponent, MeshComponent>())
             {
-                lines.AddRange(meshComponent.Mesh->BBox.GetTransformed(transform).GetLines(Vector4(0.0f, 1.0f, 0.0f, 1.0f)));
+                Vector4 color = physicsComponent.IsColliding ? Vector4(1.0f, 0.0f, 0.0f, 1.0f) : Vector4(0.0f, 1.0f, 0.0f, 1.0f);
+                lines.AddRange(meshComponent.Mesh->BBox.GetTransformed(transform).GetLines(color));
             }
 
             Renderer::UpdateBuffer(LMesh.VertexBuffer, lines.GetData(), sizeof(Line) * lines.Num());

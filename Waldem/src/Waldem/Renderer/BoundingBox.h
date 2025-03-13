@@ -9,11 +9,56 @@ namespace Waldem
         Vector3 Min;
         Vector3 Max;
 
+        // BoundingBox GetTransformed(const Matrix4& transform)
+        // {
+        //     BoundingBox result;
+        //     result.Min = Vector3(transform * Vector4(Min, 1.0f));
+        //     result.Max = Vector3(transform * Vector4(Max, 1.0f));
+        //
+        //     return result;
+        // }
+
         BoundingBox GetTransformed(const Matrix4& transform)
         {
+            // The original corners of the bounding box
+            glm::vec3 corners[8] = {
+                glm::vec3(Min.x, Min.y, Min.z),
+                glm::vec3(Max.x, Min.y, Min.z),
+                glm::vec3(Min.x, Max.y, Min.z),
+                glm::vec3(Max.x, Max.y, Min.z),
+                glm::vec3(Min.x, Min.y, Max.z),
+                glm::vec3(Max.x, Min.y, Max.z),
+                glm::vec3(Min.x, Max.y, Max.z),
+                glm::vec3(Max.x, Max.y, Max.z),
+            };
+
+            // Transform each corner of the bounding box
+            glm::vec3 transformedCorners[8];
+            for (int i = 0; i < 8; ++i)
+            {
+                transformedCorners[i] = glm::vec3(transform * glm::vec4(corners[i], 1.0f));
+            }
+
+            // Initialize the new bounding box min and max
+            glm::vec3 newMin = transformedCorners[0];
+            glm::vec3 newMax = transformedCorners[0];
+
+            // Update the new bounding box by going through all corners
+            for (int i = 1; i < 8; ++i)
+            {
+                newMin.x = std::min(newMin.x, transformedCorners[i].x);
+                newMin.y = std::min(newMin.y, transformedCorners[i].y);
+                newMin.z = std::min(newMin.z, transformedCorners[i].z);
+
+                newMax.x = std::max(newMax.x, transformedCorners[i].x);
+                newMax.y = std::max(newMax.y, transformedCorners[i].y);
+                newMax.z = std::max(newMax.z, transformedCorners[i].z);
+            }
+
+            // Return the updated bounding box
             BoundingBox result;
-            result.Min = Vector3(transform * Vector4(Min, 1.0f));
-            result.Max = Vector3(transform * Vector4(Max, 1.0f));
+            result.Min = newMin;
+            result.Max = newMax;
 
             return result;
         }
@@ -26,9 +71,15 @@ namespace Waldem
 
         bool Intersects(const BoundingBox& other)
         {
-            return Max.x >= other.Min.x && Min.x <= other.Max.x &&
-                   Max.y >= other.Min.y && Min.y <= other.Max.y &&
-                   Max.z >= other.Min.z && Min.z <= other.Max.z;
+            const float epsilon = 0.001f; // Small tolerance value
+            return !(Max.x + epsilon < other.Min.x || Max.y + epsilon < other.Min.y || Max.z + epsilon < other.Min.z ||
+                     Min.x - epsilon > other.Max.x || Min.y - epsilon > other.Max.y || Min.z - epsilon > other.Max.z);
+        }
+
+        float SurfaceArea() const
+        {
+            Vector3 size = Max - Min;
+            return 2.0f * (size.x * size.y + size.x * size.z + size.y * size.z);
         }
 
         WArray<Line> GetLines(Vector4 color)
