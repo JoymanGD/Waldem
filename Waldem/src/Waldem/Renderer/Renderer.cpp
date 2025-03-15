@@ -45,7 +45,7 @@ namespace Waldem
         return Instance->PlatformRenderer->GetNumThreadsPerGroup(computeShader);
     }
 
-    void Renderer::Draw(Mesh* mesh)
+    void Renderer::Draw(CMesh* mesh)
     {
         Instance->PlatformRenderer->Draw(mesh);
     }
@@ -85,9 +85,9 @@ namespace Waldem
         Instance->PlatformRenderer->SetRootSignature(rootSignature);
     }
 
-    void Renderer::SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil)
+    void Renderer::SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil, SViewport viewport, SScissorRect scissor)
     {
-        Instance->PlatformRenderer->SetRenderTargets(renderTargets, depthStencil);
+        Instance->PlatformRenderer->SetRenderTargets(renderTargets, depthStencil, viewport, scissor);
     }
 
     Pipeline* Renderer::CreateGraphicPipeline(const String& name,

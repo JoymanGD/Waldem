@@ -58,9 +58,9 @@ namespace Waldem
         T* GetData() { return ArrayInternal.data(); }
         size_t GetSize() const { return ArrayInternal.size() * sizeof(T); }
         
-        void Add(const T& value) { ArrayInternal.push_back(value); }
+        size_t Add(const T& value) { ArrayInternal.push_back(value); return ArrayInternal.size() - 1; }
 
-        void Add(T&& value) { ArrayInternal.push_back(std::move(value)); }
+        size_t Add(T&& value) { ArrayInternal.push_back(std::move(value)); return ArrayInternal.size() - 1; }
 
         void AddRange(const WArray<T>& other)
         {

@@ -220,7 +220,7 @@ namespace Waldem
         cmd->Draw(model);
     }
 
-    void DX12Renderer::Draw(Mesh* mesh)
+    void DX12Renderer::Draw(CMesh* mesh)
     {
         auto& cmd = WorldCommandList.first;
 
@@ -365,9 +365,9 @@ namespace Waldem
         WorldCommandList.first->SetRootSignature(rootSignature);
     }
 
-    void DX12Renderer::SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil)
+    void DX12Renderer::SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil, SViewport viewport, SScissorRect scissor)
     {
-        WorldCommandList.first->SetRenderTargets(renderTargets, depthStencil);
+        WorldCommandList.first->SetRenderTargets(renderTargets, depthStencil, viewport, scissor);
     }
 
     Pipeline* DX12Renderer::CreateGraphicPipeline(const String& name, RootSignature* rootSignature, PixelShader* shader, WArray<TextureFormat> RTFormats, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout)

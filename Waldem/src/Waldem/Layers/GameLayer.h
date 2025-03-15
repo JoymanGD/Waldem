@@ -11,11 +11,13 @@
 #include "Waldem/SceneManagement/Scene.h"
 #include "Waldem/Renderer/Renderer.h"
 #include <glm/gtc/integer.hpp>
+
+#include "Waldem/ECS/Systems/GameSystems/CollisionSystem.h"
 #include "Waldem/ECS/Systems/GameSystems/PhysicsSystem.h"
 
 namespace Waldem
 {
-	struct MainCamera;
+	struct EditorCamera;
 
 	class WALDEM_API GameLayer : public Layer
 	{
@@ -42,6 +44,7 @@ namespace Waldem
 			DrawSystems.Add((ISystem*)new DeferredRenderingSystem(ecsManager));
 			DrawSystems.Add((ISystem*)new PostProcessSystem(ecsManager));
 			DrawSystems.Add((ISystem*)new ScreenQuadSystem(ecsManager));
+			DrawSystems.Add((ISystem*)new CollisionSystem(ecsManager));
 			DrawSystems.Add((ISystem*)new PhysicsSystem(ecsManager));
 		}
 

@@ -172,10 +172,10 @@ xcopy /E /I /Y "$(SolutionDir)$(ProjectName)\Content\*" "../bin/Dist/Sandbox\Con
   <ItemGroup>
     <ClInclude Include="src\SandboxApp.h" />
     <ClInclude Include="src\Scenes\DefaultScene.h" />
+    <ClInclude Include="src\Scenes\PhysicsTestScene.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\SandboxApp.cpp" />
-    <ClCompile Include="src\Scenes\DefaultScene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Waldem\Waldem.vcxproj">

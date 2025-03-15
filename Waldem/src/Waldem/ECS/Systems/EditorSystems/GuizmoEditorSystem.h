@@ -4,7 +4,7 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "Waldem/KeyCodes.h"
 #include "Waldem/MouseButtonCodes.h"
-#include "Waldem/ECS/Components/MainCamera.h"
+#include "..\..\Components\EditorCamera.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
 #include "Waldem/ECS/Components/Selected.h"
 #include "Waldem/ECS/Systems/System.h"
@@ -94,7 +94,7 @@ namespace Waldem
             ImGuizmo::SetOrthographic(false);
 
             ImGuizmo::SetRect(0, 0, Window->GetWidth(), Window->GetHeight());
-            for (auto [cameraEntity, camera, cameraTransform, mainCamera] : ECSManager->EntitiesWith<Camera, Transform, MainCamera>())
+            for (auto [cameraEntity, camera, cameraTransform, mainCamera] : ECSManager->EntitiesWith<Camera, Transform, EditorCamera>())
             {
                 for (auto [transformEntity, transform, selected] : ECSManager->EntitiesWith<Transform, Selected>())
                 {

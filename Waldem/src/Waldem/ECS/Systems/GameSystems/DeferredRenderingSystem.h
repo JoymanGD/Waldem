@@ -1,6 +1,6 @@
 #pragma once
 #include "Waldem/ECS/Systems/System.h"
-#include "Waldem/ECS/Components/MainCamera.h"
+#include "..\..\Components\EditorCamera.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
 #include "Waldem/Editor/Editor.h"
 #include "Waldem/Renderer/Light.h"
@@ -14,6 +14,7 @@ namespace Waldem
     class WALDEM_API DeferredRenderingSystem : ISystem
     {
         RenderTarget* TargetRT = nullptr;
+        Texture2D* DummyTexture = nullptr;
         //GBuffer pass
         Pipeline* GBufferPipeline = nullptr;
         RootSignature* GBufferRootSignature = nullptr;
@@ -31,7 +32,18 @@ namespace Waldem
         Point3 GroupCount;
         
     public:
-        DeferredRenderingSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
+        DeferredRenderingSystem(ecs::Manager* eCSManager) : ISystem(eCSManager)
+        {
+            Vector4 dummyColor = Vector4(1.f, 1.f, 1.f, 1.f);
+            uint8_t* image_data = (uint8_t*)&dummyColor;
+
+            int width = 1;
+            int height = 1;
+
+            TextureFormat format = TextureFormat::R32G32B32_FLOAT;
+
+            DummyTexture = Renderer::CreateTexture("DummyTexture", width, height, format, image_data); 
+        }
         
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
         {
@@ -43,18 +55,28 @@ namespace Waldem
             auto constantBufferResource = Resource("MyConstantBuffer", RTYPE_ConstantBuffer, nullptr, sizeof(Matrix4), sizeof(Matrix4) * 4, 0);
             
             //GBuffer pass
-            WArray<Texture2D*> diffuseTextures;
-            WArray<Texture2D*> normalTextures;
-            WArray<Texture2D*> ormTextures;
+            WArray<MaterialShaderAttribute> materialAttributes;
+            
+            WArray<Texture2D*> materialTextures { DummyTexture };
+            
             for (auto [entity, mesh, transform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
             {
-                if(mesh.Mesh->CurrentMaterial->GetDiffuseTexture() == nullptr)
+                if(!mesh.Mesh->CurrentMaterial->HasDiffuseTexture())
+                {
+                    materialAttributes.Add(MaterialShaderAttribute()); //by default all texture indices = -1, so we can just add empty MaterialAttribute
                     continue;
-                    diffuseTextures.Add(mesh.Mesh->CurrentMaterial->GetDiffuseTexture());
-                if(mesh.Mesh->CurrentMaterial->GetNormalTexture() != nullptr)
-                    normalTextures.Add(mesh.Mesh->CurrentMaterial->GetNormalTexture());
-                if(mesh.Mesh->CurrentMaterial->GetORMTexture() != nullptr)
-                    ormTextures.Add(mesh.Mesh->CurrentMaterial->GetORMTexture());
+                }
+
+                int diffuseId = -1, normalId = -1, ormId = -1, clearCoat = -1;
+                
+                diffuseId = materialTextures.Add(mesh.Mesh->CurrentMaterial->GetDiffuseTexture());
+                
+                if(mesh.Mesh->CurrentMaterial->HasDiffuseTexture())
+                    normalId = materialTextures.Add(mesh.Mesh->CurrentMaterial->GetNormalTexture());
+                if(mesh.Mesh->CurrentMaterial->HasDiffuseTexture())
+                    ormId = materialTextures.Add(mesh.Mesh->CurrentMaterial->GetORMTexture());
+
+                materialAttributes.Add(MaterialShaderAttribute{ diffuseId, normalId, ormId, clearCoat, mesh.Mesh->CurrentMaterial->Albedo, mesh.Mesh->CurrentMaterial->Metallic, mesh.Mesh->CurrentMaterial->Roughness });
             }
 
             WArray<Matrix4> worldTransforms;
@@ -68,14 +90,9 @@ namespace Waldem
             gBufferPassResources.Add(constantBufferResource);
             gBufferPassResources.Add(Resource("RootConstants", RTYPE_Constant, nullptr, sizeof(uint32_t), sizeof(uint32_t), 1));
             
-            if(!worldTransforms.IsEmpty())
-                gBufferPassResources.Add(Resource("WorldTransforms", RTYPE_Buffer, worldTransforms.GetData(), sizeof(Matrix4), worldTransforms.GetSize(), 0));
-            if(!diffuseTextures.IsEmpty())
-                gBufferPassResources.Add(Resource("DiffuseTextures", diffuseTextures, 1));
-            if(!normalTextures.IsEmpty())
-                gBufferPassResources.Add(Resource("NormalTextures", normalTextures, 1025));
-            if(!ormTextures.IsEmpty())
-                gBufferPassResources.Add(Resource("ORMTextures", ormTextures, 2049));
+            gBufferPassResources.Add(Resource("WorldTransforms", RTYPE_Buffer, worldTransforms.GetData(), sizeof(Matrix4), worldTransforms.GetSize(), 0));
+            gBufferPassResources.Add(Resource("MaterialAttributes", RTYPE_Buffer, materialAttributes.GetData(), sizeof(MaterialShaderAttribute), materialAttributes.GetSize(), 1));
+            gBufferPassResources.Add(Resource("MaterialTextures", materialTextures, 2));
 
             WorldPositionRT = resourceManager->GetRenderTarget("WorldPositionRT");
             NormalRT = resourceManager->GetRenderTarget("NormalRT");
@@ -131,7 +148,7 @@ namespace Waldem
             //GBuffer pass
             WArray<FrustumPlane> frustrumPlanes;
             Matrix4 matrices[4];
-            for (auto [entity, camera, mainCamera, cameraTransform] : ECSManager->EntitiesWith<Camera, MainCamera, Transform>())
+            for (auto [entity, camera, mainCamera, cameraTransform] : ECSManager->EntitiesWith<Camera, EditorCamera, Transform>())
             {
                 matrices[0] = camera.ViewMatrix;
                 matrices[1] = camera.ProjectionMatrix;

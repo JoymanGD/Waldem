@@ -2,7 +2,7 @@
 
 namespace Waldem
 {
-    struct MainCamera
+    struct EditorCamera
     {
     };
 }

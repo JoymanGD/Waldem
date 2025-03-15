@@ -13,7 +13,7 @@ namespace Waldem
         QuadVertex(Vector3 position, Vector2 uv) : Position(position), UV(uv) {}
     };
     
-    class WALDEM_API Quad : public Mesh
+    class WALDEM_API Quad : public CMesh
     {
     private:
         QuadVertex QuadVertices[4] =
@@ -25,9 +25,9 @@ namespace Waldem
         };
         uint32_t QuadIndices[6] = { 0, 2, 1, 1, 2, 3 };
 
-        static BoundingBox CalculateBoundingBox()
+        static AABB CalculateBoundingBox()
         {
-            BoundingBox bBox;
+            AABB bBox;
             bBox.Min = Vector3(-0.5f, -0.5f, 0.0f);
             bBox.Max = Vector3(0.5f, 0.5f, 0.0f);
             return bBox;

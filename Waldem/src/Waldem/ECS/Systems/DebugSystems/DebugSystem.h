@@ -2,7 +2,7 @@
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/KeyCodes.h"
 #include "Waldem/MouseButtonCodes.h"
-#include "Waldem/ECS/Components/MainCamera.h"
+#include "..\..\Components\EditorCamera.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
 #include "Waldem/ECS/Components/PhysicsComponent.h"
 #include "Waldem/Renderer/Light.h"
@@ -19,12 +19,9 @@ namespace Waldem
     
     class WALDEM_API DebugSystem : ISystem
     {
-        Vector3 LightTargetPosition = { 0, -1, 0 };
-        Vector3 LightTargetDirection = { 0, -1, 0 };
         Matrix4 CachedViewProjMatrix;
         Vector3 frustumCorners[8];
 
-        bool IsRotatingLight = false;
         Vector2 MousePos = { 0, 0 };
 
         //Displaying debugRTs
@@ -50,7 +47,7 @@ namespace Waldem
 
         void CacheFrustrumCorners()
         {
-            for (auto [entity, camera, mainCamera, cameraTransform] : ECSManager->EntitiesWith<Camera, MainCamera, Transform>())
+            for (auto [entity, camera, mainCamera, cameraTransform] : ECSManager->EntitiesWith<Camera, EditorCamera, Transform>())
             {
                 Vector3 ndcCorners[8] =
                 {
@@ -112,11 +109,6 @@ namespace Waldem
             Vector2 resolution = Vector2(sceneData->Window->GetWidth(), sceneData->Window->GetHeight());
             
             CacheFrustrumCorners();
-
-            inputManager->SubscribeToMouseButtonEvent(WD_MOUSE_BUTTON_MIDDLE, [&](bool isPressed)
-            {
-                IsRotatingLight = isPressed;
-            });
 
             inputManager->SubscribeToMouseMoveEvent([&](Vector2 mousePos)
             {
@@ -240,39 +232,6 @@ namespace Waldem
 
         void Update(float deltaTime) override
         {
-            for (auto [entity, light, transform] : ECSManager->EntitiesWith<Light, Transform>())
-            {
-                if(light.Data.Type == LightType::Directional)
-                {
-                    Vector3 cameraUp, cameraRight;
-                    for (auto [cameraEntity, camera, cameraTransform] : ECSManager->EntitiesWith<Camera, Transform>())
-                    {
-                        cameraUp = cameraTransform.GetUpVector();
-                        cameraRight = cameraTransform.GetRightVector();
-                    }
-                    
-                    static float lastMouseX = 0;
-                    static float lastMouseY = 0;
-
-                    if (IsRotatingLight)
-                    {
-                        cameraRight.y = 0;
-                        cameraUp.y = 0;
-                    
-                        float deltaX = (MousePos.x - lastMouseX) * deltaTime;
-                        float deltaY = (MousePos.y - lastMouseY) * deltaTime;
-
-                        Matrix4 rotationMatrix = rotate(Matrix4(1.0f), deltaX, cameraUp) * rotate(Matrix4(1.0f), deltaY, cameraRight);
-                        LightTargetDirection = normalize(Vector3(rotationMatrix * Vector4(LightTargetDirection, 0.0f)));
-
-                        transform.LookAt(transform.Position + LightTargetDirection);
-                    }
-                
-                    lastMouseX = MousePos.x;
-                    lastMouseY = MousePos.y;
-                }
-            }
-
             if(DisplayDebugRTs)
             {
                 DebugRenderTargetsRootSignature->UpdateResourceData("MyConstantBuffer", &ConstantBufferData);

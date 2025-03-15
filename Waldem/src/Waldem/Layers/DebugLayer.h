@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Waldem/ECS/Systems/System.h"
+#include "Waldem/ECS/Systems/DebugSystems/CollisionRenderingSystem.h"
 #include "Waldem/ECS/Systems/DebugSystems/DebugSystem.h"
 #include "Waldem/ECS/Systems/DebugSystems/LinesRenderingSystem.h"
 #include "Waldem/Input/InputManager.h"
@@ -34,7 +35,8 @@ namespace Waldem
             resourceManager->CreateRenderTarget("DebugRT_9", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
             
             UpdateSystems.Add((ISystem*)new DebugSystem(CurrentECSManager));
-            UpdateSystems.Add((ISystem*)new LinesRenderingSystem(CurrentECSManager));
+            // UpdateSystems.Add((ISystem*)new LinesRenderingSystem(CurrentECSManager));
+            UpdateSystems.Add((ISystem*)new CollisionRenderingSystem(CurrentECSManager));
         	
 			SceneData sceneData = { window };
             

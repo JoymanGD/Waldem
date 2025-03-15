@@ -35,14 +35,14 @@ namespace Waldem
 
                 if(resources[i].Type == RTYPE_Texture)
                 {
-                    if(resources[i].NumResources > 1)
+                    if(resources[i].IsArray)
                     {
                         numDescriptors = MAX_TEXTURES;
                     }
                 }
                 else if(resources[i].Type == RTYPE_Buffer || resources[i].Type == RTYPE_RWBuffer)
                 {
-                    if(resources[i].NumResources > 1)
+                    if(resources[i].IsArray)
                     {
                         numDescriptors = MAX_BUFFERS;
                     }
@@ -408,10 +408,13 @@ namespace Waldem
                             D3D12_RESOURCE_STATE_GENERIC_READ,
                             nullptr,
                             IID_PPV_ARGS(&uploadResourceBuffer));
+
+                        DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM;
                         
                         if(resourceDesc.Textures.Num() != 0)
                         {
                             defaultResourceBuffer = (ID3D12Resource*)resourceDesc.Textures[j]->GetPlatformResource();
+                            format = (DXGI_FORMAT)resourceDesc.Textures[0]->GetFormat();
                         }
                         else
                         {
@@ -429,7 +432,7 @@ namespace Waldem
                         }
                         
                         D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-                        srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+                        srvDesc.Format = format;
                         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
                         srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
                         srvDesc.Texture2D.MipLevels = 1;

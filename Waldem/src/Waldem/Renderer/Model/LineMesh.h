@@ -4,7 +4,7 @@
 
 namespace Waldem
 {
-    class WALDEM_API LineMesh : public Mesh
+    class WALDEM_API LineMesh : public CMesh
     {
     private:
         uint32_t BufferSize = sizeof(Line) * 2000;

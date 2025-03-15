@@ -16,7 +16,7 @@ namespace Waldem
         void Initialize(Window* window) override;
         void InitializeUI() override;
         void Draw(Model* model) override;
-        void Draw(Mesh* mesh) override;
+        void Draw(CMesh* mesh) override;
         void Wait() override;
         Point3 GetNumThreadsPerGroup(ComputeShader* computeShader) override;
         void Compute(Point3 groupCount) override;
@@ -29,7 +29,7 @@ namespace Waldem
         ComputeShader* LoadComputeShader(String shaderName, String entryPoint) override;
         void SetPipeline(Pipeline* pipeline) override;
         void SetRootSignature(RootSignature* rootSignature) override;
-        void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr) override;
+        void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr, SViewport viewport = {}, SScissorRect scissor = {}) override;
         void ResourceBarrier(RenderTarget* rt, ResourceStates before, ResourceStates after) override;
         void ResourceBarrier(Buffer* buffer, ResourceStates before, ResourceStates after) override;
         Pipeline* CreateGraphicPipeline(const String& name, RootSignature* rootSignature, PixelShader* shader, WArray<TextureFormat> RTFormats, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout) override;

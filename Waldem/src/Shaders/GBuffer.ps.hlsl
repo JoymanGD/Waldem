@@ -1,4 +1,5 @@
 #include "Core.hlsl"
+#include "Materials.hlsl"
 
 struct PS_INPUT
 {
@@ -28,32 +29,56 @@ cbuffer RootConstants : register(b1)
 SamplerState myStaticSampler : register(s0);
 
 StructuredBuffer<float4x4> WorldTransforms : register(t0);
-Texture2D DiffuseTextures[MAX_TEXTURES] : register(t1);
-Texture2D NormalTextures[MAX_TEXTURES] : register(t1025);
-Texture2D ORMTextures[MAX_TEXTURES] : register(t2049);
+StructuredBuffer<MaterialAttribute> MaterialAttributes : register(t1);
+Texture2D MaterialTextures[MAX_TEXTURES] : register(t2);
 
 float3 GetNormal(float3 normal, float3 tangent, float3 bitangent, float4 normalMap)
 {
     float3x3 TBN = float3x3(tangent, bitangent, normal);
-    // return normalize(mul(TBN, normalMap.xyz * 2.0 - 1.0));
     return mul(normalMap.xyz * 2.0 - 1.0, TBN);
 }
 
 PS_OUTPUT main(PS_INPUT input)
 {
     PS_OUTPUT output;
-    
-    float4 color = DiffuseTextures[MeshId].Sample(myStaticSampler, input.UV);
-    float4 normalMap = NormalTextures[MeshId].Sample(myStaticSampler, input.UV);
-    float4 orm = ORMTextures[MeshId].Sample(myStaticSampler, input.UV);
-    
-    if(color.a < 0.1f)
-        discard;
 
-    output.WorldPositionRT = input.WorldPosition;
-    float4 normal = float4(GetNormal(input.Normal, input.Tangent, input.Bitangent, normalMap), 0.0f);
-    output.NormalRT = normalize(mul(WorldTransforms[MeshId], normal));
+    MaterialAttribute matAttr = MaterialAttributes[MeshId];
+    float4 color, normal, orm;
+
+    if(matAttr.DiffuseTextureIndex != -1)
+    {
+        color = MaterialTextures[matAttr.DiffuseTextureIndex].Sample(myStaticSampler, input.UV);
+        
+        if(color.a < 0.1f)
+            discard;
+    }
+    else
+    {
+        color = matAttr.Albedo;
+    }
+
+    if(matAttr.NormalTextureIndex != -1)
+    {
+        normal = MaterialTextures[matAttr.NormalTextureIndex].Sample(myStaticSampler, input.UV);
+        normal = float4(GetNormal(input.Normal, input.Tangent, input.Bitangent, normal), 0.0f);
+    }
+    else
+    {
+        normal = float4(input.Normal, 0.0f);
+    }
+
+    if(matAttr.ORMTextureIndex != -1)
+    {
+        orm = MaterialTextures[matAttr.ORMTextureIndex].Sample(myStaticSampler, input.UV);
+    }
+    else
+    {
+        orm = float4(0.0f, matAttr.Roughness, matAttr.Metallic, 0.0f);
+    }
+    
     output.ColorRT = color;
+    output.NormalRT = normalize(mul(WorldTransforms[MeshId], normal));
+    output.WorldPositionRT = input.WorldPosition;
     output.ORM = orm;
     output.MeshIDRT = MeshId+1;
 

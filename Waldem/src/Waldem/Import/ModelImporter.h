@@ -52,11 +52,15 @@ namespace Waldem
     public:
         virtual ~ModelImporter() override = default;
 
+        ModelImporter();
+
         virtual Model* Import(String path, bool relative = true) override;
 
     protected:
         const aiScene* ImportInternal(String& path, ModelImportFlags importFlags = ModelImportFlags::None, bool relative = true);
         
         Assimp::Importer AssimpImporter;
+
+        Texture2D* DummyTexture;
     };
 }

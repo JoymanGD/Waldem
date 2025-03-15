@@ -4,24 +4,15 @@
 
 namespace Waldem
 {
-    struct BoundingBox
+    struct AABB
     {
         Vector3 Min;
         Vector3 Max;
 
-        // BoundingBox GetTransformed(const Matrix4& transform)
-        // {
-        //     BoundingBox result;
-        //     result.Min = Vector3(transform * Vector4(Min, 1.0f));
-        //     result.Max = Vector3(transform * Vector4(Max, 1.0f));
-        //
-        //     return result;
-        // }
-
-        BoundingBox GetTransformed(const Matrix4& transform)
+        AABB GetTransformed(const Matrix4& transform)
         {
-            // The original corners of the bounding box
-            glm::vec3 corners[8] = {
+            glm::vec3 corners[8] =
+            {
                 glm::vec3(Min.x, Min.y, Min.z),
                 glm::vec3(Max.x, Min.y, Min.z),
                 glm::vec3(Min.x, Max.y, Min.z),
@@ -32,18 +23,15 @@ namespace Waldem
                 glm::vec3(Max.x, Max.y, Max.z),
             };
 
-            // Transform each corner of the bounding box
             glm::vec3 transformedCorners[8];
             for (int i = 0; i < 8; ++i)
             {
                 transformedCorners[i] = glm::vec3(transform * glm::vec4(corners[i], 1.0f));
             }
 
-            // Initialize the new bounding box min and max
             glm::vec3 newMin = transformedCorners[0];
             glm::vec3 newMax = transformedCorners[0];
 
-            // Update the new bounding box by going through all corners
             for (int i = 1; i < 8; ++i)
             {
                 newMin.x = std::min(newMin.x, transformedCorners[i].x);
@@ -55,8 +43,7 @@ namespace Waldem
                 newMax.z = std::max(newMax.z, transformedCorners[i].z);
             }
 
-            // Return the updated bounding box
-            BoundingBox result;
+            AABB result;
             result.Min = newMin;
             result.Max = newMax;
 
@@ -69,9 +56,9 @@ namespace Waldem
             Max = Vector3(transform * Vector4(Max, 1.0f));
         }
 
-        bool Intersects(const BoundingBox& other)
+        bool Intersects(const AABB& other)
         {
-            const float epsilon = 0.001f; // Small tolerance value
+            const float epsilon = 0.001f;
             return !(Max.x + epsilon < other.Min.x || Max.y + epsilon < other.Min.y || Max.z + epsilon < other.Min.z ||
                      Min.x - epsilon > other.Max.x || Min.y - epsilon > other.Max.y || Min.z - epsilon > other.Max.z);
         }
@@ -102,7 +89,7 @@ namespace Waldem
             return lines;
         }
 
-        void Expand(const BoundingBox& other)
+        void Expand(const AABB& other)
         {
             Min.x = glm::min(Min.x, other.Min.x);
             Min.y = glm::min(Min.y, other.Min.y);

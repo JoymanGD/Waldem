@@ -2,6 +2,7 @@
 
 #include <Waldem.h>
 #include "Scenes/DefaultScene.h"
+#include "Scenes/PhysicsTestScene.h"
 
 namespace Sandbox
 {
@@ -10,7 +11,8 @@ namespace Sandbox
 	public:
 		SandboxApp()
 		{
-			OpenScene(new DefaultScene);
+			// OpenScene(new DefaultScene);
+			OpenScene(new PhysicsTestScene);
 		}
 
 		~SandboxApp()

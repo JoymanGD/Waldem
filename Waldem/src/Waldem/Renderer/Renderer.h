@@ -27,7 +27,7 @@ namespace Waldem
         virtual void End() = 0;
         virtual void Present() = 0;
         virtual void Draw(Model* model) = 0;
-        virtual void Draw(Mesh* mesh) = 0;
+        virtual void Draw(CMesh* mesh) = 0;
         virtual void Wait() = 0;
         virtual Point3 GetNumThreadsPerGroup(ComputeShader* computeShader) = 0;
         virtual void Compute(Point3 groupCount) = 0;
@@ -35,7 +35,7 @@ namespace Waldem
         virtual ComputeShader* LoadComputeShader(String shaderName, String entryPoint) = 0;
         virtual void SetPipeline(Pipeline* pipeline) = 0;
         virtual void SetRootSignature(RootSignature* rootSignature) = 0;
-        virtual void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr) = 0;
+        virtual void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr, SViewport viewport = {}, SScissorRect scissor = {}) = 0;
         virtual Pipeline* CreateGraphicPipeline(const String& name, RootSignature* rootSignature, PixelShader* shader, WArray<TextureFormat> RTFormats, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout) = 0;
         virtual Pipeline* CreateComputePipeline(const String& name, RootSignature* rootSignature, ComputeShader* shader) = 0;
         virtual RootSignature* CreateRootSignature(WArray<Resource> resources) = 0;
@@ -65,7 +65,7 @@ namespace Waldem
         static void End();
         static void Present();
 
-        static void Draw(Mesh* mesh);
+        static void Draw(CMesh* mesh);
         static void Draw(Model* model);
         static void Wait();
         static Point3 GetNumThreadsPerGroup(ComputeShader* computeShader);
@@ -74,7 +74,7 @@ namespace Waldem
         static ComputeShader* LoadComputeShader(String shaderName, String entryPoint = "main");
         static void SetPipeline(Pipeline* pipeline);
         static void SetRootSignature(RootSignature* rootSignature);
-        static void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr);
+        static void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr, SViewport viewport = {}, SScissorRect scissor = {});
         static Pipeline* CreateGraphicPipeline(const String& name, RootSignature* rootSignature, PixelShader* shader, WArray<TextureFormat> RTFormats, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout);
         static Pipeline* CreateComputePipeline(const String& name, RootSignature* rootSignature, ComputeShader* shader);
         static RootSignature* CreateRootSignature(WArray<Resource> resources);

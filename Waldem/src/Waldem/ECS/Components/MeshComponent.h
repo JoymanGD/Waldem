@@ -5,7 +5,7 @@ namespace Waldem
 {
     struct MeshComponent
     {
-        MeshComponent(Mesh* mesh) : Mesh(mesh) {}
-        Mesh* Mesh;
+        MeshComponent(CMesh* mesh) : Mesh(mesh) {}
+        CMesh* Mesh;
     };
 }

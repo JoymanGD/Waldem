@@ -2,6 +2,7 @@
 
 #include "imgui.h"
 #include "backends/imgui_impl_sdl2.h"
+#include "Waldem/ECS/Systems/EditorSystems/EditorControlSystem.h"
 #include "Waldem/ECS/Systems/EditorSystems/GuizmoEditorSystem.h"
 #include "Waldem/ECS/Systems/GameSystems/FreeLookCameraSystem.h"
 #include "Waldem/ECS/Systems/EditorSystems/EntityDetailsWidgetContainer.h"
@@ -28,7 +29,7 @@ namespace Waldem
             float aspectRatio = window->GetWidth() / window->GetHeight();
             cameraEntity.Add<Transform>(Vector3(0, 0, 0));
             cameraEntity.Add<Camera>(60.0f, aspectRatio, 0.001f, 1000.0f, 30.0f, 30.0f);
-            cameraEntity.Add<MainCamera>();
+            cameraEntity.Add<EditorCamera>();
             
             //do it after all entities set up
             CurrentECSManager->Refresh();
@@ -44,7 +45,7 @@ namespace Waldem
             });
             
             UISystems.Add(new GuizmoEditorSystem(CurrentECSManager));
-            UpdateSystems.Add((ISystem*)new FreeLookCameraSystem(CurrentECSManager));
+            UpdateSystems.Add((ISystem*)new EditorControlSystem(CurrentECSManager));
         	
 			SceneData sceneData = { window };
 
