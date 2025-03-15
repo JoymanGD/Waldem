@@ -1,6 +1,7 @@
 #pragma once
+#include "..\..\Components\ColliderComponent.h"
 #include "Waldem/ECS/Systems/System.h"
-#include "Waldem/ECS/Components/MainCamera.h"
+#include "..\..\Components\EditorCamera.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
 #include "Waldem/ECS/Components/PhysicsComponent.h"
 #include "Waldem/Renderer/Model/Line.h"
@@ -49,7 +50,7 @@ namespace Waldem
         {
             Matrix4 viewProj;
             
-            for (auto [entity, camera, mainCamera, cameraTransform] : ECSManager->EntitiesWith<Camera, MainCamera, Transform>())
+            for (auto [entity, camera, mainCamera, cameraTransform] : ECSManager->EntitiesWith<Camera, EditorCamera, Transform>())
             {
                 viewProj = camera.ProjectionMatrix * camera.ViewMatrix;
                 break;
@@ -57,9 +58,9 @@ namespace Waldem
             
             WArray<Line> lines;
 
-            for (auto [transformEntity, transform, physicsComponent, meshComponent] : ECSManager->EntitiesWith<Transform, PhysicsComponent, MeshComponent>())
+            for (auto [transformEntity, transform, collider, meshComponent] : ECSManager->EntitiesWith<Transform, ColliderComponent, MeshComponent>())
             {
-                Vector4 color = physicsComponent.IsColliding ? Vector4(1.0f, 0.0f, 0.0f, 1.0f) : Vector4(0.0f, 1.0f, 0.0f, 1.0f);
+                Vector4 color = collider.IsColliding ? Vector4(1.0f, 0.0f, 0.0f, 1.0f) : Vector4(0.0f, 1.0f, 0.0f, 1.0f);
                 lines.AddRange(meshComponent.Mesh->BBox.GetTransformed(transform).GetLines(color));
             }
 

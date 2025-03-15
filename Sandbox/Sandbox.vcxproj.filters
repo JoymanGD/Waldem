@@ -10,11 +10,11 @@
     <ClInclude Include="src\Scenes\DefaultScene.h">
       <Filter>Scenes</Filter>
     </ClInclude>
+    <ClInclude Include="src\Scenes\PhysicsTestScene.h">
+      <Filter>Scenes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\SandboxApp.cpp" />
-    <ClCompile Include="src\Scenes\DefaultScene.cpp">
-      <Filter>Scenes</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>

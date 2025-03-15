@@ -88,7 +88,7 @@ namespace Waldem
         uint32_t ForcedSampleCount;
         ConservativeRasterizationMode ConservativeRaster;
     };
-    #define DEFAULT_RASTERIZER_DESC { WD_FILL_MODE_SOLID, WD_CULL_MODE_BACK, false, 0, 0.0f, 0.0f, false, false, false, 0, ConservativeRasterizationMode::WD_CONSERVATIVE_RASTERIZATION_MODE_OFF }
+    #define DEFAULT_RASTERIZER_DESC { WD_FILL_MODE_SOLID, WD_CULL_MODE_BACK, false, 0, 0.0f, 0.0f, true, false, false, 0, ConservativeRasterizationMode::WD_CONSERVATIVE_RASTERIZATION_MODE_OFF }
     
     struct BlendDesc
     {
@@ -162,6 +162,22 @@ namespace Waldem
         VIDEO_PROCESS_WRITE	= 0x80000,
         VIDEO_ENCODE_READ	= 0x200000,
         VIDEO_ENCODE_WRITE	= 0x800000
+    };
+
+    struct SViewport
+    {
+        float Width;
+        float Height;
+        float MinDepth = 0;
+        float MaxDepth = 1;
+    };
+
+    struct SScissorRect
+    {
+        long left;
+        long top;
+        long right;
+        long bottom;
     };
 
     #define DEFAULT_INPUT_LAYOUT_DESC \

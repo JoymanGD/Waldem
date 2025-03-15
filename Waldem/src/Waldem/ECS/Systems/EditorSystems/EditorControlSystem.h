@@ -9,17 +9,29 @@
 
 namespace Waldem
 {
-    class WALDEM_API FreeLookCameraSystem : ISystem
+    class WALDEM_API EditorControlSystem : ISystem
     {
+        //Camera control
         Vector2 MousePos = { 0, 0 };
         Vector2 LastMousePos = { 0, 0 };
         bool IsUnderControl = false;
         Vector3 DeltaPos = { 0, 0, 0 };
+
+        //Light control
+        Vector3 LightTargetPosition = { 0, -1, 0 };
+        Vector3 LightTargetDirection = { 0, -1, 0 };
+        bool IsRotatingLight = false;
         
     public:
-        FreeLookCameraSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
-        
+        EditorControlSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
+
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
+        {
+            InitializeCameraControl(inputManager);
+            InitializeLightControl(inputManager);
+        }        
+
+        void InitializeCameraControl(InputManager* inputManager)
         {
             inputManager->SubscribeToKeyEvent(W, [&](bool isPressed) 
             {
@@ -75,7 +87,54 @@ namespace Waldem
             }
         }
 
+        void InitializeLightControl(InputManager* inputManager)
+        {
+            inputManager->SubscribeToMouseButtonEvent(WD_MOUSE_BUTTON_MIDDLE, [&](bool isPressed)
+            {
+                IsRotatingLight = isPressed;
+            });
+        }
+
         void Update(float deltaTime) override
+        {
+            UpdateCameraControl(deltaTime);
+            UpdateLightControl(deltaTime);
+                
+            LastMousePos.x = MousePos.x;
+            LastMousePos.y = MousePos.y;
+        }
+
+        void UpdateLightControl(float deltaTime)
+        {
+            for (auto [entity, light, transform] : ECSManager->EntitiesWith<Light, Transform>())
+            {
+                if(light.Data.Type == LightType::Directional)
+                {
+                    Vector3 cameraUp, cameraRight;
+                    for (auto [cameraEntity, camera, cameraTransform] : ECSManager->EntitiesWith<Camera, Transform>())
+                    {
+                        cameraUp = cameraTransform.GetUpVector();
+                        cameraRight = cameraTransform.GetRightVector();
+                    }
+                    
+                    if (IsRotatingLight)
+                    {
+                        cameraRight.y = 0;
+                        cameraUp.y = 0;
+                    
+                        float deltaX = (MousePos.x - LastMousePos.x) * deltaTime;
+                        float deltaY = (MousePos.y - LastMousePos.y) * deltaTime;
+
+                        Matrix4 rotationMatrix = rotate(Matrix4(1.0f), deltaX, cameraUp) * rotate(Matrix4(1.0f), deltaY, cameraRight);
+                        LightTargetDirection = normalize(Vector3(rotationMatrix * Vector4(LightTargetDirection, 0.0f)));
+
+                        transform.LookAt(transform.Position + LightTargetDirection);
+                    }
+                }
+            }
+        }
+        
+        void UpdateCameraControl(float deltaTime)
         {
             for (auto [entity, transform, camera, mainCamera] : ECSManager->EntitiesWith<Transform, Camera, EditorCamera>())
             {               
@@ -91,9 +150,6 @@ namespace Waldem
                         transform.Move(normalize(DeltaPos) * deltaTime * camera.MovementSpeed * camera.SpeedModificator);
                     }
                 }
-                
-                LastMousePos.x = MousePos.x;
-                LastMousePos.y = MousePos.y;
                 
                 camera.SetViewMatrix(&transform);
             }

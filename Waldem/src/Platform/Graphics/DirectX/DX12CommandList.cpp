@@ -66,18 +66,19 @@ namespace Waldem
         CommandList->RSSetViewports(1, viewport);
         CommandList->RSSetScissorRects(1, scissor);
 
-        CurrentViewport = *viewport;
-        CurrentScissorRect = *scissor;
+        MainViewport = *viewport;
+        MainScissorRect = *scissor;
 
         //set render target
         CommandList->OMSetRenderTargets(1, &renderTargetHandle, FALSE, &depthStencilHandle);
 
-        CurrentRenderTargetHandle = renderTargetHandle;
-        CurrentDepthStencilHandle = depthStencilHandle;
+        MainRenderTargetHandles.Add(renderTargetHandle);
+        MainDepthStencilHandle = depthStencilHandle;
     }
 
     void DX12CommandList::EndInternal()
     {
+        MainRenderTargetHandles.Clear();
         CurrentExecutableShader = nullptr;
     }
 
@@ -92,7 +93,7 @@ namespace Waldem
         }
     }
 
-    void DX12CommandList::Draw(Mesh* mesh)
+    void DX12CommandList::Draw(CMesh* mesh)
     {
         //Draw mesh
         if(mesh->VertexBuffer)
@@ -241,47 +242,90 @@ namespace Waldem
         }
     }
 
-    void DX12CommandList::SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil)
+    void DX12CommandList::SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil, SViewport viewport, SScissorRect scissor)
     {
-        RenderTarget* currentRT = renderTargets.IsEmpty() ? depthStencil : renderTargets[0];
-        
-        if(!renderTargets.IsEmpty() || depthStencil)
+        WArray<D3D12_CPU_DESCRIPTOR_HANDLE> renderTargetHandlesToSet = MainRenderTargetHandles;
+        D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandleToSet = MainDepthStencilHandle;
+        D3D12_VIEWPORT viewportToSet = MainViewport;
+        D3D12_RECT scissorToSet = MainScissorRect;
+
+        if(!renderTargets.IsEmpty())
         {
-            D3D12_VIEWPORT Viewport = {};
-            D3D12_RECT ScissorRect = {};
-                
-            Viewport.Width = currentRT->GetWidth();
-            Viewport.Height = currentRT->GetHeight();
-            Viewport.MinDepth = 0;
-            Viewport.MaxDepth = 1;
-                
-            ScissorRect.right = currentRT->GetWidth();
-            ScissorRect.bottom = currentRT->GetHeight();
-                
-            CommandList->RSSetViewports(1, &Viewport);
-            CommandList->RSSetScissorRects(1, &ScissorRect);
+            renderTargetHandlesToSet.Clear();
             
-            WArray<D3D12_CPU_DESCRIPTOR_HANDLE> rtHandles;
             for(auto renderTarget : renderTargets)
             {
-                auto handle = ((DX12RenderTarget*)renderTarget)->GetRenderTargetHandle();
-                rtHandles.Add(handle);
+                if(renderTarget != nullptr)
+                {
+                    auto handle = ((DX12RenderTarget*)renderTarget)->GetRenderTargetHandle();
+                    renderTargetHandlesToSet.Add(handle);
+                }
             }
-
-            D3D12_CPU_DESCRIPTOR_HANDLE dsHandle = {};
-
-            if(depthStencil)
-                dsHandle = ((DX12RenderTarget*)depthStencil)->GetRenderTargetHandle();
-                
-            CommandList->OMSetRenderTargets(rtHandles.Num(), rtHandles.GetData(), FALSE, depthStencil ? &dsHandle : &CurrentDepthStencilHandle);
         }
-        else
+
+        if(depthStencil)
         {
-            CommandList->RSSetViewports(1, &CurrentViewport);
-            CommandList->RSSetScissorRects(1, &CurrentScissorRect);
-            CommandList->OMSetRenderTargets(1, &CurrentRenderTargetHandle, FALSE, &CurrentDepthStencilHandle);
+            depthStencilHandleToSet = ((DX12RenderTarget*)depthStencil)->GetRenderTargetHandle();
         }
+
+        if(viewport.Width != 0.f && viewport.Height != 0.f)
+        {
+            viewportToSet.Height = viewport.Height;
+            viewportToSet.Width = viewport.Width;
+            viewportToSet.MinDepth = viewport.MinDepth;
+            viewportToSet.MaxDepth = viewport.MaxDepth;
+        }
+
+        if(scissor.bottom != 0 && scissor.right != 0)
+        {
+            scissorToSet = *(D3D12_RECT*)&scissor;
+        }
+        
+        CommandList->RSSetViewports(1, &viewportToSet);
+        CommandList->RSSetScissorRects(1, &scissorToSet);
+        CommandList->OMSetRenderTargets(renderTargetHandlesToSet.Num(), renderTargetHandlesToSet.GetData(), FALSE, &depthStencilHandleToSet);
     }
+    // void DX12CommandList::SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil)
+    // {
+    //     RenderTarget* currentRT = renderTargets.IsEmpty() ? depthStencil : renderTargets[0];
+    //     
+    //     if(!renderTargets.IsEmpty() || depthStencil)
+    //     {
+    //         D3D12_VIEWPORT Viewport = {};
+    //         D3D12_RECT ScissorRect = {};
+    //             
+    //         Viewport.Width = currentRT->GetWidth();
+    //         Viewport.Height = currentRT->GetHeight();
+    //         Viewport.MinDepth = 0;
+    //         Viewport.MaxDepth = 1;
+    //             
+    //         ScissorRect.right = currentRT->GetWidth();
+    //         ScissorRect.bottom = currentRT->GetHeight();
+    //             
+    //         CommandList->RSSetViewports(1, &Viewport);
+    //         CommandList->RSSetScissorRects(1, &ScissorRect);
+    //         
+    //         WArray<D3D12_CPU_DESCRIPTOR_HANDLE> rtHandles;
+    //         for(auto renderTarget : renderTargets)
+    //         {
+    //             auto handle = ((DX12RenderTarget*)renderTarget)->GetRenderTargetHandle();
+    //             rtHandles.Add(handle);
+    //         }
+    //
+    //         D3D12_CPU_DESCRIPTOR_HANDLE dsHandle = {};
+    //
+    //         if(depthStencil)
+    //             dsHandle = ((DX12RenderTarget*)depthStencil)->GetRenderTargetHandle();
+    //             
+    //         CommandList->OMSetRenderTargets(rtHandles.Num(), rtHandles.GetData(), FALSE, depthStencil ? &dsHandle : &LastDepthStencilHandle);
+    //     }
+    //     else
+    //     {
+    //         CommandList->RSSetViewports(1, &CurrentViewport);
+    //         CommandList->RSSetScissorRects(1, &CurrentScissorRect);
+    //         CommandList->OMSetRenderTargets(1, &LastRenderTargetHandle, FALSE, &LastDepthStencilHandle);
+    //     }
+    // }
 
     void DX12CommandList::SetDescriptorHeaps(uint32_t NumDescriptorHeaps, ID3D12DescriptorHeap* const* ppDescriptorHeaps)
     {

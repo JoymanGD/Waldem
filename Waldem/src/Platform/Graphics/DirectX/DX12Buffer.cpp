@@ -1,7 +1,6 @@
 #include "wdpch.h"
 #include "DX12Buffer.h"
 #include "DX12Helper.h"
-#include "Waldem/Renderer/Model/Mesh.h"
 
 namespace Waldem
 {

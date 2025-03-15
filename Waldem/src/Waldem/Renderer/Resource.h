@@ -11,6 +11,7 @@ namespace Waldem
     public:
         String Name;
         ResourceType Type;
+        bool IsArray = false;
         uint32_t NumResources = 1;
         void* Data = nullptr;
         uint32_t Stride = 0;
@@ -54,6 +55,7 @@ namespace Waldem
         {
             Name = name;
             Type = RTYPE_Texture;
+            IsArray = true;
             Textures = textures;
             NumResources = textures.Num();
             Slot = slot;
@@ -63,6 +65,7 @@ namespace Waldem
         {
             Name = name;
             Type = RTYPE_Texture;
+            IsArray = false;
             Textures.Add(texture);
             NumResources = 1;
             Slot = slot;

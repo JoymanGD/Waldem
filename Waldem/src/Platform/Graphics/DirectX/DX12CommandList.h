@@ -1,7 +1,6 @@
 #pragma once
 #include <d3d12.h>
 
-#include "Waldem/Renderer/Model/Line.h"
 #include "Waldem/Renderer/Pipeline.h"
 #include "Waldem/Renderer/Model/Mesh.h"
 #include "Waldem/Renderer/Shader.h"
@@ -21,13 +20,13 @@ namespace Waldem
         void EndInternal();
 
         void Draw(Model* model);
-        void Draw(Mesh* mesh);
+        void Draw(CMesh* mesh);
         void Dispatch(Point3 groupCount);
         void Clear(D3D12_CPU_DESCRIPTOR_HANDLE renderTarget, D3D12_CPU_DESCRIPTOR_HANDLE depthStencil, Vector3 clearColor);
         
         void SetPipeline(Pipeline* pipeline);
         void SetRootSignature(RootSignature* rootSignature);
-        void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr);
+        void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr, SViewport viewport = {}, SScissorRect scissor = {});
         void SetDescriptorHeaps(uint32_t NumDescriptorHeaps, ID3D12DescriptorHeap* const* ppDescriptorHeaps);
 
         void* GetNativeCommandList() { return CommandList; }
@@ -60,10 +59,14 @@ namespace Waldem
         ID3D12Fence* Fence;
         HANDLE FenceEvent;
         UINT64 FenceValue;
-        D3D12_CPU_DESCRIPTOR_HANDLE CurrentRenderTargetHandle;
+        WArray<D3D12_CPU_DESCRIPTOR_HANDLE> CurrentRenderTargetHandles;
         D3D12_CPU_DESCRIPTOR_HANDLE CurrentDepthStencilHandle;
         D3D12_VIEWPORT CurrentViewport;
         D3D12_RECT CurrentScissorRect;
+        WArray<D3D12_CPU_DESCRIPTOR_HANDLE> MainRenderTargetHandles;
+        D3D12_CPU_DESCRIPTOR_HANDLE MainDepthStencilHandle;
+        D3D12_VIEWPORT MainViewport;
+        D3D12_RECT MainScissorRect;
         PixelShader* CurrentExecutableShader;
     };
 }

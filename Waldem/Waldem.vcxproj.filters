@@ -40,6 +40,9 @@
     <Filter Include="src\Waldem\ECS\Systems">
       <UniqueIdentifier>{A78A5537-9384-7E89-7CF1-149A688AE4F5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Waldem\ECS\Systems\DebugSystems">
+      <UniqueIdentifier>{758C421F-E145-ADC9-6AA5-C7A3D65D6339}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Waldem\ECS\Systems\EditorSystems">
       <UniqueIdentifier>{15682AA8-014F-EC9F-AA9F-52BD96656506}</UniqueIdentifier>
     </Filter>
@@ -48,6 +51,9 @@
     </Filter>
     <Filter Include="src\Waldem\ECS\Systems\EditorSystems\Widgets\ComponentWidgets">
       <UniqueIdentifier>{14329E5B-80FA-6BDF-498B-74F1B5129C1A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Waldem\ECS\Systems\GameSystems">
+      <UniqueIdentifier>{687F1249-54BB-15B3-BDCD-2DAAA928BECD}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\Waldem\Editor">
       <UniqueIdentifier>{CC054398-381C-412E-8193-CC4FEDE811B6}</UniqueIdentifier>
@@ -195,10 +201,16 @@
     <ClInclude Include="src\Waldem\Core.h">
       <Filter>src\Waldem</Filter>
     </ClInclude>
+    <ClInclude Include="src\Waldem\ECS\Components\ColliderComponent.h">
+      <Filter>src\Waldem\ECS\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\ECS\Components\EditorCamera.h">
+      <Filter>src\Waldem\ECS\Components</Filter>
+    </ClInclude>
     <ClInclude Include="src\Waldem\ECS\Components\Guizmo.h">
       <Filter>src\Waldem\ECS\Components</Filter>
     </ClInclude>
-    <ClInclude Include="src\Waldem\ECS\Components\MainCamera.h">
+    <ClInclude Include="src\Waldem\ECS\Components\LineComponent.h">
       <Filter>src\Waldem\ECS\Components</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\ECS\Components\MeshComponent.h">
@@ -219,11 +231,17 @@
     <ClInclude Include="src\Waldem\ECS\Components\Selected.h">
       <Filter>src\Waldem\ECS\Components</Filter>
     </ClInclude>
-    <ClInclude Include="src\Waldem\ECS\Systems\DebugSystem.h">
-      <Filter>src\Waldem\ECS\Systems</Filter>
+    <ClInclude Include="src\Waldem\ECS\Systems\DebugSystems\CollisionRenderingSystem.h">
+      <Filter>src\Waldem\ECS\Systems\DebugSystems</Filter>
     </ClInclude>
-    <ClInclude Include="src\Waldem\ECS\Systems\DeferredRenderingSystem.h">
-      <Filter>src\Waldem\ECS\Systems</Filter>
+    <ClInclude Include="src\Waldem\ECS\Systems\DebugSystems\DebugSystem.h">
+      <Filter>src\Waldem\ECS\Systems\DebugSystems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\ECS\Systems\DebugSystems\LinesRenderingSystem.h">
+      <Filter>src\Waldem\ECS\Systems\DebugSystems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\EditorControlSystem.h">
+      <Filter>src\Waldem\ECS\Systems\EditorSystems</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\EntityDetailsWidgetContainer.h">
       <Filter>src\Waldem\ECS\Systems\EditorSystems</Filter>
@@ -249,26 +267,32 @@
     <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\Widgets\HierarchyWidget.h">
       <Filter>src\Waldem\ECS\Systems\EditorSystems\Widgets</Filter>
     </ClInclude>
-    <ClInclude Include="src\Waldem\ECS\Systems\ForwardRenderingSystem.h">
-      <Filter>src\Waldem\ECS\Systems</Filter>
+    <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\CollisionSystem.h">
+      <Filter>src\Waldem\ECS\Systems\GameSystems</Filter>
     </ClInclude>
-    <ClInclude Include="src\Waldem\ECS\Systems\FreeLookCameraSystem.h">
-      <Filter>src\Waldem\ECS\Systems</Filter>
+    <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\DeferredRenderingSystem.h">
+      <Filter>src\Waldem\ECS\Systems\GameSystems</Filter>
     </ClInclude>
-    <ClInclude Include="src\Waldem\ECS\Systems\OceanSimulationSystem.h">
-      <Filter>src\Waldem\ECS\Systems</Filter>
+    <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\ForwardRenderingSystem.h">
+      <Filter>src\Waldem\ECS\Systems\GameSystems</Filter>
     </ClInclude>
-    <ClInclude Include="src\Waldem\ECS\Systems\PhysicsSystem.h">
-      <Filter>src\Waldem\ECS\Systems</Filter>
+    <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\FreeLookCameraSystem.h">
+      <Filter>src\Waldem\ECS\Systems\GameSystems</Filter>
     </ClInclude>
-    <ClInclude Include="src\Waldem\ECS\Systems\PostProcessSystem.h">
-      <Filter>src\Waldem\ECS\Systems</Filter>
+    <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\OceanSimulationSystem.h">
+      <Filter>src\Waldem\ECS\Systems\GameSystems</Filter>
     </ClInclude>
-    <ClInclude Include="src\Waldem\ECS\Systems\ScreenQuadSystem.h">
-      <Filter>src\Waldem\ECS\Systems</Filter>
+    <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\PhysicsSystem.h">
+      <Filter>src\Waldem\ECS\Systems\GameSystems</Filter>
     </ClInclude>
-    <ClInclude Include="src\Waldem\ECS\Systems\ShadowmapRenderingSystem.h">
-      <Filter>src\Waldem\ECS\Systems</Filter>
+    <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\PostProcessSystem.h">
+      <Filter>src\Waldem\ECS\Systems\GameSystems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\ScreenQuadSystem.h">
+      <Filter>src\Waldem\ECS\Systems\GameSystems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\ShadowmapRenderingSystem.h">
+      <Filter>src\Waldem\ECS\Systems\GameSystems</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\ECS\Systems\System.h">
       <Filter>src\Waldem\ECS\Systems</Filter>
@@ -309,6 +333,9 @@
     <ClInclude Include="src\Waldem\KeyCodes.h">
       <Filter>src\Waldem</Filter>
     </ClInclude>
+    <ClInclude Include="src\Waldem\Layers\DebugLayer.h">
+      <Filter>src\Waldem\Layers</Filter>
+    </ClInclude>
     <ClInclude Include="src\Waldem\Layers\EditorLayer.h">
       <Filter>src\Waldem\Layers</Filter>
     </ClInclude>
@@ -327,7 +354,7 @@
     <ClInclude Include="src\Waldem\MouseButtonCodes.h">
       <Filter>src\Waldem</Filter>
     </ClInclude>
-    <ClInclude Include="src\Waldem\Renderer\BoundingBox.h">
+    <ClInclude Include="src\Waldem\Renderer\AABB.h">
       <Filter>src\Waldem\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\Renderer\Buffer.h">
@@ -342,8 +369,11 @@
     <ClInclude Include="src\Waldem\Renderer\Light.h">
       <Filter>src\Waldem\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="src\Waldem\Renderer\Line.h">
-      <Filter>src\Waldem\Renderer</Filter>
+    <ClInclude Include="src\Waldem\Renderer\Model\Line.h">
+      <Filter>src\Waldem\Renderer\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\Renderer\Model\LineMesh.h">
+      <Filter>src\Waldem\Renderer\Model</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\Renderer\Model\Material.h">
       <Filter>src\Waldem\Renderer\Model</Filter>
@@ -355,6 +385,9 @@
       <Filter>src\Waldem\Renderer\Model</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\Renderer\Model\Quad.h">
+      <Filter>src\Waldem\Renderer\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\Renderer\Model\Simplex.h">
       <Filter>src\Waldem\Renderer\Model</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\Renderer\Model\Transform.h">
@@ -421,6 +454,9 @@
       <Filter>src\Waldem\Types</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\Utils\FileUtils.h">
+      <Filter>src\Waldem\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\Utils\GeometryUtils.h">
       <Filter>src\Waldem\Utils</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\Window.h">
@@ -1784,9 +1820,6 @@
     <ClCompile Include="src\Waldem\Log.cpp">
       <Filter>src\Waldem</Filter>
     </ClCompile>
-    <ClCompile Include="src\Waldem\Renderer\Buffer.cpp">
-      <Filter>src\Waldem\Renderer</Filter>
-    </ClCompile>
     <ClCompile Include="src\Waldem\Renderer\Interfaces\IGraphicObject.cpp">
       <Filter>src\Waldem\Renderer\Interfaces</Filter>
     </ClCompile>
@@ -1891,6 +1924,9 @@
     <FxCompile Include="src\Shaders\Line.vs.hlsl">
       <Filter>src\Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="src\Shaders\Materials.hlsl">
+      <Filter>src\Shaders</Filter>
+    </FxCompile>
     <FxCompile Include="src\Shaders\OceanSimulation\Butterfly.comp.hlsl">
       <Filter>src\Shaders\OceanSimulation</Filter>
     </FxCompile>
@@ -1918,7 +1954,10 @@
     <FxCompile Include="src\Shaders\PBR.hlsl">
       <Filter>src\Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="src\Shaders\Physics\Collision.comp.hlsl">
+    <FxCompile Include="src\Shaders\Physics\AABBBroadPhase.comp.hlsl">
+      <Filter>src\Shaders\Physics</Filter>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Physics\AABBNarrowPhase.comp.hlsl">
       <Filter>src\Shaders\Physics</Filter>
     </FxCompile>
     <FxCompile Include="src\Shaders\Physics\PhysicsTypes.hlsl">
@@ -1943,6 +1982,12 @@
       <Filter>src\Shaders</Filter>
     </FxCompile>
     <FxCompile Include="src\Shaders\Shadows.hlsl">
+      <Filter>src\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\SimpleMesh.ps.hlsl">
+      <Filter>src\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\SimpleMesh.vs.hlsl">
       <Filter>src\Shaders</Filter>
     </FxCompile>
     <FxCompile Include="src\Shaders\Types.hlsl">

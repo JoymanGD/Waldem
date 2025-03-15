@@ -22,19 +22,32 @@ namespace Waldem
             matrix.a4, matrix.b4, matrix.c4, matrix.d4
         );
     }
+    
+    Texture2D* CreateDummyTexture(String name)
+    {
+        Vector4 dummyColor = Vector4(1.f, 1.f, 1.f, 1.f);
+        uint8_t* image_data = (uint8_t*)&dummyColor;
+
+        int width = 1;
+        int height = 1;
+
+        TextureFormat format = TextureFormat::R32G32B32_FLOAT;
+
+        return Renderer::CreateTexture(name, width, height, format, image_data);
+    }
 
     Texture2D* CreateTexture(String path, String name, TextureType textureType, const aiScene* assimpModel, aiMaterial* assimpMaterial)
     {
-        uint8_t* image_data;
-
-        int width = 0;
-        int height = 0;
-        int componentsCount = 0;
-
         aiString texturePath;
         
-        if (assimpMaterial->GetTexture((aiTextureType)textureType, 0, &texturePath) == aiReturn_SUCCESS)
+        if (assimpMaterial && assimpMaterial->GetTexture((aiTextureType)textureType, 0, &texturePath) == aiReturn_SUCCESS)
         {
+            int width = 1;
+            int height = 1;
+            int componentsCount = 4;
+            
+            uint8_t* image_data = nullptr;
+            
             //texture is embedded
             if (const aiTexture* assimpTexture = assimpModel->GetEmbeddedTexture(texturePath.C_Str()))
             {
@@ -48,31 +61,22 @@ namespace Waldem
                 auto externalTexturePath = parentPath.append(texturePath.C_Str());
                 image_data = stbi_load(externalTexturePath.string().c_str(), &width, &height, &componentsCount, 4);
             }
-        }
-        else
-        {
-            width = 1;
-            height = 1;
 
-            // Fake orange texture data for the case when texture is not found
-            Vector4 fakeData = normalize(Vector4(1.f, .2f, 0.f, 1.f));
-            image_data = (uint8_t*)&fakeData;
-        }
-
-        TextureFormat format;
+            TextureFormat format;
         
-        if(componentsCount == 3)
-        {
-            format = TextureFormat::R32G32B32_FLOAT; //TODO: check if its workable
-        }
-        else
-        {
-            format = TextureFormat::R8G8B8A8_UNORM;
+            if(componentsCount == 3)
+            {
+                format = TextureFormat::R32G32B32_FLOAT; //TODO: check if its workable
+            }
+            else
+            {
+                format = TextureFormat::R8G8B8A8_UNORM;
+            }
+
+            return Renderer::CreateTexture(name, width, height, format, image_data);;
         }
 
-        auto texture = Renderer::CreateTexture(name, width, height, format, image_data);
-
-        return texture;
+        return nullptr;
     }
 
     Material* CreateMaterial(String path, const aiScene* assimpModel, aiMaterial* assimpMaterial)
@@ -84,7 +88,17 @@ namespace Waldem
         auto metalRoughness = CreateTexture(path, "MetalRoughnessTexture", DIFFUSE_ROUGHNESS, assimpModel, assimpMaterial);
         return new Material(diffuse, normal, metalRoughness);
     }
-    
+
+    Material* CreateDummyMaterial(Texture2D* dummyTexture)
+    {
+        return new Material(dummyTexture, dummyTexture, dummyTexture);
+    }
+
+    ModelImporter::ModelImporter()
+    {
+        DummyTexture = CreateDummyTexture("DummyTexture");
+    }
+
     Model* ModelImporter::Import(String path, bool relative)
     {
         Model* result = new Model();
@@ -97,17 +111,18 @@ namespace Waldem
             {
                 auto assimpMesh = assimpModel->mMeshes[i];
                 
-                std::vector<uint32_t> indexBufferData;
+                WArray<uint32_t> indexBufferData;
                 
                 for (int j = 0; j < assimpMesh->mNumFaces; ++j)
                 {
                     for (int k = 0; k < assimpMesh->mFaces[j].mNumIndices; ++k)
                     {
-                        indexBufferData.push_back(assimpMesh->mFaces[j].mIndices[k]);
+                        indexBufferData.Add(assimpMesh->mFaces[j].mIndices[k]);
                     }
                 }
 
-                std::vector<Vertex> vertexBufferData;
+                WArray<Vertex> vertexBufferData;
+                WArray<Vector3> positions;
 
                 for (uint32_t j = 0; j < assimpMesh->mNumVertices; ++j)
                 {
@@ -126,12 +141,13 @@ namespace Waldem
                     {
                         vertex.UV = Vector2(0, 0);
                     }
-                    
-                    vertexBufferData.push_back(vertex);
+
+                    positions.Add(vertex.Position);
+                    vertexBufferData.Add(vertex);
                 }
 
-                auto material = assimpModel->mMaterials[i];
-                auto mat = CreateMaterial(path, assimpModel, material);
+                auto material = assimpModel->mMaterials[assimpMesh->mMaterialIndex];
+                Material* mat = CreateMaterial(path, assimpModel, material);
 
                 Matrix4 modelMatrix;
                 if(assimpModel->mRootNode->mNumChildren > 0)
@@ -143,10 +159,10 @@ namespace Waldem
                     modelMatrix = AssimpToMatrix4(assimpModel->mRootNode->mTransformation);
                 }
                 
-                uint32_t vertexBufferSize = vertexBufferData.size() * sizeof(Vertex);
-                uint32_t indexBufferSize = indexBufferData.size() * sizeof(uint32_t);
-                BoundingBox bBox { Vector3(assimpMesh->mAABB.mMin.x, assimpMesh->mAABB.mMin.y, assimpMesh->mAABB.mMin.z), Vector3(assimpMesh->mAABB.mMax.x, assimpMesh->mAABB.mMax.y, assimpMesh->mAABB.mMax.z)};
-                Mesh* mesh = new Mesh(vertexBufferData.data(), vertexBufferSize, indexBufferData.data(), indexBufferSize, mat, bBox, assimpMesh->mName.C_Str(), modelMatrix);
+                uint32_t vertexBufferSize = vertexBufferData.Num() * sizeof(Vertex);
+                uint32_t indexBufferSize = indexBufferData.Num() * sizeof(uint32_t);
+                AABB bBox { Vector3(assimpMesh->mAABB.mMin.x, assimpMesh->mAABB.mMin.y, assimpMesh->mAABB.mMin.z), Vector3(assimpMesh->mAABB.mMax.x, assimpMesh->mAABB.mMax.y, assimpMesh->mAABB.mMax.z)};
+                CMesh* mesh = new CMesh(vertexBufferData.GetData(), vertexBufferSize, indexBufferData.GetData(), indexBufferSize, positions, mat, bBox, assimpMesh->mName.C_Str(), modelMatrix);
                 result->AddMesh(mesh);
             }
         }

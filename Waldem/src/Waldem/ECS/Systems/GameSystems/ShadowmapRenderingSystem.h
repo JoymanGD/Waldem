@@ -85,7 +85,7 @@ namespace Waldem
             {
                 if(light.Data.Type == LightType::Directional)
                 {
-                    for (auto [cameraEntity, camera, cameraTransform, mainCamera] : ECSManager->EntitiesWith<Camera, Transform, MainCamera>())
+                    for (auto [cameraEntity, camera, cameraTransform, mainCamera] : ECSManager->EntitiesWith<Camera, Transform, EditorCamera>())
                     {
                         auto currentPosition = cameraTransform.Position;
                         currentPosition.y = lightTransform.Position.y;
@@ -129,7 +129,7 @@ namespace Waldem
                     Renderer::SetPipeline(ShadowmapRenderingPipeline);
                     Renderer::SetRootSignature(ShadowmapRenderingRootSignature);
                     Renderer::ResourceBarrier(light.Shadowmap, ALL_SHADER_RESOURCE, DEPTH_WRITE);
-                    Renderer::SetRenderTargets({}, light.Shadowmap);
+                    Renderer::SetRenderTargets({ nullptr }, light.Shadowmap, { (float)light.Shadowmap->GetWidth(), (float)light.Shadowmap->GetHeight() }, { 0, 0, light.Shadowmap->GetWidth(), light.Shadowmap->GetHeight() });
                     Renderer::ClearDepthStencil(light.Shadowmap);
 
                     uint32_t meshID = 0;

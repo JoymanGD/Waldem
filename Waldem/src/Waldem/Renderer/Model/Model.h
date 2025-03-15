@@ -6,10 +6,10 @@ namespace Waldem
     struct WALDEM_API Model
     {
         Model() = default;
-        Model(std::vector<Mesh*> meshes) : Meshes(meshes) {}
+        Model(std::vector<CMesh*> meshes) : Meshes(meshes) {}
 
-        std::vector<Mesh*> GetMeshes() { return Meshes; }
-        void AddMesh(Mesh* mesh) { Meshes.push_back(mesh); }
+        std::vector<CMesh*> GetMeshes() { return Meshes; }
+        void AddMesh(CMesh* mesh) { Meshes.push_back(mesh); }
 
         std::vector<Texture2D*> GetTextures()
         {
@@ -23,6 +23,6 @@ namespace Waldem
             return textures;
         }
     private:
-        std::vector<Mesh*> Meshes;
+        std::vector<CMesh*> Meshes;
     };
 }

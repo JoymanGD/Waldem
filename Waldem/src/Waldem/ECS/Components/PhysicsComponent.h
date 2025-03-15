@@ -20,6 +20,5 @@ namespace Waldem
         uint IsKinematic;
         uint IsGravity;
         uint Padding0;
-        bool IsColliding = false;
     };
 }
