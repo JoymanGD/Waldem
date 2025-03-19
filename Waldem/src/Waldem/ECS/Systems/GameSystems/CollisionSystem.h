@@ -149,7 +149,7 @@ namespace Waldem
                 {
                     if (GJK(collider1, collider2, worldTransformA, worldTransformB))
                     {
-                        WD_CORE_INFO("Collision detected between {0} and {1}", collider1->MeshData.Mesh.Name, collider2->MeshData.Mesh.Name);
+                        // WD_CORE_INFO("Collision detected between {0} and {1}", collider1->MeshData.Mesh.Name, collider2->MeshData.Mesh.Name);
                         collider1->IsColliding = true; 
                         collider2->IsColliding = true;
                     }
