@@ -29,9 +29,9 @@ namespace Waldem
 
         void Update(float deltaTime) override
         {
-            for (auto [transformEntity, transform, physicsComponent, meshComponent] : ECSManager->EntitiesWith<Transform, PhysicsComponent, MeshComponent>())
-            {
-            }
+            // for (auto [transformEntity, transform, physicsComponent, meshComponent] : ECSManager->EntitiesWith<Transform, PhysicsComponent, MeshComponent>())
+            // {
+            // }
         }
     };
 }
