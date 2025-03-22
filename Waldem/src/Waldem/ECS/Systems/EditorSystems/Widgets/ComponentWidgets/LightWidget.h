@@ -28,10 +28,13 @@ namespace Waldem
                     {
                         ImGui::SliderFloat("LightRadius", &light.Radius, 0.0f, 20.0f);
                     }
-                    // else if(light.Data.Type == LightType::Spot)
-                    // {
-                    //     ImGui::SliderFloat("LightAngle", &light.Data.Angle, 0.0f, 50.0f);
-                    // }
+                    else if(light.Type == LightType::Spot)
+                    {
+                        ImGui::SliderFloat("LightRadius", &light.Radius, 0.0f, 20.0f);
+                        ImGui::SliderFloat("LightInnerAngle", &light.InnerCone, 1.0f, light.OuterCone);
+                        ImGui::SliderFloat("LightOuterAngle", &light.OuterCone, light.InnerCone, 90.0f);
+                        ImGui::SliderFloat("LightSharpness", &light.Sharpness, 0.001f, 1.0f);
+                    }
                     // else if(light.Data.Type == LightType::Area)
                     // {
                     //     ImGui::SliderFloat("LightWidth", &light.Data.Width, 0.0f, 50.0f);

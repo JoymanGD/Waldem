@@ -36,6 +36,8 @@ namespace Waldem
             RadianceRT = resourceManager->GetRenderTarget("RadianceRT");
             auto worldPositionRT = resourceManager->GetRenderTarget("WorldPositionRT");
             auto normalRT = resourceManager->GetRenderTarget("NormalRT");
+            auto albedoRT = resourceManager->GetRenderTarget("ColorRT");
+            auto ormRT = resourceManager->GetRenderTarget("ORMRT");
             
             WArray<Light> LightDatas;
             WArray<Matrix4> LightTransforms;
@@ -65,6 +67,8 @@ namespace Waldem
             rtResources.Add(Resource("LightTransforms", RTYPE_Buffer, nullptr, sizeof(Matrix4), LightTransforms.GetSize(), 2));
             rtResources.Add(Resource("WorldPositionRT", worldPositionRT, 3));
             rtResources.Add(Resource("NormalRT", normalRT, 4));
+            rtResources.Add(Resource("ColorRT", albedoRT, 5));
+            rtResources.Add(Resource("ORMRT", ormRT, 6));
             rtResources.Add(Resource("ShadowsRT", RadianceRT, 0, true));
             rtResources.Add(Resource("MyConstantBuffer", RTYPE_ConstantBuffer, nullptr, sizeof(RayTracingSceneData), sizeof(RayTracingSceneData), 0)); 
             RTRootSignature = Renderer::CreateRootSignature(rtResources);

@@ -61,17 +61,22 @@ namespace Sandbox
 			auto dirLightEntity = ecsManager->CreateEntity("DirectionalLight");
 			auto& lightTransform = dirLightEntity.Add<Waldem::Transform>(Waldem::Vector3(0, 0, 0));
 			lightTransform.SetEuler(90, 0, 0);
-        	dirLightEntity.Add<Waldem::Light>(Waldem::Vector3(1, 1, 1), 20.0f, Waldem::LightType::Directional, 2.0f);
+        	dirLightEntity.Add<Waldem::Light>(Waldem::Vector3(1, 1, 1), 20.0f);
 
         	//point light 1
         	auto pointLight1Entity = ecsManager->CreateEntity("PointLight1");
         	pointLight1Entity.Add<Waldem::Transform>(Waldem::Vector3(2, 1, 2));
-        	pointLight1Entity.Add<Waldem::Light>(Waldem::Vector3(1, .3f, 1), 10.0f, Waldem::LightType::Point, 2.0f);
+        	pointLight1Entity.Add<Waldem::Light>(Waldem::Vector3(1, .3f, 1), 10.0f, 2.0f);
 
         	//point light 2
         	auto pointLight2Entity = ecsManager->CreateEntity("PointLight2");
         	pointLight2Entity.Add<Waldem::Transform>(Waldem::Vector3(-2, 1, -2));
-        	pointLight2Entity.Add<Waldem::Light>(Waldem::Vector3(1, 1, .3f), 10.0f, Waldem::LightType::Point, 2.0f);
+        	pointLight2Entity.Add<Waldem::Light>(Waldem::Vector3(1, 1, .3f), 10.0f, 2.0f);
+
+        	//spot light 1
+        	auto spotLight1Entity = ecsManager->CreateEntity("SpotLight1");
+        	spotLight1Entity.Add<Waldem::Transform>(Waldem::Vector3(-2, 1, -2));
+        	spotLight1Entity.Add<Waldem::Light>(Waldem::Vector3(1, 1, .3f), 10.0f, 2.0f, 30, 45, 1);
 
 			//do it after all entities set up
 			ecsManager->Refresh();

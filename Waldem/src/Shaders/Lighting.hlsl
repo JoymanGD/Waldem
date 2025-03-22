@@ -8,7 +8,10 @@ struct Light
     float Intensity;
     uint Type;
     float Radius;
-    float2 Padding1;
+    float InnerCone;
+    float OuterCone;
+    float Sharpness;
+    float3 Padding1;
 };
 
 struct LightTransformData
