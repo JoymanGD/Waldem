@@ -1,7 +1,7 @@
 #include <wdpch.h>
 #include "Application.h"
 #include "Renderer/Renderer.h"
-#include "Waldem/Log.h"
+#include "Waldem/Log/Log.h"
 #include <numeric>
 
 #include "Time.h"
