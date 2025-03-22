@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ecs.h"
+#include "Waldem/ECS/Components/BloomPostProcess.h"
 #include "Waldem/SceneManagement/Scene.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/Input/InputManager.h"
@@ -77,6 +78,9 @@ namespace Sandbox
         	auto spotLight1Entity = ecsManager->CreateEntity("SpotLight1");
         	spotLight1Entity.Add<Waldem::Transform>(Waldem::Vector3(-2, 1, -2));
         	spotLight1Entity.Add<Waldem::Light>(Waldem::Vector3(1, 1, .3f), 10.0f, 5.0f, 21, 0.001);
+
+        	// auto postProcessEntity = ecsManager->CreateEntity("PostProcess");
+        	// postProcessEntity.Add<Waldem::BloomPostProcess>();
 
 			//do it after all entities set up
 			ecsManager->Refresh();

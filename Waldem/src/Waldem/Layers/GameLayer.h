@@ -7,7 +7,7 @@
 #include "Waldem/ECS/Systems/GameSystems/CollisionSystem.h"
 #include "Waldem/ECS/Systems/GameSystems/PhysicsSystem.h"
 #include "Waldem/ECS/Systems/GameSystems/GBufferSystem.h"
-#include "Waldem/ECS/Systems/GameSystems/RayTracingShadowsSystem.h"
+#include "Waldem/ECS/Systems/GameSystems/RayTracingRadianceSystem.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/Input/InputManager.h"
 #include "Waldem/Layers/Layer.h"
@@ -40,9 +40,9 @@ namespace Waldem
 
 			// DrawSystems.Add((ISystem*)new OceanSimulationSystem(ecsManager));
 			DrawSystems.Add((ISystem*)new GBufferSystem(ecsManager));
-			DrawSystems.Add((ISystem*)new RayTracingShadowsSystem(ecsManager));
+			DrawSystems.Add((ISystem*)new RayTracingRadianceSystem(ecsManager));
 			DrawSystems.Add((ISystem*)new DeferredRenderingSystem(ecsManager));
-			DrawSystems.Add((ISystem*)new PostProcessSystem(ecsManager));
+			// DrawSystems.Add((ISystem*)new PostProcessSystem(ecsManager));
 			DrawSystems.Add((ISystem*)new ScreenQuadSystem(ecsManager));
 			// DrawSystems.Add((ISystem*)new CollisionSystem(ecsManager));
 			// DrawSystems.Add((ISystem*)new PhysicsSystem(ecsManager));
