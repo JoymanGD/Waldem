@@ -47,36 +47,23 @@ void main(uint2 tid : SV_DispatchThreadID)
     for (int i = 0; i < NumLights; i++)
     {
         uint lightType = LightTransformDatas[i].Type;
+        float3 lightDir = float3(0.0f, 0.0f, 0.0f);
         
         if(lightType == 0) //Directional
         {
-            float3 lightDir = -LightTransformDatas[i].Forward;
-            
-            diffuse += GetDiffuseColor(lightDir, worldPosition, normal, albedo, orm, invView);
-    
-            break;
+           lightDir  = -normalize(LightTransformDatas[i].Forward);
         }
+        else if(lightType == 1) //Point
+        {
+            lightDir = normalize(LightTransformDatas[i].Position - worldPosition.xyz);
+        }
+        else if(lightType == 2) //Spot
+        {
+            lightDir = LightTransformDatas[i].Position - worldPosition.xyz;
+        }
+        
+        diffuse += GetDiffuseColor(lightDir, worldPosition, normal, albedo, orm, invView);
     }
-    // for (int i = 0; i < NumLights; i++)
-    // {
-    //     uint lightType = LightTransformDatas[i].Type;
-    //     float3 lightDir = float3(0.0f, 0.0f, 0.0f);
-    //     
-    //     if(lightType == 0) //Directional
-    //     {
-    //        lightDir  = -LightTransformDatas[i].Forward;
-    //     }
-    //     else if(lightType == 1) //Point
-    //     {
-    //         lightDir = LightTransformDatas[i].Position - worldPosition.xyz;
-    //     }
-    //     else if(lightType == 2) //Spot
-    //     {
-    //         lightDir = LightTransformDatas[i].Position - worldPosition.xyz;
-    //     }
-    //     
-    //     diffuse += GetDiffuseColor(lightDir, worldPosition, normal, albedo, orm, invView);
-    // }
     
     //Writing the result to the render target
     TargetRT[tid] = float4(ambient + diffuse * radiance, 1.0f);
