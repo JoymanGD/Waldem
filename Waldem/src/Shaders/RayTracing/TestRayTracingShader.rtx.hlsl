@@ -1,6 +1,8 @@
 #include "../Lighting.hlsl"
 #include "../Common.hlsl"
 
+#define DIR_LIGHT_INTENSITY_RATIO 10.0f
+
 struct Payload
 {
     bool Missed;
@@ -66,7 +68,7 @@ void RayGenShader()
 
             if(payload.Missed)
             {
-                radiance += normalize(light.Color) * light.Intensity * NdotL;
+                radiance += normalize(light.Color) * light.Intensity / DIR_LIGHT_INTENSITY_RATIO * NdotL;
             }
         }
         else if(light.Type == 1) //Point
