@@ -4,8 +4,8 @@ WALDEM ENGINE
 
 Architecture:
 * ECS
-* Renderer abstraction
-* OS abstraction
+* Cross Render API (DirectX)
+* Cross OS (Windows)
 * Layers (Game, Editor, Debug)
 * Editor widgets structure
 * Separate game and editor structure
