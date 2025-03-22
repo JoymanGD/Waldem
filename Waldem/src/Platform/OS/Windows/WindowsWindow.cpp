@@ -4,7 +4,7 @@
 #include "Waldem/Events/ApplicationEvent.h"
 #include "Waldem/Events/MouseEvent.h"
 #include "Waldem/Events/KeyEvent.h"
-#include "Waldem/Log.h"
+#include "Waldem/Log/Log.h"
 #include <SDL.h>
 #include <SDL_syswm.h>
 #include "backends/imgui_impl_sdl2.h"

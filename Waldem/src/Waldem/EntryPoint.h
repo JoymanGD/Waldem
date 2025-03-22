@@ -1,4 +1,5 @@
 #pragma once
+#include "Log/Log.h"
 
 #ifdef WD_PLATFORM_WINDOWS
 

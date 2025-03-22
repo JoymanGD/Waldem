@@ -1,8 +1,8 @@
 #pragma once
 #include "Waldem/ECS/Systems/System.h"
-#include "Waldem/KeyCodes.h"
-#include "Waldem/MouseButtonCodes.h"
-#include "..\..\Components\EditorCamera.h"
+#include "Waldem/Input/KeyCodes.h"
+#include "Waldem/Input/MouseButtonCodes.h"
+#include "Waldem/ECS/Components/EditorCamera.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
 #include "Waldem/ECS/Components/PhysicsComponent.h"
 #include "Waldem/Renderer/Light.h"
