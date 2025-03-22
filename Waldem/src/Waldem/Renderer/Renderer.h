@@ -47,6 +47,8 @@ namespace Waldem
         virtual RenderTarget* CreateRenderTarget(String name, int width, int height, TextureFormat format) = 0;
         virtual AccelerationStructure* CreateBLAS(String name, WArray<RayTracingGeometry>& geometries) = 0;
         virtual AccelerationStructure* CreateTLAS(String name, WArray<RayTracingInstance>& instances) = 0;
+        virtual void UpdateBLAS(AccelerationStructure* BLAS, WArray<RayTracingGeometry>& geometries) = 0;
+        virtual void UpdateTLAS(AccelerationStructure* TLAS, WArray<RayTracingInstance>& instances) = 0;
         virtual void CopyRenderTarget(RenderTarget* dstRT, RenderTarget* srcRT) = 0;
         virtual void CopyBuffer(Buffer* dstBuffer, Buffer* srcBuffer) = 0;
         virtual Buffer* CreateBuffer(String name, BufferType type, void* data, uint32_t size, uint32_t stride) = 0;
@@ -92,6 +94,8 @@ namespace Waldem
         static RenderTarget* CreateRenderTarget(String name, int width, int height, TextureFormat format);
         static AccelerationStructure* CreateBLAS(String name, WArray<RayTracingGeometry>& geometries);
         static AccelerationStructure* CreateTLAS(String name, WArray<RayTracingInstance>& instances);
+        static void UpdateBLAS(AccelerationStructure* BLAS, WArray<RayTracingGeometry>& geometries);
+        static void UpdateTLAS(AccelerationStructure* TLAS, WArray<RayTracingInstance>& instances);
         static void CopyRenderTarget(RenderTarget* dstRT, RenderTarget* srcRT);
         static void CopyBuffer(Buffer* dstBuffer, Buffer* srcBuffer);
         static Buffer* CreateBuffer(String name, BufferType type, void* data, uint32_t size, uint32_t stride);

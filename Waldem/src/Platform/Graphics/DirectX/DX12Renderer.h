@@ -43,6 +43,8 @@ namespace Waldem
         RenderTarget* CreateRenderTarget(String name, int width, int height, TextureFormat format) override;
         AccelerationStructure* CreateBLAS(String name, WArray<RayTracingGeometry>& geometries) override;
         AccelerationStructure* CreateTLAS(String name, WArray<RayTracingInstance>& instances) override;
+        void UpdateBLAS(AccelerationStructure* BLAS, WArray<RayTracingGeometry>& geometries) override;
+        void UpdateTLAS(AccelerationStructure* TLAS, WArray<RayTracingInstance>& instances) override;
         void CopyRenderTarget(RenderTarget* dstRT, RenderTarget* srcRT) override;
         void CopyBuffer(Buffer* dstBuffer, Buffer* srcBuffer) override;
         Buffer* CreateBuffer(String name, BufferType type, void* data, uint32_t size, uint32_t stride) override;

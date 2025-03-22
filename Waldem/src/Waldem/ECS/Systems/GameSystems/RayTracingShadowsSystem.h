@@ -25,14 +25,13 @@ namespace Waldem
         WArray<AccelerationStructure*> BLAS;
         AccelerationStructure* TLAS = nullptr;
         RayTracingSceneData RTSceneData;
+        WArray<RayTracingInstance> Instances;
         
     public:
         RayTracingShadowsSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
         
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
         {
-            // Vector2 resolution = Vector2(sceneData->Window->GetWidth(), sceneData->Window->GetHeight());
-            
             RadianceRT = resourceManager->GetRenderTarget("RadianceRT");
             auto worldPositionRT = resourceManager->GetRenderTarget("WorldPositionRT");
             auto normalRT = resourceManager->GetRenderTarget("NormalRT");
@@ -46,8 +45,6 @@ namespace Waldem
                 LightDatas.Add(light);
                 LightTransforms.Add(transform);
             }
-
-            WArray<RayTracingInstance> instances;
             
             for (auto [transformEntity, transform, meshComponent] : ECSManager->EntitiesWith<Transform, MeshComponent>())
             {
@@ -56,10 +53,10 @@ namespace Waldem
                 AccelerationStructure* blas = Renderer::CreateBLAS(meshComponent.Mesh->Name, geometries);
                 BLAS.Add(blas);
 
-                instances.Add(RayTracingInstance(blas, transform));
+                Instances.Add(RayTracingInstance(blas, transform));
             }
             
-            TLAS = Renderer::CreateTLAS("RayTracingTLAS", instances);
+            TLAS = Renderer::CreateTLAS("RayTracingTLAS", Instances);
             
             WArray<Resource> rtResources;
             rtResources.Add(Resource("TLAS", TLAS, 0));
@@ -99,6 +96,15 @@ namespace Waldem
 
                 break;
             }
+
+            int i = 0;
+            for (auto [entity, meshComponent, transform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
+            {
+                Instances[i].Transform = transform;
+                i++;
+            }
+
+            Renderer::UpdateTLAS(TLAS, Instances);
             
             RTSceneData.NumLights = LightDatas.Num();
             

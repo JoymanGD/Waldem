@@ -440,6 +440,18 @@ namespace Waldem
         return new DX12AccelerationStructure(name, Device, WorldCommandList.first, AccelerationStructureType::TopLevel, instances);
     }
 
+    void DX12Renderer::UpdateBLAS(AccelerationStructure* BLAS, WArray<RayTracingGeometry>& geometries)
+    {
+        DX12AccelerationStructure* dx12BLAS = (DX12AccelerationStructure*)BLAS;
+        dx12BLAS->Update(WorldCommandList.first, geometries);
+    }
+
+    void DX12Renderer::UpdateTLAS(AccelerationStructure* TLAS, WArray<RayTracingInstance>& instances)
+    {
+        DX12AccelerationStructure* dx12TLAS = (DX12AccelerationStructure*)TLAS;
+        dx12TLAS->Update(WorldCommandList.first, instances);
+    }
+
     void DX12Renderer::CopyRenderTarget(RenderTarget* dstRT, RenderTarget* srcRT)
     {
         WorldCommandList.first->CopyRenderTarget(dstRT, srcRT);
