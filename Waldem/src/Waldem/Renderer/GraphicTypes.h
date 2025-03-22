@@ -3,6 +3,19 @@
 
 namespace Waldem
 {
+    enum class PipelineType
+    {
+        Graphics = 0,
+        Compute = 1,
+        RayTracing = 2
+    };
+    
+    enum class AccelerationStructureType
+    {
+        BottomLevel = 0,
+        TopLevel = 1
+    };
+    
     enum FillMode
     {
         WD_FILL_MODE_WIREFRAME	= 2,

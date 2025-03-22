@@ -1,16 +1,18 @@
 #include "Shading.hlsl"
+#include "Shadows.hlsl"
+#include "Lighting.hlsl"
 
 SamplerState myStaticSampler : register(s0);
 SamplerComparisonState cmpSampler : register(s1);
 
-StructuredBuffer<Light> Lights : register(t0);
-Texture2D<float> Shadowmap : register(t1);
-Texture2D WorldPositionRT : register(t2);
-Texture2D NormalRT : register(t3);
-Texture2D ColorRT : register(t4);
-Texture2D ORMRT : register(t5);
-Texture2D MeshIDRT : register(t6);
-Texture2D DepthRT : register(t7);
+StructuredBuffer<LightTransformData> LightTransformDatas : register(t0);
+Texture2D WorldPositionRT : register(t1);
+Texture2D NormalRT : register(t2);
+Texture2D ColorRT : register(t3);
+Texture2D ORMRT : register(t4);
+Texture2D MeshIDRT : register(t5);
+Texture2D DepthRT : register(t6);
+Texture2D RadianceRT : register(t7);
 RWTexture2D<float4> TargetRT : register(u0);
 RWStructuredBuffer<int> HoveredMeshes : register(u1);
 
@@ -20,6 +22,7 @@ cbuffer MyConstantBuffer : register(b0)
     matrix proj;
     matrix invView;
     matrix invProj;
+    int NumLights;
 };
 
 cbuffer RootConstants : register(b1)
@@ -37,8 +40,44 @@ void main(uint2 tid : SV_DispatchThreadID)
 
     HoveredMeshes[0] = asint(MeshIDRT.Load(int3(MousePosition, 0)).x);
 
-    float3 resultColor = GetResultColor(Lights[0], Shadowmap, cmpSampler, worldPosition, normal, albedo, orm, invView);
+    float3 radiance = RadianceRT.Load(uint3(tid, 0));
+    float3 ambient = albedo * AMBIENT;
+    float3 diffuse = float3(0.0f, 0.0f, 0.0f);
+    
+    for (int i = 0; i < NumLights; i++)
+    {
+        uint lightType = LightTransformDatas[i].Type;
+        
+        if(lightType == 0) //Directional
+        {
+            float3 lightDir = -LightTransformDatas[i].Forward;
+            
+            diffuse += GetDiffuseColor(lightDir, worldPosition, normal, albedo, orm, invView);
+    
+            break;
+        }
+    }
+    // for (int i = 0; i < NumLights; i++)
+    // {
+    //     uint lightType = LightTransformDatas[i].Type;
+    //     float3 lightDir = float3(0.0f, 0.0f, 0.0f);
+    //     
+    //     if(lightType == 0) //Directional
+    //     {
+    //        lightDir  = -LightTransformDatas[i].Forward;
+    //     }
+    //     else if(lightType == 1) //Point
+    //     {
+    //         lightDir = LightTransformDatas[i].Position - worldPosition.xyz;
+    //     }
+    //     else if(lightType == 2) //Spot
+    //     {
+    //         lightDir = LightTransformDatas[i].Position - worldPosition.xyz;
+    //     }
+    //     
+    //     diffuse += GetDiffuseColor(lightDir, worldPosition, normal, albedo, orm, invView);
+    // }
     
     //Writing the result to the render target
-    TargetRT[tid] = float4(resultColor, 1.0f);
+    TargetRT[tid] = float4(ambient + diffuse * radiance, 1.0f);
 }

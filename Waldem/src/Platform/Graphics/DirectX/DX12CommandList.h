@@ -14,7 +14,6 @@ namespace Waldem
     public:
         DX12CommandList(ID3D12Device* device);
         ~DX12CommandList();
-        bool CompileFromFile(const String& shaderName);
 
         void BeginInternal(D3D12_VIEWPORT* viewport, D3D12_RECT* scissor, D3D12_CPU_DESCRIPTOR_HANDLE renderTargetHandle, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandle);
         void EndInternal();
@@ -22,6 +21,7 @@ namespace Waldem
         void Draw(Model* model);
         void Draw(CMesh* mesh);
         void Dispatch(Point3 groupCount);
+        void TraceRays(Pipeline* rayTracingPipeline, Point3 numRays);
         void Clear(D3D12_CPU_DESCRIPTOR_HANDLE renderTarget, D3D12_CPU_DESCRIPTOR_HANDLE depthStencil, Vector3 clearColor);
         
         void SetPipeline(Pipeline* pipeline);
@@ -37,10 +37,12 @@ namespace Waldem
         void WaitForCompletion();
         void ResourceBarrier(uint32_t count, D3D12_RESOURCE_BARRIER* barrier);
         void ResourceBarrier(ID3D12Resource* resource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after);
+        void UAVBarrier(ID3D12Resource* resource);
         void ClearRenderTarget(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetHandle);
         void ClearDepthStencil(D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandle);
         void Reset();
         void SetConstants(uint32_t rootParamIndex, uint32_t numConstants, void* data, PipelineType pipelineType);
+        void BuildRaytracingAccelerationStructure(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC* asDesc);
         void CopyTextureRegion(const D3D12_TEXTURE_COPY_LOCATION* dst, uint32_t dstX, uint32_t dstY, uint32_t dstZ, const D3D12_TEXTURE_COPY_LOCATION* src, const D3D12_BOX* srcBox);
         void CopyResource(ID3D12Resource* dst, ID3D12Resource* src);
         void CopyRenderTarget(RenderTarget* dst, RenderTarget* src);
@@ -54,7 +56,7 @@ namespace Waldem
     private:
 
         ID3D12Device* Device;
-        ID3D12GraphicsCommandList* CommandList;
+        ID3D12GraphicsCommandList5* CommandList;
         ID3D12CommandAllocator* CommandAllocator;
         ID3D12Fence* Fence;
         HANDLE FenceEvent;

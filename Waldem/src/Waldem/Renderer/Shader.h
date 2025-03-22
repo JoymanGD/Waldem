@@ -5,13 +5,7 @@
 #include "RenderTarget.h"
 
 namespace Waldem
-{
-    enum class PipelineType
-    {
-        Graphics = 0,
-        Compute = 1
-    };
-    
+{    
     enum ResourceType
     {
         RTYPE_ConstantBuffer = 0,
@@ -24,6 +18,7 @@ namespace Waldem
         RTYPE_Sampler = 7,
         RTYPE_RenderTarget = 8,
         RTYPE_RWRenderTarget = 9,
+        RTYPE_AccelerationStructure = 10,
         RTYPE_Constant = 19
     };
 
@@ -38,7 +33,8 @@ namespace Waldem
     public:
         Shader(const String& name) : Name(name) {}
         virtual ~Shader() = default;
-        virtual bool CompileFromFile(const String& filepath, const String& entryPoint) = 0;
+        virtual bool CompileFromFile(const String& filepath, const String& entryPoint) { throw std::runtime_error("Compilation with a single entry point is not implemented for this type of shader"); }
+        virtual bool CompileFromFile(const String& filepath, const WArray<String> entryPoints) { throw std::runtime_error("Compilation with multiple entry points is not implemented for this type of shader"); }
         String GetName() { return Name; }
     protected:
         String Name;
@@ -58,6 +54,15 @@ namespace Waldem
     public:
         ComputeShader(const String& name, const String& entryPoint) : Shader(name) {}
         virtual ~ComputeShader() {}
+        virtual void* GetPlatformData() = 0;
+    };
+
+    class WALDEM_API RayTracingShader : public Shader
+    {
+    public:
+        virtual bool CompileFromFile(const String& filepath) = 0;
+        RayTracingShader(const String& name) : Shader(name) {}
+        virtual ~RayTracingShader() {}
         virtual void* GetPlatformData() = 0;
     };
 }

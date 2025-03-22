@@ -56,11 +56,22 @@ namespace Sandbox
 			// 	waterPlaneEntity.Add<Waldem::Transform>(transform);
 			// 	waterPlaneEntity.Add<Waldem::Ocean>();
 			// }
-			
+
+        	//dir light
 			auto dirLightEntity = ecsManager->CreateEntity("DirectionalLight");
 			auto& lightTransform = dirLightEntity.Add<Waldem::Transform>(Waldem::Vector3(0, 0, 0));
 			lightTransform.SetEuler(90, 0, 0);
-			dirLightEntity.Add<Waldem::Light>(Waldem::Vector3(1, 1, 1), 20.0f, Waldem::LightType::Directional, 100.0f);
+        	dirLightEntity.Add<Waldem::Light>(Waldem::Vector3(1, 1, 1), 7.0f, Waldem::LightType::Directional, 2.0f);
+
+        	//point light 1
+        	auto pointLight1Entity = ecsManager->CreateEntity("PointLight1");
+        	pointLight1Entity.Add<Waldem::Transform>(Waldem::Vector3(2, 1, 2));
+        	pointLight1Entity.Add<Waldem::Light>(Waldem::Vector3(1, .3f, 1), 10.0f, Waldem::LightType::Point, 2.0f);
+
+        	//point light 2
+        	auto pointLight2Entity = ecsManager->CreateEntity("PointLight2");
+        	pointLight2Entity.Add<Waldem::Transform>(Waldem::Vector3(-2, 1, -2));
+        	pointLight2Entity.Add<Waldem::Light>(Waldem::Vector3(1, 1, .3f), 10.0f, Waldem::LightType::Point, 2.0f);
 
 			//do it after all entities set up
 			ecsManager->Refresh();

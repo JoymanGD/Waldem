@@ -28,6 +28,9 @@
     <Filter Include="src\Shaders\Physics">
       <UniqueIdentifier>{7856BF0F-E4B7-9C1D-6D25-E3CFD985D3DC}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Shaders\RayTracing">
+      <UniqueIdentifier>{2957FD35-1551-2688-FEBD-BC98EA568CF4}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Waldem">
       <UniqueIdentifier>{56E54637-429D-8884-ABA4-61E0977B2375}</UniqueIdentifier>
     </Filter>
@@ -144,6 +147,9 @@
     <ClInclude Include="src\Platform\Graphics\DirectX\D3DX12.h">
       <Filter>src\Platform\Graphics\DirectX</Filter>
     </ClInclude>
+    <ClInclude Include="src\Platform\Graphics\DirectX\DX12AccelerationStructure.h">
+      <Filter>src\Platform\Graphics\DirectX</Filter>
+    </ClInclude>
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12Buffer.h">
       <Filter>src\Platform\Graphics\DirectX</Filter>
     </ClInclude>
@@ -163,6 +169,12 @@
       <Filter>src\Platform\Graphics\DirectX</Filter>
     </ClInclude>
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12PixelShader.h">
+      <Filter>src\Platform\Graphics\DirectX</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\Graphics\DirectX\DX12RayTracingPipeline.h">
+      <Filter>src\Platform\Graphics\DirectX</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\Graphics\DirectX\DX12RayTracingShader.h">
       <Filter>src\Platform\Graphics\DirectX</Filter>
     </ClInclude>
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12RenderTarget.h">
@@ -288,6 +300,9 @@
     <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\PostProcessSystem.h">
       <Filter>src\Waldem\ECS\Systems\GameSystems</Filter>
     </ClInclude>
+    <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\RayTracingSystem.h">
+      <Filter>src\Waldem\ECS\Systems\GameSystems</Filter>
+    </ClInclude>
     <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\ScreenQuadSystem.h">
       <Filter>src\Waldem\ECS\Systems\GameSystems</Filter>
     </ClInclude>
@@ -355,6 +370,9 @@
       <Filter>src\Waldem</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\Renderer\AABB.h">
+      <Filter>src\Waldem\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Waldem\Renderer\AccelerationStructure.h">
       <Filter>src\Waldem\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Waldem\Renderer\Buffer.h">
@@ -1766,6 +1784,9 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Platform\Graphics\DirectX\DX12AccelerationStructure.cpp">
+      <Filter>src\Platform\Graphics\DirectX</Filter>
+    </ClCompile>
     <ClCompile Include="src\Platform\Graphics\DirectX\DX12Buffer.cpp">
       <Filter>src\Platform\Graphics\DirectX</Filter>
     </ClCompile>
@@ -1782,6 +1803,12 @@
       <Filter>src\Platform\Graphics\DirectX</Filter>
     </ClCompile>
     <ClCompile Include="src\Platform\Graphics\DirectX\DX12PixelShader.cpp">
+      <Filter>src\Platform\Graphics\DirectX</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\Graphics\DirectX\DX12RayTracingPipeline.cpp">
+      <Filter>src\Platform\Graphics\DirectX</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\Graphics\DirectX\DX12RayTracingShader.cpp">
       <Filter>src\Platform\Graphics\DirectX</Filter>
     </ClCompile>
     <ClCompile Include="src\Platform\Graphics\DirectX\DX12RenderTarget.cpp">
@@ -1971,6 +1998,9 @@
     </FxCompile>
     <FxCompile Include="src\Shaders\QuadDraw.vs.hlsl">
       <Filter>src\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\RayTracing\TestRayTracingShader.rtx.hlsl">
+      <Filter>src\Shaders\RayTracing</Filter>
     </FxCompile>
     <FxCompile Include="src\Shaders\Shading.hlsl">
       <Filter>src\Shaders</Filter>

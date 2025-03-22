@@ -31,7 +31,7 @@ namespace Waldem
         int width = 1;
         int height = 1;
 
-        TextureFormat format = TextureFormat::R32G32B32_FLOAT;
+        TextureFormat format = TextureFormat::R8G8B8A8_UNORM;
 
         return Renderer::CreateTexture(name, width, height, format, image_data);
     }
@@ -62,16 +62,12 @@ namespace Waldem
                 image_data = stbi_load(externalTexturePath.string().c_str(), &width, &height, &componentsCount, 4);
             }
 
-            TextureFormat format;
+            TextureFormat format = TextureFormat::R8G8B8A8_UNORM;
         
-            if(componentsCount == 3)
-            {
-                format = TextureFormat::R32G32B32_FLOAT; //TODO: check if its workable
-            }
-            else
-            {
-                format = TextureFormat::R8G8B8A8_UNORM;
-            }
+            // if(componentsCount == 3)
+            // {
+            //     format = TextureFormat::R32G32B32_FLOAT; //TODO: check if its workable
+            // }
 
             return Renderer::CreateTexture(name, width, height, format, image_data);;
         }

@@ -4,7 +4,10 @@
 #include "Waldem/ECS/Systems/GameSystems/OceanSimulationSystem.h"
 #include "Waldem/ECS/Systems/GameSystems/PostProcessSystem.h"
 #include "Waldem/ECS/Systems/GameSystems/ScreenQuadSystem.h"
-#include "Waldem/ECS/Systems/GameSystems/ShadowmapRenderingSystem.h"
+#include "Waldem/ECS/Systems/GameSystems/CollisionSystem.h"
+#include "Waldem/ECS/Systems/GameSystems/PhysicsSystem.h"
+#include "Waldem/ECS/Systems/GameSystems/GBufferSystem.h"
+#include "Waldem/ECS/Systems/GameSystems/RayTracingShadowsSystem.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/Input/InputManager.h"
 #include "Waldem/Layers/Layer.h"
@@ -12,13 +15,8 @@
 #include "Waldem/Renderer/Renderer.h"
 #include <glm/gtc/integer.hpp>
 
-#include "Waldem/ECS/Systems/GameSystems/CollisionSystem.h"
-#include "Waldem/ECS/Systems/GameSystems/PhysicsSystem.h"
-
 namespace Waldem
 {
-	struct EditorCamera;
-
 	class WALDEM_API GameLayer : public Layer
 	{
 	public:
@@ -38,9 +36,11 @@ namespace Waldem
 			resourceManager->CreateRenderTarget("ORMRT", resolution.x, resolution.y, TextureFormat::R32G32B32A32_FLOAT);
 			resourceManager->CreateRenderTarget("MeshIDRT", resolution.x, resolution.y, TextureFormat::R32_SINT);
 			resourceManager->CreateRenderTarget("DepthRT", resolution.x, resolution.y, TextureFormat::D32_FLOAT);
+			resourceManager->CreateRenderTarget("RadianceRT", resolution.x, resolution.y, TextureFormat::R32G32B32A32_FLOAT);
 
 			// DrawSystems.Add((ISystem*)new OceanSimulationSystem(ecsManager));
-			DrawSystems.Add((ISystem*)new ShadowmapRenderingSystem(ecsManager));
+			DrawSystems.Add((ISystem*)new GBufferSystem(ecsManager));
+			DrawSystems.Add((ISystem*)new RayTracingShadowsSystem(ecsManager));
 			DrawSystems.Add((ISystem*)new DeferredRenderingSystem(ecsManager));
 			DrawSystems.Add((ISystem*)new PostProcessSystem(ecsManager));
 			DrawSystems.Add((ISystem*)new ScreenQuadSystem(ecsManager));

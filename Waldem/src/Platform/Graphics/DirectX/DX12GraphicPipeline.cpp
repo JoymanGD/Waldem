@@ -39,6 +39,8 @@ namespace Waldem
     
     DX12GraphicPipeline::DX12GraphicPipeline(const String& name, ID3D12Device* device, RootSignature* rootSignature, PixelShader* shader, WArray<TextureFormat> RTFormats, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout) : Pipeline(name)
     {
+        CurrentPipelineType = PipelineType::Graphics;
+        
         rootSignature->CurrentPipelineType = PipelineType::Graphics;
 
         IDxcBlob* VertexShaderBlob = (IDxcBlob*)shader->GetVS();

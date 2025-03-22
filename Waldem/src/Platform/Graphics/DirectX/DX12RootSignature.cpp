@@ -1,6 +1,7 @@
 #include "wdpch.h"
 #include "DX12RootSignature.h"
 
+#include "DX12AccelerationStructure.h"
 #include "DX12CommandList.h"
 #include "DX12Helper.h"
 
@@ -504,6 +505,27 @@ namespace Waldem
                         uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
                         device->CreateUnorderedAccessView(defaultResourceBuffer, nullptr, &uavDesc, handle);
                         
+                        break;
+                    }
+                    case RTYPE_AccelerationStructure:
+                    {                        
+                        defaultResourceBuffer = (ID3D12Resource*)resourceDesc.AS->GetPlatformResource();
+
+                        device->CreateCommittedResource(
+                            &uploadHeapProps,
+                            D3D12_HEAP_FLAG_NONE,
+                            &dummyBufferDesc,
+                            D3D12_RESOURCE_STATE_GENERIC_READ,
+                            nullptr,
+                            IID_PPV_ARGS(&uploadResourceBuffer));
+
+                        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+                        srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+                        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE;
+                        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+                        srvDesc.RaytracingAccelerationStructure.Location = defaultResourceBuffer->GetGPUVirtualAddress();
+
+                        device->CreateShaderResourceView(nullptr, &srvDesc, handle);
                         break;
                     }
                 default:

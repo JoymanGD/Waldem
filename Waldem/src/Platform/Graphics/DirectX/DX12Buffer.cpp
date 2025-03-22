@@ -70,7 +70,7 @@ namespace Waldem
             cmdList->UpdateSubresoures(DefaultResource, UploadResource, 1, &subResourceData);
         }
 
-        cmdList->ResourceBarrier(DefaultResource, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+        cmdList->ResourceBarrier(DefaultResource, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE); 
 
         switch (type)
         {
