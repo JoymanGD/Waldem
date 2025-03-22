@@ -20,26 +20,27 @@ namespace Waldem
             {
                 if (ImGui::Begin("Light"))
                 {
-                    ImGui::Combo("Light type", (int*)&light.Type, lightTypeNames, 4);
-                    ImGui::SliderFloat3("LightColor", &light.Color.x, 0.0f, 1.0f);
-                    ImGui::SliderFloat("LightIntensity", &light.Intensity, 0.0f, 50.0f);
+                    ImGui::Combo("Type", (int*)&light.Type, lightTypeNames, 4);
+                    ImGui::SliderFloat3("Color", &light.Color.x, 0.0f, 1.0f);
+                    ImGui::SliderFloat("Intensity", &light.Intensity, 0.0f, 50.0f);
 
                     if(light.Type == LightType::Point)
                     {
-                        ImGui::SliderFloat("LightRadius", &light.Radius, 0.0f, 20.0f);
+                        ImGui::SliderFloat("Radius", &light.Radius, 0.0f, 20.0f);
                     }
                     else if(light.Type == LightType::Spot)
                     {
-                        ImGui::SliderFloat("LightRadius", &light.Radius, 0.0f, 20.0f);
-                        ImGui::SliderFloat("LightInnerAngle", &light.InnerCone, 1.0f, light.OuterCone);
-                        ImGui::SliderFloat("LightOuterAngle", &light.OuterCone, light.InnerCone, 90.0f);
-                        ImGui::SliderFloat("LightSharpness", &light.Sharpness, 0.001f, 1.0f);
+                        ImGui::SliderFloat("Length", &light.Radius, 0.0f, 20.0f);
+                        // ImGui::SliderFloat("Inner Angle", &light.InnerCone, 1.0f, light.OuterCone);
+                        ImGui::SliderFloat("Size", &light.OuterCone, 1.0f, 90.0f);
+                        ImGui::SliderFloat("Softness", &light.Softness, 0.001f, 1.0f);
                     }
-                    // else if(light.Data.Type == LightType::Area)
-                    // {
-                    //     ImGui::SliderFloat("LightWidth", &light.Data.Width, 0.0f, 50.0f);
-                    //     ImGui::SliderFloat("LightHeight", &light.Data.Height, 0.0f, 50.0f);
-                    // }
+                    else if(light.Type == LightType::Area)
+                    {
+                        ImGui::SliderFloat("Width", &light.AreaWidth, 0.0f, 1000.0f);
+                        ImGui::SliderFloat("Height", &light.AreaHeight, 0.0f, 1000.0f);
+                        ImGui::Checkbox("Two-sided", &light.AreaTwoSided);
+                    }
                     ImGui::End();
                 }
             }

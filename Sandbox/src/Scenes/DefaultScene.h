@@ -76,7 +76,7 @@ namespace Sandbox
         	//spot light 1
         	auto spotLight1Entity = ecsManager->CreateEntity("SpotLight1");
         	spotLight1Entity.Add<Waldem::Transform>(Waldem::Vector3(-2, 1, -2));
-        	spotLight1Entity.Add<Waldem::Light>(Waldem::Vector3(1, 1, .3f), 10.0f, 2.0f, 30, 45, 1);
+        	spotLight1Entity.Add<Waldem::Light>(Waldem::Vector3(1, 1, .3f), 10.0f, 5.0f, 21, 0.001);
 
 			//do it after all entities set up
 			ecsManager->Refresh();
