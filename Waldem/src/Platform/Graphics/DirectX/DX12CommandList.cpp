@@ -8,6 +8,7 @@
 #include "DX12Helper.h"
 #include "DX12GraphicPipeline.h"
 #include "DX12PixelShader.h"
+#include "DX12RayTracingPipeline.h"
 #include "DX12RenderTarget.h"
 #include "DX12RootSignature.h"
 #include "Waldem/Renderer/Model/Line.h"
@@ -39,7 +40,7 @@ namespace Waldem
 
         //command lists are created in the recording state. We need to close it initially.
         CommandList->Close();
-        
+
         //create the fence for synchronization
         hr = device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&Fence));
         if (FAILED(hr))
@@ -54,6 +55,8 @@ namespace Waldem
         {
             throw std::runtime_error("Failed to create fence event!");
         }
+        
+        Reset();
     }
 
     DX12CommandList::~DX12CommandList()
@@ -119,6 +122,30 @@ namespace Waldem
         CommandList->Dispatch(groupCount.x, groupCount.y, groupCount.z);
     }
 
+    void DX12CommandList::TraceRays(Pipeline* rayTracingPipeline, Point3 numRays)
+    {
+        D3D12_DISPATCH_RAYS_DESC dispatchDesc = {};
+        dispatchDesc.Width = numRays.x;
+        dispatchDesc.Height = numRays.y;
+        dispatchDesc.Depth = numRays.z;
+
+        auto dx12Pipeline = (DX12RayTracingPipeline*)rayTracingPipeline;
+        auto rayGenSBT = dx12Pipeline->GetRayGenSBT();
+        auto missSBT = dx12Pipeline->GetMissSBT();
+        auto hitGroupSBT = dx12Pipeline->GetHitGroupSBT();
+        
+        dispatchDesc.RayGenerationShaderRecord.StartAddress = rayGenSBT->Resource->GetGPUVirtualAddress();
+        dispatchDesc.RayGenerationShaderRecord.SizeInBytes = rayGenSBT->Size;
+        
+        dispatchDesc.MissShaderTable.StartAddress = missSBT->Resource->GetGPUVirtualAddress();
+        dispatchDesc.MissShaderTable.SizeInBytes = missSBT->Size;
+
+        dispatchDesc.HitGroupTable.StartAddress = hitGroupSBT->Resource->GetGPUVirtualAddress();
+        dispatchDesc.HitGroupTable.SizeInBytes = hitGroupSBT->Size;
+        
+        CommandList->DispatchRays(&dispatchDesc);
+    }
+
     void DX12CommandList::Clear(D3D12_CPU_DESCRIPTOR_HANDLE renderTarget, D3D12_CPU_DESCRIPTOR_HANDLE depthStencil, Vector3 clearColor)
     {
         //clear the render target
@@ -129,31 +156,48 @@ namespace Waldem
 
     void DX12CommandList::SetPipeline(Pipeline* pipeline)
     {
-        DX12GraphicPipeline* dx12Pipeline = (DX12GraphicPipeline*)pipeline;
-        D3D12_GRAPHICS_PIPELINE_STATE_DESC* psoDesc = dx12Pipeline->GetDesc();
-        ID3D12PipelineState* pso = (ID3D12PipelineState*)dx12Pipeline->GetNativeObject();
-        CommandList->SetPipelineState(pso);
-
-        D3D12_PRIMITIVE_TOPOLOGY primitiveTopology = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
-        
-        switch (psoDesc->PrimitiveTopologyType)
+        switch(pipeline->CurrentPipelineType)
         {
-        case D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED:
-            break;
-        case D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT:
-            primitiveTopology = D3D_PRIMITIVE_TOPOLOGY_POINTLIST;
-            break;
-        case D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE:
-            primitiveTopology = D3D_PRIMITIVE_TOPOLOGY_LINELIST;
-            break;
-        case D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE:
-            primitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-            break;
-        case D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH:
-            primitiveTopology = D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST;
-            break;
+            case PipelineType::Graphics:
+            {
+                DX12GraphicPipeline* dx12Pipeline = (DX12GraphicPipeline*)pipeline;
+                D3D12_GRAPHICS_PIPELINE_STATE_DESC* psoDesc = dx12Pipeline->GetDesc();
+
+                D3D12_PRIMITIVE_TOPOLOGY primitiveTopology = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
+            
+                switch (psoDesc->PrimitiveTopologyType)
+                {
+                case D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED:
+                    break;
+                case D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT:
+                    primitiveTopology = D3D_PRIMITIVE_TOPOLOGY_POINTLIST;
+                    break;
+                case D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE:
+                    primitiveTopology = D3D_PRIMITIVE_TOPOLOGY_LINELIST;
+                    break;
+                case D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE:
+                    primitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+                    break;
+                case D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH:
+                    primitiveTopology = D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST;
+                    break;
+                }
+                CommandList->IASetPrimitiveTopology(primitiveTopology);
+                
+                break;
+            }
         }
-        CommandList->IASetPrimitiveTopology(primitiveTopology);
+
+        if(pipeline->CurrentPipelineType == PipelineType::RayTracing)
+        {
+            ID3D12StateObject* pso = (ID3D12StateObject*)pipeline->GetNativeObject();
+            CommandList->SetPipelineState1(pso);
+        }
+        else
+        {
+            ID3D12PipelineState* pso = (ID3D12PipelineState*)pipeline->GetNativeObject();
+            CommandList->SetPipelineState(pso);
+        }
     }
 
     void DX12CommandList::SetRootSignature(RootSignature* rootSignature)
@@ -285,47 +329,6 @@ namespace Waldem
         CommandList->RSSetScissorRects(1, &scissorToSet);
         CommandList->OMSetRenderTargets(renderTargetHandlesToSet.Num(), renderTargetHandlesToSet.GetData(), FALSE, &depthStencilHandleToSet);
     }
-    // void DX12CommandList::SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil)
-    // {
-    //     RenderTarget* currentRT = renderTargets.IsEmpty() ? depthStencil : renderTargets[0];
-    //     
-    //     if(!renderTargets.IsEmpty() || depthStencil)
-    //     {
-    //         D3D12_VIEWPORT Viewport = {};
-    //         D3D12_RECT ScissorRect = {};
-    //             
-    //         Viewport.Width = currentRT->GetWidth();
-    //         Viewport.Height = currentRT->GetHeight();
-    //         Viewport.MinDepth = 0;
-    //         Viewport.MaxDepth = 1;
-    //             
-    //         ScissorRect.right = currentRT->GetWidth();
-    //         ScissorRect.bottom = currentRT->GetHeight();
-    //             
-    //         CommandList->RSSetViewports(1, &Viewport);
-    //         CommandList->RSSetScissorRects(1, &ScissorRect);
-    //         
-    //         WArray<D3D12_CPU_DESCRIPTOR_HANDLE> rtHandles;
-    //         for(auto renderTarget : renderTargets)
-    //         {
-    //             auto handle = ((DX12RenderTarget*)renderTarget)->GetRenderTargetHandle();
-    //             rtHandles.Add(handle);
-    //         }
-    //
-    //         D3D12_CPU_DESCRIPTOR_HANDLE dsHandle = {};
-    //
-    //         if(depthStencil)
-    //             dsHandle = ((DX12RenderTarget*)depthStencil)->GetRenderTargetHandle();
-    //             
-    //         CommandList->OMSetRenderTargets(rtHandles.Num(), rtHandles.GetData(), FALSE, depthStencil ? &dsHandle : &LastDepthStencilHandle);
-    //     }
-    //     else
-    //     {
-    //         CommandList->RSSetViewports(1, &CurrentViewport);
-    //         CommandList->RSSetScissorRects(1, &CurrentScissorRect);
-    //         CommandList->OMSetRenderTargets(1, &LastRenderTargetHandle, FALSE, &LastDepthStencilHandle);
-    //     }
-    // }
 
     void DX12CommandList::SetDescriptorHeaps(uint32_t NumDescriptorHeaps, ID3D12DescriptorHeap* const* ppDescriptorHeaps)
     {
@@ -360,6 +363,11 @@ namespace Waldem
         {
             CommandList->SetGraphicsRoot32BitConstants(rootParamIndex, numConstants, data, 0);
         }
+    }
+
+    void DX12CommandList::BuildRaytracingAccelerationStructure(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC* asDesc)
+    {
+        CommandList->BuildRaytracingAccelerationStructure(asDesc, 0, nullptr);
     }
 
     void DX12CommandList::CopyTextureRegion(const D3D12_TEXTURE_COPY_LOCATION* dst, uint32_t dstX, uint32_t dstY, uint32_t dstZ, const D3D12_TEXTURE_COPY_LOCATION* src, const D3D12_BOX* srcBox)
@@ -425,6 +433,8 @@ namespace Waldem
         {
             throw std::runtime_error("Failed to signal command queue fence!");
         }
+
+        WaitForCompletion();
     }
 
     void DX12CommandList::WaitForCompletion()
@@ -457,6 +467,12 @@ namespace Waldem
         barrier.Transition.StateBefore = before;
         barrier.Transition.StateAfter = after; // Or your desired state
         barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+        CommandList->ResourceBarrier(1, &barrier);
+    }
+
+    void DX12CommandList::UAVBarrier(ID3D12Resource* resource)
+    {
+        auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(resource);
         CommandList->ResourceBarrier(1, &barrier);
     }
 

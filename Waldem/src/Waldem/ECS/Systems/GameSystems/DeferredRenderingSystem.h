@@ -11,25 +11,32 @@
 
 namespace Waldem
 {
+    struct DefferedContantData
+    {
+        Matrix4 view;
+        Matrix4 proj;
+        Matrix4 invView;
+        Matrix4 invProj;
+        int NumLights;
+    };
+    
     class WALDEM_API DeferredRenderingSystem : ISystem
     {
         RenderTarget* TargetRT = nullptr;
         Texture2D* DummyTexture = nullptr;
-        //GBuffer pass
-        Pipeline* GBufferPipeline = nullptr;
-        RootSignature* GBufferRootSignature = nullptr;
-        PixelShader* GBufferPixelShader = nullptr;
         RenderTarget* WorldPositionRT = nullptr;
         RenderTarget* NormalRT = nullptr;
         RenderTarget* ColorRT = nullptr;
         RenderTarget* ORMRT = nullptr;
         RenderTarget* DepthRT = nullptr;
+        RenderTarget* RadianceRT = nullptr;
         RenderTarget* MeshIDRT = nullptr;
         //Deferred rendering pass
         Pipeline* DeferredRenderingPipeline = nullptr;
         ComputeShader* DeferredRenderingComputeShader = nullptr;
         RootSignature* DeferredRenderingRootSignature = nullptr;
         Point3 GroupCount;
+        DefferedContantData ConstantData;
         
     public:
         DeferredRenderingSystem(ecs::Manager* eCSManager) : ISystem(eCSManager)
@@ -40,7 +47,7 @@ namespace Waldem
             int width = 1;
             int height = 1;
 
-            TextureFormat format = TextureFormat::R32G32B32_FLOAT;
+            TextureFormat format = TextureFormat::R8G8B8A8_UNORM;
 
             DummyTexture = Renderer::CreateTexture("DummyTexture", width, height, format, image_data); 
         }
@@ -50,91 +57,35 @@ namespace Waldem
             Vector2 resolution = Vector2(sceneData->Window->GetWidth(), sceneData->Window->GetHeight());
             
             TargetRT = resourceManager->GetRenderTarget("TargetRT");
+            RadianceRT = resourceManager->GetRenderTarget("RadianceRT");
             
-            //Common resources
-            auto constantBufferResource = Resource("MyConstantBuffer", RTYPE_ConstantBuffer, nullptr, sizeof(Matrix4), sizeof(Matrix4) * 4, 0);
-            
-            //GBuffer pass
-            WArray<MaterialShaderAttribute> materialAttributes;
-            
-            WArray<Texture2D*> materialTextures { DummyTexture };
-            
-            for (auto [entity, mesh, transform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
-            {
-                if(!mesh.Mesh->CurrentMaterial->HasDiffuseTexture())
-                {
-                    materialAttributes.Add(MaterialShaderAttribute()); //by default all texture indices = -1, so we can just add empty MaterialAttribute
-                    continue;
-                }
-
-                int diffuseId = -1, normalId = -1, ormId = -1, clearCoat = -1;
-                
-                diffuseId = materialTextures.Add(mesh.Mesh->CurrentMaterial->GetDiffuseTexture());
-                
-                if(mesh.Mesh->CurrentMaterial->HasDiffuseTexture())
-                    normalId = materialTextures.Add(mesh.Mesh->CurrentMaterial->GetNormalTexture());
-                if(mesh.Mesh->CurrentMaterial->HasDiffuseTexture())
-                    ormId = materialTextures.Add(mesh.Mesh->CurrentMaterial->GetORMTexture());
-
-                materialAttributes.Add(MaterialShaderAttribute{ diffuseId, normalId, ormId, clearCoat, mesh.Mesh->CurrentMaterial->Albedo, mesh.Mesh->CurrentMaterial->Metallic, mesh.Mesh->CurrentMaterial->Roughness });
-            }
-
-            WArray<Matrix4> worldTransforms;
-            
-            for (auto [entity, mesh, transform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
-            {
-                worldTransforms.Add(transform.Matrix);
-            }
-            
-            WArray<Resource> gBufferPassResources;
-            gBufferPassResources.Add(constantBufferResource);
-            gBufferPassResources.Add(Resource("RootConstants", RTYPE_Constant, nullptr, sizeof(uint32_t), sizeof(uint32_t), 1));
-            
-            gBufferPassResources.Add(Resource("WorldTransforms", RTYPE_Buffer, worldTransforms.GetData(), sizeof(Matrix4), worldTransforms.GetSize(), 0));
-            gBufferPassResources.Add(Resource("MaterialAttributes", RTYPE_Buffer, materialAttributes.GetData(), sizeof(MaterialShaderAttribute), materialAttributes.GetSize(), 1));
-            gBufferPassResources.Add(Resource("MaterialTextures", materialTextures, 2));
-
             WorldPositionRT = resourceManager->GetRenderTarget("WorldPositionRT");
             NormalRT = resourceManager->GetRenderTarget("NormalRT");
             ColorRT = resourceManager->GetRenderTarget("ColorRT");
             ORMRT = resourceManager->GetRenderTarget("ORMRT");
             MeshIDRT = resourceManager->GetRenderTarget("MeshIDRT");
             DepthRT = resourceManager->GetRenderTarget("DepthRT");
-            GBufferRootSignature = Renderer::CreateRootSignature(gBufferPassResources);
-            GBufferPixelShader = Renderer::LoadPixelShader("GBuffer");
-            GBufferPipeline = Renderer::CreateGraphicPipeline("GBufferPipeline",
-                                                            GBufferRootSignature,
-                                                            GBufferPixelShader,
-                                                            { WorldPositionRT->GetFormat(), NormalRT->GetFormat(), ColorRT->GetFormat(), ORMRT->GetFormat(), MeshIDRT->GetFormat() },
-                                                            DEFAULT_RASTERIZER_DESC,
-                                                            DEFAULT_DEPTH_STENCIL_DESC,
-                                                            WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
-                                                            DEFAULT_INPUT_LAYOUT_DESC);
 
             //Deferred rendering pass
             WArray<Resource> deferredRenderingPassResources;
-            RenderTarget* testShadowMap = nullptr;
-            WArray<LightShaderData> LightDatas;
+            WArray<LightTransformData> LightTransformDatas;
             for (auto [entity, light, transform] : ECSManager->EntitiesWith<Light, Transform>())
             {
-                LightShaderData lightData(light.Data, transform);
-                testShadowMap = light.Shadowmap;
-                LightDatas.Add(lightData);
+                LightTransformDatas.Add({ light.Type, transform.GetForwardVector(), Vector4(transform.Position, 1.0f) });
             }
             deferredRenderingPassResources.Add(Resource("ComparisonSampler", { Sampler( COMPARISON_MIN_MAG_MIP_LINEAR, WRAP, WRAP, WRAP, LESS_EQUAL) }, 1));
-            if(!LightDatas.IsEmpty())
-                deferredRenderingPassResources.Add(Resource("LightsBuffer", RTYPE_Buffer, nullptr, sizeof(LightShaderData), LightDatas.GetSize(), 0));
-            if(testShadowMap)
-                deferredRenderingPassResources.Add(Resource("Shadowmap", testShadowMap, 1));
-            deferredRenderingPassResources.Add(Resource("WorldPosition", WorldPositionRT, 2));
-            deferredRenderingPassResources.Add(Resource("Normal", NormalRT, 3));
-            deferredRenderingPassResources.Add(Resource("Color", ColorRT, 4));
-            deferredRenderingPassResources.Add(Resource("ORMRT", ORMRT, 5));
-            deferredRenderingPassResources.Add(Resource("MeshIDRT", MeshIDRT, 6));
-            deferredRenderingPassResources.Add(Resource("DepthRT", DepthRT, 7));
+            if(!LightTransformDatas.IsEmpty())
+                deferredRenderingPassResources.Add(Resource("LightTransformDatas", RTYPE_Buffer, nullptr, sizeof(LightTransformData), LightTransformDatas.GetSize(), 0));
+            deferredRenderingPassResources.Add(Resource("WorldPosition", WorldPositionRT, 1));
+            deferredRenderingPassResources.Add(Resource("Normal", NormalRT, 2));
+            deferredRenderingPassResources.Add(Resource("Color", ColorRT, 3));
+            deferredRenderingPassResources.Add(Resource("ORMRT", ORMRT, 4));
+            deferredRenderingPassResources.Add(Resource("MeshIDRT", MeshIDRT, 5));
+            deferredRenderingPassResources.Add(Resource("DepthRT", DepthRT, 6));
+            deferredRenderingPassResources.Add(Resource("RadianceRT", RadianceRT, 7));
             deferredRenderingPassResources.Add(Resource("TargetRT", TargetRT, 0, true));
             deferredRenderingPassResources.Add(Resource("HoveredMeshes", RTYPE_RWBuffer, nullptr, sizeof(int), sizeof(int), 1));
-            deferredRenderingPassResources.Add(constantBufferResource);
+            deferredRenderingPassResources.Add(Resource("MyConstantBuffer", RTYPE_ConstantBuffer, nullptr, sizeof(DefferedContantData), sizeof(DefferedContantData), 0));
             deferredRenderingPassResources.Add(Resource("RootConstants", RTYPE_Constant, nullptr, sizeof(float) * 2, sizeof(float) * 2, 1));
             DeferredRenderingRootSignature = Renderer::CreateRootSignature(deferredRenderingPassResources);
             DeferredRenderingComputeShader = Renderer::LoadComputeShader("DeferredRendering");
@@ -145,79 +96,30 @@ namespace Waldem
 
         void Update(float deltaTime) override
         {
-            //GBuffer pass
-            WArray<FrustumPlane> frustrumPlanes;
-            Matrix4 matrices[4];
+            WArray<LightTransformData> LightTransformDatas;
+            for (auto [entity, light, transform] : ECSManager->EntitiesWith<Light, Transform>())
+            {
+                LightTransformDatas.Add({ light.Type, transform.GetForwardVector(), Vector4(transform.Position, 1.0f) });
+            }
+            if(!LightTransformDatas.IsEmpty())
+                DeferredRenderingRootSignature->UpdateResourceData("LightTransformDatas", LightTransformDatas.GetData());
+            
             for (auto [entity, camera, mainCamera, cameraTransform] : ECSManager->EntitiesWith<Camera, EditorCamera, Transform>())
             {
-                matrices[0] = camera.ViewMatrix;
-                matrices[1] = camera.ProjectionMatrix;
-                matrices[2] = cameraTransform.Matrix;
-                matrices[3] = inverse(camera.ProjectionMatrix);
-                GBufferRootSignature->UpdateResourceData("MyConstantBuffer", matrices);
-                DeferredRenderingRootSignature->UpdateResourceData("MyConstantBuffer", matrices);
-                frustrumPlanes = camera.ExtractFrustumPlanes();
+                ConstantData.view = camera.ViewMatrix;
+                ConstantData.proj = camera.ProjectionMatrix;
+                ConstantData.invView = cameraTransform.Matrix;
+                ConstantData.invProj = inverse(camera.ProjectionMatrix);
 
                 break;
             }
-            WArray<Matrix4> worldTransforms;
-            for (auto [entity, mesh, transform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
-            {
-                worldTransforms.Add(transform.Matrix);
-            }
-            GBufferRootSignature->UpdateResourceData("WorldTransforms", worldTransforms.GetData());
-            Renderer::SetPipeline(GBufferPipeline);
-            Renderer::SetRootSignature(GBufferRootSignature);
-            Renderer::ResourceBarrier(WorldPositionRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
-            Renderer::ResourceBarrier(NormalRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
-            Renderer::ResourceBarrier(ColorRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
-            Renderer::ResourceBarrier(ORMRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
-            Renderer::ResourceBarrier(MeshIDRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
-            Renderer::ResourceBarrier(DepthRT, ALL_SHADER_RESOURCE, DEPTH_WRITE);
-            Renderer::SetRenderTargets({ WorldPositionRT, NormalRT, ColorRT, ORMRT, MeshIDRT }, DepthRT);
-            Renderer::ClearRenderTarget(WorldPositionRT);
-            Renderer::ClearRenderTarget(NormalRT);
-            Renderer::ClearRenderTarget(ColorRT);
-            Renderer::ClearRenderTarget(ORMRT);
-            Renderer::ClearRenderTarget(MeshIDRT);
-            Renderer::ClearDepthStencil(DepthRT);
+            ConstantData.NumLights = LightTransformDatas.GetSize();
+            DeferredRenderingRootSignature->UpdateResourceData("MyConstantBuffer", &ConstantData);
             
-            uint32_t meshID = 0;
-
-            for (auto [entity, mesh, transform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
-            {
-                auto transformedBBox = mesh.Mesh->BBox.GetTransformed(transform.Matrix);
-
-                //Frustrum culling
-                if(transformedBBox.IsInFrustum(frustrumPlanes))
-                {
-                    GBufferRootSignature->UpdateResourceData("RootConstants", &meshID); 
-                    Renderer::Draw(mesh.Mesh);
-                }
-
-                meshID++;
-            }
-            
-            Renderer::SetRenderTargets({});
-
-            //Deferred rendering pass
-            Renderer::ResourceBarrier(WorldPositionRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
-            Renderer::ResourceBarrier(NormalRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
-            Renderer::ResourceBarrier(ColorRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
-            Renderer::ResourceBarrier(ORMRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
-            Renderer::ResourceBarrier(MeshIDRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
-            Renderer::ResourceBarrier(DepthRT, DEPTH_WRITE, ALL_SHADER_RESOURCE);
             Renderer::ResourceBarrier(TargetRT, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
             Renderer::SetPipeline(DeferredRenderingPipeline);
             Renderer::SetRootSignature(DeferredRenderingRootSignature);
-            WArray<LightShaderData> LightDatas;
-            for (auto [entity, light, transform] : ECSManager->EntitiesWith<Light, Transform>())
-            {
-                LightShaderData lightData(light.Data, transform);
-                LightDatas.Add(lightData);
-            }
-            if(!LightDatas.IsEmpty())
-                DeferredRenderingRootSignature->UpdateResourceData("LightsBuffer", LightDatas.GetData());
+            
             auto mousePos = Input::GetMousePos();
             DeferredRenderingRootSignature->UpdateResourceData("RootConstants", &mousePos);
             Renderer::Compute(GroupCount);

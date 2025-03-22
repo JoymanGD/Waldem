@@ -1,5 +1,4 @@
 #pragma once
-#include "Resource.h"
 #include "Interfaces/IGraphicObject.h"
 
 namespace Waldem

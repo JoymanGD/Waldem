@@ -108,7 +108,7 @@ namespace Waldem
         {
             for (auto [entity, light, transform] : ECSManager->EntitiesWith<Light, Transform>())
             {
-                if(light.Data.Type == LightType::Directional)
+                if(light.Type == LightType::Directional)
                 {
                     Vector3 cameraUp, cameraRight;
                     for (auto [cameraEntity, camera, cameraTransform] : ECSManager->EntitiesWith<Camera, Transform>())

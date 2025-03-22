@@ -1,19 +1,19 @@
-#define AMBIENT 0.1f
+#define A0 1.0f
+#define A1 0.1f
+#define A2 0.01f
 
 struct Light
 {
     float3 Color;
     float Intensity;
-    float2 Padding1;
     uint Type;
-    float Range;
-    matrix World;
-    matrix View;
-    matrix Projection;
+    float Radius;
+    float2 Padding1;
 };
 
-float3 GetLightDirection(Light light)
+struct LightTransformData
 {
-    float3 forward = transpose(light.World)[2].xyz;
-    return normalize(forward);
-}
+    uint Type;
+    float3 Forward;
+    float4 Position;
+};

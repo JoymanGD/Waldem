@@ -1,5 +1,4 @@
-#include "Core.hlsl"
-#include "Lighting.hlsl"
+#include "Shading.hlsl"
 #include "Shadows.hlsl"
 
 struct PS_INPUT
@@ -18,11 +17,9 @@ cbuffer MyConstantBuffer : register(b0)
 };
 
 SamplerState myStaticSampler : register(s0);
-SamplerComparisonState cmpSampler : register(s1);
 
-StructuredBuffer<Light> Lights : register(t0);
-Texture2D<float> Shadowmap : register(t1);
-Texture2D DiffuseTextures[] : register(t3);
+Texture2D RadianceRT : register(t0);
+Texture2D DiffuseTextures[] : register(t2);
 
 float4 main(PS_INPUT input) : SV_TARGET
 {
@@ -31,13 +28,9 @@ float4 main(PS_INPUT input) : SV_TARGET
     if(color.a < 0.1f)
         discard;
 
-    Light light = Lights[0];
+    float3 radiance = RadianceRT.Sample(myStaticSampler, input.UV);
 
-    float3 lightDirection = -GetLightDirection(light);
-    
-    float shadowFactor = CalculateShadowFactor(Shadowmap, cmpSampler, input.WorldPosition, input.Normal, light.View, light.Projection);
-
-    float3 resultColor = color.rgb * AMBIENT + color.rgb * light.Color * light.Intensity * saturate(dot(input.Normal, lightDirection)) * saturate(shadowFactor);
+    float3 resultColor = color.rgb * AMBIENT + color.rgb * radiance;
 
     return float4(resultColor, 1.0f);
 }

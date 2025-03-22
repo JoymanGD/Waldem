@@ -34,8 +34,8 @@ namespace Waldem
         float Roughness = 0.0f;
         
     private:
-        Texture2D* Diffuse;
-        Texture2D* Normal;
-        Texture2D* MetalRoughness;
+        Texture2D* Diffuse = nullptr;
+        Texture2D* Normal = nullptr;
+        Texture2D* MetalRoughness = nullptr;
     };
 }

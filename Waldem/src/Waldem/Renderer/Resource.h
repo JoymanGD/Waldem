@@ -1,4 +1,5 @@
 #pragma once
+#include "AccelerationStructure.h"
 #include "Buffer.h"
 #include "Sampler.h"
 #include "Shader.h"
@@ -21,6 +22,7 @@ namespace Waldem
         WArray<Buffer*> Buffers;
         WArray<Sampler> Samplers;
         RenderTarget* RT = nullptr;
+        AccelerationStructure* AS = nullptr;
 
         Resource() = default;
         
@@ -100,6 +102,16 @@ namespace Waldem
             Name = name;
             Type = UAV ? RTYPE_RWRenderTarget : RTYPE_RenderTarget;
             RT = renderTarget;
+            NumResources = 1;
+            Slot = slot;
+        }
+
+        //acceleration structure
+        Resource(String name, AccelerationStructure* accelerationStructure, uint32_t slot)
+        {
+            Name = name;
+            Type = RTYPE_AccelerationStructure;
+            AS = accelerationStructure;
             NumResources = 1;
             Slot = slot;
         }

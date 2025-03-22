@@ -8,6 +8,7 @@
 #include "Waldem/ECS/Systems/EditorSystems/EntityDetailsWidgetContainer.h"
 #include "Waldem/ECS/Systems/EditorSystems/MainWidgetContainer.h"
 #include "Waldem/ECS/Systems/EditorSystems/Widgets/HierarchyWidget.h"
+#include "Waldem/ECS/Systems/EditorSystems/Widgets/ComponentWidgets/LightWidget.h"
 #include "Waldem/ECS/Systems/EditorSystems/Widgets/ComponentWidgets/OceanComponentWidget.h"
 #include "Waldem/ECS/Systems/EditorSystems/Widgets/ComponentWidgets/TransformComponentWidget.h"
 #include "Waldem/Input/InputManager.h"
@@ -39,7 +40,8 @@ namespace Waldem
                 new EntityDetailsWidgetContainer(CurrentECSManager,
                 {
                     new OceanComponentWidget(CurrentECSManager),
-                    new TransformComponentWidget(CurrentECSManager)
+                    new TransformComponentWidget(CurrentECSManager),
+                    new LightWidget(CurrentECSManager)
                 }),
                 new HierarchyWidget(CurrentECSManager)
             });

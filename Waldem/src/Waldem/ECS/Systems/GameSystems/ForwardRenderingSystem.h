@@ -1,4 +1,5 @@
 #pragma once
+#include "Waldem/ECS/Components/EditorCamera.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/ECS/Components/ModelComponent.h"
 #include "Waldem/Renderer/Light.h"
@@ -14,20 +15,14 @@ namespace Waldem
         RootSignature* DefaultRootSignature = nullptr;
         PixelShader* DefaultPixelShader = nullptr;
         RenderTarget* DefaultRenderTarget = nullptr;
+        RenderTarget* RadianceRT = nullptr;
         
     public:
         ForwardRenderingSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
         
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
         {
-            RenderTarget* testShadowMap = nullptr;
-            WArray<LightShaderData> LightDatas;
-            for (auto [entity, light, transform] : ECSManager->EntitiesWith<Light, Transform>())
-            {
-                LightShaderData lightData(light.Data, transform);
-                testShadowMap = light.Shadowmap;
-                LightDatas.Add(lightData);
-            }
+            RadianceRT = resourceManager->GetRenderTarget("RadianceRT");
             
             WArray<Texture2D*> textures;
             for (auto [entity, model, transform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
@@ -41,22 +36,19 @@ namespace Waldem
             WArray<Matrix4> worldTransforms;
             for (auto [entity, model, transform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
             {
-                worldTransforms.Add(transform.GetMatrix());
+                worldTransforms.Add(transform);
             }
             
             WArray<Resource> resources;
             resources.Add(Resource("MyConstantBuffer", RTYPE_ConstantBuffer, nullptr, sizeof(Matrix4), sizeof(Matrix4) * 2, 0));
             resources.Add(Resource("RootConstants", RTYPE_Constant, 1, nullptr, 1));
-            if(!LightDatas.IsEmpty())
-                resources.Add(Resource("LightsBuffer", RTYPE_Buffer, nullptr, sizeof(LightShaderData), LightDatas.GetSize(), 0));
-            if(testShadowMap)
-                resources.Add(Resource("Shadowmap", testShadowMap, 1));
+            resources.Add(Resource("RadianceRT", RadianceRT, 0));
             if(!worldTransforms.IsEmpty())
-                resources.Add(Resource("WorldTransforms", RTYPE_Buffer, worldTransforms.GetData(), sizeof(Matrix4), worldTransforms.GetSize(), 2));
+                resources.Add(Resource("WorldTransforms", RTYPE_Buffer, worldTransforms.GetData(), sizeof(Matrix4), worldTransforms.GetSize(), 1));
             if(!textures.IsEmpty())
-                resources.Add(Resource("TestTextures", textures, 3));
-            resources.Add(Resource("ComparisonSampler", { Sampler( COMPARISON_MIN_MAG_MIP_LINEAR, WRAP, WRAP, WRAP, LESS_EQUAL) }, 1));
+                resources.Add(Resource("TestTextures", textures, 2));
         
+            
             DefaultRenderTarget = Renderer::CreateRenderTarget("DefaultRenderTarget", sceneData->Window->GetWidth(), sceneData->Window->GetHeight(), TextureFormat::R8G8B8A8_UNORM);
             DefaultRootSignature = Renderer::CreateRootSignature(resources);
             DefaultPixelShader = Renderer::LoadPixelShader("ForwardRendering");
@@ -72,20 +64,9 @@ namespace Waldem
 
         void Update(float deltaTime) override
         {
-            WArray<LightShaderData> LightDatas;
-            
-            for (auto [entity, light, transform] : ECSManager->EntitiesWith<Light, Transform>())
-            {
-                LightShaderData lightData(light.Data, transform);
-                LightDatas.Add(lightData);
-            }
-
-            if(!LightDatas.IsEmpty())
-                DefaultRootSignature->UpdateResourceData("LightsBuffer", LightDatas.GetData());
-
             WArray<FrustumPlane> frustrumPlanes;
             Matrix4 matrices[2];
-            for (auto [entity, camera, mainCamera, cameraTransform] : ECSManager->EntitiesWith<Camera, MainCamera, Transform>())
+            for (auto [entity, camera, mainCamera, cameraTransform] : ECSManager->EntitiesWith<Camera, EditorCamera, Transform>())
             {
                 matrices[0] = camera.ViewMatrix;
                 matrices[1] = camera.ProjectionMatrix;

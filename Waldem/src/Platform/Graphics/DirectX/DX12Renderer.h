@@ -9,7 +9,7 @@
 
 namespace Waldem
 {
-    class DX12Renderer : public IRenderer
+    class DX12Renderer : public IRenderer 
     {
     public:
         ~DX12Renderer() override = default;
@@ -17,9 +17,11 @@ namespace Waldem
         void InitializeUI() override;
         void Draw(Model* model) override;
         void Draw(CMesh* mesh) override;
+        void Signal() override;
         void Wait() override;
         Point3 GetNumThreadsPerGroup(ComputeShader* computeShader) override;
         void Compute(Point3 groupCount) override;
+        void TraceRays(Pipeline* rayTracingPipeline, Point3 numRays) override;
         void Begin() override;
         void End() override;
         void Present() override;
@@ -27,6 +29,7 @@ namespace Waldem
         D3D12_CPU_DESCRIPTOR_HANDLE GetDepthStencilHandle() const { return DSVHandle; }
         PixelShader* LoadPixelShader(String shaderName, String entryPoint) override;
         ComputeShader* LoadComputeShader(String shaderName, String entryPoint) override;
+        RayTracingShader* LoadRayTracingShader(String shaderName) override;
         void SetPipeline(Pipeline* pipeline) override;
         void SetRootSignature(RootSignature* rootSignature) override;
         void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr, SViewport viewport = {}, SScissorRect scissor = {}) override;
@@ -34,9 +37,12 @@ namespace Waldem
         void ResourceBarrier(Buffer* buffer, ResourceStates before, ResourceStates after) override;
         Pipeline* CreateGraphicPipeline(const String& name, RootSignature* rootSignature, PixelShader* shader, WArray<TextureFormat> RTFormats, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout) override;
         Pipeline* CreateComputePipeline(const String& name, RootSignature* rootSignature, ComputeShader* shader) override;
+        Pipeline* CreateRayTracingPipeline(const String& name, RootSignature* rootSignature, RayTracingShader* shader) override;
         RootSignature* CreateRootSignature(WArray<Resource> resources) override;
         Texture2D* CreateTexture(String name, int width, int height, TextureFormat format, uint8_t* data = nullptr) override;
         RenderTarget* CreateRenderTarget(String name, int width, int height, TextureFormat format) override;
+        AccelerationStructure* CreateBLAS(String name, WArray<RayTracingGeometry>& geometries) override;
+        AccelerationStructure* CreateTLAS(String name, WArray<RayTracingInstance>& instances) override;
         void CopyRenderTarget(RenderTarget* dstRT, RenderTarget* srcRT) override;
         void CopyBuffer(Buffer* dstBuffer, Buffer* srcBuffer) override;
         Buffer* CreateBuffer(String name, BufferType type, void* data, uint32_t size, uint32_t stride) override;
@@ -73,7 +79,9 @@ namespace Waldem
         ID3D12Debug1* DebugController1;
         ID3D12InfoQueue* InfoQueue;
         ID3D12Fence* WaitFence;
-        UINT64 waitFenceValue = 0;
+        UINT64 WaitFenceValue = 0;
+        ID3D12Fence* SecondaryWaitFence;
+        UINT64 SecondaryWaitFenceValue = 0;
 
         //ImGui
         ID3D12DescriptorHeap* ImGuiHeap;

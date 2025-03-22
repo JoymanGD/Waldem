@@ -5,12 +5,15 @@
 #include <d3dcompiler.h>
 
 #include "D3DX12.h"
+#include "DX12AccelerationStructure.h"
 #include "DX12Buffer.h"
 #include "DX12ComputePipeline.h"
 #include "DX12ComputeShader.h"
 #include "DX12Helper.h"
 #include "DX12GraphicPipeline.h"
 #include "DX12PixelShader.h"
+#include "DX12RayTracingPipeline.h"
+#include "DX12RayTracingShader.h"
 #include "DX12RenderTarget.h"
 #include "DX12RootSignature.h"
 #include "DX12Texture.h"
@@ -24,6 +27,16 @@ struct ImGuiIO;
 
 namespace Waldem
 {
+    bool IsDirectXRaytracingSupported(ID3D12Device* testDevice)
+    {
+        D3D12_FEATURE_DATA_D3D12_OPTIONS5 featureSupport = {};
+
+        if (FAILED(testDevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &featureSupport, sizeof(featureSupport))))
+            return false;
+
+        return featureSupport.RaytracingTier != D3D12_RAYTRACING_TIER_NOT_SUPPORTED;
+    }
+    
     void DX12Renderer::Initialize(Window* window)
     {
         CurrentWindow = window;
@@ -52,6 +65,8 @@ namespace Waldem
         }
 
         h = D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS(&Device));
+
+        bool rtSupported = IsDirectXRaytracingSupported(Device);
 
         if(FAILED(h))
         {
@@ -198,6 +213,7 @@ namespace Waldem
         WorldCommandList.first = new DX12CommandList(Device);
         
         Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&WaitFence));
+        Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&SecondaryWaitFence));
     }
 
     void DX12Renderer::InitializeUI()
@@ -227,17 +243,20 @@ namespace Waldem
         cmd->Draw(mesh);
     }
 
+    void DX12Renderer::Signal()
+    {
+        GraphicCommandQueue->Signal(SecondaryWaitFence, ++SecondaryWaitFenceValue);
+    }
+
     void DX12Renderer::Wait()
     {
-        GraphicCommandQueue->Signal(WaitFence, ++waitFenceValue);
-        
-        if (WaitFence->GetCompletedValue() < waitFenceValue)
+        if (SecondaryWaitFence->GetCompletedValue() < SecondaryWaitFenceValue)
         {
             HANDLE eventHandle = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-            WaitFence->SetEventOnCompletion(waitFenceValue, eventHandle);
+            SecondaryWaitFence->SetEventOnCompletion(SecondaryWaitFenceValue, eventHandle);
             WaitForSingleObject(eventHandle, INFINITE);
             CloseHandle(eventHandle);
-            waitFenceValue--;
+            SecondaryWaitFenceValue--;
         }
     }
 
@@ -280,11 +299,14 @@ namespace Waldem
         WorldCommandList.first->Dispatch(groupCount);
     }
 
+    void DX12Renderer::TraceRays(Pipeline* rayTracingPipeline, Point3 numRays)
+    {
+        WorldCommandList.first->TraceRays(rayTracingPipeline, numRays);
+    }
+
     void DX12Renderer::Begin()
     {
-        auto& worldGraphicCmd = WorldCommandList.first;
-
-        worldGraphicCmd->Reset();
+        auto& worldCmd = WorldCommandList.first;
 
         D3D12_RESOURCE_BARRIER barrier = {};
         barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -292,15 +314,15 @@ namespace Waldem
         barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
         barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
         barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-        worldGraphicCmd->ResourceBarrier(1, &barrier);
+        worldCmd->ResourceBarrier(1, &barrier);
 
         CurrentRenderTargetHandle = RTVHeap->GetCPUDescriptorHandleForHeapStart();
         CurrentRenderTargetHandle.ptr += FrameIndex * RTVDescriptorSize;
         
         if(!WorldCommandList.second)
         {
-            worldGraphicCmd->Clear(CurrentRenderTargetHandle, DSVHandle, { 0.0f, 0.0f, 0.0f });
-            worldGraphicCmd->BeginInternal(&Viewport, &ScissorRect, CurrentRenderTargetHandle, DSVHandle);
+            worldCmd->Clear(CurrentRenderTargetHandle, DSVHandle, { 0.0f, 0.0f, 0.0f });
+            worldCmd->BeginInternal(&Viewport, &ScissorRect, CurrentRenderTargetHandle, DSVHandle);
             
             WorldCommandList.second = true;
         }
@@ -308,7 +330,7 @@ namespace Waldem
 
     void DX12Renderer::End()
     {
-        auto& worldCmd = WorldCommandList.first;
+        auto& worldCmd = WorldCommandList.first; 
         
         if(WorldCommandList.second)
         {
@@ -328,7 +350,8 @@ namespace Waldem
         worldCmd->Close();
 
         worldCmd->Execute(GraphicCommandQueue);
-        worldCmd->WaitForCompletion();
+
+        worldCmd->Reset();
     }
 
     void DX12Renderer::Present()
@@ -353,6 +376,11 @@ namespace Waldem
     ComputeShader* DX12Renderer::LoadComputeShader(String shaderName, String entryPoint)
     {
         return new DX12ComputeShader(shaderName, entryPoint);
+    }
+
+    RayTracingShader* DX12Renderer::LoadRayTracingShader(String shaderName)
+    {
+        return new DX12RayTracingShader(shaderName);
     }
 
     void DX12Renderer::SetPipeline(Pipeline* pipeline)
@@ -380,6 +408,11 @@ namespace Waldem
         return new DX12ComputePipeline(name, Device, rootSignature, shader);
     }
 
+    Pipeline* DX12Renderer::CreateRayTracingPipeline(const String& name, RootSignature* rootSignature, RayTracingShader* shader)
+    {
+        return new DX12RayTracingPipeline(name, Device, rootSignature, shader);
+    }
+
     RootSignature* DX12Renderer::CreateRootSignature(WArray<Resource> resources)
     {
         return new DX12RootSignature(Device, WorldCommandList.first, resources);
@@ -395,6 +428,16 @@ namespace Waldem
     {
         DX12RenderTarget* renderTarget = new DX12RenderTarget(name, Device, WorldCommandList.first, width, height, format);
         return renderTarget;
+    }
+
+    AccelerationStructure* DX12Renderer::CreateBLAS(String name, WArray<RayTracingGeometry>& geometries)
+    {
+        return new DX12AccelerationStructure(name, Device, WorldCommandList.first, AccelerationStructureType::BottomLevel, geometries);
+    }
+
+    AccelerationStructure* DX12Renderer::CreateTLAS(String name, WArray<RayTracingInstance>& instances)
+    {
+        return new DX12AccelerationStructure(name, Device, WorldCommandList.first, AccelerationStructureType::TopLevel, instances);
     }
 
     void DX12Renderer::CopyRenderTarget(RenderTarget* dstRT, RenderTarget* srcRT)

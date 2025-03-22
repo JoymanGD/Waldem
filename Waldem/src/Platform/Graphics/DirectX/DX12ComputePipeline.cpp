@@ -7,6 +7,8 @@ namespace Waldem
 {
     DX12ComputePipeline::DX12ComputePipeline(const String& name, ID3D12Device* device, RootSignature* rootSignature, ComputeShader* shader) : Pipeline(name)
     {
+        CurrentPipelineType = PipelineType::Compute;
+        
         rootSignature->CurrentPipelineType = PipelineType::Compute;
         
         IDxcBlob* ComputeShaderBlob = (IDxcBlob*)shader->GetPlatformData();

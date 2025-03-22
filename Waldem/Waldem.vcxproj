@@ -147,6 +147,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\Platform\Graphics\DirectX\D3DX12.h" />
+    <ClInclude Include="src\Platform\Graphics\DirectX\DX12AccelerationStructure.h" />
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12Buffer.h" />
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12CommandList.h" />
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12ComputePipeline.h" />
@@ -154,6 +155,8 @@
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12GraphicPipeline.h" />
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12Helper.h" />
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12PixelShader.h" />
+    <ClInclude Include="src\Platform\Graphics\DirectX\DX12RayTracingPipeline.h" />
+    <ClInclude Include="src\Platform\Graphics\DirectX\DX12RayTracingShader.h" />
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12RenderTarget.h" />
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12Renderer.h" />
     <ClInclude Include="src\Platform\Graphics\DirectX\DX12Resource.h" />
@@ -185,6 +188,7 @@
     <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\IWidgetContainerSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\MainWidgetContainer.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\WidgetSystem.h" />
+    <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\Widgets\ComponentWidgets\LightWidget.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\Widgets\ComponentWidgets\OceanComponentWidget.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\Widgets\ComponentWidgets\TransformComponentWidget.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\Widgets\HierarchyWidget.h" />
@@ -192,9 +196,11 @@
     <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\DeferredRenderingSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\ForwardRenderingSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\FreeLookCameraSystem.h" />
+    <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\GBufferSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\OceanSimulationSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\PhysicsSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\PostProcessSystem.h" />
+    <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\RayTracingShadowsSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\ScreenQuadSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\ShadowmapRenderingSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\System.h" />
@@ -218,6 +224,7 @@
     <ClInclude Include="src\Waldem\Log.h" />
     <ClInclude Include="src\Waldem\MouseButtonCodes.h" />
     <ClInclude Include="src\Waldem\Renderer\AABB.h" />
+    <ClInclude Include="src\Waldem\Renderer\AccelerationStructure.h" />
     <ClInclude Include="src\Waldem\Renderer\Buffer.h" />
     <ClInclude Include="src\Waldem\Renderer\GraphicTypes.h" />
     <ClInclude Include="src\Waldem\Renderer\Interfaces\IGraphicObject.h" />
@@ -689,12 +696,15 @@
     <ClInclude Include="vendor\imgui\misc\single_file\imgui_single_file.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Platform\Graphics\DirectX\DX12AccelerationStructure.cpp" />
     <ClCompile Include="src\Platform\Graphics\DirectX\DX12Buffer.cpp" />
     <ClCompile Include="src\Platform\Graphics\DirectX\DX12CommandList.cpp" />
     <ClCompile Include="src\Platform\Graphics\DirectX\DX12ComputePipeline.cpp" />
     <ClCompile Include="src\Platform\Graphics\DirectX\DX12ComputeShader.cpp" />
     <ClCompile Include="src\Platform\Graphics\DirectX\DX12GraphicPipeline.cpp" />
     <ClCompile Include="src\Platform\Graphics\DirectX\DX12PixelShader.cpp" />
+    <ClCompile Include="src\Platform\Graphics\DirectX\DX12RayTracingPipeline.cpp" />
+    <ClCompile Include="src\Platform\Graphics\DirectX\DX12RayTracingShader.cpp" />
     <ClCompile Include="src\Platform\Graphics\DirectX\DX12RenderTarget.cpp" />
     <ClCompile Include="src\Platform\Graphics\DirectX\DX12Renderer.cpp" />
     <ClCompile Include="src\Platform\Graphics\DirectX\DX12RootSignature.cpp" />
@@ -765,6 +775,17 @@
       <ShaderType>Compute</ShaderType>
       <ShaderModel>6.5</ShaderModel>
       <EntryPointName>main</EntryPointName>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\Common.hlsl">
+      <ObjectFileOutput>..\bin\Debug\Waldem\%(Filename).cso</ObjectFileOutput>
+      <TrackerLogDirectory>..\bin-int\Debug\Waldem\Waldem.tlog\</TrackerLogDirectory>
+      <EntryPointName>main</EntryPointName>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <ShaderModel>6.5</ShaderModel>
+      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
+      <DisableOptimizations>true</DisableOptimizations>
+      <EnableDebuggingInformation>true</EnableDebuggingInformation>
+      <ExcludedFromBuild>true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="src\Shaders\Complex.hlsl">
       <ExcludedFromBuild>true</ExcludedFromBuild>
@@ -893,6 +914,10 @@
       <ShaderType>Vertex</ShaderType>
       <ShaderModel>6.5</ShaderModel>
       <EntryPointName>main</EntryPointName>
+    </FxCompile>
+    <FxCompile Include="src\Shaders\RayTracing\TestRayTracingShader.rtx.hlsl">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+      <ShaderModel>6.5</ShaderModel>
     </FxCompile>
     <FxCompile Include="src\Shaders\Shading.hlsl">
       <ExcludedFromBuild>true</ExcludedFromBuild>

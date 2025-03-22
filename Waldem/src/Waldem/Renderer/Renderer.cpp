@@ -55,6 +55,11 @@ namespace Waldem
         Instance->PlatformRenderer->Draw(model);
     }
 
+    void Renderer::Signal()
+    {
+        Instance->PlatformRenderer->Signal();
+    }
+
     void Renderer::Wait()
     {
         Instance->PlatformRenderer->Wait();
@@ -65,6 +70,11 @@ namespace Waldem
         Instance->PlatformRenderer->Compute(groupCount);
     }
 
+    void Renderer::TraceRays(Pipeline* rayTracingPipeline, Point3 numRays)
+    {
+        Instance->PlatformRenderer->TraceRays(rayTracingPipeline, numRays);
+    }
+
     PixelShader* Renderer::LoadPixelShader(String shaderName, String entryPoint)
     {
         return Instance->PlatformRenderer->LoadPixelShader(shaderName, entryPoint);
@@ -73,6 +83,11 @@ namespace Waldem
     ComputeShader* Renderer::LoadComputeShader(String shaderName, String entryPoint)
     {
         return Instance->PlatformRenderer->LoadComputeShader(shaderName, entryPoint);
+    }
+
+    RayTracingShader* Renderer::LoadRayTracingShader(String shaderName)
+    {
+        return Instance->PlatformRenderer->LoadRayTracingShader(shaderName);
     }
 
     void Renderer::SetPipeline(Pipeline* pipeline)
@@ -107,6 +122,11 @@ namespace Waldem
         return Instance->PlatformRenderer->CreateComputePipeline(name, rootSignature, shader);
     }
 
+    Pipeline* Renderer::CreateRayTracingPipeline(const String& name, RootSignature* rootSignature, RayTracingShader* shader)
+    {
+        return Instance->PlatformRenderer->CreateRayTracingPipeline(name, rootSignature, shader);
+    }
+
     RootSignature* Renderer::CreateRootSignature(WArray<Resource> resources)
     {
         return Instance->PlatformRenderer->CreateRootSignature(resources);
@@ -122,6 +142,16 @@ namespace Waldem
     {
         RenderTarget* renderTarget = Instance->PlatformRenderer->CreateRenderTarget(name, width, height, format);
         return renderTarget;
+    }
+
+    AccelerationStructure* Renderer::CreateBLAS(String name, WArray<RayTracingGeometry>& geometries)
+    {
+        return Instance->PlatformRenderer->CreateBLAS(name, geometries);
+    }
+
+    AccelerationStructure* Renderer::CreateTLAS(String name, WArray<RayTracingInstance>& instances)
+    {
+        return Instance->PlatformRenderer->CreateTLAS(name, instances);
     }
 
     void Renderer::CopyRenderTarget(RenderTarget* dstRT, RenderTarget* srcRT)
