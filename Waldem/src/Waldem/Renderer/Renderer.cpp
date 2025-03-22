@@ -154,6 +154,16 @@ namespace Waldem
         return Instance->PlatformRenderer->CreateTLAS(name, instances);
     }
 
+    void Renderer::UpdateBLAS(AccelerationStructure* BLAS, WArray<RayTracingGeometry>& geometries)
+    {
+        Instance->PlatformRenderer->UpdateBLAS(BLAS, geometries);
+    }
+
+    void Renderer::UpdateTLAS(AccelerationStructure* TLAS, WArray<RayTracingInstance>& instances)
+    {
+        Instance->PlatformRenderer->UpdateTLAS(TLAS, instances);
+    }
+
     void Renderer::CopyRenderTarget(RenderTarget* dstRT, RenderTarget* srcRT)
     {
         Instance->PlatformRenderer->CopyRenderTarget(dstRT, srcRT);

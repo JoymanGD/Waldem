@@ -13,9 +13,13 @@ namespace Waldem
     public:
         DX12AccelerationStructure(String name, ID3D12Device5* device, DX12CommandList* cmdList, AccelerationStructureType type, WArray<RayTracingGeometry>& geometries);
         DX12AccelerationStructure(String name, ID3D12Device5* device, DX12CommandList* cmdList, AccelerationStructureType type, WArray<RayTracingInstance>& instances);
+        void Update(DX12CommandList* cmdList, WArray<RayTracingGeometry>& geometries);
+        void Update(DX12CommandList* cmdList, WArray<RayTracingInstance>& instances);
         void* GetPlatformResource() override { return Resource; }
 
     private:
         ID3D12Resource* Resource;
+        ID3D12Resource* ScratchBuffer;
+        ID3D12Resource* InstanceBuffer;
     };
 }
