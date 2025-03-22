@@ -10,8 +10,10 @@ struct Light
     float Radius;
     float InnerCone;
     float OuterCone;
-    float Sharpness;
-    float3 Padding1;
+    float Softness;
+    float AreaWidth;
+    float AreaHeight;
+    int AreaTwoSided;
 };
 
 struct LightTransformData

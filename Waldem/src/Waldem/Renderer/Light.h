@@ -39,24 +39,26 @@ namespace Waldem
         }
 
         //Spot
-        Light(Vector3 color, float intensity, float radius, float innerCone, float outerCone, float sharpness)
+        Light(Vector3 color, float intensity, float radius, float outerCone, float softness)
         {
             Color = color;
             Intensity = intensity;
             Type = LightType::Spot;
             Radius = radius;
-            InnerCone = innerCone;
+            InnerCone = 1.0f;
             OuterCone = outerCone;
-            Sharpness = sharpness;
+            Softness = softness;
         }
         
         Vector3 Color;
         float Intensity;
         LightType Type;
         float Radius;
-        float InnerCone;
+        float InnerCone = 1; 
         float OuterCone;
-        float Sharpness;
-        Vector3 Padding1;
+        float Softness;
+        float AreaWidth;
+        float AreaHeight;
+        bool AreaTwoSided;
     };
 }

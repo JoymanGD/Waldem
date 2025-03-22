@@ -50,6 +50,8 @@ void RayGenShader()
     float4 orm = ORMRT.Load(uint3(dispatchIndex, 0));
 
     Payload payload;
+
+    uint RayFlags = RAY_FLAG_FORCE_OPAQUE | RAY_FLAG_SKIP_CLOSEST_HIT_SHADER | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH;
             
     //shadow ray
     for (int i = 0; i < NumLights; i++)
@@ -58,6 +60,12 @@ void RayGenShader()
         Light light = Lights[i];
         matrix lightTransform = LightTransforms[i];
         float3 lightDirection = 0.0f;
+
+        //fix for zero color
+        if(length(light.Color) == 0.0f)
+        {
+            light.Color = float3(0.001f, 0.001f, 0.001f);
+        }
         
         if(light.Type == 0) //Directional
         {
@@ -70,7 +78,7 @@ void RayGenShader()
             ray.TMin = 0.001;
             ray.TMax = 1000.0;
 
-            TraceRay(g_TLAS, RAY_FLAG_FORCE_OPAQUE | RAY_FLAG_SKIP_CLOSEST_HIT_SHADER, 0xFF, 0, 1, 0, ray, payload);
+            TraceRay(g_TLAS, RayFlags, 0xFF, 0, 1, 0, ray, payload);
 
             if(payload.Missed)
             {
@@ -82,24 +90,26 @@ void RayGenShader()
             float3 lightPosition = transpose(lightTransform)[3].xyz;
             lightDirection = lightPosition - worldPosition;
             float distance = length(lightDirection);
-            
-            lightDirection /= distance;
-            
-            float NdotL = saturate(dot(normal.xyz, lightDirection));
-            
-            RayDesc ray;
-            ray.Origin = worldPosition;
-            ray.Direction = lightDirection;
-            ray.TMin = 0.001;
-            ray.TMax = min(distance, light.Radius);
+            lightDirection /= distance; //Normalize
 
-            TraceRay(g_TLAS, RAY_FLAG_FORCE_OPAQUE | RAY_FLAG_SKIP_CLOSEST_HIT_SHADER, 0xFF, 0, 1, 0, ray, payload);
-
-            if(payload.Missed)
+            if(distance <= light.Radius)
             {
-                float attenuation = 1.0 / (A0 + A1 * distance + A2 * distance * distance);
-                attenuation *= smoothstep(light.Radius, 0.0, distance);
-                radiance += normalize(light.Color) * light.Intensity * attenuation * NdotL;
+                float NdotL = saturate(dot(normal.xyz, lightDirection));
+                
+                RayDesc ray;
+                ray.Origin = worldPosition;
+                ray.Direction = lightDirection;
+                ray.TMin = 0.001;
+                ray.TMax = min(distance, light.Radius);
+
+                TraceRay(g_TLAS, RayFlags, 0xFF, 0, 1, 0, ray, payload);
+
+                if(payload.Missed)
+                {
+                    float attenuation = 1.0 / (A0 + A1 * distance + A2 * distance * distance);
+                    attenuation *= smoothstep(light.Radius, 0.0, distance);
+                    radiance += normalize(light.Color) * light.Intensity * attenuation * NdotL;
+                }
             }
         }
         else if(light.Type == 2) //Spot
@@ -108,27 +118,29 @@ void RayGenShader()
             lightDirection = lightPosition - worldPosition;
             float3 spotLightForward = GetForwardVector(lightTransform);
             float distance = length(lightDirection);
-            
-            lightDirection /= distance;
-            
-            float NdotL = saturate(dot(normal.xyz, lightDirection));
-            
-            RayDesc ray;
-            ray.Origin = worldPosition;
-            ray.Direction = lightDirection;
-            ray.TMin = 0.001;
-            ray.TMax = min(distance, light.Radius);
+            lightDirection /= distance; //Normalize
 
-            TraceRay(g_TLAS, RAY_FLAG_FORCE_OPAQUE | RAY_FLAG_SKIP_CLOSEST_HIT_SHADER, 0xFF, 0, 1, 0, ray, payload);
-
-            if(payload.Missed)
+            if(distance <= light.Radius)
             {
-                float spotDot = dot(lightDirection, normalize(-spotLightForward));
-                float spotFalloff = smoothstep(cos(radians(light.OuterCone)), cos(radians(light.InnerCone)), spotDot);
-                spotFalloff = pow(spotFalloff, light.Sharpness);
-                float attenuation = 1.0 / (A0 + A1 * distance + A2 * distance * distance);
-                attenuation *= smoothstep(light.Radius, 0.0, distance);
-                radiance += normalize(light.Color) * light.Intensity * attenuation * spotFalloff * NdotL;
+                float NdotL = saturate(dot(normal.xyz, lightDirection));
+                
+                RayDesc ray;
+                ray.Origin = worldPosition;
+                ray.Direction = lightDirection;
+                ray.TMin = 0.001;
+                ray.TMax = min(distance, light.Radius);
+
+                TraceRay(g_TLAS, RayFlags, 0xFF, 0, 1, 0, ray, payload);
+
+                if(payload.Missed)
+                {
+                    float spotDot = dot(lightDirection, normalize(-spotLightForward));
+                    float spotFalloff = smoothstep(cos(radians(light.OuterCone)), cos(radians(light.InnerCone)), spotDot);
+                    spotFalloff = pow(spotFalloff, light.Softness);
+                    float attenuation = 1.0 / (A0 + A1 * distance + A2 * distance * distance);
+                    attenuation *= smoothstep(light.Radius, 0.0, distance);
+                    radiance += normalize(light.Color) * light.Intensity * attenuation * spotFalloff * NdotL;
+                }
             }
         }
         
