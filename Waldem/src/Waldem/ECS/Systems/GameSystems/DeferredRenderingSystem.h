@@ -24,11 +24,7 @@ namespace Waldem
     {
         RenderTarget* TargetRT = nullptr;
         Texture2D* DummyTexture = nullptr;
-        RenderTarget* WorldPositionRT = nullptr;
-        RenderTarget* NormalRT = nullptr;
-        RenderTarget* ColorRT = nullptr;
-        RenderTarget* ORMRT = nullptr;
-        RenderTarget* DepthRT = nullptr;
+        RenderTarget* AlbedoRT = nullptr;
         RenderTarget* RadianceRT = nullptr;
         RenderTarget* MeshIDRT = nullptr;
         //Deferred rendering pass
@@ -59,34 +55,17 @@ namespace Waldem
             TargetRT = resourceManager->GetRenderTarget("TargetRT");
             RadianceRT = resourceManager->GetRenderTarget("RadianceRT");
             
-            WorldPositionRT = resourceManager->GetRenderTarget("WorldPositionRT");
-            NormalRT = resourceManager->GetRenderTarget("NormalRT");
-            ColorRT = resourceManager->GetRenderTarget("ColorRT");
-            ORMRT = resourceManager->GetRenderTarget("ORMRT");
+            AlbedoRT = resourceManager->GetRenderTarget("ColorRT");
             MeshIDRT = resourceManager->GetRenderTarget("MeshIDRT");
-            DepthRT = resourceManager->GetRenderTarget("DepthRT");
 
             //Deferred rendering pass
             WArray<Resource> deferredRenderingPassResources;
-            WArray<LightTransformData> LightTransformDatas;
-            for (auto [entity, light, transform] : ECSManager->EntitiesWith<Light, Transform>())
-            {
-                LightTransformDatas.Add({ light.Type, transform.GetForwardVector(), Vector4(transform.Position, 1.0f) });
-            }
-            deferredRenderingPassResources.Add(Resource("ComparisonSampler", { Sampler( COMPARISON_MIN_MAG_MIP_LINEAR, WRAP, WRAP, WRAP, LESS_EQUAL) }, 1));
-            if(!LightTransformDatas.IsEmpty())
-                deferredRenderingPassResources.Add(Resource("LightTransformDatas", RTYPE_Buffer, nullptr, sizeof(LightTransformData), LightTransformDatas.GetSize(), 0));
-            deferredRenderingPassResources.Add(Resource("WorldPosition", WorldPositionRT, 1));
-            deferredRenderingPassResources.Add(Resource("Normal", NormalRT, 2));
-            deferredRenderingPassResources.Add(Resource("Color", ColorRT, 3));
-            deferredRenderingPassResources.Add(Resource("ORMRT", ORMRT, 4));
-            deferredRenderingPassResources.Add(Resource("MeshIDRT", MeshIDRT, 5));
-            deferredRenderingPassResources.Add(Resource("DepthRT", DepthRT, 6));
-            deferredRenderingPassResources.Add(Resource("RadianceRT", RadianceRT, 7));
+            deferredRenderingPassResources.Add(Resource("AlbedoRT", AlbedoRT, 0));
+            deferredRenderingPassResources.Add(Resource("MeshIDRT", MeshIDRT, 1));
+            deferredRenderingPassResources.Add(Resource("RadianceRT", RadianceRT, 2));
             deferredRenderingPassResources.Add(Resource("TargetRT", TargetRT, 0, true));
             deferredRenderingPassResources.Add(Resource("HoveredMeshes", RTYPE_RWBuffer, nullptr, sizeof(int), sizeof(int), 1));
-            deferredRenderingPassResources.Add(Resource("MyConstantBuffer", RTYPE_ConstantBuffer, nullptr, sizeof(DefferedContantData), sizeof(DefferedContantData), 0));
-            deferredRenderingPassResources.Add(Resource("RootConstants", RTYPE_Constant, nullptr, sizeof(float) * 2, sizeof(float) * 2, 1));
+            deferredRenderingPassResources.Add(Resource("RootConstants", RTYPE_Constant, nullptr, sizeof(float) * 2, sizeof(float) * 2, 0));
             DeferredRenderingRootSignature = Renderer::CreateRootSignature(deferredRenderingPassResources);
             DeferredRenderingComputeShader = Renderer::LoadComputeShader("DeferredRendering");
             DeferredRenderingPipeline = Renderer::CreateComputePipeline("DeferredLightingPipeline", DeferredRenderingRootSignature, DeferredRenderingComputeShader);
@@ -96,26 +75,6 @@ namespace Waldem
 
         void Update(float deltaTime) override
         {
-            WArray<LightTransformData> LightTransformDatas;
-            for (auto [entity, light, transform] : ECSManager->EntitiesWith<Light, Transform>())
-            {
-                LightTransformDatas.Add({ light.Type, transform.GetForwardVector(), Vector4(transform.Position, 1.0f) });
-            }
-            if(!LightTransformDatas.IsEmpty())
-                DeferredRenderingRootSignature->UpdateResourceData("LightTransformDatas", LightTransformDatas.GetData());
-            
-            for (auto [entity, camera, mainCamera, cameraTransform] : ECSManager->EntitiesWith<Camera, EditorCamera, Transform>())
-            {
-                ConstantData.view = camera.ViewMatrix;
-                ConstantData.proj = camera.ProjectionMatrix;
-                ConstantData.invView = cameraTransform.Matrix;
-                ConstantData.invProj = inverse(camera.ProjectionMatrix);
-
-                break;
-            }
-            ConstantData.NumLights = LightTransformDatas.GetSize();
-            DeferredRenderingRootSignature->UpdateResourceData("MyConstantBuffer", &ConstantData);
-            
             Renderer::ResourceBarrier(TargetRT, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
             Renderer::SetPipeline(DeferredRenderingPipeline);
             Renderer::SetRootSignature(DeferredRenderingRootSignature);

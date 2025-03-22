@@ -1,5 +1,7 @@
 WALDEM ENGINE
 
+![img.png](img.png)
+
 Architecture:
 * ECS
 * Renderer abstraction

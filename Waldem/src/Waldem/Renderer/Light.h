@@ -21,18 +21,42 @@ namespace Waldem
     
     struct Light
     {
-        Light(Vector3 color, float intensity, LightType type, float radius)
+        //Directional
+        Light(Vector3 color, float intensity)
         {
             Color = color;
             Intensity = intensity;
-            Type = type;
+            Type = LightType::Directional;
+        }
+
+        //Point
+        Light(Vector3 color, float intensity, float radius)
+        {
+            Color = color;
+            Intensity = intensity;
+            Type = LightType::Point;
             Radius = radius;
+        }
+
+        //Spot
+        Light(Vector3 color, float intensity, float radius, float innerCone, float outerCone, float sharpness)
+        {
+            Color = color;
+            Intensity = intensity;
+            Type = LightType::Spot;
+            Radius = radius;
+            InnerCone = innerCone;
+            OuterCone = outerCone;
+            Sharpness = sharpness;
         }
         
         Vector3 Color;
         float Intensity;
         LightType Type;
         float Radius;
-        Vector2 Padding1;
+        float InnerCone;
+        float OuterCone;
+        float Sharpness;
+        Vector3 Padding1;
     };
 }
