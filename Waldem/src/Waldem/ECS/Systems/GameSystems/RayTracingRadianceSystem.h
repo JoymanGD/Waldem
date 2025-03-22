@@ -16,7 +16,7 @@ namespace Waldem
         int NumLights;
     };
     
-    class WALDEM_API RayTracingShadowsSystem : ISystem
+    class WALDEM_API RayTracingRadianceSystem : ISystem
     {
         RenderTarget* RadianceRT = nullptr;
         Pipeline* RTPipeline = nullptr;
@@ -28,7 +28,7 @@ namespace Waldem
         WArray<RayTracingInstance> Instances;
         
     public:
-        RayTracingShadowsSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
+        RayTracingRadianceSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
         
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
         {
@@ -69,7 +69,7 @@ namespace Waldem
             rtResources.Add(Resource("ShadowsRT", RadianceRT, 0, true));
             rtResources.Add(Resource("MyConstantBuffer", RTYPE_ConstantBuffer, nullptr, sizeof(RayTracingSceneData), sizeof(RayTracingSceneData), 0)); 
             RTRootSignature = Renderer::CreateRootSignature(rtResources);
-            RTShader = Renderer::LoadRayTracingShader("RayTracing/TestRayTracingShader");
+            RTShader = Renderer::LoadRayTracingShader("RayTracing/Radiance");
             RTPipeline = Renderer::CreateRayTracingPipeline("PostProcessPipeline", RTRootSignature, RTShader);
         }
 

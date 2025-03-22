@@ -169,6 +169,7 @@
     <ClInclude Include="src\Waldem.h" />
     <ClInclude Include="src\Waldem\Application.h" />
     <ClInclude Include="src\Waldem\Core.h" />
+    <ClInclude Include="src\Waldem\ECS\Components\BloomPostProcess.h" />
     <ClInclude Include="src\Waldem\ECS\Components\ColliderComponent.h" />
     <ClInclude Include="src\Waldem\ECS\Components\EditorCamera.h" />
     <ClInclude Include="src\Waldem\ECS\Components\Guizmo.h" />
@@ -188,6 +189,7 @@
     <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\IWidgetContainerSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\MainWidgetContainer.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\WidgetSystem.h" />
+    <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\Widgets\ComponentWidgets\BloomWidget.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\Widgets\ComponentWidgets\LightWidget.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\Widgets\ComponentWidgets\OceanComponentWidget.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\Widgets\ComponentWidgets\TransformComponentWidget.h" />
@@ -200,7 +202,7 @@
     <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\OceanSimulationSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\PhysicsSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\PostProcessSystem.h" />
-    <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\RayTracingShadowsSystem.h" />
+    <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\RayTracingRadianceSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\ScreenQuadSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\GameSystems\ShadowmapRenderingSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\System.h" />
@@ -915,7 +917,7 @@
       <ShaderModel>6.5</ShaderModel>
       <EntryPointName>main</EntryPointName>
     </FxCompile>
-    <FxCompile Include="src\Shaders\RayTracing\TestRayTracingShader.rtx.hlsl">
+    <FxCompile Include="src\Shaders\RayTracing\Radiance.rtx.hlsl">
       <ExcludedFromBuild>true</ExcludedFromBuild>
       <ShaderModel>6.5</ShaderModel>
     </FxCompile>

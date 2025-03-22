@@ -3,7 +3,7 @@
 
 SamplerState myStaticSampler : register(s0);
 
-Texture2D TargetRTBack : register(t0);
+Texture2D<float4> TargetRTBack : register(t0);
 RWTexture2D<float4> TargetRT : register(u0);
 
 cbuffer MyConstantBuffer : register(b0)
@@ -27,22 +27,24 @@ float4 BloomEffect(float2 uv)
 
     // 2. Gaussian Blur (dual filtering)
     float4 blurredColor = float4(0, 0, 0, 0);
-    // float weights[10] = { 0.227, 0.194, 0.121, 0.054, 0.016, 0.009, 0.004, 0.002, 0.001, 0.0005 };
-    float weights[5] = { 0.227, 0.194, 0.121, 0.054, 0.016 };
+    float weights[10] = { 0.227, 0.194, 0.121, 0.054, 0.016, 0.009, 0.004, 0.002, 0.001, 0.0005 };
+    // float weights[5] = { 0.227, 0.194, 0.121, 0.054, 0.016 };
 
     // Horizontal and Vertical blur in one pass
-    for (int i = 0; i < 5; ++i)
+    for (int i = 0; i < 10; ++i)
     {
-        float2 offsetH = float2(TexelSize.x * i, 0);
-        float2 offsetV = float2(0, TexelSize.y * i);
+        float2 offsetH = float2(TexelSize.x * (float)i, 0);
+        float2 offsetV = float2(0, TexelSize.y * (float)i);
 
         blurredColor += TargetRTBack.SampleLevel(myStaticSampler, uv + offsetH, 0) * weights[i];
         blurredColor += TargetRTBack.SampleLevel(myStaticSampler, uv - offsetH, 0) * weights[i];
         blurredColor += TargetRTBack.SampleLevel(myStaticSampler, uv + offsetV, 0) * weights[i];
         blurredColor += TargetRTBack.SampleLevel(myStaticSampler, uv - offsetV, 0) * weights[i];
     }
+    
+    float4 bloom = brightColor * blurredColor * BloomIntensity;
 
-    return blurredColor;
+    return bloom;
 }
 
 [numthreads(8, 8, 1)]
@@ -51,14 +53,14 @@ void main(uint2 tid : SV_DispatchThreadID)
     float2 UV = (float2)tid / Resolution;
     
     // // Compute the bloom effect
-    // float4 bloom = BloomEffect(UV);
+    float4 bloom = BloomEffect(UV);
     //
     // // Combine bloom with the original scene
-    // float4 originalColor = TargetRTBack.SampleLevel(myStaticSampler, UV, 0);
-    // float4 finalColor = originalColor + bloom * BloomIntensity;
+    float4 originalColor = TargetRTBack.SampleLevel(myStaticSampler, UV, 0);
+    float4 finalColor = originalColor + bloom;
     //
     // //Writing the result to the render target
-    // TargetRT[tid] = finalColor;
+    TargetRT[tid] = finalColor;
     
-    TargetRT[tid] = TargetRTBack.SampleLevel(myStaticSampler, UV, 0);
+    // TargetRT[tid] = TargetRTBack.Sample(myStaticSampler, UV);
 }
