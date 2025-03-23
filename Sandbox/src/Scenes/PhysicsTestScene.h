@@ -33,7 +33,7 @@ namespace Sandbox
 				entity.Add<Waldem::MeshComponent>(mesh);
 				entity.Add<Waldem::Transform>(mesh->ObjectMatrix);
 				entity.Add<Waldem::PhysicsComponent>();
-				entity.Add<Waldem::ColliderComponent>(Waldem::WD_COLLIDER_TYPE_MESH, Waldem::MeshColliderData{ *mesh });
+				entity.Add<Waldem::ColliderComponent>(Waldem::WD_COLLIDER_TYPE_MESH, Waldem::MeshColliderData{ mesh });
 			}
 			
 			auto dirLightEntity = ecsManager->CreateEntity("DirectionalLight");

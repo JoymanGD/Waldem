@@ -150,7 +150,7 @@ namespace Waldem
                     if (GJK(collider1, collider2, worldTransformA, worldTransformB))
                     {
                         // WD_CORE_INFO("Collision detected between {0} and {1}", collider1->MeshData.Mesh.Name, collider2->MeshData.Mesh.Name);
-                        collider1->IsColliding = true; 
+                        collider1->IsColliding = true;
                         collider2->IsColliding = true;
                     }
                 }
@@ -167,8 +167,13 @@ namespace Waldem
 
             for (auto [transformEntity, transform, collider, meshComponent] : ECSManager->EntitiesWith<Transform, ColliderComponent, MeshComponent>())
             {
-                boundingBoxes.Add(meshComponent.Mesh->BBox);
+                boundingBoxes.Add(meshComponent.Mesh->BBox.GetTransformed(transform));
                 names.Add(meshComponent.Mesh->Name);
+            }
+
+            if(boundingBoxes.IsEmpty())
+            {
+                return;
             }
             
             RootNode = BuildBVH(boundingBoxes, names, 0, boundingBoxes.Num());
@@ -186,6 +191,11 @@ namespace Waldem
                 collider.IsColliding = false;
                 colliders.Add(&collider);
                 transforms.Add(transform);
+            }
+
+            if(boundingBoxes.IsEmpty())
+            {
+                return;
             }
 
             UpdateBVH(RootNode, boundingBoxes);

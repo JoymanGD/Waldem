@@ -35,7 +35,7 @@ namespace Waldem
 
     struct MeshColliderData
     {
-        CMesh Mesh;
+        CMesh* Mesh;
     };
 
     struct BoxColliderData
@@ -72,7 +72,7 @@ namespace Waldem
                     Vector3 maxPoint = Vector3(0.0f);
                     float maxDistance = -FLT_MAX;
 
-                    for(Vector3 vertex : MeshData.Mesh.Positions)
+                    for(Vector3& vertex : MeshData.Mesh->Positions)
                     {
                         Vector3 transformedPosition = worldTransform.Matrix * Vector4(vertex, 1.0f);
                         

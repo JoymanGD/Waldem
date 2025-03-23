@@ -102,19 +102,19 @@ namespace Waldem
                 Renderer::SetPipeline(MeshCollidersRenderingPipeline);
                 Renderer::SetRootSignature(MeshCollidersRenderingRootSignature);
                 MeshCollidersRenderingRootSignature->UpdateResourceData("RootConstants", &MeshColliderRenderingConstants);
-                Renderer::Draw(&collider.MeshData.Mesh);
+                Renderer::Draw(collider.MeshData.Mesh);
                 
                 lines.AddRange(meshComponent.Mesh->BBox.GetTransformed(transform).GetLines(color));
             }
+
+            Renderer::UpdateBuffer(LMesh.VertexBuffer, lines.GetData(), sizeof(Line) * lines.Num());
+            Renderer::SetPipeline(AABBRenderingPipeline);
+            Renderer::SetRootSignature(AABBRenderingRootSignature);
+            AABBRenderingRootSignature->UpdateResourceData("RootConstants", &viewProj);
+            Renderer::Draw(&LMesh);
             
             Renderer::SetRenderTargets({});
             Renderer::ResourceBarrier(DepthRT, DEPTH_WRITE, ALL_SHADER_RESOURCE);
-
-            // Renderer::UpdateBuffer(LMesh.VertexBuffer, lines.GetData(), sizeof(Line) * lines.Num());
-            // Renderer::SetPipeline(AABBRenderingPipeline);
-            // Renderer::SetRootSignature(AABBRenderingRootSignature);
-            // AABBRenderingRootSignature->UpdateResourceData("RootConstants", &viewProj);
-            // Renderer::Draw(&LMesh);
         }
     };
 }

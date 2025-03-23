@@ -6,7 +6,7 @@ namespace Waldem
     {
     private:
         std::array<Vector3, 4> Points;
-        unsigned Size;
+        int Size;
 
     public:
         Simplex() : Points({Vector3(0), Vector3(0), Vector3(0), Vector3(0)}), Size(0) {}
@@ -26,12 +26,12 @@ namespace Waldem
         void Add(const Vector3& point)
         {
             Points = { point, Points[0], Points[1], Points[2] };
-            Size = std::min(Size + 1, 4u);
+            Size = std::min(Size + 1, 4);
         }
 
-        Vector3& operator[](unsigned i) { return Points[i]; }
+        Vector3& operator[](int i) { return Points[i]; }
 
-        unsigned Num() const { return Size; }
+        int Num() const { return Size; }
 
         auto begin() const { return Points.begin(); }
         auto end() const { return Points.end() - (4 - Size); }
