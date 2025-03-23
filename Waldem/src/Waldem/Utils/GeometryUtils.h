@@ -48,7 +48,8 @@ namespace Waldem
 
             if(SameDirection(ab, ao))
             {
-                direction = cross(cross(ab, ao), ab);
+                Vector3 ABCrossAO = cross(ab, ao);
+                direction = cross(ABCrossAO, ab);
             }
             else
             {
@@ -140,7 +141,7 @@ namespace Waldem
             return true;
         }
 
-        static bool NextSimplex(Simplex& points, Vector3 direction)
+        static bool NextSimplex(Simplex& points, Vector3& direction)
         {
             switch(points.Num())
             {

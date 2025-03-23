@@ -40,8 +40,6 @@ namespace Sandbox
 				Waldem::Transform transform = mesh->ObjectMatrix;
 				transform.Translate({50, 0, 0});
 				entity.Add<Waldem::Transform>(transform);
-				// entity.Add<Waldem::PhysicsComponent>();
-				// entity.Add<Waldem::IColliderComponent>(Waldem::MeshColliderComponent(mesh));
 			}
 
 			//water plane
