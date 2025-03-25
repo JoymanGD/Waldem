@@ -8,5 +8,7 @@ namespace Waldem
     {
     public:
         IWidgetSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
+        virtual String GetName() = 0;
+        virtual bool IsVisible() { return true; }
     };
 }

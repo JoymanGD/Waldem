@@ -38,14 +38,14 @@ namespace Waldem
 
             MainWidgetContainerSystem = new MainWidgetContainer(CurrentECSManager,
             {
+                new HierarchyWidget(CurrentECSManager),
                 new EntityDetailsWidgetContainer(CurrentECSManager,
                 {
-                    new OceanComponentWidget(CurrentECSManager),
                     new TransformComponentWidget(CurrentECSManager),
+                    new OceanComponentWidget(CurrentECSManager),
                     new LightWidget(CurrentECSManager),
                     new BloomWidget(CurrentECSManager),
                 }),
-                new HierarchyWidget(CurrentECSManager)
             });
             
             UISystems.Add(new GuizmoEditorSystem(CurrentECSManager));
@@ -148,7 +148,7 @@ namespace Waldem
                 }
                 ImGui::EndMainMenuBar();
             }
-            
+
             MainWidgetContainerSystem->Update(deltaTime);
             
             for (ISystem* system : UISystems)
