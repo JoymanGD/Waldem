@@ -190,6 +190,7 @@
     <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\MainWidgetContainer.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\WidgetSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\Widgets\ComponentWidgets\BloomWidget.h" />
+    <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\Widgets\ComponentWidgets\ColliderComponentWidget.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\Widgets\ComponentWidgets\LightWidget.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\Widgets\ComponentWidgets\OceanComponentWidget.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\EditorSystems\Widgets\ComponentWidgets\TransformComponentWidget.h" />
