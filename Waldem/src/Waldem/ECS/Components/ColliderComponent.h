@@ -1,14 +1,16 @@
 #pragma once
 
 #include "Waldem/Renderer/Model/Mesh.h"
+#include <execution>
+#include <mutex>
 
 namespace Waldem
 {
     enum ColliderType
     {
         WD_COLLIDER_TYPE_NONE = 0,
-        WD_COLLIDER_TYPE_BOX = 1,
-        WD_COLLIDER_TYPE_SPHERE = 2,
+        WD_COLLIDER_TYPE_SPHERE = 1,
+        WD_COLLIDER_TYPE_BOX = 2,
         WD_COLLIDER_TYPE_CAPSULE = 3,
         WD_COLLIDER_TYPE_MESH = 4
     };
@@ -24,23 +26,23 @@ namespace Waldem
 
     struct SphereColliderData
     {
-        float Radius;
+        float Radius = 1;
     };
 
     struct CapsuleColliderData
     {
-        float Radius;
-        float Height;
+        float Radius = 1;
+        float Height = 1;
     };
 
     struct MeshColliderData
     {
-        CMesh* Mesh;
+        CMesh* Mesh = nullptr;
     };
 
     struct BoxColliderData
     {
-        Vector3 Size;
+        Vector3 Size = { 1, 1, 1 };
     };
     
     struct ColliderComponent
@@ -64,30 +66,48 @@ namespace Waldem
             switch (Type)
             {
                 case WD_COLLIDER_TYPE_SPHERE:
-                    return Vector3(0.0f);
+                {
+                    return worldTransform.Position + normalize(dir) * SphereData.Radius;
+                }
                 case WD_COLLIDER_TYPE_CAPSULE:
-                    return Vector3(0.0f);
+                {
+                    Vector3 top = worldTransform.Matrix * Vector4(0, CapsuleData.Height * 0.5f, 0, 1);
+                    Vector3 bottom = worldTransform.Matrix * Vector4(0, -CapsuleData.Height * 0.5f, 0, 1);
+                    Vector3 furthestEnd = (dot(top, dir) > dot(bottom, dir)) ? top : bottom;
+                    return furthestEnd + normalize(dir) * CapsuleData.Radius;
+                }
+                case WD_COLLIDER_TYPE_BOX:
+                {
+                    Vector3 transformedSize = worldTransform.Matrix * Vector4(BoxData.Size, 1.0f);
+                        
+                    Vector3 localFurthest = Vector3(
+                        (dir.x >= 0.0f) ? transformedSize.x : -transformedSize.x,
+                        (dir.y >= 0.0f) ? transformedSize.y : -transformedSize.y,
+                        (dir.z >= 0.0f) ? transformedSize.z : -transformedSize.z
+                    );
+                    return localFurthest;
+                }
                 case WD_COLLIDER_TYPE_MESH:
                 {
                     Vector3 maxPoint = Vector3(0.0f);
                     float maxDistance = -FLT_MAX;
-
-                    for(Vector3& vertex : MeshData.Mesh->Positions)
+                    std::mutex mtx;
+                    
+                    std::for_each(std::execution::par, MeshData.Mesh->Positions.begin(), MeshData.Mesh->Positions.end(), [&](Vector3& vertex)
                     {
                         Vector3 transformedPosition = worldTransform.Matrix * Vector4(vertex, 1.0f);
-                        
                         float distance = dot(transformedPosition, dir);
+                    
                         if (distance > maxDistance)
                         {
+                            std::lock_guard lock(mtx);
                             maxDistance = distance;
                             maxPoint = transformedPosition;
                         }
-                    }
-
+                    });
+                    
                     return maxPoint;
                 }
-                case WD_COLLIDER_TYPE_BOX:
-                    return Vector3(0.0f);
             }
         }
 

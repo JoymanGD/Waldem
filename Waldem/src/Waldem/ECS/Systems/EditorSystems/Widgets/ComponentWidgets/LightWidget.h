@@ -8,6 +8,7 @@ namespace Waldem
 {
     class WALDEM_API LightWidget : public IWidgetSystem
     {
+    private:
         const char* lightTypeNames[4] = { "Directional", "Point", "Spot", "Area" };
     public:
         LightWidget(ecs::Manager* eCSManager) : IWidgetSystem(eCSManager) {}

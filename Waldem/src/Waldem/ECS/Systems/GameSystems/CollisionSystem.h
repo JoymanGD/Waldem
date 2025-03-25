@@ -145,14 +145,10 @@ namespace Waldem
                 Transform& worldTransformA = transforms[collision.first];
                 Transform& worldTransformB = transforms[collision.second];
                 
-                if (collider1->Type == WD_COLLIDER_TYPE_MESH && collider2->Type == WD_COLLIDER_TYPE_MESH)
+                if (GJK(collider1, collider2, worldTransformA, worldTransformB))
                 {
-                    if (GJK(collider1, collider2, worldTransformA, worldTransformB))
-                    {
-                        // WD_CORE_INFO("Collision detected between {0} and {1}", collider1->MeshData.Mesh.Name, collider2->MeshData.Mesh.Name);
-                        collider1->IsColliding = true;
-                        collider2->IsColliding = true;
-                    }
+                    collider1->IsColliding = true;
+                    collider2->IsColliding = true;
                 }
             }
         }
