@@ -7,6 +7,8 @@ namespace Waldem
     class WALDEM_API MainWidgetContainer : public IWidgetContainerSystem
     {
     public:
-        MainWidgetContainer(ecs::Manager* eCSManager, WArray<ISystem*> children) : IWidgetContainerSystem(eCSManager, children) {}
+        MainWidgetContainer(ecs::Manager* eCSManager, WArray<IWidgetSystem*> children) : IWidgetContainerSystem(eCSManager, children) {} 
+
+        String GetName() override { return "MainWidgetContainer"; } 
     };
 }

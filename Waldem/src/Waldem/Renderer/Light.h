@@ -51,12 +51,12 @@ namespace Waldem
         }
         
         Vector3 Color;
-        float Intensity;
-        LightType Type;
-        float Radius;
+        float Intensity = 10;
+        LightType Type = LightType::Directional;
+        float Radius = 10;
         float InnerCone = 1; 
-        float OuterCone;
-        float Softness;
+        float OuterCone = 45;
+        float Softness = 0.001f;
         float AreaWidth;
         float AreaHeight;
         bool AreaTwoSided;

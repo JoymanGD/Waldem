@@ -13,17 +13,16 @@ namespace Waldem
         
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override {}
 
+        String GetName() override { return "Bloom"; }
+        bool IsVisible() override { return ECSManager->EntitiesWith<BloomPostProcess, Selected>().Count() > 0; }
+
         void Update(float deltaTime) override
         {
             for (auto [transformEntity, bloom, selected] : ECSManager->EntitiesWith<BloomPostProcess, Selected>())
             {
-                if (ImGui::Begin("Bloom"))
-                {
-                    ImGui::SliderFloat("Bloom Threshold", &bloom.BrightThreshold, 0.0f, 2.0f);
-                    ImGui::SliderFloat("Bloom Intensity", &bloom.BloomIntensity, 0.0f, 10.0f);
-                    ImGui::SliderFloat2("Texel Size", &bloom.TexelSize.x, 0.0f, 1.0f);
-                    ImGui::End();
-                }
+                ImGui::SliderFloat("Bloom Threshold", &bloom.BrightThreshold, 0.0f, 2.0f);
+                ImGui::SliderFloat("Bloom Intensity", &bloom.BloomIntensity, 0.0f, 10.0f);
+                ImGui::SliderFloat2("Texel Size", &bloom.TexelSize.x, 0.0f, 1.0f);
             }
         }
     };

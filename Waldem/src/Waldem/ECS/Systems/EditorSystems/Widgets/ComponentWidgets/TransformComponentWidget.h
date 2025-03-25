@@ -11,27 +11,26 @@ namespace Waldem
     public:
         TransformComponentWidget(ecs::Manager* eCSManager) : IWidgetSystem(eCSManager) {}
 
+        String GetName() override { return "Transform"; }
+        bool IsVisible() override { return ECSManager->EntitiesWith<Transform, Selected>().Count() > 0; }
+
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override {}
 
         void Update(float deltaTime) override
         {
             for (auto [transformEntity, transform, selected] : ECSManager->EntitiesWith<Transform, Selected>())
             {
-                if (ImGui::Begin("Transform"))
-                {
-                    Vector3 cachedPosition = transform.Position;
-                    Quaternion cachedRotation = transform.Rotation;
-                    Vector3 cachedScale = transform.LocalScale;
-                    
-                    ImGui::InputFloat3("Position", &transform.Position.x);
-                    ImGui::InputFloat3("Rotation", &transform.Rotation.x);
-                    ImGui::InputFloat3("Scale", &transform.LocalScale.x);
-                    ImGui::End();
+                Vector3 cachedPosition = transform.Position;
+                Quaternion cachedRotation = transform.Rotation;
+                Vector3 cachedScale = transform.LocalScale;
+                
+                ImGui::DragFloat3("Position", &transform.Position.x);
+                ImGui::DragFloat3("Rotation", &transform.Rotation.x);
+                ImGui::DragFloat3("Scale", &transform.LocalScale.x);
 
-                    if(cachedPosition != transform.Position || cachedRotation != transform.Rotation || cachedScale != transform.LocalScale)
-                    {
-                        transform.Update();
-                    }
+                if(cachedPosition != transform.Position || cachedRotation != transform.Rotation || cachedScale != transform.LocalScale)
+                {
+                    transform.Update();
                 }
             }
         }
