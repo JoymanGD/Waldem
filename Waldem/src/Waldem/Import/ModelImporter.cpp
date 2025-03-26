@@ -158,7 +158,7 @@ namespace Waldem
                 uint32_t vertexBufferSize = vertexBufferData.Num() * sizeof(Vertex);
                 uint32_t indexBufferSize = indexBufferData.Num() * sizeof(uint32_t);
                 AABB bBox { Vector3(assimpMesh->mAABB.mMin.x, assimpMesh->mAABB.mMin.y, assimpMesh->mAABB.mMin.z), Vector3(assimpMesh->mAABB.mMax.x, assimpMesh->mAABB.mMax.y, assimpMesh->mAABB.mMax.z)};
-                CMesh* mesh = new CMesh(vertexBufferData.GetData(), vertexBufferSize, indexBufferData.GetData(), indexBufferSize, positions, mat, bBox, assimpMesh->mName.C_Str(), modelMatrix);
+                CMesh* mesh = new CMesh(vertexBufferData.GetData(), vertexBufferSize, indexBufferData.GetData(), indexBufferSize, positions, indexBufferData, mat, bBox, assimpMesh->mName.C_Str(), modelMatrix);
                 result->AddMesh(mesh);
             }
         }

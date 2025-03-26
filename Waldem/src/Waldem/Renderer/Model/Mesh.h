@@ -23,14 +23,15 @@ namespace Waldem
     {
     public:
         CMesh() = default;
-        CMesh(const CMesh& other) : VertexBuffer(other.VertexBuffer), IndexBuffer(other.IndexBuffer), CurrentMaterial(other.CurrentMaterial), Positions(other.Positions), BBox(other.BBox), ObjectMatrix(other.ObjectMatrix), Name(other.Name) {}
-        CMesh(void* vertexBufferData, uint32_t vertexBufferDataSize, uint32_t* indexBufferData, uint32_t indexBufferDataSize, WArray<Vector3> positions, Material* material, AABB bBox, String name = "", Matrix4 objectMatrix = glm::identity<Matrix4>());
+        CMesh(const CMesh& other) : VertexBuffer(other.VertexBuffer), IndexBuffer(other.IndexBuffer), CurrentMaterial(other.CurrentMaterial), Vertices(other.Vertices), BBox(other.BBox), ObjectMatrix(other.ObjectMatrix), Name(other.Name) {}
+        CMesh(void* vertexBufferData, uint32_t vertexBufferDataSize, uint32_t* indexBufferData, uint32_t indexBufferDataSize, WArray<Vector3> positions, WArray<uint> indices, Material* material, AABB bBox, String name = "", Matrix4 objectMatrix = glm::identity<Matrix4>());
         void SetMaterial(Material* material) { CurrentMaterial = material; }
 
         Buffer* VertexBuffer = nullptr;
         Buffer* IndexBuffer = nullptr;
         Material* CurrentMaterial = nullptr;
-        WArray<Vector3> Positions;
+        WArray<Vector3> Vertices;
+        WArray<uint> Indices;
         AABB BBox;
         Matrix4 ObjectMatrix;
         String Name;

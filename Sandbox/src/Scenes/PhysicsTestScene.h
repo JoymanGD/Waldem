@@ -8,7 +8,7 @@
 #include "Waldem/Renderer/Resources/ResourceManager.h"
 #include "Waldem/Import/ModelImporter.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
-#include "Waldem/ECS/Components/PhysicsComponent.h"
+#include "..\..\..\Waldem\src\Waldem\ECS\Components\RigidBody.h"
 #include "Waldem/Renderer/Light.h"
 #include "Waldem/Renderer/Model/Mesh.h"
 #include "Waldem/Types/MathTypes.h"
@@ -29,11 +29,13 @@ namespace Sandbox
 			int index = 0;
 			for (Waldem::CMesh* mesh : sceneModel->GetMeshes())
 			{
-				auto entity = ecsManager->CreateEntity("PhysicsTestScene_" + std::to_string(index++) + "_" + mesh->Name);
+				auto entity = ecsManager->CreateEntity("PhysicsTestScene_" + std::to_string(index) + "_" + mesh->Name);
 				entity.Add<Waldem::MeshComponent>(mesh);
 				entity.Add<Waldem::Transform>(mesh->ObjectMatrix);
-				entity.Add<Waldem::PhysicsComponent>();
-				entity.Add<Waldem::ColliderComponent>(Waldem::WD_COLLIDER_TYPE_MESH, Waldem::MeshColliderData{ mesh });
+				auto collider = Waldem::ColliderComponent(Waldem::WD_COLLIDER_TYPE_MESH, Waldem::MeshColliderData{ mesh });
+				entity.Add<Waldem::ColliderComponent>(collider);
+				entity.Add<Waldem::RigidBody>(index < 5, true, 1.0f, &collider); //we set first 5 meshes as kinematic since its floor and walls
+				index++;
 			}
 			
 			auto dirLightEntity = ecsManager->CreateEntity("DirectionalLight");
