@@ -16,15 +16,11 @@ namespace Waldem
     public:
         WArray() = default; 
 
-        explicit WArray(size_t size) 
-            : ArrayInternal(size) {} 
+        explicit WArray(size_t size) : ArrayInternal(size) {} 
 
-        WArray(size_t size, const T& defaultValue) 
-            : ArrayInternal(size, defaultValue) {} 
+        WArray(size_t size, const T& defaultValue) : ArrayInternal(size, defaultValue) {} 
 
-        WArray(std::initializer_list<T> initList) 
-            : ArrayInternal(initList) {} 
-
+        WArray(std::initializer_list<T> initList) : ArrayInternal(initList) {}
         
         T& operator[](size_t index)
         {
@@ -47,6 +43,12 @@ namespace Waldem
             if (index >= ArrayInternal.size()) throw std::out_of_range("Index out of bounds");
             return ArrayInternal[index];
         }
+
+        T* Find(const T& value)
+        {
+            auto it = std::find(ArrayInternal.begin(), ArrayInternal.end(), value);
+            return it != ArrayInternal.end() ? &(*it) : nullptr;
+        }
         
         size_t Num() const { return ArrayInternal.size(); }
         size_t Capacity() const { return ArrayInternal.capacity(); }
@@ -59,8 +61,10 @@ namespace Waldem
         size_t GetSize() const { return ArrayInternal.size() * sizeof(T); }
         
         size_t Add(const T& value) { ArrayInternal.push_back(value); return ArrayInternal.size() - 1; }
-
         size_t Add(T&& value) { ArrayInternal.push_back(std::move(value)); return ArrayInternal.size() - 1; }
+
+        void EmplaceBack(T& value) { ArrayInternal.emplace_back(value); }
+        void EmplaceBack(T&& value) { ArrayInternal.emplace_back(std::move(value)); }
 
         void AddRange(const WArray<T>& other)
         {
@@ -85,7 +89,7 @@ namespace Waldem
             ArrayInternal.erase(it, ArrayInternal.end());
         }
 
-        void PopBack()
+        void RemoveLast()
         {
             if (ArrayInternal.empty()) throw std::out_of_range("Cannot pop from an empty array");
             ArrayInternal.pop_back();

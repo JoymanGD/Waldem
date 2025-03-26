@@ -45,7 +45,7 @@ namespace Waldem
 			// DrawSystems.Add((ISystem*)new PostProcessSystem(ecsManager));
 			DrawSystems.Add((ISystem*)new ScreenQuadSystem(ecsManager));
 			DrawSystems.Add((ISystem*)new CollisionSystem(ecsManager));
-			// DrawSystems.Add((ISystem*)new PhysicsSystem(ecsManager));
+			DrawSystems.Add((ISystem*)new PhysicsSystem(ecsManager));
 		}
 
 		void OnUpdate(float deltaTime) override

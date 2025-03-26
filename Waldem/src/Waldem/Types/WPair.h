@@ -10,5 +10,10 @@ namespace Waldem
 
         WPair() = default;
         WPair(const T1& first, const T2& second) : key(first), value(second) {}
+
+        bool operator==(const WPair& other) const
+        {
+            return key == other.key && value == other.value;
+        }
     };
 }

@@ -4,6 +4,9 @@
 #include <execution>
 #include <mutex>
 
+#include "Waldem/Utils/PhysicsUtils.h"
+
+
 namespace Waldem
 {
     enum ColliderType
@@ -61,24 +64,24 @@ namespace Waldem
         ColliderComponent(ColliderType type, BoxColliderData data)
             : Type(type), BoxData(data) {}
 
-        Vector3 FindFurthestPoint(Vector3 dir, Transform& worldTransform) const
+        Vector3 FindFurthestPoint(Vector3 dir, Transform* worldTransform) const
         {
             switch (Type)
             {
                 case WD_COLLIDER_TYPE_SPHERE:
                 {
-                    return worldTransform.Position + normalize(dir) * SphereData.Radius;
+                    return worldTransform->Position + normalize(dir) * SphereData.Radius;
                 }
                 case WD_COLLIDER_TYPE_CAPSULE:
                 {
-                    Vector3 top = worldTransform.Matrix * Vector4(0, CapsuleData.Height * 0.5f, 0, 1);
-                    Vector3 bottom = worldTransform.Matrix * Vector4(0, -CapsuleData.Height * 0.5f, 0, 1);
+                    Vector3 top = worldTransform->Matrix * Vector4(0, CapsuleData.Height * 0.5f, 0, 1);
+                    Vector3 bottom = worldTransform->Matrix * Vector4(0, -CapsuleData.Height * 0.5f, 0, 1);
                     Vector3 furthestEnd = (dot(top, dir) > dot(bottom, dir)) ? top : bottom;
                     return furthestEnd + normalize(dir) * CapsuleData.Radius;
                 }
                 case WD_COLLIDER_TYPE_BOX:
                 {
-                    Vector3 transformedSize = worldTransform.Matrix * Vector4(BoxData.Size, 1.0f);
+                    Vector3 transformedSize = worldTransform->Matrix * Vector4(BoxData.Size, 1.0f);
                         
                     Vector3 localFurthest = Vector3(
                         (dir.x >= 0.0f) ? transformedSize.x : -transformedSize.x,
@@ -93,9 +96,9 @@ namespace Waldem
                     float maxDistance = -FLT_MAX;
                     std::mutex mtx;
                     
-                    std::for_each(std::execution::par, MeshData.Mesh->Positions.begin(), MeshData.Mesh->Positions.end(), [&](Vector3& vertex)
+                    std::for_each(std::execution::par, MeshData.Mesh->Vertices.begin(), MeshData.Mesh->Vertices.end(), [&](Vector3& vertex)
                     {
-                        Vector3 transformedPosition = worldTransform.Matrix * Vector4(vertex, 1.0f);
+                        Vector3 transformedPosition = worldTransform->Matrix * Vector4(vertex, 1.0f);
                         float distance = dot(transformedPosition, dir);
                     
                         if (distance > maxDistance)
@@ -109,6 +112,47 @@ namespace Waldem
                     return maxPoint;
                 }
             }
+        }
+
+        Matrix3 ComputeInertiaTensor(float mass)
+        {
+            switch (Type)
+            {
+            case WD_COLLIDER_TYPE_NONE:
+                break;
+            case WD_COLLIDER_TYPE_SPHERE:
+                return (2.0f / 5.0f) * mass * SphereData.Radius * SphereData.Radius;
+            case WD_COLLIDER_TYPE_BOX:
+                {
+                    float x2 = BoxData.Size.x * BoxData.Size.x;
+                    float y2 = BoxData.Size.y * BoxData.Size.y;
+                    float z2 = BoxData.Size.z * BoxData.Size.z;
+                    return mass / 12.0f * Matrix3(
+                        y2 + z2, 0, 0,
+                        0, x2 + z2, 0,
+                        0, 0, x2 + y2
+                    );
+                }
+            case WD_COLLIDER_TYPE_CAPSULE:
+                {
+                    float radius2 = CapsuleData.Radius * CapsuleData.Radius;
+                    float height2 = CapsuleData.Height * CapsuleData.Height;
+                    float cylinderMass = mass * (CapsuleData.Height / (CapsuleData.Height + 2.0f * CapsuleData.Radius));
+                    float sphereMass = mass - cylinderMass;
+                    float Ixx = (1.0f / 12.0f) * cylinderMass * (3.0f * radius2 + height2) + (2.0f / 5.0f) * sphereMass * radius2;
+                    float Iyy = Ixx;
+                    float Izz = (1.0f / 2.0f) * cylinderMass * radius2 + (2.0f / 5.0f) * sphereMass * radius2;
+                    return Matrix3(
+                        Ixx, 0, 0,
+                        0, Iyy, 0,
+                        0, 0, Izz
+                    );
+                }
+            case WD_COLLIDER_TYPE_MESH:
+                return PhysicsUtils::ComputeMeshInertiaTensor(MeshData.Mesh->Vertices, MeshData.Mesh->Indices, mass);
+            }
+
+            return Matrix3(1.0f);
         }
 
         SphereColliderData SphereData;

@@ -178,7 +178,7 @@
     <ClInclude Include="src\Waldem\ECS\Components\ModelComponent.h" />
     <ClInclude Include="src\Waldem\ECS\Components\NameComponent.h" />
     <ClInclude Include="src\Waldem\ECS\Components\Ocean.h" />
-    <ClInclude Include="src\Waldem\ECS\Components\PhysicsComponent.h" />
+    <ClInclude Include="src\Waldem\ECS\Components\RigidBody.h" />
     <ClInclude Include="src\Waldem\ECS\Components\Selected.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\DebugSystems\CollisionRenderingSystem.h" />
     <ClInclude Include="src\Waldem\ECS\Systems\DebugSystems\DebugSystem.h" />
@@ -262,6 +262,7 @@
     <ClInclude Include="src\Waldem\Types\WPair.h" />
     <ClInclude Include="src\Waldem\Utils\FileUtils.h" />
     <ClInclude Include="src\Waldem\Utils\GeometryUtils.h" />
+    <ClInclude Include="src\Waldem\Utils\PhysicsUtils.h" />
     <ClInclude Include="src\Waldem\Window.h" />
     <ClInclude Include="src\Waldem\World\Camera.h" />
     <ClInclude Include="src\wdpch.h" />

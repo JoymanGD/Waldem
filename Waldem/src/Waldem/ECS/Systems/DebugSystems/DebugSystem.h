@@ -4,7 +4,7 @@
 #include "Waldem/Input/MouseButtonCodes.h"
 #include "Waldem/ECS/Components/EditorCamera.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
-#include "Waldem/ECS/Components/PhysicsComponent.h"
+#include "..\..\Components\RigidBody.h"
 #include "Waldem/Renderer/Light.h"
 #include "Waldem/Renderer/Model/Transform.h"
 

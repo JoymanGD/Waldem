@@ -1,6 +1,8 @@
 #pragma once
 #include "Waldem/ECS/Components/ColliderComponent.h"
 #include "Waldem/Renderer/Model/Simplex.h"
+#include "Waldem/Types/WMap.h"
+#include "Waldem/Types/WPair.h"
 
 namespace Waldem
 {
@@ -13,6 +15,15 @@ namespace Waldem
         String DebugName;
 
         bool IsLeaf() const { return Left == nullptr && Right == nullptr; }
+    };
+    
+    struct Contact
+    {
+        Vector3 ContactPointA;
+        Vector3 ContactPointB;
+        Vector3 Normal;
+        float PenetrationDepth;
+        bool HasCollision;
     };
 
     struct CollisionPairHash
@@ -28,7 +39,7 @@ namespace Waldem
     class WALDEM_API GeometryUtils
     {
     public:
-        static Vector3 Support(const ColliderComponent* colliderA, const ColliderComponent* colliderB, Transform& worldTransformA, Transform& worldTransformB, const Vector3& dir)
+        static Vector3 Support(const ColliderComponent* colliderA, const ColliderComponent* colliderB, Transform* worldTransformA, Transform* worldTransformB, const Vector3& dir)
         {
             return colliderA->FindFurthestPoint(dir, worldTransformA) - colliderB->FindFurthestPoint(-dir, worldTransformB);
         }
@@ -36,6 +47,53 @@ namespace Waldem
         static bool SameDirection(const Vector3& a, const Vector3& b)
         {
             return dot(a, b) > 0;
+        }
+        
+        static std::pair<std::vector<Vector4>, size_t> GetFaceNormals(const std::vector<Vector3>& polytope, const std::vector<size_t>& faces)
+        {
+            std::vector<Vector4> normals;
+            size_t minTriangle = 0;
+            float  minDistance = FLT_MAX;
+
+            for (size_t i = 0; i < faces.size(); i += 3)
+            {
+                Vector3 a = polytope[faces[i]];
+                Vector3 b = polytope[faces[i + 1]];
+                Vector3 c = polytope[faces[i + 2]];
+
+                Vector3 normal = normalize(cross(b - a, c - a));
+                float distance = dot(normal, a);
+
+                if (distance < 0)
+                {
+                    normal   *= -1;
+                    distance *= -1;
+                }
+
+                normals.emplace_back(normal, distance);
+
+                if (distance < minDistance)
+                {
+                    minTriangle = i / 3;
+                    minDistance = distance;
+                }
+            }
+
+            return { normals, minTriangle };
+        }
+
+        static void AddIfUniqueEdge(std::vector<std::pair<size_t, size_t>>& edges, const std::vector<size_t>& faces, size_t a, size_t b)
+        {
+            auto reverse = std::find(edges.begin(), edges.end(), std::make_pair(faces[b], faces[a]));
+ 
+            if (reverse != edges.end())
+            {
+                edges.erase(reverse);
+            }
+            else
+            {
+                edges.emplace_back(faces[a], faces[b]);
+            }
         }
 
         static bool Line(Simplex& points, Vector3& direction)

@@ -3,7 +3,7 @@
 #include "Waldem/ECS/Systems/System.h"
 #include "..\..\Components\EditorCamera.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
-#include "Waldem/ECS/Components/PhysicsComponent.h"
+#include "..\..\Components\RigidBody.h"
 #include "Waldem/Renderer/Model/Line.h"
 #include "Waldem/Renderer/Model/LineMesh.h"
 #include "Waldem/Renderer/Model/Transform.h"

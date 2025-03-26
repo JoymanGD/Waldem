@@ -1,5 +1,6 @@
 #pragma once
 #include "WPair.h"
+#include "WArray.h"
 
 namespace Waldem
 {
@@ -22,6 +23,11 @@ namespace Waldem
             Data.Add(WPair<T1, T2>(key, value));
         }
 
+        void EmplaceBack(const T1& key, const T2& value)
+        {
+            Data.EmplaceBack(WPair<T1, T2>(key, value));
+        }
+
         bool Remove(const T1& key)
         {
             for (size_t i = 0; i < Data.Num(); ++i)
@@ -29,6 +35,19 @@ namespace Waldem
                 if (Data[i].key == key)
                 {
                     Data.Erase(i);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        bool Remove(const WPair<T1, T2>& pair)
+        {
+            for (size_t i = 0; i < Data.Num(); ++i)
+            {
+                if (Data[i] == pair)
+                {
+                    Data.RemoveAt(i);
                     return true;
                 }
             }
@@ -45,6 +64,18 @@ namespace Waldem
                 }
             }
             return false;
+        }
+
+        WPair<T1, T2>* Find(const T1& key, const T2& value)
+        {
+            for (size_t i = 0; i < Data.Num(); ++i)
+            {
+                if (Data[i].key == key && Data[i].value == value)
+                {
+                    return &Data[i];
+                }
+            }
+            return nullptr;
         }
 
         T2* Find(const T1& key)
