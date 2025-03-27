@@ -1,6 +1,6 @@
 WALDEM ENGINE
 
-![img.png](img.png)
+![image](https://github.com/user-attachments/assets/59e365d1-036e-470a-9d56-d3b21346911f)
 
 Architecture:
 * ECS
@@ -9,6 +9,12 @@ Architecture:
 * Layers (Game, Editor, Debug)
 * Editor widgets structure
 * Separate game and editor structure
+
+Editor:
+* Entities list widget
+* Entity details widget
+* ImGuizmo
+* Mesh selection using MeshIdsRenderTarget
 
 Renderer:
 * Ray tracing
@@ -22,7 +28,10 @@ Renderer:
 
 Physics:
 * AABB BVH broadphase collisions
-* GJK narrowphase collisions [WIP]
+* GJK narrowphase collision detection [WIP]
+* EPA [WIP]
+* Collision resolving [WIP]
+* Physics system [WIP]
 
 Import:
 * GLTF
