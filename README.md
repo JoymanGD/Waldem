@@ -10,6 +10,12 @@ Architecture:
 * Editor widgets structure
 * Separate game and editor structure
 
+Editor:
+* Entities list widget
+* Entity details widget
+* ImGuizmo
+* Mesh selection using MeshIdsRenderTarget
+
 Renderer:
 * Ray tracing
 * PBR
@@ -22,7 +28,10 @@ Renderer:
 
 Physics:
 * AABB BVH broadphase collisions
-* GJK narrowphase collisions [WIP]
+* GJK narrowphase collision detection [WIP]
+* EPA [WIP]
+* Collision resolving [WIP]
+* Physics system [WIP]
 
 Import:
 * GLTF
