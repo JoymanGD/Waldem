@@ -1,6 +1,6 @@
 WALDEM ENGINE
 
-![img.png](img.png)
+![image](https://github.com/user-attachments/assets/59e365d1-036e-470a-9d56-d3b21346911f)
 
 Architecture:
 * ECS
