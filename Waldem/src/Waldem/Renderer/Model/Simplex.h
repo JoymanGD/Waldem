@@ -2,16 +2,26 @@
 
 namespace Waldem
 {
+    struct SimplexVertex
+    {
+        Vector3 Point;
+        Vector3 SupportA;
+        Vector3 SupportB;
+
+        SimplexVertex() : Point(Vector3(0)), SupportA(Vector3(0)), SupportB(Vector3(0)) {}
+        SimplexVertex(Vector3 a, Vector3 b) : Point(a - b), SupportA(a), SupportB(b) {}
+    };
+    
     struct Simplex
     {
     private:
-        std::array<Vector3, 4> Points;
+        std::array<SimplexVertex, 4> Points;
         int Size;
 
     public:
-        Simplex() : Points({Vector3(0), Vector3(0), Vector3(0), Vector3(0)}), Size(0) {}
+        Simplex() : Points({SimplexVertex(), SimplexVertex(), SimplexVertex(), SimplexVertex()}), Size(0) {}
 
-        Simplex& operator=(std::initializer_list<Vector3> list)
+        Simplex& operator=(std::initializer_list<SimplexVertex> list)
         {
             for(auto v = list.begin(); v != list.end(); v++)
             {
@@ -23,13 +33,13 @@ namespace Waldem
             return *this;
         }
 
-        void Add(const Vector3& point)
+        void Add(const SimplexVertex& point)
         {
             Points = { point, Points[0], Points[1], Points[2] };
             Size = std::min(Size + 1, 4);
         }
 
-        Vector3& operator[](int i) { return Points[i]; }
+        SimplexVertex& operator[](int i) { return Points[i]; }
 
         int Num() const { return Size; }
 

@@ -8,7 +8,7 @@ namespace Waldem
     class WALDEM_API PhysicsSystem : ISystem
     {
     public:
-        float Gravity = 9.81f;
+        Vector3 Gravity = Vector3(0, -9.81f, 0);
         
         PhysicsSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
         
@@ -24,19 +24,19 @@ namespace Waldem
 
                 if(rigidBody.IsKinematic) continue;
 
-                rigidBody.Force += Vector3(0, -Gravity, 0) * rigidBody.Mass;
-
-                rigidBody.Velocity += (rigidBody.Force * rigidBody.InvMass) * deltaTime;
-                rigidBody.AngularVelocity += rigidBody.InvInertiaTensor * rigidBody.Torque * deltaTime;
-                
+                rigidBody.Velocity += Gravity * deltaTime;
+                rigidBody.Velocity *= (1.0f - rigidBody.LinearDamping * deltaTime);
                 transform.Translate(rigidBody.Velocity * deltaTime);
 
-                if(length(rigidBody.AngularVelocity) > 0.0f)
+                rigidBody.AngularVelocity += rigidBody.InvInertiaTensor * rigidBody.Torque * deltaTime;
+                rigidBody.AngularVelocity *= (1.0f - rigidBody.AngularDamping * deltaTime);
+                
+                if(length(rigidBody.AngularVelocity) > 1e-5f)
                 {
                     float angle = length(rigidBody.AngularVelocity) * deltaTime;
                     Vector3 axis = normalize(rigidBody.AngularVelocity);
-                    Quaternion deltaQuat = angleAxis(angle, axis);;
-                    transform.Rotate(deltaQuat);
+                    Quaternion deltaQuat = angleAxis(angle, axis);
+                    transform.Rotate(normalize(deltaQuat));
                 }
 
                 rigidBody.Reset();
