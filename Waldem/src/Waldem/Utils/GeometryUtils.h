@@ -96,13 +96,46 @@ namespace Waldem
             }
         }
 
+        static void ComputeBarycentricForOriginInTriangle( const Vector3& v0, const Vector3& v1, const Vector3& v2, float& alpha0, float& alpha1, float& alpha2)
+        {
+            auto area = [](const Vector3& p0, const Vector3& p1, const Vector3& p2)
+            {
+                return 0.5f * length(cross(p1 - p0, p2 - p0));
+            };
+
+            float areaABC = area(v0, v1, v2);
+            if (areaABC < 1e-12f)
+            {
+                // Degenerate triangle
+                alpha0 = alpha1 = alpha2 = 1.0f/3.0f;
+                return;
+            }
+
+            float areaOBC = area(Vector3(0,0,0), v1, v2);
+            float areaAOC = area(v0, Vector3(0,0,0), v2);
+            float areaABO = area(v0, v1, Vector3(0,0,0));
+
+            alpha0 = areaOBC / areaABC;
+            alpha1 = areaAOC / areaABC;
+            alpha2 = areaABO / areaABC;
+
+            // If the origin is truly inside, alpha0+alpha1+alpha2 should be ~1.
+            // We can do a minor normalization if we want:
+            float sum = alpha0 + alpha1 + alpha2;
+            if (fabsf(sum) > 1e-6f) {
+                alpha0 /= sum;
+                alpha1 /= sum;
+                alpha2 /= sum;
+            }
+        }
+
         static bool Line(Simplex& points, Vector3& direction)
         {
-            Vector3 a = points[0];
-            Vector3 b = points[1];
+            SimplexVertex a = points[0];
+            SimplexVertex b = points[1];
 
-            Vector3 ab = b - a;
-            Vector3 ao = -a;
+            Vector3 ab = b.Point - a.Point;
+            Vector3 ao = -a.Point;
 
             if(SameDirection(ab, ao))
             {
@@ -120,13 +153,13 @@ namespace Waldem
 
         static bool Triangle(Simplex& points, Vector3& direction)
         {
-            Vector3 a = points[0];
-            Vector3 b = points[1];
-            Vector3 c = points[2];
+            SimplexVertex a = points[0];
+            SimplexVertex b = points[1];
+            SimplexVertex c = points[2];
 
-            Vector3 ab = b - a;
-            Vector3 ac = c - a;
-            Vector3 ao = -a;
+            Vector3 ab = b.Point - a.Point;
+            Vector3 ac = c.Point - a.Point;
+            Vector3 ao = -a.Point;
 
             Vector3 abc = cross(ab, ac);
 
@@ -167,15 +200,15 @@ namespace Waldem
 
         static bool Tetrahedron(Simplex& points, Vector3& direction)
         {
-            Vector3 a = points[0];
-            Vector3 b = points[1];
-            Vector3 c = points[2];
-            Vector3 d = points[3];
+            SimplexVertex a = points[0];
+            SimplexVertex b = points[1];
+            SimplexVertex c = points[2];
+            SimplexVertex d = points[3];
 
-            Vector3 ab = b - a;
-            Vector3 ac = c - a;
-            Vector3 ad = d - a;
-            Vector3 ao = -a;
+            Vector3 ab = b.Point - a.Point;
+            Vector3 ac = c.Point - a.Point;
+            Vector3 ad = d.Point - a.Point;
+            Vector3 ao = -a.Point;
 
             Vector3 abc = cross(ab, ac);
             Vector3 acd = cross(ac, ad);
