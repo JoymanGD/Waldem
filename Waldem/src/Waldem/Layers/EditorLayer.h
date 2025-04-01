@@ -2,6 +2,7 @@
 
 #include "imgui.h"
 #include "backends/imgui_impl_sdl2.h"
+#include "Waldem/ECS/Components/AudioListener.h"
 #include "Waldem/ECS/Systems/EditorSystems/EditorControlSystem.h"
 #include "Waldem/ECS/Systems/EditorSystems/GuizmoEditorSystem.h"
 #include "Waldem/ECS/Systems/GameSystems/FreeLookCameraSystem.h"
@@ -33,6 +34,7 @@ namespace Waldem
             cameraEntity.Add<Transform>(Vector3(0, 0, 0));
             cameraEntity.Add<Camera>(60.0f, aspectRatio, 0.001f, 1000.0f, 30.0f, 30.0f);
             cameraEntity.Add<EditorCamera>();
+            cameraEntity.Add<AudioListener>();
             
             //do it after all entities set up
             CurrentECSManager->Refresh();

@@ -43,7 +43,6 @@ namespace Waldem
         Point3 GroupCount;
         DebugSystemConstantBuffer ConstantBufferData;
         AudioClip* TestClip;
-        AudioClip* TestClip2;
         
     public:
         DebugSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
@@ -110,7 +109,6 @@ namespace Waldem
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
         {
             TestClip = Audio::Load("Content/Sounds/TestSound");
-            TestClip2 = Audio::Load("Content/Sounds/Nuvaon");
             
             Vector2 resolution = Vector2(sceneData->Window->GetWidth(), sceneData->Window->GetHeight());
             
@@ -206,30 +204,6 @@ namespace Waldem
                 if(isPressed)
                 {
                     Audio::Play(TestClip, 1.0f, false);
-                }
-            });
-
-            inputManager->SubscribeToKeyEvent(KEY_2, [&](bool isPressed)
-            {
-                if(isPressed)
-                {
-                    Audio::Play(TestClip2, 1.0f, false);
-                }
-            });
-
-            inputManager->SubscribeToKeyEvent(KEY_3, [&](bool isPressed)
-            {
-                if(isPressed)
-                {
-                    Audio::Pause(TestClip2);
-                }
-            });
-
-            inputManager->SubscribeToKeyEvent(KEY_4, [&](bool isPressed)
-            {
-                if(isPressed)
-                {
-                    Audio::Stop(TestClip2);
                 }
             });
 

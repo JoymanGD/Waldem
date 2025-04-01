@@ -110,9 +110,18 @@ namespace Waldem
 
             float* channelData = channel.samples + (channel.position * Spec.channels);
 
-            for (int i = 0; i < framesToCopy * Spec.channels; ++i)
+            float leftVolume = channel.distanceVolume * channel.volume * (1.0f - channel.pan) / 2.0f;
+            float rightVolume = channel.distanceVolume * channel.volume * (1.0f + channel.pan) / 2.0f;
+
+            for (int frame = 0; frame < framesToCopy; ++frame)
             {
-                out[i] += channelData[i] * channel.volume;
+                // The source's left and right samples for this frame
+                float sampleL = channelData[frame * 2 + 0];
+                float sampleR = channelData[frame * 2 + 1];
+                
+                // Multiply by the channel's panning volumes
+                out[frame * 2 + 0] += sampleL * leftVolume;
+                out[frame * 2 + 1] += sampleR * rightVolume;
             }
 
             channel.position += framesToCopy;
@@ -207,6 +216,16 @@ namespace Waldem
         clip->CurrentChannel->playing = false;
         clip->CurrentChannel->position = 0;
         clip->CurrentChannel = nullptr;
+        SDL_UnlockAudioDevice(WindowsAudio::Device);
+    }
+    
+    void Audio::LockAudioThread()
+    {
+        SDL_LockAudioDevice(WindowsAudio::Device);
+    }
+
+    void Audio::UnlockAudioThread()
+    {
         SDL_UnlockAudioDevice(WindowsAudio::Device);
     }
 }

@@ -2,6 +2,7 @@
 
 #include "ecs.h"
 #include "Waldem/Audio/Audio.h"
+#include "Waldem/ECS/Components/AudioSource.h"
 #include "Waldem/SceneManagement/Scene.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/Input/InputManager.h"
@@ -66,6 +67,7 @@ namespace Sandbox
         	auto pointLight1Entity = ecsManager->CreateEntity("PointLight1");
         	pointLight1Entity.Add<Waldem::Transform>(Waldem::Vector3(2, 1, 2));
         	pointLight1Entity.Add<Waldem::Light>(Waldem::Vector3(1, .3f, 1), 10.0f, 2.0f);
+        	pointLight1Entity.Add<Waldem::AudioSource>(Waldem::Audio::Load("Content/Sounds/Nuvaon"), 20.0f, true, 1.0f, true);
 
         	//point light 2
         	auto pointLight2Entity = ecsManager->CreateEntity("PointLight2");
