@@ -8,7 +8,7 @@ Architecture:
 * Cross OS (Windows)
 * Layers (Game, Editor, Debug)
 * Editor widgets structure
-* Separate game and editor structure
+* Separate game and engine structure
 
 Editor:
 * Entities list widget
