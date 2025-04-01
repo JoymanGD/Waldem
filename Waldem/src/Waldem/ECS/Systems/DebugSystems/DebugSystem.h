@@ -5,6 +5,7 @@
 #include "Waldem/ECS/Components/EditorCamera.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
 #include "..\..\Components\RigidBody.h"
+#include "Waldem/Audio/Audio.h"
 #include "Waldem/Renderer/Light.h"
 #include "Waldem/Renderer/Model/Transform.h"
 
@@ -41,6 +42,8 @@ namespace Waldem
         RenderTarget* DebugRT_9 = nullptr;
         Point3 GroupCount;
         DebugSystemConstantBuffer ConstantBufferData;
+        AudioClip* TestClip;
+        AudioClip* TestClip2;
         
     public:
         DebugSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
@@ -103,9 +106,12 @@ namespace Waldem
         //     //     line.ToClipSpace(viewProjMatrix);
         //     // }
         // }
-        
+
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
         {
+            TestClip = Audio::Load("Content/Sounds/TestSound");
+            TestClip2 = Audio::Load("Content/Sounds/Nuvaon");
+            
             Vector2 resolution = Vector2(sceneData->Window->GetWidth(), sceneData->Window->GetHeight());
             
             CacheFrustrumCorners();
@@ -192,6 +198,38 @@ namespace Waldem
                 if(isPressed)
                 {
                     ConstantBufferData.DebugRTIndex = 9;
+                }
+            });
+
+            inputManager->SubscribeToKeyEvent(KEY_1, [&](bool isPressed)
+            {
+                if(isPressed)
+                {
+                    Audio::Play(TestClip, 1.0f, false);
+                }
+            });
+
+            inputManager->SubscribeToKeyEvent(KEY_2, [&](bool isPressed)
+            {
+                if(isPressed)
+                {
+                    Audio::Play(TestClip2, 1.0f, false);
+                }
+            });
+
+            inputManager->SubscribeToKeyEvent(KEY_3, [&](bool isPressed)
+            {
+                if(isPressed)
+                {
+                    Audio::Pause(TestClip2);
+                }
+            });
+
+            inputManager->SubscribeToKeyEvent(KEY_4, [&](bool isPressed)
+            {
+                if(isPressed)
+                {
+                    Audio::Stop(TestClip2);
                 }
             });
 
