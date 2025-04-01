@@ -40,6 +40,7 @@ Physics:
 Import:
 * GLTF
 * Image
+* Wav
 
 Other:
 * Logging system
