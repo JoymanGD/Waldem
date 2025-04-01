@@ -15,6 +15,8 @@
 #include "Waldem/Renderer/Renderer.h"
 #include <glm/gtc/integer.hpp>
 
+#include "Waldem/ECS/Systems/GameSystems/SpatialAudioSystem.h"
+
 namespace Waldem
 {
 	class WALDEM_API GameLayer : public Layer
@@ -39,6 +41,7 @@ namespace Waldem
 			resourceManager->CreateRenderTarget("RadianceRT", resolution.x, resolution.y, TextureFormat::R32G32B32A32_FLOAT);
 
 			// DrawSystems.Add((ISystem*)new OceanSimulationSystem(ecsManager));
+			DrawSystems.Add((ISystem*)new SpatialAudioSystem(ecsManager));
 			DrawSystems.Add((ISystem*)new GBufferSystem(ecsManager));
 			DrawSystems.Add((ISystem*)new RayTracingRadianceSystem(ecsManager));
 			DrawSystems.Add((ISystem*)new DeferredRenderingSystem(ecsManager));

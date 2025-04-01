@@ -1,0 +1,89 @@
+#pragma once
+#include "Waldem/Audio/Audio.h"
+#include "Waldem/ECS/Components/AudioListener.h"
+#include "Waldem/ECS/Components/AudioSource.h"
+#include "Waldem/ECS/Systems/System.h"
+#include "Waldem/Renderer/Model/Transform.h"
+
+namespace Waldem
+{
+    class WALDEM_API SpatialAudioSystem : ISystem
+    {
+    private:
+        float PAN_SIMPLIFICATION = 0.8f;        
+    public:
+        SpatialAudioSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
+        
+        void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
+        {
+        }
+
+        void Update(float deltaTime) override
+        {
+            Audio::LockAudioThread();
+            
+            for (auto [listenerEntity, audioListener, listenerTransform] : ECSManager->EntitiesWith<AudioListener, Transform>())
+            {
+                for (auto [sourceEntity, audioSource, sourceTransform] : ECSManager->EntitiesWith<AudioSource, Transform>())
+                {
+                    if(!audioSource.Spatial)
+                    {
+                        continue;
+                    }
+                    
+                    if(!audioSource.Clip)
+                    {
+                        continue;
+                    }
+
+                    //distance handling
+                    Vector3 listenerPos = listenerTransform.Position;
+                    Vector3 sourcePos = sourceTransform.Position;
+
+                    float dx = sourcePos.x - listenerPos.x;
+                    float dy = sourcePos.y - listenerPos.y;
+                    float dz = sourcePos.z - listenerPos.z;
+                    
+                    float distance = sqrtf(dx*dx + dy*dy + dz*dz);
+                    
+                    float minDist = 1.0f;
+                    float maxDist = audioSource.Range;
+                    float rolloff = 1.0f;
+                    
+                    if (distance < minDist) distance = minDist;
+                    
+                    if (distance > maxDist)
+                    {
+                        audioSource.Clip->CurrentChannel->distanceVolume = 0.0f;
+                    }
+                    else
+                    {
+                        audioSource.Clip->CurrentChannel->distanceVolume = 1.0f / (1.0f + rolloff * (distance - minDist));
+                    }
+
+                    //simple distance handling
+                    // float distance = glm::distance(listenerPos, sourcePos);
+                    //
+                    // if (distance > audioSource.Range)
+                    // {
+                    //     audioSource.Clip->CurrentChannel->distanceVolume = 0.0f;
+                    // }
+                    // else
+                    // {
+                    //     audioSource.Clip->CurrentChannel->distanceVolume = 1.0f - (distance / audioSource.Range);
+                    // }
+
+                    //panning
+                    Vector3 direction = normalize(sourcePos - listenerPos);
+                    direction.y = 0.0f;
+
+                    Vector3 right = normalize(listenerTransform.GetRightVector());
+
+                    audioSource.Clip->CurrentChannel->pan = glm::clamp(dot(direction, right), -PAN_SIMPLIFICATION, PAN_SIMPLIFICATION);
+                }
+            }
+
+            Audio::UnlockAudioThread();
+        }
+    };
+}
