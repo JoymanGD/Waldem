@@ -44,27 +44,48 @@ namespace Waldem
         AudioClip* clip = new AudioClip();
         
         SDL_AudioSpec clipSpec;
+        Uint8* wavData;
+        Uint32 wavLength;
         
         if(p.extension() == ".wav")
         {
-            if (SDL_LoadWAV(p.string().c_str(), &clipSpec, &clip->Data, &clip->Length) == nullptr)
+            if (SDL_LoadWAV(p.string().c_str(), &clipSpec, &wavData, &wavLength) == nullptr)
             {
                 WD_CORE_ERROR("Failed to load WAV: {0}", SDL_GetError());
                 return nullptr;
             }
-        }
-        else if(p.extension() == ".mp3")
-        {
-            WD_CORE_ERROR("mp3 format is not yet supported");
-            return nullptr;
         }
         else
         {
             WD_CORE_ERROR("Unsupported audio format: {0}", p.extension().string());
             return nullptr;
         }
+            
+        SDL_AudioCVT cvt;
+        SDL_BuildAudioCVT(&cvt, clipSpec.format, clipSpec.channels, clipSpec.freq, WindowsAudio::Spec.format, WindowsAudio::Spec.channels, WindowsAudio::Spec.freq);
 
-        clip->Stride = SDL_AUDIO_BITSIZE(clipSpec.format) / 8;
+        SDL_AudioFormat format;
+        
+        if (cvt.needed)
+        {
+            cvt.len = wavLength;
+            cvt.buf = (Uint8*)SDL_malloc(cvt.len * cvt.len_mult);
+            SDL_memcpy(cvt.buf, wavData, wavLength);
+            SDL_ConvertAudio(&cvt);
+
+            clip->Data   = cvt.buf;
+            clip->Length = cvt.len_cvt;
+            SDL_FreeWAV(wavData);
+            format = cvt.dst_format;
+        }
+        else
+        {
+            clip->Data   = wavData;
+            clip->Length = wavLength;
+            format = clipSpec.format;
+        }
+        
+        clip->Stride = SDL_AUDIO_BITSIZE(format) / 8;
         clip->Channels = clipSpec.channels;
         
         return clip;
@@ -76,37 +97,30 @@ namespace Waldem
         int floatCount = len / sizeof(float);
         int framesToMix = floatCount / Spec.channels;  // since it's stereo (2 channels)
 
-        // 1) Clear output
         SDL_memset(stream, 0, len);
 
-        // 2) Mix each active channel
         for (int ch = 0; ch < MAX_AUDIO_CHANNELS; ++ch)
         {
             AudioChannel& channel = Channels[ch];
             if (!channel.playing) continue;
 
-            // how many frames remain in this channel?
             int framesLeft = channel.lengthInFrames - channel.position;
             int framesToCopy = (framesLeft < framesToMix) ? framesLeft : framesToMix;
 
-            // pointer to our channel's data at its current position
             float* channelData = channel.samples + (channel.position * Spec.channels);
 
-            // accumulate into out
             for (int i = 0; i < framesToCopy * Spec.channels; ++i)
             {
                 out[i] += channelData[i] * channel.volume;
             }
 
-            // advance the channel position
             channel.position += framesToCopy;
 
-            // if we've reached the end
             if (channel.position >= channel.lengthInFrames)
             {
                 if (channel.loop)
                 {
-                    channel.position = 0;  // loop from start
+                    channel.position = 0;
                 }
                 else
                 {
@@ -122,11 +136,11 @@ namespace Waldem
         SDL_zero(desiredSpec);
 
         desiredSpec.freq = 44100;
-        desiredSpec.format = AUDIO_F32;     // 32-bit float samples
-        desiredSpec.channels = 2;          // stereo
-        desiredSpec.samples = 1024;        // buffer size
+        desiredSpec.format = AUDIO_F32;
+        desiredSpec.channels = 2;
+        desiredSpec.samples = 1024;
         desiredSpec.callback = AudioCallback;
-        desiredSpec.userdata = nullptr;    // we can pass a custom pointer if needed
+        desiredSpec.userdata = nullptr;
 
         Device = SDL_OpenAudioDevice(
             nullptr,
