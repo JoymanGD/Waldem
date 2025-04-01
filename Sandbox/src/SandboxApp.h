@@ -11,8 +11,8 @@ namespace Sandbox
 	public:
 		SandboxApp()
 		{
-			// OpenScene(new DefaultScene);
-			OpenScene(new PhysicsTestScene);
+			OpenScene(new DefaultScene);
+			// OpenScene(new PhysicsTestScene);
 		}
 
 		~SandboxApp()
