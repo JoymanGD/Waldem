@@ -61,7 +61,7 @@ namespace Sandbox
 			auto dirLightEntity = ecsManager->CreateEntity("DirectionalLight");
 			auto& lightTransform = dirLightEntity.Add<Waldem::Transform>(Waldem::Vector3(0, 0, 0));
 			lightTransform.SetEuler(90, 0, 0);
-        	dirLightEntity.Add<Waldem::Light>(Waldem::Vector3(1, 1, 1), 20.0f);
+        	dirLightEntity.Add<Waldem::Light>(Waldem::Vector3(1, 1, 1), 55.0f);
 
         	//point light 1
         	auto pointLight1Entity = ecsManager->CreateEntity("PointLight1");
