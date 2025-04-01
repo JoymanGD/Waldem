@@ -12,8 +12,9 @@ namespace Waldem
 		Audio() {}
 		virtual ~Audio() {}
 
-		static void Play(AudioClip* clip, float volume, bool loop = false);
-		static void Pause();
+		static void Play(AudioClip* clip, float volume = 1.0f, bool loop = false);
+		static void Pause(AudioClip* clip);
+		static void Stop(AudioClip* clip);
 		
 		static AudioClip* Load(String path, bool relative = true);
 		static AudioChannel& GetChannel(int channel) { return Instance->Channels[channel]; }

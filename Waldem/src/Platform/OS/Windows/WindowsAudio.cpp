@@ -86,7 +86,7 @@ namespace Waldem
         }
         
         clip->Stride = SDL_AUDIO_BITSIZE(format) / 8;
-        clip->Channels = clipSpec.channels;
+        clip->ChannelsNum = clipSpec.channels;
         
         return clip;
     }
@@ -103,6 +103,7 @@ namespace Waldem
         {
             AudioChannel& channel = Channels[ch];
             if (!channel.playing) continue;
+            if (channel.paused) continue;
 
             int framesLeft = channel.lengthInFrames - channel.position;
             int framesToCopy = (framesLeft < framesToMix) ? framesLeft : framesToMix;
@@ -160,25 +161,52 @@ namespace Waldem
 
     void Audio::Play(AudioClip* clip, float volume, bool loop)
     {
-        // find a free channel
         SDL_LockAudioDevice(WindowsAudio::Device);
-        for (int i = 0; i < MAX_AUDIO_CHANNELS; ++i)
+
+        if(clip->CurrentChannel != nullptr && clip->CurrentChannel->playing && clip->CurrentChannel->paused)
         {
-            if (!Channels[i].playing)
+            clip->CurrentChannel->paused = false;
+        }
+        else
+        {
+            for (int i = 0; i < MAX_AUDIO_CHANNELS; ++i)
             {
-                Channels[i].samples = (float*)clip->Data;
-                Channels[i].lengthInFrames = (int)clip->Length / (clip->Stride * clip->Channels);
-                Channels[i].position = 0;
-                Channels[i].volume = volume;
-                Channels[i].loop = loop;
-                Channels[i].playing = true;
-                break;
+                if (!Channels[i].playing)
+                {
+                    Channels[i].samples = (float*)clip->Data;
+                    Channels[i].lengthInFrames = (int)clip->Length / (clip->Stride * clip->ChannelsNum);
+                    Channels[i].position = 0;
+                    Channels[i].volume = volume;
+                    Channels[i].loop = loop;
+                    Channels[i].playing = true;
+                    Channels[i].paused = false;
+
+                    clip->CurrentChannel = &Channels[i];
+                    
+                    break;
+                }
             }
         }
+        
         SDL_UnlockAudioDevice(WindowsAudio::Device);
     }
 
-    void Audio::Pause()
+    void Audio::Pause(AudioClip* clip)
     {
+        if(clip->CurrentChannel && clip->CurrentChannel->playing)
+        {
+            SDL_LockAudioDevice(WindowsAudio::Device);
+            clip->CurrentChannel->paused = true;
+            SDL_UnlockAudioDevice(WindowsAudio::Device);
+        }
+    }
+    
+	void Audio::Stop(AudioClip* clip)
+    {
+        SDL_LockAudioDevice(WindowsAudio::Device);
+        clip->CurrentChannel->playing = false;
+        clip->CurrentChannel->position = 0;
+        clip->CurrentChannel = nullptr;
+        SDL_UnlockAudioDevice(WindowsAudio::Device);
     }
 }

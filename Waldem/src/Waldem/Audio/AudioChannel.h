@@ -10,5 +10,6 @@ namespace Waldem
         float volume = 0;
         bool playing = false;
         bool loop = false;
+        bool paused = false;
     };
 }

@@ -2,7 +2,6 @@
 
 #include "ecs.h"
 #include "Waldem/Audio/Audio.h"
-#include "Waldem/ECS/Components/BloomPostProcess.h"
 #include "Waldem/SceneManagement/Scene.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/Input/InputManager.h"
@@ -18,10 +17,7 @@ namespace Sandbox
     {
     public:
         void Initialize(Waldem::SceneData* sceneData, Waldem::InputManager* inputManager, ecs::Manager* ecsManager, Waldem::ResourceManager* resourceManager) override
-        {
-        	auto testClip = Waldem::Audio::Load("Content/Sounds/Nuvaon");
-        	Waldem::Audio::Play(testClip, 1.0f, true);
-        	
+        {        	
 			Waldem::ModelImporter importer;
 
 			//Entities
