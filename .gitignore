@@ -16,6 +16,8 @@
 *.vcxproj
 *.vcxproj.filters
 
+# Rider
+.idea/
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
