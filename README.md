@@ -8,7 +8,7 @@ Architecture:
 * Cross OS (Windows)
 * Layers (Game, Editor, Debug)
 * Editor widgets structure
-* Separate game and editor structure
+* Separate game and engine structure
 
 Editor:
 * Entities list widget
@@ -26,6 +26,10 @@ Renderer:
 * Materials
 * FFT Ocean simulation
 
+Audio:
+* Audio listeners and sources
+* Spatial (3D) audio
+
 Physics:
 * AABB BVH broadphase collisions
 * GJK narrowphase collision detection [WIP]
@@ -36,6 +40,7 @@ Physics:
 Import:
 * GLTF
 * Image
+* Wav
 
 Other:
 * Logging system
