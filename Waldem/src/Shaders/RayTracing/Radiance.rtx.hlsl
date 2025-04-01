@@ -42,6 +42,7 @@ void RayGenShader()
 {
     float3 radiance = 0.0f;
     float3 diffuse = float3(0.0f, 0.0f, 0.0f);
+    float3 finalColor = float3(0.0f, 0.0f, 0.0f);
     
     uint2 dispatchIndex = DispatchRaysIndex().xy;
     float4 worldPosition = WorldPositionsRT.Load(uint3(dispatchIndex, 0));
@@ -59,7 +60,7 @@ void RayGenShader()
         payload.Missed = false;
         Light light = Lights[i];
         matrix lightTransform = LightTransforms[i];
-        float3 lightDirection = 0.0f;
+        float3 lightDirection;
 
         //fix for zero color
         if(length(light.Color) == 0.0f)
@@ -70,6 +71,9 @@ void RayGenShader()
         if(light.Type == 0) //Directional
         {
             lightDirection = -GetForwardVector(lightTransform);
+            
+            diffuse = GetDiffuseColor(lightDirection, worldPosition, normal, albedo, orm, InvView);
+            
             float NdotL = saturate(dot(normal.xyz, lightDirection));
             
             RayDesc ray;
@@ -82,8 +86,10 @@ void RayGenShader()
 
             if(payload.Missed)
             {
-                radiance += normalize(light.Color) * light.Intensity / DIR_LIGHT_INTENSITY_RATIO * NdotL;
+                radiance = normalize(light.Color) * light.Intensity / DIR_LIGHT_INTENSITY_RATIO * NdotL;
             }
+
+            finalColor += diffuse * radiance;
         }
         else if(light.Type == 1) //Point
         {
@@ -91,9 +97,11 @@ void RayGenShader()
             lightDirection = lightPosition - worldPosition;
             float distance = length(lightDirection);
             lightDirection /= distance; //Normalize
-
+            
             if(distance <= light.Radius)
             {
+                diffuse = GetDiffuseColor(lightDirection, worldPosition, normal, albedo, orm, InvView);
+                
                 float NdotL = saturate(dot(normal.xyz, lightDirection));
                 
                 RayDesc ray;
@@ -108,7 +116,8 @@ void RayGenShader()
                 {
                     float attenuation = 1.0 / (A0 + A1 * distance + A2 * distance * distance);
                     attenuation *= smoothstep(light.Radius, 0.0, distance);
-                    radiance += normalize(light.Color) * light.Intensity * attenuation * NdotL;
+                    radiance = normalize(light.Color) * light.Intensity * attenuation * NdotL;
+                    finalColor += diffuse * radiance;
                 }
             }
         }
@@ -122,6 +131,8 @@ void RayGenShader()
 
             if(distance <= light.Radius)
             {
+                diffuse = GetDiffuseColor(lightDirection, worldPosition, normal, albedo, orm, InvView);
+                
                 float NdotL = saturate(dot(normal.xyz, lightDirection));
                 
                 RayDesc ray;
@@ -139,15 +150,14 @@ void RayGenShader()
                     spotFalloff = pow(spotFalloff, light.Softness);
                     float attenuation = 1.0 / (A0 + A1 * distance + A2 * distance * distance);
                     attenuation *= smoothstep(light.Radius, 0.0, distance);
-                    radiance += normalize(light.Color) * light.Intensity * attenuation * spotFalloff * NdotL;
+                    radiance = normalize(light.Color) * light.Intensity * attenuation * spotFalloff * NdotL;
+                    finalColor += diffuse * radiance;
                 }
             }
         }
-        
-        diffuse += GetDiffuseColor(lightDirection, worldPosition, normal, albedo, orm, InvView);
     }
     
-    OutputColor[dispatchIndex] = float4(radiance * diffuse, 1.0);
+    OutputColor[dispatchIndex] = float4(finalColor, 1.0);
 }
 
 [shader("miss")]
