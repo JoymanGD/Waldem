@@ -26,6 +26,10 @@ Renderer:
 * Materials
 * FFT Ocean simulation
 
+Audio:
+* Audio listeners and sources
+* Spatial (3D) audio
+
 Physics:
 * AABB BVH broadphase collisions
 * GJK narrowphase collision detection [WIP]
