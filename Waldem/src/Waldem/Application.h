@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core.h"
+#include "PlatformInitializer.h"
 #include "Window.h"
 #include "Layers/DebugLayer.h"
 #include "Layers/EditorLayer.h"
@@ -17,6 +18,7 @@ namespace Waldem
 	{
 	public:
 		Application();
+		void Initialize();
 		virtual ~Application();
 		void Run();
 		void OnEvent(Event& e);
@@ -29,7 +31,7 @@ namespace Waldem
 		static Application* Instance;
 	private:
 		bool OnWindowClose(WindowCloseEvent& e);
-		
+
 		Window* Window;
 		Renderer CurrentRenderer;
         ecs::Manager CoreECSManager;

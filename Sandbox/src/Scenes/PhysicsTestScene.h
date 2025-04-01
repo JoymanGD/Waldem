@@ -8,7 +8,7 @@
 #include "Waldem/Renderer/Resources/ResourceManager.h"
 #include "Waldem/Import/ModelImporter.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
-#include "..\..\..\Waldem\src\Waldem\ECS\Components\RigidBody.h"
+#include "Waldem/ECS/Components/RigidBody.h"
 #include "Waldem/Renderer/Light.h"
 #include "Waldem/Renderer/Model/Mesh.h"
 #include "Waldem/Types/MathTypes.h"

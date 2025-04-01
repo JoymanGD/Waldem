@@ -61,12 +61,6 @@ namespace Waldem
         Data.Height = props.Height;
         Data.VSync = false;
 
-        if (SDL_Init(SDL_INIT_VIDEO) != 0)
-        {
-            WD_CORE_ERROR("SDL could not initialize! SDL_Error: {0}", SDL_GetError());
-            return;
-        }
-
         NativeWindow = SDL_CreateWindow(Data.Title.c_str(),
                                     SDL_WINDOWPOS_CENTERED,
                                     SDL_WINDOWPOS_CENTERED,

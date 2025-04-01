@@ -3,8 +3,10 @@
 #include "Renderer/Renderer.h"
 #include "Waldem/Log/Log.h"
 #include <numeric>
+#include <SDL.h>
 
 #include "Time.h"
+#include "Audio/Audio.h"
 
 namespace Waldem
 {
@@ -15,11 +17,20 @@ namespace Waldem
 	
 	Application::Application()
 	{
+		Initialize();
+	}
+
+	void Application::Initialize()
+	{
+		PlatformInitializer::Initialize();
+		Audio::Create();
+		
 		CoreECSManager = {};
 		ResourceManager = {};
 
 		WD_CORE_ASSERT(!Instance, "Application already exists!")
 		Instance = this;
+		
 		Window = Window::Create();
 		Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
 
@@ -42,7 +53,7 @@ namespace Waldem
 		
 		Renderer::End();
 	}
-	
+
 	void Application::OpenScene(Scene* scene)
 	{
 		SceneData sceneData = { Window };

@@ -1,0 +1,25 @@
+#pragma once
+
+#include "AudioChannel.h"
+#include "AudioClip.h"
+static const int MAX_AUDIO_CHANNELS = 32;
+
+namespace Waldem
+{
+	class WALDEM_API Audio
+	{
+	public:
+		Audio() {}
+		virtual ~Audio() {}
+
+		static void Play(AudioClip* clip, float volume, bool loop = false);
+		static void Pause();
+		
+		static AudioClip* Load(String path, bool relative = true);
+		static AudioChannel& GetChannel(int channel) { return Instance->Channels[channel]; }
+		static Audio* Create();
+        inline static Audio* Instance;
+	protected:
+		inline static AudioChannel Channels[MAX_AUDIO_CHANNELS];
+	};
+}
