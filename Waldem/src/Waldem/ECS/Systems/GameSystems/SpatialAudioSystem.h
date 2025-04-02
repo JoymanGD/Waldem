@@ -36,10 +36,10 @@ namespace Waldem
                         continue;
                     }
 
-                    //distance handling
                     Vector3 listenerPos = listenerTransform.Position;
                     Vector3 sourcePos = sourceTransform.Position;
-
+                    
+                    //distance handling
                     float dx = sourcePos.x - listenerPos.x;
                     float dy = sourcePos.y - listenerPos.y;
                     float dz = sourcePos.z - listenerPos.z;
@@ -72,14 +72,19 @@ namespace Waldem
                     // {
                     //     audioSource.Clip->CurrentChannel->distanceVolume = 1.0f - (distance / audioSource.Range);
                     // }
-
+                    
                     //panning
                     Vector3 direction = normalize(sourcePos - listenerPos);
-                    direction.y = 0.0f;
-
                     Vector3 right = normalize(listenerTransform.GetRightVector());
-
-                    audioSource.Clip->CurrentChannel->pan = glm::clamp(dot(direction, right), -PAN_SIMPLIFICATION, PAN_SIMPLIFICATION);
+                    Vector3 forward = normalize(listenerTransform.GetForwardVector());
+                    
+                    float x = dot(direction, right);
+                    float z = dot(direction, forward);
+                    
+                    float angle = atan2(x, z);
+                    
+                    float pan = glm::clamp(sin(angle), -1.0f, 1.0f);
+                    audioSource.Clip->CurrentChannel->pan = pan * PAN_SIMPLIFICATION;
                 }
             }
 
