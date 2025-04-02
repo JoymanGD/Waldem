@@ -177,6 +177,11 @@ namespace Waldem
         VIDEO_ENCODE_WRITE	= 0x800000
     };
 
+    inline ResourceStates operator|(ResourceStates a, ResourceStates b)
+    {
+        return static_cast<ResourceStates>(static_cast<int>(a) | static_cast<int>(b));
+    }
+
     struct SViewport
     {
         float Width;

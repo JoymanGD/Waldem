@@ -44,18 +44,18 @@ namespace Sandbox
 			}
 
 			//water plane
-			// auto waterTexture = resourceManager->LoadTexture("Content/Textures/WaterColor.png");
-			// auto waterPlaneModel = importer.Import("Content/Models/WaterPlane.glb", true);
-			// for (Waldem::Mesh* mesh : waterPlaneModel->GetMeshes())
-			// {
-			// 	mesh->SetMaterial(new Waldem::Material(waterTexture, nullptr, nullptr, nullptr));
-			// 	auto waterPlaneEntity = ecsManager->CreateEntity("WaterPlane");
-			// 	waterPlaneEntity.Add<Waldem::MeshComponent>(mesh);
-			// 	Waldem::Transform transform = mesh->ObjectMatrix;
-			// 	transform.Translate({0,20,0});
-			// 	waterPlaneEntity.Add<Waldem::Transform>(transform);
-			// 	waterPlaneEntity.Add<Waldem::Ocean>();
-			// }
+			auto waterTexture = resourceManager->LoadTexture("Content/Textures/WaterColor.png");
+			auto waterPlaneModel = importer.Import("Content/Models/WaterPlane.glb");
+			for (Waldem::CMesh* mesh : waterPlaneModel->GetMeshes())
+			{
+				mesh->SetMaterial(new Waldem::Material(waterTexture, nullptr, nullptr));
+				auto waterPlaneEntity = ecsManager->CreateEntity("WaterPlane");
+				waterPlaneEntity.Add<Waldem::MeshComponent>(mesh);
+				Waldem::Transform transform = mesh->ObjectMatrix;
+				transform.Translate({0,20,0});
+				waterPlaneEntity.Add<Waldem::Transform>(transform);
+				waterPlaneEntity.Add<Waldem::Ocean>();
+			}
 
         	//dir light
 			auto dirLightEntity = ecsManager->CreateEntity("DirectionalLight");

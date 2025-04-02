@@ -23,6 +23,7 @@ namespace Waldem
         RayTracingShader* RTShader = nullptr;
         RootSignature* RTRootSignature = nullptr;
         WArray<AccelerationStructure*> BLAS;
+        WMap<CMesh*, AccelerationStructure*> BLASToUpdate;
         AccelerationStructure* TLAS = nullptr;
         RayTracingSceneData RTSceneData;
         WArray<RayTracingInstance> Instances;
@@ -54,6 +55,11 @@ namespace Waldem
                 BLAS.Add(blas);
 
                 Instances.Add(RayTracingInstance(blas, transform));
+
+                if(transformEntity.Has<Ocean>())
+                {
+                    BLASToUpdate.Add(meshComponent.Mesh, blas);
+                }
             }
             
             TLAS = Renderer::CreateTLAS("RayTracingTLAS", Instances);
@@ -102,6 +108,12 @@ namespace Waldem
             {
                 Instances[i].Transform = transform;
                 i++;
+            }
+
+            for (auto blas : BLASToUpdate)
+            {
+                WArray geometries { RayTracingGeometry(blas.key->VertexBuffer, blas.key->IndexBuffer) };
+                Renderer::UpdateBLAS(blas.value, geometries);
             }
 
             Renderer::UpdateTLAS(TLAS, Instances);
