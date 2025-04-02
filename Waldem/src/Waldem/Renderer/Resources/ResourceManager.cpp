@@ -54,11 +54,11 @@ namespace Waldem
     {
         Buffer* destBuffer = CreateBuffer(buffer->GetName() + "_Clone", buffer->GetType(), nullptr, buffer->GetSize(), buffer->GetStride());
 
-        Renderer::ResourceBarrier(buffer, VERTEX_AND_CONSTANT_BUFFER, COPY_SOURCE);
-        Renderer::ResourceBarrier(destBuffer, VERTEX_AND_CONSTANT_BUFFER, COPY_DEST);
+        Renderer::ResourceBarrier(buffer, VERTEX_AND_CONSTANT_BUFFER | NON_PIXEL_SHADER_RESOURCE, COPY_SOURCE);
+        Renderer::ResourceBarrier(destBuffer, VERTEX_AND_CONSTANT_BUFFER | NON_PIXEL_SHADER_RESOURCE, COPY_DEST);
         Renderer::CopyBuffer(destBuffer, buffer);
-        Renderer::ResourceBarrier(buffer, COPY_SOURCE, VERTEX_AND_CONSTANT_BUFFER);
-        Renderer::ResourceBarrier(destBuffer, COPY_DEST, VERTEX_AND_CONSTANT_BUFFER);
+        Renderer::ResourceBarrier(buffer, COPY_SOURCE, VERTEX_AND_CONSTANT_BUFFER | NON_PIXEL_SHADER_RESOURCE);
+        Renderer::ResourceBarrier(destBuffer, COPY_DEST, VERTEX_AND_CONSTANT_BUFFER | NON_PIXEL_SHADER_RESOURCE);
 
         return destBuffer;
     }

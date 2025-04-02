@@ -40,7 +40,7 @@ namespace Waldem
 			resourceManager->CreateRenderTarget("DepthRT", resolution.x, resolution.y, TextureFormat::D32_FLOAT);
 			resourceManager->CreateRenderTarget("RadianceRT", resolution.x, resolution.y, TextureFormat::R32G32B32A32_FLOAT);
 
-			// DrawSystems.Add((ISystem*)new OceanSimulationSystem(ecsManager));
+			DrawSystems.Add((ISystem*)new OceanSimulationSystem(ecsManager));
 			DrawSystems.Add((ISystem*)new SpatialAudioSystem(ecsManager));
 			DrawSystems.Add((ISystem*)new GBufferSystem(ecsManager));
 			DrawSystems.Add((ISystem*)new RayTracingRadianceSystem(ecsManager));

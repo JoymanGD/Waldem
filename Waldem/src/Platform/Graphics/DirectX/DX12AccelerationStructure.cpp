@@ -137,8 +137,7 @@ namespace Waldem
 
         cmdList->BuildRaytracingAccelerationStructure(&asDesc);
 
-        auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(Resource);
-        cmdList->ResourceBarrier(1, &barrier);
+        cmdList->UAVBarrier(Resource);
     }
 
     //BOTTOM LEVEL
@@ -192,8 +191,7 @@ namespace Waldem
         // Add a UAV barrier to ensure the structure update is complete
         cmdList->UAVBarrier(Resource);
     }
-
-
+    
     //TOP LEVEL
     void DX12AccelerationStructure::Update(DX12CommandList* cmdList, WArray<RayTracingInstance>& instances)
     {
@@ -244,7 +242,6 @@ namespace Waldem
         cmdList->BuildRaytracingAccelerationStructure(&asDesc);
 
         // Insert a barrier to ensure completion
-        auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(Resource);
-        cmdList->ResourceBarrier(1, &barrier);
+        cmdList->UAVBarrier(Resource);
     }
 }

@@ -441,7 +441,7 @@ namespace Waldem
             //Ocean displacement
             for (auto vertexBuffer : VertexBuffers)
             {
-                Renderer::ResourceBarrier(vertexBuffer, (ResourceStates)(ALL_SHADER_RESOURCE | VERTEX_AND_CONSTANT_BUFFER), UNORDERED_ACCESS);
+                Renderer::ResourceBarrier(vertexBuffer, ALL_SHADER_RESOURCE | VERTEX_AND_CONSTANT_BUFFER, UNORDERED_ACCESS);
             }
             Renderer::SetPipeline(OceanDisplacementPipeline);
             Renderer::SetRootSignature(OceanDisplacementRootSignature);
@@ -449,7 +449,7 @@ namespace Waldem
             Renderer::Compute(ButterflyGroupCount);
             for (auto vertexBuffer : VertexBuffers)
             {
-                Renderer::ResourceBarrier(vertexBuffer, UNORDERED_ACCESS, (ResourceStates)(ALL_SHADER_RESOURCE | VERTEX_AND_CONSTANT_BUFFER));
+                Renderer::ResourceBarrier(vertexBuffer, UNORDERED_ACCESS, ALL_SHADER_RESOURCE | VERTEX_AND_CONSTANT_BUFFER);
             }
         }
     };
