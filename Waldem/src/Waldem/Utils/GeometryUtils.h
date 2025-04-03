@@ -19,11 +19,21 @@ namespace Waldem
     
     struct Contact
     {
+        ColliderComponent* ColliderA;
+        ColliderComponent* ColliderB;
         Vector3 ContactPointA;
         Vector3 ContactPointB;
         Vector3 Normal;
         float PenetrationDepth;
         bool HasCollision;
+
+        void AddContactPoint(const Vector3& localA, const Vector3& localB, const Vector3& normal, float p)
+        {
+            ContactPointA = localA;
+            ContactPointB = localB;
+            Normal = normal;
+            PenetrationDepth = p;
+        }
     };
 
     struct CollisionPairHash

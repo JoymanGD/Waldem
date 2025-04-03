@@ -2,11 +2,19 @@
 #include "Waldem/ECS/Components/ColliderComponent.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
 #include "Waldem/ECS/Systems/System.h"
+#include "Waldem/Math/Math.h"
 #include "Waldem/Renderer/AABB.h"
+#include "Waldem/Renderer/Model/Plane.h"
 #include "Waldem/Renderer/Model/Simplex.h"
 #include "Waldem/Renderer/Model/Transform.h"
 #include "Waldem/Utils/GeometryUtils.h"
-#include "Waldem/Types/WMap.h"
+
+#define EPA_EPSILON 1e-5
+#define GJK_MAX_NUM_ITERATIONS 64
+#define EPA_MAX_NUM_ITERATIONS 64
+#define EPA_MAX_NUM_LOOSE_EDGES 32
+#define EPA_MAX_NUM_FACES 64
+#define EPA_TOLERANCE 0.0001f
 
 namespace Waldem
 {
@@ -14,8 +22,8 @@ namespace Waldem
     {
     private:
         BVHNode* RootNode;
-        int MaxIterations = 20;
-        const float EPA_EPSILON = 1e-5;
+        int MaxIterations = 50;
+        int MaxResolveIterations = 5;
         
         BVHNode* BuildBVH(WArray<AABB>& objects, WArray<String>& names, int start, int end)
         {
@@ -112,206 +120,540 @@ namespace Waldem
             }
         }
 
-        Contact EPA(const Simplex& simplex, const ColliderComponent* colliderA, const ColliderComponent* colliderB, Transform* worldTransformA, Transform* worldTransformB)
+        // Contact EPA(const Simplex& simplex, const ColliderComponent* colliderA, const ColliderComponent* colliderB, Transform* worldTransformA, Transform* worldTransformB)
+        // {
+        //     Contact contact;
+        //     contact.HasCollision = false;
+        //
+        //     std::vector<Vector3> polytope;
+        //     std::vector<Vector3> sourcePointsA;
+        //     std::vector<Vector3> sourcePointsB;
+        //
+        //     for (auto& vertex : simplex)
+        //     {
+        //         polytope.push_back(vertex.Point);
+        //         sourcePointsA.push_back(vertex.SupportA); 
+        //         sourcePointsB.push_back(vertex.SupportB);
+        //     }
+        //
+        //     std::vector<size_t> faces = {
+        //         0, 1, 2,
+        //         0, 3, 1,
+        //         0, 2, 3,
+        //         1, 3, 2
+        //     };
+        //
+        //     auto [normals, minFace] = GeometryUtils::GetFaceNormals(polytope, faces);
+        //
+        //     Vector3 minNormal;
+        //     float minDistance = FLT_MAX;
+        //
+        //     // We'll store the final 'face indices'
+        //     int finalFaceIdx = -1;
+        //
+        //     // Store expansions in parallel arrays
+        //     // so each polytope vertex has a corresponding A/B source
+        //     auto pushSupport = [&](const Vector3& v, const Vector3& a, const Vector3& b)
+        //     {
+        //         polytope.push_back(v);
+        //         sourcePointsA.push_back(a);
+        //         sourcePointsB.push_back(b);
+        //     };
+        //
+        //     uint32_t iterations = 0;
+        //     
+        //     // Iteration loop
+        //     while (minDistance == FLT_MAX && iterations < MaxIterations)
+        //     {
+        //         minNormal   = normals[minFace];
+        //         minDistance = normals[minFace].w;
+        //         finalFaceIdx = (int)minFace;
+        //
+        //         // get support from colliders
+        //         Vector3 supportA = colliderA->FindFurthestPoint(minNormal, worldTransformA);
+        //         Vector3 supportB = colliderB->FindFurthestPoint(-minNormal, worldTransformB);
+        //         Vector3 support  = supportA - supportB;
+        //
+        //         float sDistance = dot(minNormal, support);
+        //
+        //         // Check if this actually improves
+        //         if (fabs(sDistance - minDistance) > 0.0001f) // smaller threshold
+        //         {
+        //             minDistance = FLT_MAX;
+        //
+        //             std::vector<std::pair<size_t, size_t>> uniqueEdges;
+        //
+        //             for (size_t i = 0; i < normals.size(); i++)
+        //             {
+        //                 if (GeometryUtils::SameDirection(normals[i], support - polytope[faces[i*3]]))
+        //                 {
+        //                     size_t f = i * 3;
+        //
+        //                     GeometryUtils::AddIfUniqueEdge(uniqueEdges, faces, f, f + 1);
+        //                     GeometryUtils::AddIfUniqueEdge(uniqueEdges, faces, f + 1, f + 2);
+        //                     GeometryUtils::AddIfUniqueEdge(uniqueEdges, faces, f + 2, f);
+        //
+        //                     // remove face i
+        //                     faces[f + 2] = faces.back(); faces.pop_back();
+        //                     faces[f + 1] = faces.back(); faces.pop_back();
+        //                     faces[f]     = faces.back(); faces.pop_back();
+        //
+        //                     normals[i] = normals.back();
+        //                     normals.pop_back();
+        //
+        //                     i--;
+        //                 }
+        //             }
+        //
+        //             // build new faces from uniqueEdges
+        //             std::vector<size_t> newFaces;
+        //             size_t newVertIndex = polytope.size();
+        //
+        //             pushSupport(support, supportA, supportB);
+        //
+        //             for (auto [edgeIndex1, edgeIndex2] : uniqueEdges)
+        //             {
+        //                 newFaces.push_back(edgeIndex1);
+        //                 newFaces.push_back(edgeIndex2);
+        //                 newFaces.push_back(newVertIndex);
+        //             }
+        //
+        //             auto [newNormals, newMinFace] = GeometryUtils::GetFaceNormals(polytope, newFaces);
+        //
+        //             float oldMinDistance = FLT_MAX;
+        //             for (size_t i = 0; i < normals.size(); i++)
+        //             {
+        //                 if (normals[i].w < oldMinDistance)
+        //                 {
+        //                     oldMinDistance = normals[i].w;
+        //                     minFace = i;
+        //                 }
+        //             }
+        //
+        //             if (newNormals.empty())
+        //                 return contact;
+        //
+        //             if (newNormals[newMinFace].w < oldMinDistance)
+        //             {
+        //                 minFace = newMinFace + normals.size();
+        //             }
+        //
+        //             faces.insert(faces.end(), newFaces.begin(), newFaces.end());
+        //             normals.insert(normals.end(), newNormals.begin(), newNormals.end());
+        //         }
+        //
+        //         iterations++;
+        //     }
+        //
+        //     // We can compute a better contact point:
+        //     contact.HasCollision = true;
+        //     
+        //     contact.Normal = normalize(minNormal);
+        //
+        //     // optional margin:
+        //     contact.PenetrationDepth = minDistance;
+        //
+        //     // Let's find the actual face indices
+        //     size_t idx0 = faces[finalFaceIdx*3 + 0];
+        //     size_t idx1 = faces[finalFaceIdx*3 + 1];
+        //     size_t idx2 = faces[finalFaceIdx*3 + 2];
+        //
+        //     Vector3 v0 = polytope[idx0];
+        //     Vector3 v1 = polytope[idx1];
+        //     Vector3 v2 = polytope[idx2];
+        //
+        //     Vector3 a0 = sourcePointsA[idx0];
+        //     Vector3 a1 = sourcePointsA[idx1];
+        //     Vector3 a2 = sourcePointsA[idx2];
+        //
+        //     Vector3 b0 = sourcePointsB[idx0];
+        //     Vector3 b1 = sourcePointsB[idx1];
+        //     Vector3 b2 = sourcePointsB[idx2];
+        //
+        //     // Solve for barycentric coords alpha0, alpha1, alpha2 such that
+        //     // alpha0+alpha1+alpha2=1 and alpha0*v0 + alpha1*v1 + alpha2*v2=0
+        //     float alpha0, alpha1, alpha2;
+        //     GeometryUtils::ComputeBarycentricForOriginInTriangle(v0, v1, v2, alpha0, alpha1, alpha2);
+        //
+        //     // Then final contact points
+        //     contact.ContactPointA = alpha0 * a0 + alpha1 * a1 + alpha2 * a2;
+        //     contact.ContactPointB = alpha0 * b0 + alpha1 * b1 + alpha2 * b2;
+        //
+        //     return contact;
+        // }
+
+        // Contact GJK(const ColliderComponent* colliderA, const ColliderComponent* colliderB, Transform* worldTransformA, Transform* worldTransformB)
+        // {
+        //     Contact contact;
+        //
+        //     Vector3 initialDir = Vector3(1, 0, 0);
+        //     
+        //     SimplexVertex support = SimplexVertex(colliderA->FindFurthestPoint(initialDir, worldTransformA), colliderB->FindFurthestPoint(-initialDir, worldTransformB));
+        //
+        //     Simplex points;
+        //     points.Add(support);
+        //
+        //     Vector3 direction = -support.Point;
+        //
+        //     int iterations = 0;
+        //     
+        //     while(true)
+        //     {
+        //         if(iterations > MaxIterations)
+        //         {
+        //             contact.HasCollision = false;
+        //             return contact;
+        //         }
+        //         
+        //         support = SimplexVertex(colliderA->FindFurthestPoint(direction, worldTransformA), colliderB->FindFurthestPoint(-direction, worldTransformB));
+        //
+        //         if(dot(support.Point, direction) <= 0)
+        //         {
+        //             contact.HasCollision = false;
+        //             return contact;
+        //         }
+        //
+        //         points.Add(support);
+        //
+        //         if(GeometryUtils::NextSimplex(points, direction))
+        //         {
+        //             contact = EPA(points, colliderA, colliderB, worldTransformA, worldTransformB);
+        //             
+        //             return contact;
+        //         }
+        //
+        //         iterations++;
+        //     }
+        // }
+
+        struct CollisionPoint
         {
-            Contact contact;
-            contact.HasCollision = false;
+            Vector3 p; //Conserve Minkowski Difference
+            Vector3 a; //Result coordinate of object A's support function 
+            Vector3 b; //Result coordinate of object B's support function 
+        };
 
-            std::vector<Vector3> polytope;
-            std::vector<Vector3> sourcePointsA;
-            std::vector<Vector3> sourcePointsB;
-
-            for (auto& vertex : simplex)
-            {
-                polytope.push_back(vertex.Point);
-                sourcePointsA.push_back(vertex.SupportA); 
-                sourcePointsB.push_back(vertex.SupportB);
-            }
-
-            std::vector<size_t> faces = {
-                0, 1, 2,
-                0, 3, 1,
-                0, 2, 3,
-                1, 3, 2
-            };
-
-            auto [normals, minFace] = GeometryUtils::GetFaceNormals(polytope, faces);
-
-            Vector3 minNormal;
-            float minDistance = FLT_MAX;
-
-            // We'll store the final 'face indices'
-            int finalFaceIdx = -1;
-
-            // Store expansions in parallel arrays
-            // so each polytope vertex has a corresponding A/B source
-            auto pushSupport = [&](const Vector3& v, const Vector3& a, const Vector3& b)
-            {
-                polytope.push_back(v);
-                sourcePointsA.push_back(a);
-                sourcePointsB.push_back(b);
-            };
-
-            // Iteration loop
-            while (minDistance == FLT_MAX)
-            {
-                minNormal   = normals[minFace];
-                minDistance = normals[minFace].w;
-                finalFaceIdx = (int)minFace;
-
-                // get support from colliders
-                Vector3 supportA = colliderA->FindFurthestPoint(minNormal, worldTransformA);
-                Vector3 supportB = colliderB->FindFurthestPoint(-minNormal, worldTransformB);
-                Vector3 support  = supportA - supportB;
-
-                float sDistance = dot(minNormal, support);
-
-                // Check if this actually improves
-                if (fabs(sDistance - minDistance) > 0.0001f) // smaller threshold
-                {
-                    minDistance = FLT_MAX;
-
-                    std::vector<std::pair<size_t, size_t>> uniqueEdges;
-
-                    for (size_t i = 0; i < normals.size(); i++)
-                    {
-                        if (GeometryUtils::SameDirection(normals[i], support - polytope[faces[i*3]]))
-                        {
-                            size_t f = i * 3;
-
-                            GeometryUtils::AddIfUniqueEdge(uniqueEdges, faces, f, f + 1);
-                            GeometryUtils::AddIfUniqueEdge(uniqueEdges, faces, f + 1, f + 2);
-                            GeometryUtils::AddIfUniqueEdge(uniqueEdges, faces, f + 2, f);
-
-                            // remove face i
-                            faces[f + 2] = faces.back(); faces.pop_back();
-                            faces[f + 1] = faces.back(); faces.pop_back();
-                            faces[f]     = faces.back(); faces.pop_back();
-
-                            normals[i] = normals.back();
-                            normals.pop_back();
-
-                            i--;
-                        }
-                    }
-
-                    // build new faces from uniqueEdges
-                    std::vector<size_t> newFaces;
-                    size_t newVertIndex = polytope.size();
-
-                    pushSupport(support, supportA, supportB);
-
-                    for (auto [edgeIndex1, edgeIndex2] : uniqueEdges)
-                    {
-                        newFaces.push_back(edgeIndex1);
-                        newFaces.push_back(edgeIndex2);
-                        newFaces.push_back(newVertIndex);
-                    }
-
-                    auto [newNormals, newMinFace] = GeometryUtils::GetFaceNormals(polytope, newFaces);
-
-                    float oldMinDistance = FLT_MAX;
-                    for (size_t i = 0; i < normals.size(); i++)
-                    {
-                        if (normals[i].w < oldMinDistance)
-                        {
-                            oldMinDistance = normals[i].w;
-                            minFace = i;
-                        }
-                    }
-
-                    if (newNormals.empty())
-                        return contact;
-
-                    if (newNormals[newMinFace].w < oldMinDistance)
-                    {
-                        minFace = newMinFace + normals.size();
-                    }
-
-                    faces.insert(faces.end(), newFaces.begin(), newFaces.end());
-                    normals.insert(normals.end(), newNormals.begin(), newNormals.end());
-                }
-            }
-
-            // We can compute a better contact point:
-            contact.HasCollision = true;
-            contact.Normal = minNormal;
-
-            // optional margin:
-            float margin = 0.00001f;
-            contact.PenetrationDepth = minDistance + margin;
-
-            // Let's find the actual face indices
-            size_t idx0 = faces[finalFaceIdx*3 + 0];
-            size_t idx1 = faces[finalFaceIdx*3 + 1];
-            size_t idx2 = faces[finalFaceIdx*3 + 2];
-
-            Vector3 v0 = polytope[idx0];
-            Vector3 v1 = polytope[idx1];
-            Vector3 v2 = polytope[idx2];
-
-            Vector3 a0 = sourcePointsA[idx0];
-            Vector3 a1 = sourcePointsA[idx1];
-            Vector3 a2 = sourcePointsA[idx2];
-
-            Vector3 b0 = sourcePointsB[idx0];
-            Vector3 b1 = sourcePointsB[idx1];
-            Vector3 b2 = sourcePointsB[idx2];
-
-            // Solve for barycentric coords alpha0, alpha1, alpha2 such that
-            // alpha0+alpha1+alpha2=1 and alpha0*v0 + alpha1*v1 + alpha2*v2=0
-            float alpha0, alpha1, alpha2;
-            GeometryUtils::ComputeBarycentricForOriginInTriangle(v0, v1, v2, alpha0, alpha1, alpha2);
-
-            // Then final contact points
-            contact.ContactPointA = alpha0 * a0 + alpha1 * a1 + alpha2 * a2;
-            contact.ContactPointB = alpha0 * b0 + alpha1 * b1 + alpha2 * b2;
-
-            return contact;
+        void CalculateSearchPoint(CollisionPoint& point, Vector3& search_dir, ColliderComponent* coll1, ColliderComponent* coll2, Transform* worldTransformA, Transform* worldTransformB)
+        {
+            point.b = coll2->FindFurthestPoint(search_dir, worldTransformA);
+            point.a = coll1->FindFurthestPoint(-search_dir, worldTransformB);
+            point.p = point.b - point.a;
         }
 
-        Contact GJK(const ColliderComponent* colliderA, const ColliderComponent* colliderB, Transform* worldTransformA, Transform* worldTransformB)
+        void update_simplex3(CollisionPoint& a, CollisionPoint& b, CollisionPoint& c, CollisionPoint& d, int& simp_dim, Vector3& search_dir)
+        {
+	        /* Required winding order:
+	           //  b
+	           //  | \
+	           //  |   \
+	           //  |    a
+	           //  |   /
+	           //  | /
+	           //  c
+	           */
+	        Vector3 n = cross(b.p - a.p, c.p - a.p); //triangle's normal
+	        Vector3 AO = -a.p; //direction to origin
+
+	        //Determine which feature is closest to origin, make that the new simplex
+
+	        simp_dim = 2;
+	        if (dot(cross(b.p - a.p, n), AO) > 0) { //Closest to edge AB
+		        c = a;
+		        //simp_dim = 2;
+		        search_dir = cross(cross(b.p - a.p, AO), b.p - a.p);
+		        return;
+	        }
+	        if (dot(cross(n, c.p - a.p), AO) > 0) { //Closest to edge AC
+		        b = a;
+		        //simp_dim = 2;
+		        search_dir = cross(cross(c.p - a.p, AO), c.p - a.p);
+		        return;
+	        }
+
+	        simp_dim = 3;
+	        if (dot(n, AO) > 0) { //Above triangle
+		        d = c;
+		        c = b;
+		        b = a;
+		        //simp_dim = 3;
+		        search_dir = n;
+		        return;
+	        }
+	        //else //Below triangle
+	        d = b;
+	        b = a;
+	        //simp_dim = 3;
+	        search_dir = -n;
+	        return;
+        }
+
+        bool update_simplex4(CollisionPoint& a, CollisionPoint& b, CollisionPoint& c, CollisionPoint& d, int& simp_dim, Vector3& search_dir)
+        {
+	        // a is peak/tip of pyramid, BCD is the base (counterclockwise winding order)
+	        //We know a priori that origin is above BCD and below a
+
+	        //Get normals of three new faces
+	        Vector3 ABC = cross(b.p - a.p, c.p - a.p);
+	        Vector3 ACD = cross(c.p - a.p, d.p - a.p);
+	        Vector3 ADB = cross(d.p - a.p, b.p - a.p);
+
+	        Vector3 AO = -a.p; //dir to origin
+	        simp_dim = 3; //hoisting this just cause
+
+	        //Plane-test origin with 3 faces
+	        /*
+	        // Note: Kind of primitive approach used here; If origin is in front of a face, just use it as the new simplex.
+	        // We just go through the faces sequentially and exit at the first one which satisfies dot product. Not sure this
+	        // is optimal or if edges should be considered as possible simplices? Thinking this through in my head I feel like
+	        // this method is good enough. Makes no difference for AABBS, should test with more complex colliders.
+	        */
+	        if (dot(ABC, AO) > 0) { //In front of ABC
+		        d = c;
+		        c = b;
+		        b = a;
+		        search_dir = ABC;
+		        return false;
+	        }
+
+	        if (dot(ACD, AO) > 0) { //In front of ACD
+		        b = a;
+		        search_dir = ACD;
+		        return false;
+	        }
+	        if (dot(ADB, AO) > 0) { //In front of ADB
+		        c = d;
+		        d = b;
+		        b = a;
+		        search_dir = ADB;
+		        return false;
+	        }
+
+	        //else inside tetrahedron; enclosed!
+	        return true;
+        }
+
+        void EPA(CollisionPoint& a, CollisionPoint& b, CollisionPoint& c, CollisionPoint& d, ColliderComponent* coll1, ColliderComponent* coll2, Transform* worldTransformA, Transform* worldTransformB, Contact& collisionInfo)
+		{
+			CollisionPoint faces[EPA_MAX_NUM_FACES][4]; //Array of faces, each with 3 verts and a normal
+
+			Vector3 VertexA[3];
+			Vector3 VertexB[3];
+
+			//Init with final simplex from GJK
+			faces[0][0] = a;
+			faces[0][1] = b;
+			faces[0][2] = c;
+			faces[0][3].p = normalize(cross(b.p - a.p, c.p - a.p)); //ABC
+			faces[1][0] = a;
+			faces[1][1] = c;
+			faces[1][2] = d;
+			faces[1][3].p = normalize(cross(c.p - a.p, d.p - a.p)); //ACD
+			faces[2][0] = a;
+			faces[2][1] = d;
+			faces[2][2] = b;
+			faces[2][3].p = normalize(cross(d.p - a.p, b.p - a.p)); //ADB
+			faces[3][0] = b;
+			faces[3][1] = d;
+			faces[3][2] = c;
+			faces[3][3].p = normalize(cross(d.p - b.p, c.p - b.p)); //BDC
+
+			int num_faces = 4;
+			int closest_face;
+
+			for (int iterations = 0; iterations < EPA_MAX_NUM_ITERATIONS; iterations++)
+			{
+				//Find face that's closest to origin
+				float min_dist = dot(faces[0][0].p, faces[0][3].p);
+				closest_face = 0;
+				for (int i = 1; i < num_faces; i++)
+				{
+					float dist = dot(faces[i][0].p, faces[i][3].p);
+					if (dist < min_dist)
+					{
+						min_dist = dist;
+						closest_face = i;
+					}
+				}
+
+				//search normal to face that's closest to origin
+				Vector3 search_dir = faces[closest_face][3].p;
+
+				CollisionPoint p;
+				CalculateSearchPoint(p, search_dir, coll1, coll2, worldTransformA, worldTransformB);
+
+				if (dot(p.p, search_dir) - min_dist < EPA_TOLERANCE) {
+
+				/*Core of calculating collision information*/
+					Plane closestPlane = Plane::PlaneFromTri(faces[closest_face][0].p, faces[closest_face][1].p, faces[closest_face][2].p); //plane of closest triangle face
+					Vector3 projectionPoint = closestPlane.ProjectPointOntoPlane(Vector3(0, 0, 0)); //projecting the origin onto the triangle(both are in Minkowski space)
+					float u, v, w;
+					Math::Barycentric(faces[closest_face][0].p, faces[closest_face][1].p, faces[closest_face][2].p,
+						projectionPoint, u, v, w); //finding the barycentric coordinate of this projection point to the triangle
+
+					//The contact points just have the same barycentric coordinate in their own triangles which  are composed by result coordinates of support function 
+					Vector3 localA = faces[closest_face][0].a * u + faces[closest_face][1].a * v + faces[closest_face][2].a * w;
+					Vector3 localB = faces[closest_face][0].b * u + faces[closest_face][1].b * v + faces[closest_face][2].b * w;
+					float penetration = length(localA - localB);
+					Vector3 normal = normalize(localA - localB);
+
+					//Convergence (new point is not significantly further from origin)
+					localA -= worldTransformA->Position;
+					localB -= worldTransformB->Position;
+
+					collisionInfo.AddContactPoint(localA, localB, normal, penetration);
+				/*Core of calculating collision information*/
+
+					return;
+				}
+
+				CollisionPoint loose_edges[EPA_MAX_NUM_LOOSE_EDGES][2]; //keep track of edges we need to fix after removing faces
+				int num_loose_edges = 0;
+
+				//Find all triangles that are facing p
+				for (int i = 0; i < num_faces; i++)
+				{
+					if (dot(faces[i][3].p, p.p - faces[i][0].p) > 0) //triangle i faces p, remove it
+					{
+						//Add removed triangle's edges to loose edge list.
+						//If it's already there, remove it (both triangles it belonged to are gone)
+						for (int j = 0; j < 3; j++) //Three edges per face
+						{
+							CollisionPoint current_edge[2] = { faces[i][j], faces[i][(j + 1) % 3] };
+							bool found_edge = false;
+							for (int k = 0; k < num_loose_edges; k++) //Check if current edge is already in list
+							{
+								if (loose_edges[k][1].p == current_edge[0].p && loose_edges[k][0].p == current_edge[1].p) {
+									loose_edges[k][0] = loose_edges[num_loose_edges - 1][0]; //Overwrite current edge
+									loose_edges[k][1] = loose_edges[num_loose_edges - 1][1]; //with last edge in list
+									num_loose_edges--;
+									found_edge = true;
+									k = num_loose_edges; //exit loop because edge can only be shared once
+								}
+							}//endfor loose_edges
+
+							if (!found_edge) { //add current edge to list
+								// assert(num_loose_edges<EPA_MAX_NUM_LOOSE_EDGES);
+								if (num_loose_edges >= EPA_MAX_NUM_LOOSE_EDGES) break;
+								loose_edges[num_loose_edges][0] = current_edge[0];
+								loose_edges[num_loose_edges][1] = current_edge[1];
+								num_loose_edges++;
+							}
+						}
+
+						//Remove triangle i from list
+						faces[i][0] = faces[num_faces - 1][0];
+						faces[i][1] = faces[num_faces - 1][1];
+						faces[i][2] = faces[num_faces - 1][2];
+						faces[i][3] = faces[num_faces - 1][3];
+						num_faces--;
+						i--;
+					}//endif p can see triangle i
+				}//endfor num_faces
+
+				//Reconstruct polytope with p added
+				for (int i = 0; i < num_loose_edges; i++)
+				{
+					// assert(num_faces<EPA_MAX_NUM_FACES);
+					if (num_faces >= EPA_MAX_NUM_FACES) break;
+					faces[num_faces][0] = loose_edges[i][0];
+					faces[num_faces][1] = loose_edges[i][1];
+					faces[num_faces][2] = p;
+					faces[num_faces][3].p = normalize(cross(loose_edges[i][0].p - loose_edges[i][1].p, loose_edges[i][0].p - p.p));
+
+					//Check for wrong normal to maintain CCW winding
+					float bias = 0.000001f; //in case dot result is only slightly < 0 (because origin is on face)
+					if (dot(faces[num_faces][0].p, faces[num_faces][3].p) + bias < 0)
+					{
+						CollisionPoint temp = faces[num_faces][0];
+						faces[num_faces][0] = faces[num_faces][1];
+						faces[num_faces][1] = temp;
+						faces[num_faces][3].p = -faces[num_faces][3].p;
+					}
+					num_faces++;
+				}
+			} //End for iterations
+			printf("EPA did not converge\n");
+			//Return most recent closest point
+			Vector3 search_dir = faces[closest_face][3].p;
+
+			CollisionPoint p;
+			CalculateSearchPoint(p, search_dir, coll1, coll2, worldTransformA, worldTransformB);
+
+			Plane closestPlane = Plane::PlaneFromTri(faces[closest_face][0].p, faces[closest_face][1].p, faces[closest_face][2].p);
+			Vector3 projectionPoint = closestPlane.ProjectPointOntoPlane(Vector3(0, 0, 0));
+			float u, v, w;
+			Math::Barycentric(faces[closest_face][0].p, faces[closest_face][1].p, faces[closest_face][2].p, projectionPoint, u, v, w);
+			Vector3 localA = faces[closest_face][0].a * u + faces[closest_face][1].a * v + faces[closest_face][2].a * w;
+			Vector3 localB = faces[closest_face][0].b * u + faces[closest_face][1].b * v + faces[closest_face][2].b * w;
+			float penetration = length(localA - localB);
+			Vector3 normal = normalize(localA - localB);
+
+			collisionInfo.AddContactPoint(localA, localB, normal, penetration);
+		}
+
+        bool GJK(ColliderComponent* colliderA, ColliderComponent* colliderB, Transform* worldTransformA, Transform* worldTransformB, Contact& outContact)
         {
             Contact contact;
+            contact.ColliderA = colliderA;
+            contact.ColliderB = colliderB;
 
-            Vector3 initialDir = Vector3(1, 0, 0);
+            Vector3* mtv;
+
+            Vector3 coll1Pos = worldTransformA->Position;
+            Vector3 coll2Pos = worldTransformB->Position;
             
-            SimplexVertex support = SimplexVertex(colliderA->FindFurthestPoint(initialDir, worldTransformA), colliderB->FindFurthestPoint(-initialDir, worldTransformB));
-
-            Simplex points;
-            points.Add(support);
-
-            Vector3 direction = -support.Point;
-
-            int iterations = 0;
+            CollisionPoint a, b, c, d;
             
-            while(true)
+            Vector3 search_dir = coll1Pos - coll2Pos;
+
+            CalculateSearchPoint(c, search_dir, colliderA, colliderB, worldTransformA, worldTransformB);
+            search_dir = -c.p;
+            
+            CalculateSearchPoint(b, search_dir, colliderA, colliderB, worldTransformA, worldTransformB);
+
+            if (dot(b.p, search_dir) < 0)
             {
-                if(iterations > MaxIterations)
+                return false;
+            }//we didn't reach the origin, won't enclose it
+
+            search_dir = cross(cross(c.p - b.p, -b.p), c.p - b.p);
+
+            if (search_dir == Vector3(0)) //origin is on this line segment
+            {
+                //Apparently any normal search vector will do?
+                search_dir = cross(c.p - b.p, Vector3(1, 0, 0)); //normal with x-axis
+
+                if (search_dir == Vector3(0, 0, 0))
                 {
-                    contact.HasCollision = false;
-                    return contact;
+                    search_dir = cross(c.p - b.p, Vector3(0, 0, -1)); //normal with z-axis
                 }
-                
-                support = SimplexVertex(colliderA->FindFurthestPoint(direction, worldTransformA), colliderB->FindFurthestPoint(-direction, worldTransformB));
-
-                if(dot(support.Point, direction) <= 0)
-                {
-                    contact.HasCollision = false;
-                    return contact;
-                }
-
-                points.Add(support);
-
-                if(GeometryUtils::NextSimplex(points, direction))
-                {
-                    contact = EPA(points, colliderA, colliderB, worldTransformA, worldTransformB);
-                    
-                    return contact;
-                }
-
-                iterations++;
             }
+
+            int simp_dim = 2;
+
+            for (int iterations = 0; iterations < GJK_MAX_NUM_ITERATIONS; iterations++)
+            {
+                //Point a;
+                CalculateSearchPoint(a, search_dir, colliderA, colliderB, worldTransformA, worldTransformB);
+
+                if (dot(a.p, search_dir) < 0)
+                {
+                    return false;
+                }//we didn't reach the origin, won't enclose it
+
+                simp_dim++;
+                if (simp_dim == 3)
+                {
+                    update_simplex3(a, b, c, d, simp_dim, search_dir);
+                }
+                else if (update_simplex4(a, b, c, d, simp_dim, search_dir))
+                {
+                    EPA(a, b, c, d, colliderA, colliderB, worldTransformA, worldTransformB, outContact);
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         void ResolveCollision(Transform* transformA, Transform* transformB, RigidBody* rigidBodyA, RigidBody* rigidBodyB, const Contact& contact)
@@ -321,7 +663,7 @@ namespace Waldem
 
             // 1. Positional correction (same approach)
             {
-                const float percent = 0.8f;  // typically 20–80% correction
+                const float percent = 0.3f;  // typically 20–80% correction
                 const float slop = 0.01f;    // penetration slop
 
                 // penetration depth - slop
@@ -336,6 +678,8 @@ namespace Waldem
             //    We'll do a more accurate velocityAlongNormal by considering relative angular velocity too
             Vector3 ra = (contact.ContactPointA - transformA->Position); // radius from A's center of mass to contact
             Vector3 rb = (contact.ContactPointB - transformB->Position); // radius from B's center of mass to contact
+            float check = dot(contact.ContactPointB - contact.ContactPointA, contact.Normal);
+            WD_CORE_INFO("Check: {0}, PDepth: {1}", check, contact.PenetrationDepth);
 
             // linear velocity at contact point from each body
             Vector3 velA = rigidBodyA->Velocity + cross(rigidBodyA->AngularVelocity, ra);
@@ -410,14 +754,14 @@ namespace Waldem
                     continue;
                 }
 
-                auto contact = GJK(collider1, collider2, worldTransformA, worldTransformB);
+            	Contact contact;
                 
-                if (contact.HasCollision)
+                if (GJK(collider1, collider2, worldTransformA, worldTransformB, contact))
                 {
                     collider1->IsColliding = true;
                     collider2->IsColliding = true;
-                
-                    ResolveCollision(worldTransformA, worldTransformB, rigidBodyA, rigidBodyB, contact);
+
+                    // ResolveCollision(worldTransformA, worldTransformB, rigidBodyA, rigidBodyB, contact);
                 }
             }
         }
