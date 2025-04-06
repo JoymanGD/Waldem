@@ -102,7 +102,7 @@ namespace Waldem
                 Renderer::SetPipeline(MeshCollidersRenderingPipeline);
                 Renderer::SetRootSignature(MeshCollidersRenderingRootSignature);
                 MeshCollidersRenderingRootSignature->UpdateResourceData("RootConstants", &MeshColliderRenderingConstants);
-                Renderer::Draw(collider.MeshData.Mesh);
+                // Renderer::Draw(collider.MeshData.Mesh);
                 
                 lines.AddRange(meshComponent.Mesh->BBox.GetTransformed(transform).GetLines(color));
             }

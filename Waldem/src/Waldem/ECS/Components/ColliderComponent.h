@@ -3,9 +3,7 @@
 #include "Waldem/Renderer/Model/Mesh.h"
 #include <execution>
 #include <mutex>
-
 #include "Waldem/Utils/PhysicsUtils.h"
-
 
 namespace Waldem
 {
@@ -40,7 +38,22 @@ namespace Waldem
 
     struct MeshColliderData
     {
-        CMesh* Mesh = nullptr;
+        WArray<Vector3> Vertices;
+        WArray<uint> Indices;
+        
+        MeshColliderData() = default;
+        
+        MeshColliderData(CMesh* mesh)
+        {
+            Vertices = mesh->Vertices;
+            Indices = mesh->Indices;
+        }
+        
+        MeshColliderData(WArray<Vector3> vertices, WArray<uint> indices)
+        {
+            Vertices = vertices;
+            Indices = indices;
+        }
     };
 
     struct BoxColliderData
@@ -94,20 +107,17 @@ namespace Waldem
                 {
                     Vector3 maxPoint = Vector3(0.0f);
                     float maxDistance = -FLT_MAX;
-                    std::mutex mtx;
-                    
-                    std::for_each(std::execution::par, MeshData.Mesh->Vertices.begin(), MeshData.Mesh->Vertices.end(), [&](Vector3& vertex)
+
+                    for (auto vertex : MeshData.Vertices)
                     {
-                        Vector3 transformedPosition = worldTransform->Matrix * Vector4(vertex, 1.0f);
-                        float distance = dot(transformedPosition, dir);
+                        float distance = dot(vertex, dir);
                     
                         if (distance > maxDistance)
                         {
-                            std::lock_guard lock(mtx);
                             maxDistance = distance;
-                            maxPoint = transformedPosition;
+                            maxPoint = vertex;
                         }
-                    });
+                    }
                     
                     return maxPoint;
                 }
@@ -149,7 +159,9 @@ namespace Waldem
                     );
                 }
             case WD_COLLIDER_TYPE_MESH:
-                return PhysicsUtils::ComputeMeshInertiaTensor(MeshData.Mesh->Vertices, MeshData.Mesh->Indices, mass);
+                {
+                    return PhysicsUtils::ComputeMeshInertiaTensor(MeshData.Vertices, MeshData.Indices, mass);
+                }
             }
 
             return Matrix3(1.0f);

@@ -18,6 +18,7 @@ namespace Waldem
         virtual void OnAttach() {}
         virtual void OnDetach() {}
         virtual void OnUpdate(float deltaTime) {}
+        virtual void OnFixedUpdate(float deltaTime) {}
         virtual void OnDrawUI(float deltaTime) {}
         virtual void OnEvent(Event& event) {}
 

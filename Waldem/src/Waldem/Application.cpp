@@ -114,6 +114,9 @@ namespace Waldem
 		auto lastFrameTime = std::chrono::high_resolution_clock::now();
 		auto startTime = std::chrono::high_resolution_clock::now();
 
+		Time::FixedDeltaTime = 1.0f / 60.0f;
+		float accumulatedTime = 0.0f;
+
 		while (IsRunning)
 		{
 			Window->OnUpdate();
@@ -124,6 +127,21 @@ namespace Waldem
 			std::chrono::duration<float> elapsedTimeDuration = currentFrameTime - startTime;
 			Time::ElapsedTime = elapsedTimeDuration.count();
 			lastFrameTime = currentFrameTime;
+
+			// Accumulate unprocessed time
+			accumulatedTime += Time::DeltaTime;
+
+			// Run FixedUpdate() as many times as needed
+			while (accumulatedTime >= Time::FixedDeltaTime)
+			{
+				// 🔁 Your fixed-timestep physics update
+				for (Layer* layer : LayerStack)
+				{
+					layer->OnFixedUpdate(Time::FixedDeltaTime);
+				}
+
+				accumulatedTime -= Time::FixedDeltaTime;
+			}
 
 			Renderer::Begin();
 			

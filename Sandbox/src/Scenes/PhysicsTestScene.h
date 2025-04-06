@@ -32,10 +32,13 @@ namespace Sandbox
 				auto entity = ecsManager->CreateEntity("PhysicsTestScene_" + std::to_string(index) + "_" + mesh->Name);
 				entity.Add<Waldem::MeshComponent>(mesh);
 				entity.Add<Waldem::Transform>(mesh->ObjectMatrix);
-				auto collider = Waldem::ColliderComponent(Waldem::WD_COLLIDER_TYPE_MESH, Waldem::MeshColliderData{ mesh });
+				auto collider = Waldem::ColliderComponent(Waldem::WD_COLLIDER_TYPE_MESH, Waldem::MeshColliderData(mesh));
 				entity.Add<Waldem::ColliderComponent>(collider);
 				entity.Add<Waldem::RigidBody>(index < 5, true, 1.0f, &collider); //we set first 5 meshes as kinematic since its floor and walls
+
 				index++;
+
+				// if(index > 5) break;
 			}
 			
 			auto dirLightEntity = ecsManager->CreateEntity("DirectionalLight");

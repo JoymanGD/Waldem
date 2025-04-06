@@ -2,10 +2,9 @@
 
 #include "Waldem/ECS/Systems/GameSystems/DeferredRenderingSystem.h"
 #include "Waldem/ECS/Systems/GameSystems/OceanSimulationSystem.h"
-#include "Waldem/ECS/Systems/GameSystems/PostProcessSystem.h"
 #include "Waldem/ECS/Systems/GameSystems/ScreenQuadSystem.h"
 #include "Waldem/ECS/Systems/GameSystems/CollisionSystem.h"
-#include "Waldem/ECS/Systems/GameSystems/PhysicsSystem.h"
+#include "..\ECS\Systems\GameSystems\PhysicsUpdateSystem.h"
 #include "Waldem/ECS/Systems/GameSystems/GBufferSystem.h"
 #include "Waldem/ECS/Systems/GameSystems/RayTracingRadianceSystem.h"
 #include "Waldem/ECS/Systems/System.h"
@@ -15,6 +14,7 @@
 #include "Waldem/Renderer/Renderer.h"
 #include <glm/gtc/integer.hpp>
 
+#include "Waldem/ECS/Systems/GameSystems/PhysicsIntegrationSystem.h"
 #include "Waldem/ECS/Systems/GameSystems/SpatialAudioSystem.h"
 
 namespace Waldem
@@ -47,8 +47,10 @@ namespace Waldem
 			DrawSystems.Add((ISystem*)new DeferredRenderingSystem(ecsManager));
 			// DrawSystems.Add((ISystem*)new PostProcessSystem(ecsManager));
 			DrawSystems.Add((ISystem*)new ScreenQuadSystem(ecsManager));
-			// DrawSystems.Add((ISystem*)new PhysicsSystem(ecsManager));
-			DrawSystems.Add((ISystem*)new CollisionSystem(ecsManager));
+			
+			PhysicsSystems.Add((ISystem*)new PhysicsIntegrationSystem(ecsManager));
+			PhysicsSystems.Add((ISystem*)new PhysicsUpdateSystem(ecsManager));
+			PhysicsSystems.Add((ISystem*)new CollisionSystem(ecsManager));
 		}
 
 		void OnUpdate(float deltaTime) override
@@ -61,6 +63,14 @@ namespace Waldem
 			}
 
 			CurrentScene->Draw(deltaTime);
+		}
+
+		void OnFixedUpdate(float fixedDeltaTime) override
+		{
+			for (ISystem* system : PhysicsSystems)
+			{
+				system->Update(fixedDeltaTime);
+			}
 		}
 
 		void OnEvent(Event& event) override
@@ -97,6 +107,11 @@ namespace Waldem
 				system->Initialize(sceneData, &GameInputManager, CurrentResourceManager);
 			}
 			
+			for (ISystem* system : PhysicsSystems)
+			{
+				system->Initialize(sceneData, &GameInputManager, CurrentResourceManager);
+			}
+			
 			Renderer::End();
             
 			CurrentScene = scene;
@@ -113,5 +128,6 @@ namespace Waldem
 		Scene* CurrentScene = nullptr;
 		InputManager GameInputManager;
 		WArray<ISystem*> DrawSystems;
+		WArray<ISystem*> PhysicsSystems;
 	};
 }
