@@ -32,8 +32,8 @@ Audio:
 
 Physics:
 * AABB BVH broadphase collisions
-* GJK narrowphase collision detection [WIP]
-* EPA [WIP]
+* GJK narrowphase collision detection
+* EPA
 * Collision resolving [WIP]
 * Physics system [WIP]
 
