@@ -19,8 +19,6 @@ namespace Waldem
     
     struct Contact
     {
-        ColliderComponent* ColliderA;
-        ColliderComponent* ColliderB;
         Vector3 ContactPointA;
         Vector3 ContactPointB;
         Vector3 Normal;
@@ -36,12 +34,15 @@ namespace Waldem
         }
     };
 
-    struct CollisionPairHash
+    struct PersistentContact
     {
-        size_t operator()(const std::pair<int, int>& p) const
-        {
-            return std::hash<int>()(p.first) ^ std::hash<int>()(p.second);
-        }
+        Contact ContactData;
+
+        int ColliderA;
+        int ColliderB;
+
+        int FramesAlive = 0; //not used for now
+        bool WasUpdatedThisFrame = false;
     };
     
     using CollisionPair = std::pair<int, int>;

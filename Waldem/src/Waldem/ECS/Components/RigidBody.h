@@ -2,26 +2,6 @@
 
 namespace Waldem
 {
-    // struct PhysicsData
-    // {
-    //     Vector3 Velocity;
-    //     float Padding0;
-    //     Vector3 Acceleration = { 2, 2, 2 };
-    //     float Padding1;
-    //     Vector3 Padding2;
-    //     float Drag = 3.0f; //size 48
-    // };
-    //
-    // struct PhysicsComponent
-    // {
-    //     PhysicsData Linear;
-    //     PhysicsData Angular;
-    //     float Mass;
-    //     uint IsKinematic;
-    //     uint IsGravity;
-    //     uint Padding0;
-    // };
-    
     struct RigidBody
     {
         bool IsKinematic = false;
@@ -30,8 +10,8 @@ namespace Waldem
         Vector3 AngularVelocity = Vector3(0);
         float Mass = 1.0f;
         float InvMass = 0.0f;
-        float LinearDamping = 0.1f;
-        float AngularDamping = 0.1f;
+        float LinearDamping = 0.9f;
+        float AngularDamping = 0.9f;
         Matrix3 InertiaTensor = Matrix3(0);
         Matrix3 InvInertiaTensor = Matrix3(0);
         Vector3 Force = Vector3(0);
@@ -49,15 +29,12 @@ namespace Waldem
         {
             if(IsKinematic)
             {
-                InertiaTensor = Matrix3(0);
                 InvInertiaTensor = Matrix3(0);
-                InvMass = 0.0f;
-                Mass = 0.0f;
+                InvMass = Mass = 0.0f;
             }
             else
             {
-                InertiaTensor = collider->ComputeInertiaTensor(Mass);
-                InvInertiaTensor = inverse(InertiaTensor);
+                InvInertiaTensor = collider->ComputeInertiaTensor(Mass);
                 InvMass = Mass > 0.0f ? 1.0f / Mass : 0.0f;
             }
         }
