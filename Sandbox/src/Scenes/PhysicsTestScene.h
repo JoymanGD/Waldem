@@ -1,6 +1,5 @@
 #pragma once
 
-#include "ecs.h"
 #include "Waldem/ECS/Components/ColliderComponent.h"
 #include "Waldem/SceneManagement/Scene.h"
 #include "Waldem/ECS/Systems/System.h"
@@ -9,17 +8,19 @@
 #include "Waldem/Import/ModelImporter.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
 #include "Waldem/ECS/Components/RigidBody.h"
-#include "Waldem/Renderer/Light.h"
+#include "Waldem/ECS/Components/Light.h"
 #include "Waldem/Renderer/Model/Mesh.h"
 #include "Waldem/Types/MathTypes.h"
 #include "Waldem/Types/WArray.h"
+#include "Waldem/ECS/Entity.h"
+#include "Waldem/ECS/ECSManager.h"
 
 namespace Sandbox
 {
-    class PhysicsTestScene : public Waldem::Scene
+    class PhysicsTestScene : public Waldem::IScene
     {
     public:
-        void Initialize(Waldem::SceneData* sceneData, Waldem::InputManager* inputManager, ecs::Manager* ecsManager, Waldem::ResourceManager* resourceManager) override
+        void Initialize(Waldem::SceneData* sceneData, Waldem::InputManager* inputManager, Waldem::ECSManager* ecsManager, Waldem::ResourceManager* resourceManager) override
         {
 			Waldem::ModelImporter importer;
 
@@ -30,11 +31,11 @@ namespace Sandbox
 			for (Waldem::CMesh* mesh : sceneModel->GetMeshes())
 			{
 				auto entity = ecsManager->CreateEntity("PhysicsTestScene_" + std::to_string(index) + "_" + mesh->Name);
-				entity.Add<Waldem::MeshComponent>(mesh);
-				entity.Add<Waldem::Transform>(mesh->ObjectMatrix);
+				entity->Add<Waldem::MeshComponent>(mesh);
+				entity->Add<Waldem::Transform>(mesh->ObjectMatrix);
 				auto collider = Waldem::ColliderComponent(Waldem::WD_COLLIDER_TYPE_MESH, Waldem::MeshColliderData(mesh));
-				entity.Add<Waldem::ColliderComponent>(collider);
-				entity.Add<Waldem::RigidBody>(index < 5, true, 1.0f, &collider); //we set first 5 meshes as kinematic since its floor and walls
+				entity->Add<Waldem::ColliderComponent>(collider);
+				entity->Add<Waldem::RigidBody>(index < 5, true, 1.0f, &collider); //we set first 5 meshes as kinematic since its floor and walls
 
 				index++;
 
@@ -42,9 +43,9 @@ namespace Sandbox
 			}
 			
 			auto dirLightEntity = ecsManager->CreateEntity("DirectionalLight");
-			auto& lightTransform = dirLightEntity.Add<Waldem::Transform>(Waldem::Vector3(0, 0, 0));
+			auto& lightTransform = dirLightEntity->Add<Waldem::Transform>(Waldem::Vector3(0, 0, 0));
 			lightTransform.SetEuler(90, 0, 0);
-			dirLightEntity.Add<Waldem::Light>(Waldem::Vector3(1, 1, 1), 20.0f);
+			dirLightEntity->Add<Waldem::Light>(Waldem::Vector3(1, 1, 1), 20.0f);
 
 			//do it after all entities set up
 			ecsManager->Refresh();
@@ -67,6 +68,8 @@ namespace Sandbox
         		system->Update(deltaTime);
         	}
         }
+    	
+        void FixedUpdate(float fixedDeltaTime) override {}
         
     	void Draw(float deltaTime) override
         {

@@ -1,11 +1,12 @@
 #pragma once
 #include "Waldem/ECS/Components/ColliderComponent.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
+#include "Waldem/ECS/Components/RigidBody.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/Renderer/AABB.h"
 #include "Waldem/Renderer/Model/Plane.h"
 #include "Waldem/Renderer/Model/Simplex.h"
-#include "Waldem/Renderer/Model/Transform.h"
+#include "Waldem/ECS/Components/Transform.h"
 #include "Waldem/Utils/GeometryUtils.h"
 
 #define EPA_EPSILON 0.0001f
@@ -495,14 +496,14 @@ namespace Waldem
         }
         
     public:
-        CollisionSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
+        CollisionSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
         
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
         {
             WArray<AABB> boundingBoxes;
             WArray<String> names;
 
-            for (auto [transformEntity, transform, collider, meshComponent] : ECSManager->EntitiesWith<Transform, ColliderComponent, MeshComponent>())
+            for (auto [transformEntity, transform, collider, meshComponent] : Manager->EntitiesWith<Transform, ColliderComponent, MeshComponent>())
             {
                 boundingBoxes.Add(meshComponent.Mesh->BBox.GetTransformed(transform));
                 names.Add(meshComponent.Mesh->Name);
@@ -523,7 +524,7 @@ namespace Waldem
             WArray<ColliderComponent*> colliders;
             WArray<RigidBody*> rigidBodies;
 
-            for (auto [transformEntity, transform, collider, rigidBody, meshComponent] : ECSManager->EntitiesWith<Transform, ColliderComponent, RigidBody, MeshComponent>())
+            for (auto [transformEntity, transform, collider, rigidBody, meshComponent] : Manager->EntitiesWith<Transform, ColliderComponent, RigidBody, MeshComponent>())
             {
                 if(collider.Type == WD_COLLIDER_TYPE_MESH)
                 {

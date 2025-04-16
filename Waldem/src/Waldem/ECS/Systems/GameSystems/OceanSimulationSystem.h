@@ -1,7 +1,7 @@
 #pragma once
 #include "Waldem/ECS/Systems/System.h"
 #include "glm/gtc/bitfield.hpp"
-#include "Waldem/Renderer/Light.h"
+#include "Waldem/ECS/Components/Light.h"
 #include "Waldem/Renderer/Shader.h"
 #include "Waldem/Time.h"
 #include <glm/gtc/integer.hpp>
@@ -107,7 +107,7 @@ namespace Waldem
         WArray<Buffer*> VertexBuffers;
         
     public:
-        OceanSimulationSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
+        OceanSimulationSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
         
         unsigned int bitfieldReverse(unsigned int index , int numBits)
         {
@@ -127,27 +127,27 @@ namespace Waldem
         
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
         {
-            for (auto [entity, transform, meshComponent, ocean] : ECSManager->EntitiesWith<Transform, MeshComponent, Ocean>())
+            for (auto [entity, transform, meshComponent, ocean] : Manager->EntitiesWith<Transform, MeshComponent, Ocean>())
             {
                 Resource oceanParametersCBResource = Resource("OceanParameters", RTYPE_ConstantBuffer, &ocean, sizeof(Ocean), sizeof(Ocean), 0);
                 
                 VertexBuffers.Add(meshComponent.Mesh->VertexBuffer);
 			    Point2 fftResolution = Point2(N, N);
                 Stages = glm::log2(fftResolution.x);
-                GaussianNoiseRenderTarget = resourceManager->GetRenderTarget("DebugRT_1");
-                H0 = resourceManager->GetRenderTarget("DebugRT_2");
+                GaussianNoiseRenderTarget = resourceManager->CreateRenderTarget("GaussianNoise", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
+                H0 = resourceManager->CreateRenderTarget("H0", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
                 H0Inverse = resourceManager->CreateRenderTarget("H0Inverse", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
                 DxCoefficients = resourceManager->CreateRenderTarget("DxCoefficients", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
                 DyCoefficients = resourceManager->CreateRenderTarget("DyCoefficients", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
                 DzCoefficients = resourceManager->CreateRenderTarget("DzCoefficients", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
-                Normal = resourceManager->GetRenderTarget("DebugRT_4");
-                Displacement = resourceManager->GetRenderTarget("DebugRT_5");
+                Normal = resourceManager->CreateRenderTarget("Normals", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
+                Displacement = resourceManager->CreateRenderTarget("Displacement", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
                 DxPingPong = resourceManager->CreateRenderTarget("DxPingPong", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
                 DyPingPong = resourceManager->CreateRenderTarget("DyPingPong", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
                 DzPingPong = resourceManager->CreateRenderTarget("DzPingPong", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
-                Dx = resourceManager->GetRenderTarget("DebugRT_7");
-                Dy = resourceManager->GetRenderTarget("DebugRT_8");
-                Dz = resourceManager->GetRenderTarget("DebugRT_9");
+                Dx = resourceManager->CreateRenderTarget("Dx", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
+                Dy = resourceManager->CreateRenderTarget("Dy", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
+                Dz = resourceManager->CreateRenderTarget("Dz", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
                 ButterflyTexture512 = resourceManager->CreateRenderTarget("ButterflyTexture512", Stages, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
                 
                 //Gaussian noise initialization
@@ -323,7 +323,7 @@ namespace Waldem
     
         void Update(float deltaTime) override
         {
-            for (auto [entity, transform, meshComponent, ocean] : ECSManager->EntitiesWith<Transform, MeshComponent, Ocean>())
+            for (auto [entity, transform, meshComponent, ocean] : Manager->EntitiesWith<Transform, MeshComponent, Ocean>())
             {
                 //Spectrum generation
                 //TODO: probably may be separated into initial spectrum generation and axes spectrum generation, and initial one could be moved to the initialization

@@ -21,6 +21,7 @@ IncludeDir["SPDLog"] = "Waldem/vendor/spdlog/include"
 IncludeDir["Assimp"] = "Waldem/vendor/assimp/include"
 IncludeDir["stb"] = "Waldem/vendor/stb/include"
 IncludeDir["dxc"] = "Waldem/vendor/dxc/inc"
+IncludeDir["mono"] = "Waldem/vendor/mono/include"
 
 filter { "files:**.hlsl" }
    flags { "ExcludeFromBuild", 'NoPCH' }
@@ -83,14 +84,16 @@ project "Waldem"
         "%{IncludeDir.ImGui}",
         "%{IncludeDir.ImGuizmo}",
         "%{IncludeDir.ECS}",
-        "%{IncludeDir.dxc}"
+        "%{IncludeDir.dxc}",
+        "%{IncludeDir.mono}",
     }
     
     libdirs
     {
         "%{prj.name}/vendor/assimp/lib",
         "%{prj.name}/vendor/SDL/lib",
-        "%{prj.name}/vendor/dxc/lib"
+        "%{prj.name}/vendor/dxc/lib",
+        "%{prj.name}/vendor/mono/lib",
     }
 
     links
@@ -99,7 +102,8 @@ project "Waldem"
         "opengl32.lib",
         "dxcompiler.lib",
         "assimp-vc142-mt.lib",
-        "d3d12", "dxgi", "d3dcompiler"
+        "d3d12", "dxgi", "d3dcompiler",
+        "mono-2.0-sgen.lib"
     }
 
     filter "system:windows"
@@ -138,7 +142,7 @@ project "Sandbox"
     language "C++"
     cppdialect "C++20"
     staticruntime "on"
-    dependson { "Waldem" }
+    dependson { "Waldem", "ScriptEngine" }
 
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
@@ -167,7 +171,8 @@ project "Sandbox"
         "%{IncludeDir.ImGui}",
         "%{IncludeDir.ImGuizmo}",
         "%{IncludeDir.ECS}",
-        "%{IncludeDir.dxc}"
+        "%{IncludeDir.dxc}",
+        "%{IncludeDir.mono}",
     }
 
     filter "system:windows"
@@ -176,22 +181,22 @@ project "Sandbox"
         
         postbuildcommands
         {
+            --Remove old shaders and content
             "if exist %{wks.location}bin\\Debug\\Sandbox\\Shaders (rmdir /s /q %{wks.location}bin\\Debug\\Sandbox\\Shaders)",
             "if exist %{wks.location}bin\\Debug\\Sandbox\\Content (rmdir /s /q %{wks.location}bin\\Debug\\Sandbox\\Content)",
+            "if exist %{wks.location}bin\\Debug\\Sandbox\\mono (rmdir /s /q %{wks.location}bin\\Debug\\Sandbox\\mono)",
             "echo Copying files...",
-            --[["{COPY} %{wks.location}%{prj.name}\\src\\Shaders\\*.hlsl %{cfg.targetdir}\\Shaders\\",
-            "{COPY} %{wks.location}Waldem\\src\\Shaders\\*.hlsl %{cfg.targetdir}\\Shaders\\",
-            "{COPY} %{wks.location}Waldem\\vendor\\SDL\\lib\\SDL2.dll %{cfg.targetdir}\\",
-            "{COPY} %{wks.location}Waldem\\vendor\\dxc\\bin\\x64\\dxcompiler.dll %{cfg.targetdir}\\",
-            "{COPY} %{wks.location}Waldem\\vendor\\dxc\\bin\\x64\\dxil.dll %{cfg.targetdir}\\",
-            "{COPY} %{wks.location}Waldem\\vendor\\assimp\\lib\\assimp-vc142-mt.dll %{cfg.targetdir}\\",
-            "{COPYDIR} %{wks.location}%{prj.name}\\Content\\ %{cfg.targetdir}\\Content\\"]]
+            --Copy shaders
             'xcopy /E /I /Y "%{wks.location}%{prj.name}\\src\\Shaders\\*.hlsl" "%{cfg.targetdir}\\Shaders\\"',
             'xcopy /E /I /Y "%{wks.location}Waldem\\src\\Shaders\\*.hlsl" "%{cfg.targetdir}\\Shaders\\"',
+            --Copy dlls
             'xcopy /Y "%{wks.location}Waldem\\vendor\\SDL\\lib\\SDL2.dll" "%{cfg.targetdir}\\"',
+            'xcopy /Y "%{wks.location}Waldem\\vendor\\mono\\bin\\mono-2.0-sgen.dll" "%{cfg.targetdir}\\"',
+            'xcopy /E /I /Y "%{wks.location}Waldem\\vendor\\mono\\lib\\4.5" "%{cfg.targetdir}\\mono\\lib\\4.5"', --Copy .NET assemblies
             'xcopy /Y "%{wks.location}Waldem\\vendor\\dxc\\bin\\x64\\dxcompiler.dll" "%{cfg.targetdir}\\"',
             'xcopy /Y "%{wks.location}Waldem\\vendor\\dxc\\bin\\x64\\dxil.dll" "%{cfg.targetdir}\\"',
             'xcopy /Y "%{wks.location}Waldem\\vendor\\assimp\\lib\\assimp-vc142-mt.dll" "%{cfg.targetdir}\\"',
+            --Copy content
             'xcopy /E /I /Y "%{wks.location}%{prj.name}\\Content\\*" "%{cfg.targetdir}\\Content\\"'
         }
 
@@ -209,3 +214,15 @@ project "Sandbox"
         defines "WD_DIST"
         runtime "Release"
         optimize "on"
+        
+project "ScriptEngine"
+    location "ScriptEngine"
+    kind "SharedLib" -- Could also be "ConsoleApp" or "WindowedApp"
+    language "C#"
+
+    targetdir ("bin/" .. outputdir .. "/Sandbox")
+
+    files
+    {
+        "%{prj.name}/**.cs"
+    }

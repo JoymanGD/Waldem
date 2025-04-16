@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Waldem.h>
-#include "Scenes/DefaultScene.h"
+#include "Scenes\RenderingTestScene.h"
 #include "Scenes/PhysicsTestScene.h"
 
 namespace Sandbox
@@ -11,8 +11,9 @@ namespace Sandbox
 	public:
 		SandboxApp()
 		{
-			// OpenScene(new DefaultScene);
-			OpenScene(new PhysicsTestScene);
+			// OpenScene(new RenderingTestScene);
+			InitializeLayers();
+			// OpenScene(new PhysicsTestScene);
 		}
 
 		~SandboxApp()

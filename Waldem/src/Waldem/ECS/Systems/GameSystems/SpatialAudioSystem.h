@@ -3,7 +3,7 @@
 #include "Waldem/ECS/Components/AudioListener.h"
 #include "Waldem/ECS/Components/AudioSource.h"
 #include "Waldem/ECS/Systems/System.h"
-#include "Waldem/Renderer/Model/Transform.h"
+#include "Waldem/ECS/Components/Transform.h"
 
 namespace Waldem
 {
@@ -12,7 +12,7 @@ namespace Waldem
     private:
         float PAN_SIMPLIFICATION = 0.8f;        
     public:
-        SpatialAudioSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
+        SpatialAudioSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
         
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
         {
@@ -22,9 +22,9 @@ namespace Waldem
         {
             Audio::LockAudioThread();
             
-            for (auto [listenerEntity, audioListener, listenerTransform] : ECSManager->EntitiesWith<AudioListener, Transform>())
+            for (auto [listenerEntity, audioListener, listenerTransform] : Manager->EntitiesWith<AudioListener, Transform>())
             {
-                for (auto [sourceEntity, audioSource, sourceTransform] : ECSManager->EntitiesWith<AudioSource, Transform>())
+                for (auto [sourceEntity, audioSource, sourceTransform] : Manager->EntitiesWith<AudioSource, Transform>())
                 {
                     if(!audioSource.Spatial)
                     {

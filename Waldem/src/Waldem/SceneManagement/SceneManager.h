@@ -6,7 +6,7 @@ namespace Waldem
     class WALDEM_API SceneManager
     {
     public:
-        Scene* GetCurrentScene();
+        IScene* GetCurrentScene();
     private:
     };
 }

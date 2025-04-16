@@ -3,10 +3,10 @@
 
 namespace Waldem
 {
-    struct WALDEM_API Model
+    struct WALDEM_API CModel
     {
-        Model() = default;
-        Model(std::vector<CMesh*> meshes) : Meshes(meshes) {}
+        CModel() = default;
+        CModel(std::vector<CMesh*> meshes) : Meshes(meshes) {}
 
         std::vector<CMesh*> GetMeshes() { return Meshes; }
         void AddMesh(CMesh* mesh) { Meshes.push_back(mesh); }

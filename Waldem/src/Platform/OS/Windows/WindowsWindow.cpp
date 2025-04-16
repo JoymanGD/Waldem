@@ -1,6 +1,7 @@
 #include <wdpch.h>
 
 #include "WindowsWindow.h"
+#include <filesystem>
 #include "Waldem/Events/ApplicationEvent.h"
 #include "Waldem/Events/MouseEvent.h"
 #include "Waldem/Events/KeyEvent.h"

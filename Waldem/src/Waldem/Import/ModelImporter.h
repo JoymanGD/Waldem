@@ -47,14 +47,14 @@ namespace Waldem
         return static_cast<ModelImportFlags>(static_cast<int>(a) | static_cast<int>(b));
     }
     
-    class ModelImporter : public IImporter<Model>
+    class ModelImporter : public IImporter<CModel>
     {
     public:
         virtual ~ModelImporter() override = default;
 
         ModelImporter();
 
-        virtual Model* Import(String path, bool relative = true) override;
+        virtual CModel* Import(String path, bool relative = true) override;
 
     protected:
         const aiScene* ImportInternal(String& path, ModelImportFlags importFlags = ModelImportFlags::None, bool relative = true);

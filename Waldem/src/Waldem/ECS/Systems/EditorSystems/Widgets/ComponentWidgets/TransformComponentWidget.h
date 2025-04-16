@@ -1,24 +1,24 @@
 #pragma once
 #include "Waldem/ECS/Components/Selected.h"
 #include "Waldem/ECS/Systems/System.h"
-#include "Waldem/ECS/Systems/EditorSystems/WidgetSystem.h"
-#include "Waldem/Renderer/Model/Transform.h"
+#include "Waldem/ECS/Systems/EditorSystems/Widgets/WidgetSystem.h"
+#include "Waldem/ECS/Components/Transform.h"
 
 namespace Waldem
 {
     class WALDEM_API TransformComponentWidget : public IWidgetSystem
     {
     public:
-        TransformComponentWidget(ecs::Manager* eCSManager) : IWidgetSystem(eCSManager) {}
+        TransformComponentWidget(ECSManager* eCSManager) : IWidgetSystem(eCSManager) {}
 
         String GetName() override { return "Transform"; }
-        bool IsVisible() override { return ECSManager->EntitiesWith<Transform, Selected>().Count() > 0; }
+        bool IsVisible() override { return Manager->EntitiesWith<Transform, Selected>().Count() > 0; }
 
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override {}
 
         void Update(float deltaTime) override
         {
-            for (auto [transformEntity, transform, selected] : ECSManager->EntitiesWith<Transform, Selected>())
+            for (auto [transformEntity, transform, selected] : Manager->EntitiesWith<Transform, Selected>())
             {
                 Vector3 cachedPosition = transform.Position;
                 Quaternion cachedRotation = transform.Rotation;

@@ -1,6 +1,7 @@
 #include <wdpch.h>
 #include "WindowsAudio.h"
 #include <filesystem>
+#include "Waldem/Types/WArray.h"
 
 namespace Waldem
 {
@@ -170,6 +171,12 @@ namespace Waldem
 
     void Audio::Play(AudioClip* clip, float volume, bool loop)
     {
+        if(!clip)
+        {
+            WD_CORE_ERROR("Audio clip is null");
+            return;
+        }
+        
         SDL_LockAudioDevice(WindowsAudio::Device);
 
         if(clip->CurrentChannel != nullptr && clip->CurrentChannel->playing && clip->CurrentChannel->paused)

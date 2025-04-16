@@ -1,7 +1,7 @@
 #pragma once
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
-#include "Waldem/Renderer/Light.h"
+#include "Waldem/ECS/Components/Light.h"
 #include "Waldem/Renderer/Shader.h"
 #include "Waldem/Renderer/Model/Quad.h"
 
@@ -16,7 +16,7 @@ namespace Waldem
         Quad FullscreenQuad = {};
         
     public:
-        ScreenQuadSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
+        ScreenQuadSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
         
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
         {

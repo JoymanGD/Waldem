@@ -81,6 +81,8 @@ namespace Waldem
         float MinLOD = 0.0f;
         float MaxLOD = 3.402823466e+38f;
 
+        Sampler() = default;
+        
         Sampler(WD_SAMPLER_FILTER filter, WD_TEXTURE_ADDRESS_MODE addressU, WD_TEXTURE_ADDRESS_MODE addressV, WD_TEXTURE_ADDRESS_MODE addressW, float mipLODBias, uint32_t maxAnisotropy, WD_COMPARISON_FUNC comparisonFunc, float minLOD, float maxLOD)
             : Filter(filter), AddressU(addressU), AddressV(addressV), AddressW(addressW), MipLODBias(mipLODBias), MaxAnisotropy(maxAnisotropy), ComparisonFunc(comparisonFunc), MinLOD(minLOD), MaxLOD(maxLOD) {}
         

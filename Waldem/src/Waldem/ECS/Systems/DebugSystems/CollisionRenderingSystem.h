@@ -1,12 +1,12 @@
 #pragma once
-#include "..\..\Components\ColliderComponent.h"
+#include "Waldem/ECS/Components/ColliderComponent.h"
 #include "Waldem/ECS/Systems/System.h"
-#include "..\..\Components\EditorCamera.h"
+#include "Waldem/ECS/Components/Camera.h"
+#include "Waldem/ECS/Components/EditorCamera.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
-#include "..\..\Components\RigidBody.h"
 #include "Waldem/Renderer/Model/Line.h"
 #include "Waldem/Renderer/Model/LineMesh.h"
-#include "Waldem/Renderer/Model/Transform.h"
+#include "Waldem/ECS/Components/Transform.h"
 
 namespace Waldem
 {
@@ -33,7 +33,7 @@ namespace Waldem
         PixelShader* MeshPixelShader = nullptr;
         
     public:
-        CollisionRenderingSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
+        CollisionRenderingSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
 
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
         {
@@ -82,7 +82,7 @@ namespace Waldem
         {
             Matrix4 viewProj;
             
-            for (auto [entity, camera, mainCamera, cameraTransform] : ECSManager->EntitiesWith<Camera, EditorCamera, Transform>())
+            for (auto [entity, camera, mainCamera, cameraTransform] : Manager->EntitiesWith<Camera, EditorCamera, Transform>())
             {
                 viewProj = camera.ProjectionMatrix * camera.ViewMatrix;
                 break;
@@ -93,7 +93,7 @@ namespace Waldem
             
             WArray<Line> lines;
 
-            for (auto [transformEntity, transform, collider, meshComponent] : ECSManager->EntitiesWith<Transform, ColliderComponent, MeshComponent>())
+            for (auto [transformEntity, transform, collider, meshComponent] : Manager->EntitiesWith<Transform, ColliderComponent, MeshComponent>())
             {
                 Vector4 color = collider.IsColliding ? Vector4(1.0f, 0.0f, 0.0f, 1.0f) : Vector4(0.0f, 1.0f, 0.0f, 1.0f);
                 

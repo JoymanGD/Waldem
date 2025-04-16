@@ -1,13 +1,13 @@
 #pragma once
 #include "Waldem/ECS/Systems/System.h"
-#include "..\..\Components\EditorCamera.h"
+#include "Waldem/ECS/Components/EditorCamera.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
 #include "Waldem/Editor/Editor.h"
-#include "Waldem/Renderer/Light.h"
+#include "Waldem/ECS/Components/Light.h"
 #include "Waldem/Renderer/Shader.h"
 #include "Waldem/Renderer/Model/Quad.h"
-#include "Waldem/Renderer/Model/Transform.h"
-#include "Waldem/World/Camera.h"
+#include "Waldem/ECS/Components/Transform.h"
+#include "Waldem/ECS/Components/Camera.h"
 
 namespace Waldem
 {
@@ -27,7 +27,7 @@ namespace Waldem
         RenderTarget* MeshIDRT = nullptr;
         
     public:
-        GBufferSystem(ecs::Manager* eCSManager) : ISystem(eCSManager)
+        GBufferSystem(ECSManager* eCSManager) : ISystem(eCSManager)
         {
             Vector4 dummyColor = Vector4(1.f, 1.f, 1.f, 1.f);
             uint8_t* image_data = (uint8_t*)&dummyColor;
@@ -54,7 +54,7 @@ namespace Waldem
             
             WArray materialTextures { DummyTexture };
 
-            for (auto [entity, mesh, transform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
+            for (auto [entity, mesh, transform] : Manager->EntitiesWith<MeshComponent, Transform>())
             {
                 if(!mesh.Mesh->CurrentMaterial->HasDiffuseTexture())
                 {
@@ -76,7 +76,7 @@ namespace Waldem
 
             WArray<Matrix4> worldTransforms;
             
-            for (auto [entity, mesh, transform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
+            for (auto [entity, mesh, transform] : Manager->EntitiesWith<MeshComponent, Transform>())
             {
                 worldTransforms.Add(transform.Matrix);
             }
@@ -119,7 +119,7 @@ namespace Waldem
             //GBuffer pass
             WArray<FrustumPlane> frustrumPlanes;
             Matrix4 matrices[4];
-            for (auto [entity, camera, mainCamera, cameraTransform] : ECSManager->EntitiesWith<Camera, EditorCamera, Transform>())
+            for (auto [entity, camera, mainCamera, cameraTransform] : Manager->EntitiesWith<Camera, EditorCamera, Transform>())
             {
                 matrices[0] = camera.ViewMatrix;
                 matrices[1] = camera.ProjectionMatrix;
@@ -131,7 +131,7 @@ namespace Waldem
                 break;
             }
             WArray<Matrix4> worldTransforms;
-            for (auto [entity, mesh, transform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
+            for (auto [entity, mesh, transform] : Manager->EntitiesWith<MeshComponent, Transform>())
             {
                 worldTransforms.Add(transform.Matrix);
             }
@@ -148,7 +148,7 @@ namespace Waldem
             
             uint32_t meshID = 0;
 
-            for (auto [entity, mesh, transform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
+            for (auto [entity, mesh, transform] : Manager->EntitiesWith<MeshComponent, Transform>())
             {
                 auto transformedBBox = mesh.Mesh->BBox.GetTransformed(transform.Matrix);
 

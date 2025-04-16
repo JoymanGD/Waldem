@@ -10,6 +10,8 @@ namespace Waldem
     
     struct Line
     {
+        Line() = default;
+        
         Line(Vector3 start, Vector3 end, Vector4 color)
         {
             Start.Color = color;

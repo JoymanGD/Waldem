@@ -15,10 +15,3 @@ struct Light
     float AreaHeight;
     int AreaTwoSided;
 };
-
-struct LightTransformData
-{
-    uint Type;
-    float3 Forward;
-    float4 Position;
-};

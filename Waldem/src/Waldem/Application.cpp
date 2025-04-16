@@ -4,6 +4,8 @@
 #include "Waldem/Log/Log.h"
 #include <numeric>
 #include <SDL.h>
+#include <mono/jit/jit.h>
+#include <mono/metadata/assembly.h>
 
 #include "Time.h"
 #include "Audio/Audio.h"
@@ -24,6 +26,9 @@ namespace Waldem
 	{
 		PlatformInitializer::Initialize();
 		Audio::Create();
+
+		MonoRuntime = Mono();
+		// MonoRuntime.Initialize();
 		
 		CoreECSManager = {};
 		ResourceManager = {};
@@ -54,10 +59,20 @@ namespace Waldem
 		Renderer::End();
 	}
 
-	void Application::OpenScene(Scene* scene)
+	void Application::InitializeLayers()
 	{
 		SceneData sceneData = { Window };
-		Game->OpenScene(scene, &sceneData);
+		Editor->Initialize(&sceneData);
+		Game->Initialize(&sceneData);
+		Debug->Initialize(&sceneData);
+	}
+
+	void Application::OpenScene(GameScene* scene)
+	{
+		// SceneData sceneData = { Window };
+		// Game->OpenScene(scene, &sceneData);
+		SceneData sceneData = { Window };
+		Editor->OpenScene(scene, &sceneData);
 	}
 
 	Application::~Application()
@@ -83,11 +98,14 @@ namespace Waldem
 		
 		for(auto it = LayerStack.end(); it != LayerStack.begin(); )
 		{
-			(*--it)->OnEvent(e);
-
-			if(e.Handled)
+			if((*--it)->Initialized)
 			{
-				break;
+				(*--it)->OnEvent(e);
+
+				if(e.Handled)
+				{
+					break;
+				}
 			}
 		}
 	}
@@ -137,7 +155,10 @@ namespace Waldem
 				// 🔁 Your fixed-timestep physics update
 				for (Layer* layer : LayerStack)
 				{
-					layer->OnFixedUpdate(Time::FixedDeltaTime);
+					if(layer->Initialized)
+					{
+						layer->OnFixedUpdate(Time::FixedDeltaTime);
+					}
 				}
 
 				accumulatedTime -= Time::FixedDeltaTime;
@@ -147,13 +168,27 @@ namespace Waldem
 			
 			for (Layer* layer : LayerStack)
 			{
-				layer->OnUpdate(Time::DeltaTime);
+				if(layer->Initialized)
+				{
+					layer->OnUpdate(Time::DeltaTime);
+				}
+			}
+			
+			for (Layer* layer : LayerStack)
+			{
+				if(layer->Initialized)
+				{
+					layer->OnDraw(Time::DeltaTime);
+				}
 			}
 
 			Editor->Begin();
 			for (Layer* layer : LayerStack)
 			{
-				layer->OnDrawUI(Time::DeltaTime);
+				if(layer->Initialized)
+				{
+					layer->OnDrawUI(Time::DeltaTime);
+				}
 			}
 			Editor->End();
 			
@@ -171,4 +206,4 @@ namespace Waldem
 		IsRunning = false;
 		return true;
 	}
-} 
+}

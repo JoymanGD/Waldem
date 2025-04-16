@@ -1,7 +1,8 @@
 #pragma once
 #include "Waldem/ECS/Components/BloomPostProcess.h"
 #include "Waldem/ECS/Systems/System.h"
-#include "Waldem/Renderer/Light.h"
+#include "Waldem/ECS/Components/Light.h"
+#include "Waldem/Renderer/Renderer.h"
 #include "Waldem/Renderer/Shader.h"
 
 namespace Waldem
@@ -24,11 +25,11 @@ namespace Waldem
         Point3 GroupCount;
         
     public:
-        PostProcessSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
+        PostProcessSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
         
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
         {
-            for (auto [entity, bloom] : ECSManager->EntitiesWith<BloomPostProcess>())
+            for (auto [entity, bloom] : Manager->EntitiesWith<BloomPostProcess>())
             {
                 Vector2 resolution = Vector2(sceneData->Window->GetWidth(), sceneData->Window->GetHeight());
                 
@@ -59,7 +60,7 @@ namespace Waldem
             Renderer::ResourceBarrier(TargetRT, COPY_SOURCE, UNORDERED_ACCESS);
             Renderer::ResourceBarrier(TargetRTBack, COPY_DEST, ALL_SHADER_RESOURCE);
 
-            for (auto [entity, bloom] : ECSManager->EntitiesWith<BloomPostProcess>())
+            for (auto [entity, bloom] : Manager->EntitiesWith<BloomPostProcess>())
             {
                 PostProcessRootSignature->UpdateResourceData("BloomParams", &bloom);
             }

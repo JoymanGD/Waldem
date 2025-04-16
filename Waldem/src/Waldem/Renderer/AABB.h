@@ -1,6 +1,7 @@
 #pragma once
 #include "Model/Line.h"
-#include "Waldem/World/Camera.h"
+#include "Waldem/ECS/Components/Camera.h"
+#include "Waldem/Types/WArray.h"
 
 namespace Waldem
 {
