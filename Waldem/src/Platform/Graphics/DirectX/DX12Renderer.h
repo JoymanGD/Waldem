@@ -15,7 +15,7 @@ namespace Waldem
         ~DX12Renderer() override = default;
         void Initialize(Window* window) override;
         void InitializeUI() override;
-        void Draw(Model* model) override;
+        void Draw(CModel* model) override;
         void Draw(CMesh* mesh) override;
         void Signal() override;
         void Wait() override;

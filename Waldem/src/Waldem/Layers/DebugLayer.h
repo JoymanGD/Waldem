@@ -15,7 +15,7 @@ namespace Waldem
         bool EnableDebug = false;
         
     public:
-        DebugLayer(Window* window, ecs::Manager* ecsManager, ResourceManager* resourceManager) : Layer("DebugLayer", window, ecsManager, resourceManager)
+        DebugLayer(Window* window, ECSManager* ecsManager, ResourceManager* resourceManager) : Layer("DebugLayer", window, ecsManager, resourceManager)
         {
             DebugInputManager = {};
             
@@ -37,13 +37,6 @@ namespace Waldem
             UpdateSystems.Add((ISystem*)new DebugSystem(CurrentECSManager));
             // UpdateSystems.Add((ISystem*)new LinesRenderingSystem(CurrentECSManager));
             UpdateSystems.Add((ISystem*)new CollisionRenderingSystem(CurrentECSManager));
-        	
-			SceneData sceneData = { window };
-            
-            for (ISystem* system : UpdateSystems)
-            {
-                system->Initialize(&sceneData, &DebugInputManager, CurrentResourceManager);
-            }
 
             DebugInputManager.SubscribeToKeyEvent(WD_KeyCode::F1, [&](bool isPressed)
             {
@@ -52,6 +45,16 @@ namespace Waldem
                     EnableDebug = !EnableDebug;
                 }
             });
+        }
+
+        void Initialize(SceneData* sceneData) override
+        {
+            for (ISystem* system : UpdateSystems)
+            {
+                system->Initialize(sceneData, &DebugInputManager, CurrentResourceManager);
+            }
+
+			Initialized = true;
         }
         
         void Begin() override

@@ -1,8 +1,12 @@
 #pragma once
 #include "Waldem/ECS/Systems/System.h"
-#include "Waldem/Renderer/Light.h"
+#include "Waldem/ECS/Components/Light.h"
+#include "Waldem/ECS/Components/Camera.h"
+#include "Waldem/ECS/Components/EditorCamera.h"
+#include "Waldem/ECS/Components/MeshComponent.h"
 #include "Waldem/Renderer/Shader.h"
-#include "Waldem/Renderer/Model/Transform.h"
+#include "Waldem/ECS/Components/Transform.h"
+#include "Waldem/Renderer/Renderer.h"
 
 namespace Waldem
 {
@@ -24,7 +28,7 @@ namespace Waldem
         ResourceManager* resourceManager;
         
     public:
-        ShadowmapRenderingSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
+        ShadowmapRenderingSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
         
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
         {
@@ -32,7 +36,7 @@ namespace Waldem
             
             WArray<Matrix4> worldTransforms;
             
-            for (auto [entity, mesh, transform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
+            for (auto [entity, mesh, transform] : Manager->EntitiesWith<MeshComponent, Transform>())
             {
                 worldTransforms.Add(transform.Matrix);
             }
@@ -81,11 +85,11 @@ namespace Waldem
 
         void Update(float deltaTime) override
         {
-            for (auto [entity, light, lightTransform] : ECSManager->EntitiesWith<Light, Transform>())
+            for (auto [entity, light, lightTransform] : Manager->EntitiesWith<Light, Transform>())
             {
                 if(light.Data.Type == LightType::Directional)
                 {
-                    for (auto [cameraEntity, camera, cameraTransform, mainCamera] : ECSManager->EntitiesWith<Camera, Transform, EditorCamera>())
+                    for (auto [cameraEntity, camera, cameraTransform, mainCamera] : Manager->EntitiesWith<Camera, Transform, EditorCamera>())
                     {
                         auto currentPosition = cameraTransform.Position;
                         currentPosition.y = lightTransform.Position.y;
@@ -119,7 +123,7 @@ namespace Waldem
                     ShadowmapRenderingRootSignature->UpdateResourceData("MyConstantBuffer", matrices);
 
                     WArray<Matrix4> worldTransforms;
-                    for (auto [modelEntity, mesh, modelTransform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
+                    for (auto [modelEntity, mesh, modelTransform] : Manager->EntitiesWith<MeshComponent, Transform>())
                     {
                         worldTransforms.Add(modelTransform.Matrix);
                     }
@@ -134,7 +138,7 @@ namespace Waldem
 
                     uint32_t meshID = 0;
 
-                    for (auto [modelEtity, meshComponent, modelTransform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
+                    for (auto [modelEtity, meshComponent, modelTransform] : Manager->EntitiesWith<MeshComponent, Transform>())
                     {
                         ShadowmapRenderingRootSignature->UpdateResourceData("RootConstants", &meshID);
                         

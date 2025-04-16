@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-
+#include "Waldem/Types/WArray.h"
 #include "GraphicTypes.h"
 #include "RenderTarget.h"
 

@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Waldem/Renderer/Model/Mesh.h"
-#include <execution>
-#include <mutex>
 #include "Waldem/Utils/PhysicsUtils.h"
+#include "Waldem/ECS/Component.h"
+#include "Waldem/Serialization/Serializable.h"
 
 namespace Waldem
 {
@@ -15,28 +15,56 @@ namespace Waldem
         WD_COLLIDER_TYPE_CAPSULE = 3,
         WD_COLLIDER_TYPE_MESH = 4
     };
-    
-    // struct IColliderComponent
-    // {
-    //     virtual ColliderType GetType() { return WD_COLLIDER_TYPE_NONE; }
-    //
-    //     virtual Vector3 FindFurthestPoint(Vector3 dir) const { return Vector3(0.0f); }
-    //
-    //     bool IsColliding = false;
-    // };
 
-    struct SphereColliderData
+    struct BoxColliderData : ISerializable
     {
-        float Radius = 1;
+        Vector3 Size = { 1, 1, 1 };
+        
+        void Serialize(WDataBuffer& outData) override
+        { 
+            outData << Size;
+        }
+        
+        void Deserialize(WDataBuffer& inData) override
+        {
+            inData >> Size;
+        }
     };
 
-    struct CapsuleColliderData
+    struct SphereColliderData : ISerializable
+    {
+        float Radius = 1;
+        
+        void Serialize(WDataBuffer& outData) override
+        { 
+            outData << Radius;
+        }
+        
+        void Deserialize(WDataBuffer& inData) override
+        {
+            inData >> Radius;
+        }
+    };
+
+    struct CapsuleColliderData : ISerializable
     {
         float Radius = 1;
         float Height = 1;
+        
+        void Serialize(WDataBuffer& outData) override
+        { 
+            outData << Radius;
+            outData << Height;
+        }
+        
+        void Deserialize(WDataBuffer& inData) override
+        {
+            inData >> Radius;
+            inData >> Height;
+        }
     };
 
-    struct MeshColliderData
+    struct MeshColliderData : ISerializable
     {
         WArray<Vector3> Vertices;
         WArray<uint> Indices;
@@ -54,17 +82,31 @@ namespace Waldem
             Vertices = vertices;
             Indices = indices;
         }
-    };
-
-    struct BoxColliderData
-    {
-        Vector3 Size = { 1, 1, 1 };
+        
+        void Serialize(WDataBuffer& outData) override
+        { 
+            Vertices.Serialize(outData);
+            Indices.Serialize(outData);
+        }
+        
+        void Deserialize(WDataBuffer& inData) override
+        {
+            Vertices.Deserialize(inData);
+            Indices.Deserialize(inData);
+        }
     };
     
-    struct ColliderComponent
+    struct WALDEM_API ColliderComponent : IComponent<ColliderComponent>
     {
         ColliderType Type = WD_COLLIDER_TYPE_BOX;
+        SphereColliderData SphereData;
+        CapsuleColliderData CapsuleData;
+        MeshColliderData MeshData;
+        BoxColliderData BoxData;
+        bool IsColliding = false;
 
+        ColliderComponent() = default;
+        
         ColliderComponent(ColliderType type, SphereColliderData data)
             : Type(type), SphereData(data) {}
         
@@ -121,6 +163,7 @@ namespace Waldem
                     
                     return maxPoint;
                 }
+                default: return Vector3(0.0f);
             }
         }
 
@@ -167,11 +210,66 @@ namespace Waldem
             return Matrix3(1.0f);
         }
 
-        SphereColliderData SphereData;
-        CapsuleColliderData CapsuleData;
-        MeshColliderData MeshData;
-        BoxColliderData BoxData;
+        void Serialize(WDataBuffer& outData) override
+        {
+            outData << (uint)Type;
 
-        bool IsColliding = false;
+            switch (Type)
+            {
+            case WD_COLLIDER_TYPE_NONE:
+                break;
+            case WD_COLLIDER_TYPE_SPHERE:
+                {
+                    SphereData.Serialize(outData);
+                    break;
+                }
+            case WD_COLLIDER_TYPE_BOX:
+                {
+                    BoxData.Serialize(outData);
+                    break;
+                }
+            case WD_COLLIDER_TYPE_CAPSULE:
+                {
+                    CapsuleData.Serialize(outData);
+                    break;
+                }
+            case WD_COLLIDER_TYPE_MESH:
+                {
+                    MeshData.Serialize(outData);
+                    break;
+                }
+            }
+        }
+        
+        void Deserialize(WDataBuffer& inData) override
+        {
+            inData >> Type;
+
+            switch (Type)
+            {
+            case WD_COLLIDER_TYPE_NONE:
+                break;
+            case WD_COLLIDER_TYPE_SPHERE:
+                {
+                    SphereData.Deserialize(inData);
+                    break;
+                }
+            case WD_COLLIDER_TYPE_BOX:
+                {
+                    BoxData.Deserialize(inData);
+                    break;
+                }
+            case WD_COLLIDER_TYPE_CAPSULE:
+                {
+                    CapsuleData.Deserialize(inData);
+                    break;
+                }
+            case WD_COLLIDER_TYPE_MESH:
+                {
+                    MeshData.Deserialize(inData);
+                    break;
+                }
+            }
+        }
     };
 }

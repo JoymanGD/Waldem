@@ -1,14 +1,21 @@
 #pragma once
+#include "Waldem/Serialization/Serializable.h"
+#include "Waldem/Types/BasicTypes.h"
+#include <vector>
+#include <stdexcept>
+#include <algorithm>
+#include <utility>
 
 namespace Waldem
 {
-    #include <vector>
-    #include <stdexcept>
-    #include <algorithm>
-    #include <utility>
+    template<typename T>
+    struct is_serializable_base : std::is_base_of<ISerializable, std::remove_pointer_t<T>> {};
 
+    template<typename T>
+    inline constexpr bool is_serializable_base_v = is_serializable_base<T>::value;
+    
     template <typename T>
-    class WArray
+    class WArray : ISerializable
     {
     private:
         std::vector<T> ArrayInternal;
@@ -148,6 +155,49 @@ namespace Waldem
             for (const auto& elem : ArrayInternal)
             {
                 WD_CORE_INFO(elem);
+            }
+        }
+
+        void Serialize(WDataBuffer& outData) override
+        {
+            outData << (uint)ArrayInternal.size();
+
+            if constexpr (is_serializable_base_v<T>)
+            {
+                for (size_t i = 0; i < ArrayInternal.size(); ++i)
+                {
+                    if constexpr (std::is_pointer_v<T>)
+                        ArrayInternal[i]->Serialize(outData);
+                    else
+                        ArrayInternal[i].Serialize(outData);
+                }
+            }
+        }
+
+        void Deserialize(WDataBuffer& inData) override
+        {
+            uint count = 0;
+            inData >> count;
+
+            Resize(count);
+
+            if constexpr (is_serializable_base_v<T>)
+            {
+                if constexpr (std::is_pointer_v<T>)
+                {
+                    for (size_t i = 0; i < count; ++i)
+                    {
+                        ArrayInternal[i] = new typename std::remove_pointer<T>::type();
+                        ArrayInternal[i]->Deserialize(inData);
+                    }
+                }
+                else
+                {
+                    for (size_t i = 0; i < count; ++i)
+                    {
+                        ArrayInternal[i].Deserialize(inData);
+                    }
+                }
             }
         }
     };

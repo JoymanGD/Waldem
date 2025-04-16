@@ -1,7 +1,7 @@
 #pragma once
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/ECS/Components/RigidBody.h"
-#include "Waldem/Renderer/Model/Transform.h"
+#include "Waldem/ECS/Components/Transform.h"
 
 namespace Waldem
 {
@@ -10,7 +10,7 @@ namespace Waldem
     public:
         Vector3 Gravity = Vector3(0, -9.81f, 0);
         
-        PhysicsUpdateSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
+        PhysicsUpdateSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
         
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
         {
@@ -18,7 +18,7 @@ namespace Waldem
 
         void Update(float deltaTime) override
         {
-            for (auto [transformEntity, transform, rigidBody] : ECSManager->EntitiesWith<Transform, RigidBody>())
+            for (auto [transformEntity, transform, rigidBody] : Manager->EntitiesWith<Transform, RigidBody>())
             {
                 if(rigidBody.InvMass <= 0.0f) continue;
                 

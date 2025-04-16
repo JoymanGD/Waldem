@@ -26,7 +26,7 @@ namespace Waldem
         virtual void Begin() = 0; 
         virtual void End() = 0;
         virtual void Present() = 0;
-        virtual void Draw(Model* model) = 0;
+        virtual void Draw(CModel* model) = 0;
         virtual void Draw(CMesh* mesh) = 0;
         virtual void Signal() = 0;
         virtual void Wait() = 0;
@@ -74,7 +74,7 @@ namespace Waldem
         static void Present();
 
         static void Draw(CMesh* mesh);
-        static void Draw(Model* model);
+        static void Draw(CModel* model);
         static void Signal();
         static void Wait();
         static Point3 GetNumThreadsPerGroup(ComputeShader* computeShader);

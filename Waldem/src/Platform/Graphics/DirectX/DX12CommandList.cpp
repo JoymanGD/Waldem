@@ -85,7 +85,7 @@ namespace Waldem
         CurrentExecutableShader = nullptr;
     }
 
-    void DX12CommandList::Draw(Model* model)
+    void DX12CommandList::Draw(CModel* model)
     {
         //Draw meshes
         auto meshes = model->GetMeshes();

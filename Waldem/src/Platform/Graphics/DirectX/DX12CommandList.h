@@ -18,7 +18,7 @@ namespace Waldem
         void BeginInternal(D3D12_VIEWPORT* viewport, D3D12_RECT* scissor, D3D12_CPU_DESCRIPTOR_HANDLE renderTargetHandle, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandle);
         void EndInternal();
 
-        void Draw(Model* model);
+        void Draw(CModel* model);
         void Draw(CMesh* mesh);
         void Dispatch(Point3 groupCount);
         void TraceRays(Pipeline* rayTracingPipeline, Point3 numRays);

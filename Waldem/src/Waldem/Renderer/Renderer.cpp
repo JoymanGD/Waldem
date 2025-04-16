@@ -50,7 +50,7 @@ namespace Waldem
         Instance->PlatformRenderer->Draw(mesh);
     }
 
-    void Renderer::Draw(Model* model)
+    void Renderer::Draw(CModel* model)
     {
         Instance->PlatformRenderer->Draw(model);
     }

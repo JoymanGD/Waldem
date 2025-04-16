@@ -1,8 +1,9 @@
 #pragma once
+#include "Waldem/ECS/Component.h"
 
 namespace Waldem
 {
-    struct RigidBody
+    struct WALDEM_API RigidBody : IComponent<RigidBody>
     {
         bool IsKinematic = false;
         bool Gravity = true;
@@ -20,6 +21,8 @@ namespace Waldem
         float Friction = 0.f;
         float MaxAngularSpeed = 10.f;
 
+        RigidBody() = default;
+        
         RigidBody(bool isKinematic, bool gravity, float mass, ColliderComponent* collider) : IsKinematic(isKinematic), Gravity(gravity), Mass(mass)
         {
             UpdateRigidBody(collider);
@@ -48,6 +51,44 @@ namespace Waldem
         void Reset()
         {
             Force = Torque = Vector3(0);
+        }
+
+        void Serialize(WDataBuffer& outData) override
+        {
+            outData << IsKinematic;
+            outData << Gravity;
+            outData << Velocity;
+            outData << AngularVelocity;
+            outData << Mass;
+            outData << InvMass;
+            outData << LinearDamping;
+            outData << AngularDamping;
+            outData << InertiaTensor;
+            outData << InvInertiaTensor;
+            outData << Force;
+            outData << Torque;
+            outData << Bounciness;
+            outData << Friction;
+            outData << MaxAngularSpeed;
+        }
+        
+        void Deserialize(WDataBuffer& inData) override
+        {
+            inData >> IsKinematic;
+            inData >> Gravity;
+            inData >> Velocity;
+            inData >> AngularVelocity;
+            inData >> Mass;
+            inData >> InvMass;
+            inData >> LinearDamping;
+            inData >> AngularDamping;
+            inData >> InertiaTensor;
+            inData >> InvInertiaTensor;
+            inData >> Force;
+            inData >> Torque;
+            inData >> Bounciness;
+            inData >> Friction;
+            inData >> MaxAngularSpeed;
         }
     };
 }

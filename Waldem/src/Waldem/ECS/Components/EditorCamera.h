@@ -1,8 +1,11 @@
 #pragma once
+#include "Waldem/ECS/Component.h"
 
 namespace Waldem
 {
-    struct EditorCamera
+    struct WALDEM_API EditorCamera : IComponent<EditorCamera>
     {
+        void Serialize(WDataBuffer& outData) override {}
+        void Deserialize(WDataBuffer& inData) override {}
     };
 }

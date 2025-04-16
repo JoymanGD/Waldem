@@ -9,7 +9,7 @@
 #include "Waldem/ECS/Components/Selected.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/Editor/Editor.h"
-#include "Waldem/World/Camera.h"
+#include "Waldem/ECS/Components/Camera.h"
 
 namespace Waldem
 {
@@ -21,7 +21,7 @@ namespace Waldem
         bool CanModifyManipulationSettings = false;
         
     public:
-        GuizmoEditorSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
+        GuizmoEditorSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
         
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
         {
@@ -69,14 +69,14 @@ namespace Waldem
             {
                 if(isPressed)
                 {
-                    for (auto [entity, transform, selected] : ECSManager->EntitiesWith<Transform, Selected>())
+                    for (auto [entity, transform, selected] : Manager->EntitiesWith<Transform, Selected>())
                     {
                         entity.Remove<Selected>();
                     }
                     
                     int meshId = 0;
                     
-                    for (auto [entity, mesh, transform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
+                    for (auto [entity, mesh, transform] : Manager->EntitiesWith<MeshComponent, Transform>())
                     {
                         if(meshId == Editor::HoveredIntityID)
                         {
@@ -94,9 +94,9 @@ namespace Waldem
             ImGuizmo::SetOrthographic(false);
 
             ImGuizmo::SetRect(0, 0, Window->GetWidth(), Window->GetHeight());
-            for (auto [cameraEntity, camera, cameraTransform, mainCamera] : ECSManager->EntitiesWith<Camera, Transform, EditorCamera>())
+            for (auto [cameraEntity, camera, cameraTransform, mainCamera] : Manager->EntitiesWith<Camera, Transform, EditorCamera>())
             {
-                for (auto [transformEntity, transform, selected] : ECSManager->EntitiesWith<Transform, Selected>())
+                for (auto [transformEntity, transform, selected] : Manager->EntitiesWith<Transform, Selected>())
                 {
                     ImGuizmo::Manipulate(value_ptr(camera.ViewMatrix), value_ptr(camera.ProjectionMatrix), CurrentOperation, CurrentMode, value_ptr(transform.Matrix));
                     transform.DecompileMatrix();

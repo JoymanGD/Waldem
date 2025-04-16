@@ -6,6 +6,8 @@
 #include "Waldem/Renderer/Resource.h"
 #include "Waldem/Renderer/RootSignature.h"
 #include "Waldem/Renderer/Shader.h"
+#include "Waldem/ECS/Components/Camera.h"
+#include "Waldem/ECS/Components/Light.h"
 
 namespace Waldem
 {
@@ -29,7 +31,7 @@ namespace Waldem
         WArray<RayTracingInstance> Instances;
         
     public:
-        RayTracingRadianceSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
+        RayTracingRadianceSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
         
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
         {
@@ -39,15 +41,15 @@ namespace Waldem
             auto albedoRT = resourceManager->GetRenderTarget("ColorRT");
             auto ormRT = resourceManager->GetRenderTarget("ORMRT");
             
-            WArray<Light> LightDatas;
+            WArray<LightData> LightDatas;
             WArray<Matrix4> LightTransforms;
-            for (auto [entity, light, transform] : ECSManager->EntitiesWith<Light, Transform>())
+            for (auto [entity, light, transform] : Manager->EntitiesWith<Light, Transform>())
             {
-                LightDatas.Add(light);
+                LightDatas.Add(light.Data);
                 LightTransforms.Add(transform);
             }
             
-            for (auto [transformEntity, transform, meshComponent] : ECSManager->EntitiesWith<Transform, MeshComponent>())
+            for (auto [transformEntity, transform, meshComponent] : Manager->EntitiesWith<Transform, MeshComponent>())
             {
                 WArray geometries { RayTracingGeometry(meshComponent.Mesh->VertexBuffer, meshComponent.Mesh->IndexBuffer) };
                 
@@ -66,7 +68,7 @@ namespace Waldem
             
             WArray<Resource> rtResources;
             rtResources.Add(Resource("TLAS", TLAS, 0));
-            rtResources.Add(Resource("LightsBuffer", RTYPE_Buffer, nullptr, sizeof(Light), LightDatas.GetSize(), 1));
+            rtResources.Add(Resource("LightsBuffer", RTYPE_Buffer, nullptr, sizeof(LightData), LightDatas.GetSize(), 1));
             rtResources.Add(Resource("LightTransforms", RTYPE_Buffer, nullptr, sizeof(Matrix4), LightTransforms.GetSize(), 2));
             rtResources.Add(Resource("WorldPositionRT", worldPositionRT, 3));
             rtResources.Add(Resource("NormalRT", normalRT, 4));
@@ -82,11 +84,11 @@ namespace Waldem
         void Update(float deltaTime) override
         {
             //lights update
-            WArray<Light> LightDatas;
+            WArray<LightData> LightDatas;
             WArray<Matrix4> LightTransforms;
-            for (auto [entity, light, transform] : ECSManager->EntitiesWith<Light, Transform>())
+            for (auto [entity, light, transform] : Manager->EntitiesWith<Light, Transform>())
             {
-                LightDatas.Add(light);
+                LightDatas.Add(light.Data);
                 LightTransforms.Add(transform);
             }
             if(!LightDatas.IsEmpty())
@@ -95,7 +97,7 @@ namespace Waldem
                 RTRootSignature->UpdateResourceData("LightTransforms", LightTransforms.GetData());
             
             //constant buffer update
-            for (auto [entity, camera, mainCamera, cameraTransform] : ECSManager->EntitiesWith<Camera, EditorCamera, Transform>())
+            for (auto [entity, camera, mainCamera, cameraTransform] : Manager->EntitiesWith<Camera, EditorCamera, Transform>())
             {
                 RTSceneData.InvViewMatrix = inverse(camera.ViewMatrix);
                 RTSceneData.InvProjectionMatrix = inverse(camera.ProjectionMatrix);
@@ -104,7 +106,7 @@ namespace Waldem
             }
 
             int i = 0;
-            for (auto [entity, meshComponent, transform] : ECSManager->EntitiesWith<MeshComponent, Transform>())
+            for (auto [entity, meshComponent, transform] : Manager->EntitiesWith<MeshComponent, Transform>())
             {
                 Instances[i].Transform = transform;
                 i++;

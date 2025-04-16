@@ -3,11 +3,10 @@
 #include "Waldem/Input/KeyCodes.h"
 #include "Waldem/Input/MouseButtonCodes.h"
 #include "Waldem/ECS/Components/EditorCamera.h"
-#include "Waldem/ECS/Components/MeshComponent.h"
-#include "..\..\Components\RigidBody.h"
 #include "Waldem/Audio/Audio.h"
-#include "Waldem/Renderer/Light.h"
-#include "Waldem/Renderer/Model/Transform.h"
+#include "Waldem/ECS/Components/Light.h"
+#include "Waldem/ECS/Components/Camera.h"
+#include "Waldem/ECS/Components/Transform.h"
 
 namespace Waldem
 {
@@ -45,11 +44,11 @@ namespace Waldem
         AudioClip* TestClip;
         
     public:
-        DebugSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
+        DebugSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
 
         void CacheFrustrumCorners()
         {
-            for (auto [entity, camera, mainCamera, cameraTransform] : ECSManager->EntitiesWith<Camera, EditorCamera, Transform>())
+            for (auto [entity, camera, mainCamera, cameraTransform] : Manager->EntitiesWith<Camera, EditorCamera, Transform>())
             {
                 Vector3 ndcCorners[8] =
                 {

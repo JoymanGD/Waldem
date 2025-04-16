@@ -1,8 +1,9 @@
 #pragma once
 #include "Material.h"
-#include "Transform.h"
+#include "Waldem/ECS/Components/Transform.h"
 #include "Waldem/Renderer/AABB.h"
 #include "Waldem/Renderer/Buffer.h"
+#include "Waldem/Types/WArray.h"
 
 namespace Waldem
 {

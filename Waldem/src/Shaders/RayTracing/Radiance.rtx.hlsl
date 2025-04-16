@@ -28,7 +28,6 @@ cbuffer MyConstantBuffer : register(b0)
     matrix InvView;
     matrix InvProj;
     int NumLights;
-    //TODO: add lights amount
 };
 
 float smoothstep(float edge0, float edge1, float x)

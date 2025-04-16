@@ -10,7 +10,7 @@ namespace Waldem
     public:
         Vector3 Gravity = Vector3(0, -9.81f, 0);
         
-        PhysicsIntegrationSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
+        PhysicsIntegrationSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
         
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
         {
@@ -18,7 +18,7 @@ namespace Waldem
 
         void Update(float deltaTime) override
         {
-            for (auto [entity, transform, rigidBody] : ECSManager->EntitiesWith<Transform, RigidBody>())
+            for (auto [entity, transform, rigidBody] : Manager->EntitiesWith<Transform, RigidBody>())
             {
                 if(rigidBody.InvMass <= 0.0f) continue;
                 

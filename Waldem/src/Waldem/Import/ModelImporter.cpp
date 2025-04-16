@@ -95,9 +95,9 @@ namespace Waldem
         DummyTexture = CreateDummyTexture("DummyTexture");
     }
 
-    Model* ModelImporter::Import(String path, bool relative)
+    CModel* ModelImporter::Import(String path, bool relative)
     {
-        Model* result = new Model();
+        CModel* result = new CModel();
         
         auto assimpModel = ImportInternal(path, ModelImportFlags::CalcTangentSpace | ModelImportFlags::Triangulate | ModelImportFlags::GenBoundingBoxes | ModelImportFlags::FlipUVs | ModelImportFlags::MakeLeftHanded | ModelImportFlags::FlipWindingOrder, relative);
 

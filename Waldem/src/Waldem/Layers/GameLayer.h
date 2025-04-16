@@ -4,7 +4,8 @@
 #include "Waldem/ECS/Systems/GameSystems/OceanSimulationSystem.h"
 #include "Waldem/ECS/Systems/GameSystems/ScreenQuadSystem.h"
 #include "Waldem/ECS/Systems/GameSystems/CollisionSystem.h"
-#include "..\ECS\Systems\GameSystems\PhysicsUpdateSystem.h"
+#include "Waldem/ECS/Systems/GameSystems/PhysicsUpdateSystem.h"
+#include "Waldem/ECS/Systems/GameSystems/PhysicsIntegrationSystem.h"
 #include "Waldem/ECS/Systems/GameSystems/GBufferSystem.h"
 #include "Waldem/ECS/Systems/GameSystems/RayTracingRadianceSystem.h"
 #include "Waldem/ECS/Systems/System.h"
@@ -13,24 +14,20 @@
 #include "Waldem/SceneManagement/Scene.h"
 #include "Waldem/Renderer/Renderer.h"
 #include <glm/gtc/integer.hpp>
-
-#include "Waldem/ECS/Systems/GameSystems/PhysicsIntegrationSystem.h"
+#include "Waldem/ECS/Systems/GameSystems/ScriptExecutionSystem.h"
 #include "Waldem/ECS/Systems/GameSystems/SpatialAudioSystem.h"
+#include "Waldem/SceneManagement/GameScene.h"
 
 namespace Waldem
 {
 	class WALDEM_API GameLayer : public Layer
 	{
 	public:
-		GameLayer(Window* window, ecs::Manager* ecsManager, ResourceManager* resourceManager) : Layer("GameLayer", window, ecsManager, resourceManager)
+		GameLayer(Window* window, ECSManager* ecsManager, ResourceManager* resourceManager) : Layer("GameLayer", window, ecsManager, resourceManager)
 		{
 			GameInputManager = {};
 
 			Vector2 resolution = Vector2(window->GetWidth(), window->GetHeight());
-
-			// auto averageWorldPositionEntity = ecsManager->CreateEntity();
-			// averageWorldPositionEntity.Add<Selected>();
-			// averageWorldPositionEntity.Add<Transform>(Vector3(0, 0, 0));
 
 			resourceManager->CreateRenderTarget("WorldPositionRT", resolution.x, resolution.y, TextureFormat::R32G32B32A32_FLOAT);
 			resourceManager->CreateRenderTarget("NormalRT", resolution.x, resolution.y, TextureFormat::R16G16B16A16_FLOAT);
@@ -48,21 +45,47 @@ namespace Waldem
 			// DrawSystems.Add((ISystem*)new PostProcessSystem(ecsManager));
 			DrawSystems.Add((ISystem*)new ScreenQuadSystem(ecsManager));
 			
-			PhysicsSystems.Add((ISystem*)new PhysicsIntegrationSystem(ecsManager));
-			PhysicsSystems.Add((ISystem*)new PhysicsUpdateSystem(ecsManager));
-			PhysicsSystems.Add((ISystem*)new CollisionSystem(ecsManager));
+			// PhysicsSystems.Add((ISystem*)new PhysicsIntegrationSystem(ecsManager));
+			// PhysicsSystems.Add((ISystem*)new PhysicsUpdateSystem(ecsManager));
+			// PhysicsSystems.Add((ISystem*)new CollisionSystem(ecsManager));
+
+			ScriptSystem = new ScriptExecutionSystem(ecsManager);
+		}
+
+		void Initialize(SceneData* sceneData) override
+		{
+			Renderer::Begin();
+			for (ISystem* system : DrawSystems)
+			{
+				system->Initialize(sceneData, &GameInputManager, CurrentResourceManager);
+			}
+			Renderer::End();
+			
+			for (ISystem* system : UpdateSystems)
+			{
+				system->Initialize(sceneData, &GameInputManager, CurrentResourceManager);
+			}
+			
+			for (ISystem* system : PhysicsSystems)
+			{
+				system->Initialize(sceneData, &GameInputManager, CurrentResourceManager);
+			}
+
+			ScriptSystem->Initialize(sceneData, &GameInputManager, CurrentResourceManager);
+
+			Initialized = true;
 		}
 
 		void OnUpdate(float deltaTime) override
 		{
-			CurrentScene->Update(deltaTime);
-			
-			for (ISystem* system : DrawSystems)
+			for (ISystem* system : UpdateSystems)
 			{
 				system->Update(deltaTime);
 			}
+			
+			// CurrentScene->Update(deltaTime);
 
-			CurrentScene->Draw(deltaTime);
+			ScriptSystem->Update(deltaTime);
 		}
 
 		void OnFixedUpdate(float fixedDeltaTime) override
@@ -71,6 +94,22 @@ namespace Waldem
 			{
 				system->Update(fixedDeltaTime);
 			}
+
+			// CurrentScene->FixedUpdate(fixedDeltaTime);
+
+			ScriptSystem->FixedUpdate(fixedDeltaTime);
+		}
+
+		void OnDraw(float deltaTime) override
+		{
+			for (ISystem* system : DrawSystems)
+			{
+				system->Update(deltaTime);
+			}
+
+			// CurrentScene->Draw(deltaTime);
+
+			ScriptSystem->Draw(deltaTime);
 		}
 
 		void OnEvent(Event& event) override
@@ -94,10 +133,10 @@ namespace Waldem
 
 		void OnDrawUI(float deltaTime) override
 		{
-			CurrentScene->DrawUI(deltaTime);
+			// CurrentScene->DrawUI(deltaTime);
 		}
 
-		void OpenScene(Scene* scene, SceneData* sceneData)
+		void OpenScene(GameScene* scene, SceneData* sceneData)
 		{
 			Renderer::Begin();
 			scene->Initialize(sceneData, &GameInputManager, CurrentECSManager, CurrentResourceManager);
@@ -106,18 +145,24 @@ namespace Waldem
 			{
 				system->Initialize(sceneData, &GameInputManager, CurrentResourceManager);
 			}
+			Renderer::End();
+			
+			for (ISystem* system : UpdateSystems)
+			{
+				system->Initialize(sceneData, &GameInputManager, CurrentResourceManager);
+			}
 			
 			for (ISystem* system : PhysicsSystems)
 			{
 				system->Initialize(sceneData, &GameInputManager, CurrentResourceManager);
 			}
+
+			ScriptSystem->Initialize(sceneData, &GameInputManager, CurrentResourceManager);
 			
-			Renderer::End();
-            
-			CurrentScene = scene;
+			// CurrentScene = scene;
 		}
 
-		Scene* GetCurrentScene() { return CurrentScene; }
+		// GameScene* GetCurrentScene() { return CurrentScene; }
         
 		void Begin() override {}
 		void End() override {}
@@ -125,9 +170,11 @@ namespace Waldem
 		void OnDetach() override{}
 
 	private:
-		Scene* CurrentScene = nullptr;
+		// GameScene* CurrentScene = nullptr;
 		InputManager GameInputManager;
 		WArray<ISystem*> DrawSystems;
+		WArray<ISystem*> UpdateSystems;
 		WArray<ISystem*> PhysicsSystems;
+		ScriptExecutionSystem* ScriptSystem = nullptr;
 	};
 }

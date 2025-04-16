@@ -1,13 +1,13 @@
 #pragma once
 #include "Waldem/ECS/Systems/System.h"
-#include "..\..\Components\EditorCamera.h"
+#include "Waldem/ECS/Components/EditorCamera.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
 #include "Waldem/Editor/Editor.h"
-#include "Waldem/Renderer/Light.h"
+#include "Waldem/ECS/Components/Light.h"
 #include "Waldem/Renderer/Shader.h"
 #include "Waldem/Renderer/Model/Quad.h"
-#include "Waldem/Renderer/Model/Transform.h"
-#include "Waldem/World/Camera.h"
+#include "Waldem/ECS/Components/Transform.h"
+#include "Waldem/ECS/Components/Camera.h"
 
 namespace Waldem
 {
@@ -35,7 +35,7 @@ namespace Waldem
         DefferedContantData ConstantData;
         
     public:
-        DeferredRenderingSystem(ecs::Manager* eCSManager) : ISystem(eCSManager)
+        DeferredRenderingSystem(ECSManager* eCSManager) : ISystem(eCSManager)
         {
             Vector4 dummyColor = Vector4(1.f, 1.f, 1.f, 1.f);
             uint8_t* image_data = (uint8_t*)&dummyColor;

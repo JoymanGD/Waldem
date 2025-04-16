@@ -2,10 +2,14 @@
 #include "Waldem/ECS/Components/EditorCamera.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/ECS/Components/ModelComponent.h"
-#include "Waldem/Renderer/Light.h"
+#include "Waldem/ECS/Components/Light.h"
 #include "Waldem/Renderer/Shader.h"
-#include "Waldem/Renderer/Model/Transform.h"
-#include "Waldem/World/Camera.h"
+#include "Waldem/ECS/Components/Transform.h"
+#include "Waldem/ECS/Components/Camera.h"
+#include "Waldem/Renderer/Pipeline.h"
+#include "Waldem/Renderer/Renderer.h"
+#include "Waldem/Renderer/Resource.h"
+#include "Waldem/Renderer/RootSignature.h"
 
 namespace Waldem
 {
@@ -18,14 +22,14 @@ namespace Waldem
         RenderTarget* RadianceRT = nullptr;
         
     public:
-        ForwardRenderingSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
+        ForwardRenderingSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
         
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
         {
             RadianceRT = resourceManager->GetRenderTarget("RadianceRT");
             
             WArray<Texture2D*> textures;
-            for (auto [entity, model, transform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
+            for (auto [entity, model, transform] : Manager->EntitiesWith<ModelComponent, Transform>())
             {
                 for (auto texture : model.Model->GetTextures())
                     textures.Add(texture);
@@ -34,7 +38,7 @@ namespace Waldem
             }
 
             WArray<Matrix4> worldTransforms;
-            for (auto [entity, model, transform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
+            for (auto [entity, model, transform] : Manager->EntitiesWith<ModelComponent, Transform>())
             {
                 worldTransforms.Add(transform);
             }
@@ -66,7 +70,7 @@ namespace Waldem
         {
             WArray<FrustumPlane> frustrumPlanes;
             Matrix4 matrices[2];
-            for (auto [entity, camera, mainCamera, cameraTransform] : ECSManager->EntitiesWith<Camera, EditorCamera, Transform>())
+            for (auto [entity, camera, mainCamera, cameraTransform] : Manager->EntitiesWith<Camera, EditorCamera, Transform>())
             {
                 matrices[0] = camera.ViewMatrix;
                 matrices[1] = camera.ProjectionMatrix;
@@ -78,7 +82,7 @@ namespace Waldem
 
             //collect world transforms for buffer update
             WArray<Matrix4> worldTransforms;
-            for (auto [entity, model, transform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
+            for (auto [entity, model, transform] : Manager->EntitiesWith<ModelComponent, Transform>())
             {
                 worldTransforms.Add(transform);
             }
@@ -88,7 +92,7 @@ namespace Waldem
             Renderer::SetRootSignature(DefaultRootSignature);
             
             uint32_t modelID = 0;
-            for (auto [entity, modelComponent, transform] : ECSManager->EntitiesWith<ModelComponent, Transform>())
+            for (auto [entity, modelComponent, transform] : Manager->EntitiesWith<ModelComponent, Transform>())
             {
                 DefaultRootSignature->UpdateResourceData("RootConstants", &modelID);
                 for (auto mesh : modelComponent.Model->GetMeshes())

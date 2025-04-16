@@ -2,7 +2,7 @@
 #include "Waldem/ECS/Components/ColliderComponent.h"
 #include "Waldem/ECS/Components/Selected.h"
 #include "Waldem/ECS/Systems/System.h"
-#include "Waldem/ECS/Systems/EditorSystems/WidgetSystem.h"
+#include "Waldem/ECS/Systems/EditorSystems/Widgets/WidgetSystem.h"
 
 namespace Waldem
 {
@@ -11,16 +11,16 @@ namespace Waldem
     private:
         const char* colliderTypeNames[5] = { "None", "Sphere", "Box", "Capsule", "Mesh" };
     public:
-        ColliderComponentWidget(ecs::Manager* eCSManager) : IWidgetSystem(eCSManager) {}
+        ColliderComponentWidget(ECSManager* eCSManager) : IWidgetSystem(eCSManager) {}
 
         String GetName() override { return "Collider"; }
-        bool IsVisible() override { return ECSManager->EntitiesWith<ColliderComponent, Selected>().Count() > 0; }
+        bool IsVisible() override { return Manager->EntitiesWith<ColliderComponent, Selected>().Count() > 0; }
 
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override {}
 
         void Update(float deltaTime) override
         {
-            for (auto [entity, collider, selected] : ECSManager->EntitiesWith<ColliderComponent, Selected>())
+            for (auto [entity, collider, selected] : Manager->EntitiesWith<ColliderComponent, Selected>())
             {
                 ImGui::Combo("Type", (int*)&collider.Type, colliderTypeNames, 5);
 

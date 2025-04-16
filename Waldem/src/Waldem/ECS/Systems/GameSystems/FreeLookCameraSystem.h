@@ -4,8 +4,8 @@
 #include "Waldem/Input/Input.h"
 #include "Waldem/Input/KeyCodes.h"
 #include "Waldem/Input/MouseButtonCodes.h"
-#include "Waldem/Renderer/Model/Transform.h"
-#include "Waldem/World/Camera.h"
+#include "Waldem/ECS/Components/Transform.h"
+#include "Waldem/ECS/Components/Camera.h"
 
 namespace Waldem
 {
@@ -17,7 +17,7 @@ namespace Waldem
         Vector3 DeltaPos = { 0, 0, 0 };
         
     public:
-        FreeLookCameraSystem(ecs::Manager* eCSManager) : ISystem(eCSManager) {}
+        FreeLookCameraSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
         
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
         {
@@ -62,7 +62,7 @@ namespace Waldem
                 MousePos = mousePos;
             });
 
-            for (auto [entity, transform, camera, mainCamera] : ECSManager->EntitiesWith<Transform, Camera, EditorCamera>())
+            for (auto [entity, transform, camera, mainCamera] : Manager->EntitiesWith<Transform, Camera, EditorCamera>())
             {
                 inputManager->SubscribeToMouseScrollEvent([&](Vector2 scroll)
                 {
@@ -77,7 +77,7 @@ namespace Waldem
 
         void Update(float deltaTime) override
         {
-            for (auto [entity, transform, camera, mainCamera] : ECSManager->EntitiesWith<Transform, Camera, EditorCamera>())
+            for (auto [entity, transform, camera, mainCamera] : Manager->EntitiesWith<Transform, Camera, EditorCamera>())
             {               
                 if (IsUnderControl)
                 {

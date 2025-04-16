@@ -7,11 +7,12 @@ namespace Waldem
     class RayTracingGeometry
     {
     public:
+        RayTracingGeometry() = default;
         RayTracingGeometry(Buffer* vertexBuffer, Buffer* indexBuffer) : VertexBuffer(vertexBuffer), IndexBuffer(indexBuffer) {}
         virtual ~RayTracingGeometry() {}
         
-        Buffer* VertexBuffer;
-        Buffer* IndexBuffer;
+        Buffer* VertexBuffer = nullptr;
+        Buffer* IndexBuffer = nullptr;
     };
     
     class RayTracingInstance;
@@ -34,6 +35,7 @@ namespace Waldem
     class RayTracingInstance
     {
     public:
+        RayTracingInstance() : BLAS(nullptr), Transform(Matrix4(1.0f)) {}
         RayTracingInstance(AccelerationStructure* blas, Matrix4 transform) : BLAS(blas), Transform(transform) {}
         virtual ~RayTracingInstance() {}
 

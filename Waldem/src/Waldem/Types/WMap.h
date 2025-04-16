@@ -84,7 +84,14 @@ namespace Waldem
             {
                 if (Data[i].key == key)
                 {
-                    return &Data[i].value;
+                    if constexpr (std::is_pointer_v<T2>)
+                    {
+                        return Data[i].value;
+                    }
+                    else
+                    {
+                        return &Data[i].value;
+                    }
                 }
             }
             return nullptr;
@@ -100,8 +107,9 @@ namespace Waldem
                 }
             }
 
-            WD_CORE_ERROR("Key '{0}' not found in WMap", key);
-            throw std::runtime_error("Key not found in WMap");
+            // If key not found, insert default-constructed value
+            Data.Add(WPair<T1, T2>(key, T2{}));
+            return Data.Last().value;
         }
 
         auto begin() { return Data.begin(); }

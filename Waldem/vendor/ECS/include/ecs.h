@@ -38,8 +38,6 @@ SOFTWARE.
 #include <utility>
 #include <vector>
 
-#include "Waldem/ECS/Components/NameComponent.h"
-
 namespace ecs {
 
 class Entity;
@@ -457,7 +455,7 @@ public:
 		);
 	}
 
-	Entity CreateEntity(std::string name);
+	Entity CreateEntity();
 
 	template <typename... Ts>
 	void CopyEntity(const Entity& from, Entity& to);
@@ -1206,13 +1204,12 @@ inline bool Entity::IsIdenticalTo(const Entity& e) const {
 	return different_entities && manager_ == e.manager_ && manager_.Match(entity_, e.entity_);
 }
 
-inline Entity Manager::CreateEntity(std::string name) {
+inline Entity Manager::CreateEntity() {
 	Index entity{ 0 };
 	Version version{ null_version };
 	GenerateEntity(entity, version);
 	assert(version != null_version && "Failed to create new entity in manager");
 	auto newEntity = Entity{ entity, version, *this };
-	newEntity.Add<Waldem::NameComponent>(name);
 	return newEntity;
 }
 
