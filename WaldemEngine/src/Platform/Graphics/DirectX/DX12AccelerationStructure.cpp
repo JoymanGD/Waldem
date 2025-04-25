@@ -244,4 +244,15 @@ namespace Waldem
         // Insert a barrier to ensure completion
         cmdList->UAVBarrier(Resource);
     }
+
+    void DX12AccelerationStructure::Destroy()
+    {
+        Resource->Release();
+        ScratchBuffer->Release();
+
+        if(Type == AccelerationStructureType::TopLevel)
+        {
+            InstanceBuffer->Release();
+        }
+    }
 }

@@ -16,7 +16,7 @@ namespace Waldem
         void Update(DX12CommandList* cmdList, WArray<RayTracingGeometry>& geometries);
         void Update(DX12CommandList* cmdList, WArray<RayTracingInstance>& instances);
         void* GetPlatformResource() override { return Resource; }
-        void Destroy() override { Resource->Release(); ScratchBuffer->Release(); InstanceBuffer->Release(); }
+        void Destroy() override;
 
     private:
         ID3D12Resource* Resource;

@@ -18,6 +18,14 @@ namespace Waldem
         {
         }
 
+        void Deinitialize() override
+        {
+            for (auto [sourceEntity, audioSource] : Manager->EntitiesWith<AudioSource>())
+            {
+                Audio::Stop(audioSource.Clip);
+            }
+        }
+
         void Update(float deltaTime) override
         {
             Audio::LockAudioThread();

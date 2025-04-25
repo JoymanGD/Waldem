@@ -16,7 +16,7 @@ namespace Waldem
 
     public:
         void* GetPlatformData() override { return ShaderBlob; }
-        void Destroy() override { if (ShaderBlob) ShaderBlob->Release(); if (ErrorBlob) ErrorBlob->Release(); if (DxcUtils) DxcUtils->Release(); if (DxcCompiler) DxcCompiler->Release(); if (DxcIncludeHandler) DxcIncludeHandler->Release(); }
+        void Destroy() override { if (ShaderBlob) ShaderBlob->Release(); if (DxcUtils) DxcUtils->Release(); if (DxcCompiler) DxcCompiler->Release(); if (DxcIncludeHandler) DxcIncludeHandler->Release(); }
 
     private:
         IDxcBlob* ShaderBlob;
