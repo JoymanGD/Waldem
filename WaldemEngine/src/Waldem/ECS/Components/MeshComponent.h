@@ -14,14 +14,11 @@ namespace Waldem
         
         void Serialize(WDataBuffer& outData) override
         {
-            uint64 hash = ResourceManager::ExportAsset(Mesh);
-            outData << hash;
+            ResourceManager::SerializeAsset(outData, Mesh);
         }
         void Deserialize(WDataBuffer& inData) override
         {
-            uint64 hash;
-            inData >> hash;
-            Mesh = ResourceManager::ImportAsset<CMesh>(hash);
+            ResourceManager::DeserializeAsset(inData, Mesh);
         }
     };
 }

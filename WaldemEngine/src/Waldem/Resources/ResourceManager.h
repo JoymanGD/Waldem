@@ -33,6 +33,24 @@ namespace Waldem
 
             uint64 hash = HashFromData(dataBuffer.GetData(), dataBuffer.GetSize());
 
+            if(hash == asset->Hash)
+            {
+                return asset->Hash;
+            }
+
+            // // delete previous asset
+            // if(asset->Hash)
+            // {
+            //     std::filesystem::path path = GetPathForAsset(asset->Type);
+            //     path.append(std::to_string(asset->Hash));
+            //     path.replace_extension(".ass");
+            //
+            //     if (exists(path))
+            //     {
+            //         std::filesystem::remove(path);
+            //     }
+            // }
+
             Path path = GetPathForAsset(asset->Type);
             path.append(std::to_string(hash));
             path.replace_extension(".ass");
@@ -69,6 +87,7 @@ namespace Waldem
                     if (inFile.read((char*)buffer, size))
                     {
                         asset = new T();
+                        asset->Hash = hash;
                         WDataBuffer inData = WDataBuffer(buffer, size);
                         asset->Deserialize(inData);
                     }
@@ -82,6 +101,29 @@ namespace Waldem
             }
 
             return (T*)asset;
+        }
+        
+        static void SerializeAsset(WDataBuffer& dataBuffer, Asset* asset)
+        {
+            if(asset)
+            {
+                dataBuffer << ExportAsset(asset);
+                return;
+            }
+
+            dataBuffer << 0;
+        }
+        
+        template <typename T>
+        static void DeserializeAsset(WDataBuffer& dataBuffer, T*& asset)
+        {
+            uint64 hash;
+            dataBuffer >> hash;
+            
+            if(hash > 0)
+            {
+                asset = ImportAsset<T>(hash);
+            }
         }
         
     private:
