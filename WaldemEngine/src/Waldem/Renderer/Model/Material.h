@@ -32,42 +32,47 @@ namespace Waldem
         bool HasDiffuseTexture() { return Diffuse != nullptr; }
         bool HasNormalTexture() { return Normal != nullptr; }
         bool HasORMTexture() { return MetalRoughness != nullptr; }
-        
-        void Serialize(WDataBuffer& outData) override
+
+        void SerializeTexture(WDataBuffer& outData, Texture2D* texture)
         {
-            uint64 hash;
-            hash = Diffuse ? ResourceManager::ExportAsset(&Diffuse->Desc) : 0;
-            outData << hash;
-            hash = Normal ? ResourceManager::ExportAsset(&Normal->Desc) : 0;
-            outData << hash;
-            hash = MetalRoughness ? ResourceManager::ExportAsset(&MetalRoughness->Desc) : 0;
-            outData << hash;
-            outData << Albedo;
-            outData << Metallic;
-            outData << Roughness;
+            if(texture)
+            {
+                uint64 hash = ResourceManager::ExportAsset(&texture->Desc);
+                outData << hash;
+                return;
+            }
+
+            outData << (uint64)0;
         }
 
-        Texture2D* DeserializeTexture(uint64 hash)
+        void DeserializeTexture(WDataBuffer& inData, Texture2D*& texture)
         {
+            uint64 hash;
+            inData >> hash;
+            
             if(hash > 0)
             {
                 auto textureDesc = ResourceManager::ImportAsset<TextureDesc>(hash);
 
-                return Renderer::CreateTexture(*textureDesc);
+                texture = Renderer::CreateTexture(*textureDesc);
             }
-
-            return nullptr;
+        }
+        
+        void Serialize(WDataBuffer& outData) override
+        {
+            SerializeTexture(outData, Diffuse);
+            SerializeTexture(outData, Normal);
+            SerializeTexture(outData, MetalRoughness);
+            outData << Albedo;
+            outData << Metallic;
+            outData << Roughness;
         }
         
         void Deserialize(WDataBuffer& inData) override
         {
-            uint64 hash;
-            inData >> hash;
-            Diffuse = DeserializeTexture(hash);
-            inData >> hash;
-            Normal = DeserializeTexture(hash);
-            inData >> hash;
-            MetalRoughness = DeserializeTexture(hash);
+            DeserializeTexture(inData, Diffuse);
+            DeserializeTexture(inData, Normal);
+            DeserializeTexture(inData, MetalRoughness);
             inData >> Albedo;
             inData >> Metallic;
             inData >> Roughness;
