@@ -22,6 +22,7 @@
 #include "backends/imgui_impl_dx12.h"
 #include "backends/imgui_impl_sdl2.h"
 #include "backends/imgui_impl_sdl2.h"
+#include "..\..\..\Waldem\Editor\UIStyles.h"
 
 struct ImGuiIO;
 
@@ -227,6 +228,8 @@ namespace Waldem
         
         // Platform/Renderer bindings
         ImGui_ImplDX12_Init(Device, SWAPCHAIN_SIZE, DXGI_FORMAT_R8G8B8A8_UNORM, ImGuiHeap, ImGuiHeap->GetCPUDescriptorHandleForHeapStart(), ImGuiHeap->GetGPUDescriptorHandleForHeapStart());
+            
+        UIStyles::ApplyDefault();
     }
 
     void DX12Renderer::Draw(CModel* model)

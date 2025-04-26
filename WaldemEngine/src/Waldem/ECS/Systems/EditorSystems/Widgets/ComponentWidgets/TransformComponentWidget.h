@@ -25,7 +25,11 @@ namespace Waldem
                 Vector3 cachedScale = transform.LocalScale;
                 
                 ImGui::DragFloat3("Position", &transform.Position.x);
-                ImGui::DragFloat3("Rotation", &transform.Rotation.x);
+                
+                auto euler = transform.GetEuler();
+                ImGui::DragFloat3("Rotation", &euler.x);
+                transform.SetEuler(euler);
+                
                 ImGui::DragFloat3("Scale", &transform.LocalScale.x);
 
                 if(cachedPosition != transform.Position || cachedRotation != transform.Rotation || cachedScale != transform.LocalScale)
