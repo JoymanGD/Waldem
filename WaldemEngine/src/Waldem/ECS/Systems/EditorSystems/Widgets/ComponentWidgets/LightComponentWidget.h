@@ -23,7 +23,7 @@ namespace Waldem
             for (auto [transformEntity, light, selected] : Manager->EntitiesWith<Light, Selected>())
             {
                 ImGui::Combo("Type", (int*)&light.Data.Type, lightTypeNames, 4);
-                ImGui::SliderFloat3("Color", &light.Data.Color.x, 0.0f, 1.0f);
+                ImGui::ColorEdit3("Color", &light.Data.Color.x);
                 ImGui::DragFloat("Intensity", &light.Data.Intensity, .5f, 0.0f, 200.0f);
 
                 if(light.Data.Type == LightType::Point)

@@ -91,6 +91,12 @@ namespace Waldem
         Translate(forward * delta.z + right * delta.x + up * delta.y);
     }
 
+    Vector3 Transform::GetEuler()
+    {
+        Vector3 euler = degrees(eulerAngles(Rotation));
+        return euler;
+    }
+
     void Transform::SetEuler(Vector3 euler)
     {
         euler = radians(euler);
