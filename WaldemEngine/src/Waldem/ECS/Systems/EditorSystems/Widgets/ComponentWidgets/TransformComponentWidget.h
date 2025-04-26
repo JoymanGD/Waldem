@@ -13,6 +13,7 @@ namespace Waldem
 
         WString GetName() override { return "Transform"; }
         bool IsVisible() override { return Manager->EntitiesWith<Transform, Selected>().Count() > 0; }
+        bool IsRemovable() override { return false; }
 
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override {}
 
