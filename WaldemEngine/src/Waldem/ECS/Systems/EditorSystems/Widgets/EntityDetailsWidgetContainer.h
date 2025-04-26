@@ -1,4 +1,5 @@
 #pragma once
+#include "imgui_internal.h"
 #include "Waldem/ECS/Components/Selected.h"
 #include "Waldem/ECS/Systems/EditorSystems/Widgets/IWidgetContainerSystem.h"
 #include "Waldem/ECS/Systems/System.h"
@@ -37,7 +38,36 @@ namespace Waldem
                         {
                             if (ImGui::BeginChild(child->GetName().C_Str(), ImVec2(0, 0), ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY))
                             {
+                                if(child->IsRemovable() || child->IsResettable())
+                                {
+                                    ImGui::SameLine(ImGui::GetWindowWidth() - 50);
+                                    if (ImGui::Button("..."))
+                                    {
+                                        ImGui::OpenPopup("TransformContextMenu");
+                                    }
+
+                                    if (ImGui::BeginPopupContextItem("TransformContextMenu", ImGuiPopupFlags_MouseButtonLeft))
+                                    {
+                                        if(child->IsResettable())
+                                        {
+                                            if (ImGui::MenuItem("Reset"))
+                                            {
+                                            }
+                                        }
+
+                                        if(child->IsRemovable())
+                                        {
+                                            if (ImGui::MenuItem("Remove"))
+                                            {
+                                            }
+                                        }
+
+                                        ImGui::EndPopup();
+                                    }
+                                }
+
                                 ImGui::Text(child->GetName().C_Str());
+                                
                                 child->Update(deltaTime);
                             }
                             ImGui::EndChild();
@@ -46,6 +76,11 @@ namespace Waldem
                             ImGui::Separator();
                             ImGui::Spacing();
                         }
+                    }
+
+                    if (ImGui::Button("Add component"))
+                    {
+                        // Add logic to handle adding a component
                     }
                 }
             }

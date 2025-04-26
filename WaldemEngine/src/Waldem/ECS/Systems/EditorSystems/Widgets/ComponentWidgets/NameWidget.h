@@ -17,6 +17,8 @@ namespace Waldem
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override {}
 
         WString GetName() override { return "Name"; }
+        bool IsRemovable() override { return false; }
+        bool IsResettable() override { return false; }
         bool IsVisible() override { return Manager->EntitiesWith<NameComponent, Selected>().Count() > 0; }
 
         void Update(float deltaTime) override
