@@ -17,11 +17,15 @@ namespace Waldem
         CEntity* CreateEntity(const WString& name)
         {
             CEntity* entity = new CEntity(name);
-        
             entity->NativeEntity = NativeECSManager.CreateEntity();
             entity->Add<NameComponent>(name);
 
             return entity;
+        }
+
+        void RemoveEntity(ecs::Entity& entity)
+        {
+            entity.Destroy();
         }
         
         void Refresh()

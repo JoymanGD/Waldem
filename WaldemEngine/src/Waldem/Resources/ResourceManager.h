@@ -41,7 +41,7 @@ namespace Waldem
             // // delete previous asset
             // if(asset->Hash)
             // {
-            //     std::filesystem::path path = GetPathForAsset(asset->Type);
+            //     Path path = GetPathForAsset(asset->Type);
             //     path.append(std::to_string(asset->Hash));
             //     path.replace_extension(".ass");
             //
@@ -57,7 +57,7 @@ namespace Waldem
 
             if (!exists(path))
             {
-                create_directories(std::filesystem::path(path).parent_path());
+                create_directories(Path(path).parent_path());
                 std::ofstream outFile(path.c_str(), std::ios::binary);
                 outFile.write(static_cast<const char*>(dataBuffer.GetData()), dataBuffer.GetSize());
             }
@@ -71,7 +71,7 @@ namespace Waldem
             Asset* asset = nullptr;
         
             AssetType type = GetAssetType<T>();
-            std::filesystem::path path = GetPathForAsset(type);
+            Path path = GetPathForAsset(type);
             path.append(std::to_string(hash));
             path.replace_extension(".ass");
 

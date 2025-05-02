@@ -13,9 +13,6 @@
 
 namespace Waldem
 {
-	
-#define BIND_EVENT_FN(x) std::bind(&Engine::x, this, std::placeholders::_1)
-
 	Engine* Engine::Instance = nullptr;
 	
 	Engine::Engine()
@@ -38,7 +35,7 @@ namespace Waldem
 		Instance = this;
 		
 		Window = CWindow::Create();
-		Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
+		Window->SetEventCallback(BIND_EVENT_FN(Engine::OnEvent));
 
 		CurrentRenderer = {};
 		CurrentRenderer.Initialize(Window);
@@ -116,7 +113,7 @@ namespace Waldem
 	void Engine::OnEvent(Event& e)
 	{
 		EventDispatcher dispatcher(e);
-		dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(OnWindowClose));
+		dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(Engine::OnWindowClose));
 
 		for (int i = LayerStack.Num() - 1; i >= 0; i--)
 		{

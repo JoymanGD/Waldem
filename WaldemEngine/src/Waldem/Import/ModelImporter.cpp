@@ -36,7 +36,7 @@ namespace Waldem
         return Renderer::CreateTexture(name, width, height, format, sizeof(Vector4), image_data);
     }
 
-    Texture2D* CreateTexture(std::filesystem::path& path, WString name, TextureType textureType, const aiScene* assimpModel, aiMaterial* assimpMaterial)
+    Texture2D* CreateTexture(Path& path, WString name, TextureType textureType, const aiScene* assimpModel, aiMaterial* assimpMaterial)
     {
         aiString texturePath;
         
@@ -56,7 +56,7 @@ namespace Waldem
             //texture is external
             else
             {
-                std::filesystem::path parentPath = path.parent_path();
+                Path parentPath = path.parent_path();
                 auto externalTexturePath = parentPath.append(texturePath.C_Str());
                 image_data = stbi_load(externalTexturePath.string().c_str(), &width, &height, &componentsCount, 4);
             }
@@ -71,7 +71,7 @@ namespace Waldem
         return nullptr;
     }
 
-    Material* CreateMaterial(std::filesystem::path& path, const aiScene* assimpModel, aiMaterial* assimpMaterial)
+    Material* CreateMaterial(Path& path, const aiScene* assimpModel, aiMaterial* assimpMaterial)
     {
         auto diffuse = CreateTexture(path, "DiffuseTexture", DIFFUSE, assimpModel, assimpMaterial);
         auto normal = CreateTexture(path, "NormalTexture", NORMALS, assimpModel, assimpMaterial);
@@ -165,7 +165,7 @@ namespace Waldem
         return result;
     }
 
-    const aiScene* ModelImporter::ImportInternal(std::filesystem::path& path, ModelImportFlags importFlags, bool relative)
+    const aiScene* ModelImporter::ImportInternal(Path& path, ModelImportFlags importFlags, bool relative)
     {
         return AssimpImporter.ReadFile(path.string(), (unsigned)importFlags);
     }

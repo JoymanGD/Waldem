@@ -1,4 +1,5 @@
 #pragma once
+#include "ComponentWidget.h"
 #include "Waldem/ECS/Components/ColliderComponent.h"
 #include "Waldem/ECS/Components/Selected.h"
 #include "Waldem/ECS/Systems/System.h"
@@ -6,15 +7,14 @@
 
 namespace Waldem
 {
-    class WALDEM_API ColliderComponentWidget : public IWidgetSystem
+    class WALDEM_API ColliderComponentWidget : public ComponentWidget<ColliderComponent>
     {
     private:
         const char* colliderTypeNames[5] = { "None", "Sphere", "Box", "Capsule", "Mesh" };
     public:
-        ColliderComponentWidget(ECSManager* eCSManager) : IWidgetSystem(eCSManager) {}
+        ColliderComponentWidget(ECSManager* eCSManager) : ComponentWidget(eCSManager) {}
 
         WString GetName() override { return "Collider"; }
-        bool IsVisible() override { return Manager->EntitiesWith<ColliderComponent, Selected>().Count() > 0; }
 
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override {}
 

@@ -9,6 +9,7 @@ namespace Waldem
     {
         virtual void RegisterToNativeEntity(ecs::Entity& entity) = 0;
         virtual WString GetComponentName() = 0;
+        virtual void Reset() = 0;
     };
     
     template<typename T>
@@ -16,6 +17,11 @@ namespace Waldem
     {
         void Serialize(WDataBuffer& outData) override {}
         void Deserialize(WDataBuffer& inData) override {}
+
+        void Reset() override
+        {
+            *(T*)this = T();
+        }
         
         void RegisterToNativeEntity(ecs::Entity& entity) override
         {
