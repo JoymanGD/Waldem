@@ -26,15 +26,6 @@ namespace Waldem
         SetMatrix(matrix);
     }
 
-    void Transform::Reset()
-    {
-        LocalScale = { 1, 1, 1 };
-        Position = { 0, 0, 0 };
-        Rotation = { 1, 0, 0, 0 };
-        
-        Update();
-    }
-
     void Transform::SetPosition(Vector3 newPosition)
     {
         Position = newPosition;

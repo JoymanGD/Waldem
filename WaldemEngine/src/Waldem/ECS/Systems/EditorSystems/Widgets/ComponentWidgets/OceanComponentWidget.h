@@ -1,19 +1,17 @@
 #pragma once
-#include "Waldem/ECS/Systems/EditorSystems/Widgets/WidgetSystem.h"
 #include "Waldem/ECS/Components/Ocean.h"
 #include "Waldem/ECS/Components/Selected.h"
 #include "Waldem/ECS/Systems/System.h"
 
 namespace Waldem
 {
-    class WALDEM_API OceanComponentWidget : public IWidgetSystem
+    class WALDEM_API OceanComponentWidget : public ComponentWidget<Ocean>
     {
         
     public:
-        OceanComponentWidget(ECSManager* eCSManager) : IWidgetSystem(eCSManager) {}
+        OceanComponentWidget(ECSManager* eCSManager) : ComponentWidget(eCSManager) {}
 
         WString GetName() override { return "Ocean"; }
-        bool IsVisible() override { return Manager->EntitiesWith<Ocean, Selected>().Count() > 0; }
         
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override {}
 

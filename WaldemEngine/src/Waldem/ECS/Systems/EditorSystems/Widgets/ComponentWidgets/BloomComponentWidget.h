@@ -1,4 +1,5 @@
 #pragma once
+#include "ComponentWidget.h"
 #include "Waldem/ECS/Components/BloomPostProcess.h"
 #include "Waldem/ECS/Systems/EditorSystems/Widgets/WidgetSystem.h"
 #include "Waldem/ECS/Components/Selected.h"
@@ -6,15 +7,14 @@
 
 namespace Waldem
 {
-    class WALDEM_API BloomComponentWidget : public IWidgetSystem
+    class WALDEM_API BloomComponentWidget : public ComponentWidget<BloomPostProcess>
     {
     public:
-        BloomComponentWidget(ECSManager* eCSManager) : IWidgetSystem(eCSManager) {}
+        BloomComponentWidget(ECSManager* eCSManager) : ComponentWidget(eCSManager) {}
         
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override {}
 
         WString GetName() override { return "Bloom"; }
-        bool IsVisible() override { return Manager->EntitiesWith<BloomPostProcess, Selected>().Count() > 0; }
 
         void Update(float deltaTime) override
         {

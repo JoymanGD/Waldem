@@ -3,22 +3,12 @@
 #include <fstream>
 #include <filesystem>
 #include "imgui.h"
-#include "backends/imgui_impl_dx12.h"
-#include "backends/imgui_impl_sdl2.h"
 #include "Waldem/ECS/Components/AudioListener.h"
 #include "Waldem/ECS/Systems/EditorSystems/EditorControlSystem.h"
-#include "Waldem/ECS/Systems/EditorSystems/GuizmoEditorSystem.h"
+#include "..\ECS\Systems\EditorSystems\EditorGuizmoSystem.h"
 #include "Waldem/ECS/Systems/GameSystems/FreeLookCameraSystem.h"
 #include "Waldem/ECS/Components/Camera.h"
-#include "Waldem/ECS/Systems/EditorSystems/Widgets/EntityDetailsWidgetContainer.h"
-#include "Waldem/ECS/Systems/EditorSystems/Widgets/MainWidgetContainer.h"
-#include "Waldem/ECS/Systems/EditorSystems/Widgets/HierarchyWidget.h"
-#include "Waldem/ECS/Systems/EditorSystems/Widgets/ComponentWidgets/BloomComponentWidget.h"
-#include "Waldem/ECS/Systems/EditorSystems/Widgets/ComponentWidgets/ColliderComponentWidget.h"
-#include "Waldem/ECS/Systems/EditorSystems/Widgets/ComponentWidgets/LightComponentWidget.h"
-#include "Waldem/ECS/Systems/EditorSystems/Widgets/ComponentWidgets/NameWidget.h"
-#include "Waldem/ECS/Systems/EditorSystems/Widgets/ComponentWidgets/OceanComponentWidget.h"
-#include "Waldem/ECS/Systems/EditorSystems/Widgets/ComponentWidgets/TransformComponentWidget.h"
+#include "Waldem/ECS/Systems/EditorSystems/EditorUISystem.h"
 #include "Waldem/ECS/Systems/GameSystems/DeferredRenderingSystem.h"
 #include "Waldem/ECS/Systems/GameSystems/GBufferSystem.h"
 #include "Waldem/ECS/Systems/GameSystems/OceanSimulationSystem.h"
@@ -39,7 +29,7 @@ namespace Waldem
         CWindow* Window;
         GameScene* CurrentScene = nullptr;
         bool BlockUIEvents = true;
-        std::filesystem::path CurrentScenePath;
+        Path CurrentScenePath;
         bool ImportSceneThisFrame = false;
         
     public:
@@ -57,8 +47,8 @@ namespace Waldem
             //do it after all entities set up
             CurrentECSManager->Refresh();
 
-            UISystems.Add(CreateMainWidget());
-            UISystems.Add(new GuizmoEditorSystem(CurrentECSManager));
+            UISystems.Add(new EditorUISystem(CurrentECSManager, BIND_ACTION(OnOpenScene), BIND_ACTION(OnSaveScene), BIND_ACTION(OnSaveSceneAs)));
+            UISystems.Add(new EditorGuizmoSystem(CurrentECSManager));
             
             UpdateSystems.Add(new EditorControlSystem(CurrentECSManager));
             UpdateSystems.Add(new SpatialAudioSystem(ecsManager));
@@ -71,24 +61,6 @@ namespace Waldem
             DrawSystems.Add(new ScreenQuadSystem(ecsManager));
 
             Window = window;
-        }
-
-        MainWidgetContainer* CreateMainWidget()
-        {
-            return new MainWidgetContainer(CurrentECSManager,
-            {
-                new HierarchyWidget(CurrentECSManager),
-                new EntityDetailsWidgetContainer(CurrentECSManager,
-                {
-                    //put all component widgets here
-                    new NameWidget(CurrentECSManager),
-                    new TransformComponentWidget(CurrentECSManager),
-                    new ColliderComponentWidget(CurrentECSManager),
-                    new LightComponentWidget(CurrentECSManager),
-                    new BloomComponentWidget(CurrentECSManager),
-                    new OceanComponentWidget(CurrentECSManager),
-                }),
-            });
         }
         
         void Begin() override
@@ -103,12 +75,10 @@ namespace Waldem
         
         void OnAttach() override
         {
-            InitializeUI();
         }
         
         void OnDetach() override
         {
-            DeinitializeUI();
         }
         
         void OnEvent(Event& event) override
@@ -176,85 +146,14 @@ namespace Waldem
 
         void OnDrawUI(float deltaTime) override
         {
-            if (ImGui::BeginMainMenuBar())
-            {
-                if (ImGui::BeginMenu("File"))
-                {
-                    if (ImGui::MenuItem("New scene")) {}
-                    if (ImGui::MenuItem("Open scene", "Ctrl+O"))
-                    {
-                        if(OpenFile(CurrentScenePath))
-                        {
-                            ImportSceneThisFrame = true;
-                        }
-                    }
-                    if (ImGui::MenuItem("Save scene"))
-                    {
-                        bool save = true;
-                        if(CurrentScenePath.empty())
-                        {
-                            save = SaveFile(CurrentScenePath);
-                        }
-
-                        if(save)
-                        {
-                            ExportScene(CurrentScenePath);
-                        }
-                    }
-                    if (ImGui::MenuItem("Save scene as..."))
-                    {
-                        if(SaveFile(CurrentScenePath))
-                        {
-                            ExportScene(CurrentScenePath);
-                        }
-                    }
-            
-                    ImGui::Separator();
-					       
-                    if (ImGui::BeginMenu("Options"))
-                    {
-                        ImGui::EndMenu();
-                    }
-					       
-                    ImGui::EndMenu();
-                }
-                ImGui::EndMainMenuBar();
-            }
-
             for (ISystem* system : UISystems)
             {
                 system->Update(deltaTime);
             }
         }
 
-        void InitializeUI()
-        {
-            IMGUI_CHECKVERSION();
-            ImGui::CreateContext();
-            ImGuiIO& io = ImGui::GetIO();
-            io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable keyboard controls
-            // io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     // Enable docking
-            // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;   // Enable multi-viewport
-
-            SDL_Window* window = static_cast<SDL_Window*>(CWindow::GetNativeWindow());
-            ImGui_ImplSDL2_InitForD3D(window);
-
-            // Style
-            ImGui::StyleColorsDark();
-
-            Renderer::InitializeUI();
-        }
-
-        void DeinitializeUI()
-        {
-            ImGui_ImplSDL2_Shutdown();
-            ImGui_ImplDX12_Shutdown();
-            ImGui::DestroyContext();
-        }
-
         void CloseScene(GameScene* scene)
         {                    
-            //destroy previous scene
             if(scene)
             {
                 delete scene;
@@ -284,7 +183,7 @@ namespace Waldem
             Initialize(sceneData);
         }
 
-        void ImportScene(std::filesystem::path path)
+        void ImportScene(Path path)
         {
             std::ifstream inFile(path.c_str(), std::ios::binary | std::ios::ate);
             if (inFile.is_open())
@@ -312,7 +211,7 @@ namespace Waldem
             }
         }
 
-        void ExportScene(std::filesystem::path path)
+        void ExportScene(Path path)
         {
             WDataBuffer outData;
             CurrentScene->Serialize(outData);
@@ -320,6 +219,36 @@ namespace Waldem
             std::ofstream outFile(path.c_str(), std::ios::binary);
             outFile.write(static_cast<const char*>(outData.GetData()), outData.GetSize());
             outFile.close();
+        }
+
+        void OnOpenScene()
+        {
+            if(OpenFile(CurrentScenePath))
+            {
+                ImportSceneThisFrame = true;
+            }
+        }
+
+        void OnSaveScene()
+        {
+            bool save = true;
+            if(CurrentScenePath.empty())
+            {
+                save = SaveFile(CurrentScenePath);
+            }
+
+            if(save)
+            {
+                ExportScene(CurrentScenePath);
+            }
+        }
+
+        void OnSaveSceneAs()
+        {
+            if(SaveFile(CurrentScenePath))
+            {
+                ExportScene(CurrentScenePath);
+            }
         }
     };
 }

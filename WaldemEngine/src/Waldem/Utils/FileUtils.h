@@ -11,10 +11,10 @@ namespace Waldem
     {
         char buffer[MAX_PATH];
         GetModuleFileNameA(nullptr, buffer, MAX_PATH);
-        return std::filesystem::path(buffer).parent_path();
+        return Path(buffer).parent_path();
     }
 
-    inline bool SaveFile(std::filesystem::path& outPath)
+    inline bool SaveFile(Path& outPath)
     {
         OPENFILENAMEW ofn;
         wchar_t szFile[MAX_PATH] = L"";
@@ -30,7 +30,7 @@ namespace Waldem
 
         if (GetSaveFileNameW(&ofn))
         {
-            std::filesystem::path selectedPath = szFile;
+            Path selectedPath = szFile;
 
             if (selectedPath.extension() != L".ass")
             {
@@ -44,7 +44,7 @@ namespace Waldem
         return false;
     }
 
-    inline bool OpenFile(std::filesystem::path& outPath)
+    inline bool OpenFile(Path& outPath)
     {
         OPENFILENAMEW ofn;
         wchar_t szFile[MAX_PATH] = L"";
@@ -60,7 +60,7 @@ namespace Waldem
 
         if (GetOpenFileNameW(&ofn))
         {
-            outPath = std::filesystem::path(szFile);
+            outPath = Path(szFile);
             return true;
         }
 

@@ -86,6 +86,6 @@ namespace Waldem
             inData >> Data.AreaTwoSided;
         }
 
-        LightData Data;
+        LightData Data = {};
     };
 }

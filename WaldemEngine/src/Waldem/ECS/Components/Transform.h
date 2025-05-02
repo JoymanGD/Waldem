@@ -7,6 +7,11 @@ namespace Waldem
 {
     struct WALDEM_API Transform : IComponent<Transform>
     {
+        Vector3 Position = { 0, 0, 0 };
+        Quaternion Rotation = { 1, 0, 0, 0 };
+        Vector3 LocalScale = { 1, 1, 1 };
+        Matrix4 Matrix = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
+
         Transform() = default;
         Transform(Vector3 position);
         Transform(Vector3 position, Quaternion rotation, Vector3 localScale);
@@ -18,7 +23,6 @@ namespace Waldem
 
         operator Matrix4() const { return Matrix; }
         
-        void Reset();
         void SetPosition(Vector3 newPosition); 
         void SetPosition(float x, float y, float z);
         void Translate(Vector3 translation);
@@ -37,10 +41,5 @@ namespace Waldem
         void DecompileMatrix();
         void Serialize(WDataBuffer& outData) override;
         void Deserialize(WDataBuffer& inData) override;
-
-        Vector3 Position;
-        Quaternion Rotation;
-        Vector3 LocalScale;
-        Matrix4 Matrix;
     };
 }

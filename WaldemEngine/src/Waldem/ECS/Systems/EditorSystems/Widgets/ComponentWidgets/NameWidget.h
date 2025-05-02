@@ -7,19 +7,18 @@
 
 namespace Waldem
 {
-    class WALDEM_API NameWidget : public IWidgetSystem
+    class WALDEM_API NameWidget : public ComponentWidget<NameComponent>
     {
     private:
         WString RenameString = "";
     public:
-        NameWidget(ECSManager* eCSManager) : IWidgetSystem(eCSManager) {}
+        NameWidget(ECSManager* eCSManager) : ComponentWidget(eCSManager) {}
         
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override {}
 
         WString GetName() override { return "Name"; }
         bool IsRemovable() override { return false; }
         bool IsResettable() override { return false; }
-        bool IsVisible() override { return Manager->EntitiesWith<NameComponent, Selected>().Count() > 0; }
 
         void Update(float deltaTime) override
         {

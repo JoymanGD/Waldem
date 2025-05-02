@@ -5,6 +5,7 @@ namespace Waldem
 {
     using String = std::string;
     using Path = std::filesystem::path;
+    using Action = std::function<void()>;
     using uint64 = uint64_t;
     using uint32 = uint32_t;
     using uint16 = uint16_t;
@@ -18,4 +19,6 @@ namespace Waldem
     #define unlikely_if(x) if (x) UNLIKELY
     #define likely_else else LIKELY
     #define unlikely_else else UNLIKELY
+	#define BIND_ACTION(fn, ...) [this](auto&&... args) { fn(std::forward<decltype(args)>(args)..., ##__VA_ARGS__); }
+	#define BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
 }

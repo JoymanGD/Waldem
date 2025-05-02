@@ -57,7 +57,7 @@ namespace Waldem
         virtual CModel* Import(const Path& path, bool relative = true) override;
 
     protected:
-        const aiScene* ImportInternal(std::filesystem::path& path, ModelImportFlags importFlags = ModelImportFlags::None, bool relative = true);
+        const aiScene* ImportInternal(Path& path, ModelImportFlags importFlags = ModelImportFlags::None, bool relative = true);
         
         Assimp::Importer AssimpImporter;
 

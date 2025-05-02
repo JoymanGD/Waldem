@@ -6,15 +6,14 @@
 
 namespace Waldem
 {
-    class WALDEM_API LightComponentWidget : public IWidgetSystem
+    class WALDEM_API LightComponentWidget : public ComponentWidget<Light>
     {
     private:
         const char* lightTypeNames[4] = { "Directional", "Point", "Spot", "Area" };
     public:
-        LightComponentWidget(ECSManager* eCSManager) : IWidgetSystem(eCSManager) {}
+        LightComponentWidget(ECSManager* eCSManager) : ComponentWidget(eCSManager) {}
 
         WString GetName() override { return "Light"; }
-        bool IsVisible() override { return Manager->EntitiesWith<Light, Selected>().Count() > 0; }
         
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override {}
 

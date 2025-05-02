@@ -13,16 +13,22 @@ namespace Waldem
         float PanelWidth = 300.0f;
         float MinPanelWidth = 300.0f;
         float MaxPanelWidth = 500.0f;
+        bool DeleteSelectedEntity = false;
         ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoSavedSettings;
 
         void SelectEntity(ecs::Entity& entity)
+        {
+            DeselectEntity();
+
+            entity.Add<Selected>();
+        }
+
+        void DeselectEntity()
         {
             for (auto [selectedEntity, selected] : Manager->EntitiesWith<Selected>())
             {
                 selectedEntity.Remove<Selected>();
             }
-
-            entity.Add<Selected>();
         }
         
     public:
@@ -30,7 +36,16 @@ namespace Waldem
 
         WString GetName() override { return "Hierarchy"; }
         
-        void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override {}
+        void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
+        {
+            inputManager->SubscribeToKeyEvent(KEY_DELETE, [&](bool isPressed)
+            {
+                if(isPressed)
+                {
+                    DeleteSelectedEntity = true;
+                }
+            });
+        }
 
         void Update(float deltaTime) override
         {
@@ -47,8 +62,25 @@ namespace Waldem
             ImGui::SetNextWindowSize(ImVec2(PanelWidth, ImGui::GetIO().DisplaySize.y), ImGuiCond_Once);
             ImGui::SetNextWindowSizeConstraints(ImVec2(MinPanelWidth, -1), ImVec2(MaxPanelWidth, -1));
 
-            if (ImGui::Begin("Entities", nullptr, WindowFlags))
+            if (ImGui::Begin("Entities", nullptr, WindowFlags | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_MenuBar))
             {
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8, 6)); // adjust as needed
+                ImGui::BeginGroup();
+                ImGui::Text("Entities");
+                ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("+").x - ImGui::GetStyle().FramePadding.x * 2);
+
+                if (ImGui::Button("+"))
+                {
+                    auto entity = Manager->CreateEntity("NewEntity");
+                    Manager->Refresh();
+                    
+                    SelectEntity(entity->NativeEntity);
+                }
+                ImGui::EndGroup();
+                ImGui::PopStyleVar();
+
+                ImGui::Separator();
+                
                 PanelWidth = ImGui::GetWindowWidth();
 
                 auto entities = Manager->Entities();
@@ -78,10 +110,19 @@ namespace Waldem
                     if (isSelected)
                     {
                         ImGui::SetItemDefaultFocus();
+
+                        if(DeleteSelectedEntity)
+                        {
+                            entity.Destroy();
+                            DeselectEntity();
+                            Manager->Refresh();
+                        }
                     }
                 }
             }
             ImGui::End();
+                        
+            DeleteSelectedEntity = false;
         }
     };
 }

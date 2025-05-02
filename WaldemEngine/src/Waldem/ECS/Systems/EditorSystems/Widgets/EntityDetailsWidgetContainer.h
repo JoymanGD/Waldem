@@ -1,5 +1,6 @@
 #pragma once
 #include "imgui_internal.h"
+#include "ComponentWidgets/ComponentWidgetSystem.h"
 #include "Waldem/ECS/Components/Selected.h"
 #include "Waldem/ECS/Systems/EditorSystems/Widgets/IWidgetContainerSystem.h"
 #include "Waldem/ECS/Systems/System.h"
@@ -29,16 +30,18 @@ namespace Waldem
             if (ImGui::Begin("Details", nullptr, WindowFlags))
             {
                 PanelWidth = ImGui::GetWindowWidth();
-                
-                if(!Manager->EntitiesWith<Selected>().GetVector().empty())
+
+                for (auto [entity, selected] : Manager->EntitiesWith<Selected>())
                 {
                     for(auto child : Children)
                     {
-                        if(child->IsVisible())
+                        IComponentWidgetSystem* componentWidget = dynamic_cast<IComponentWidgetSystem*>(child);
+                        
+                        if(componentWidget->IsVisible())
                         {
-                            if (ImGui::BeginChild(child->GetName().C_Str(), ImVec2(0, 0), ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY))
+                            if (ImGui::BeginChild(componentWidget->GetName().C_Str(), ImVec2(0, 0), ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY))
                             {
-                                if(child->IsRemovable() || child->IsResettable())
+                                if(componentWidget->IsRemovable() || componentWidget->IsResettable())
                                 {
                                     ImGui::SameLine(ImGui::GetWindowWidth() - 50);
                                     if (ImGui::Button("..."))
@@ -48,17 +51,19 @@ namespace Waldem
 
                                     if (ImGui::BeginPopupContextItem("TransformContextMenu", ImGuiPopupFlags_MouseButtonLeft))
                                     {
-                                        if(child->IsResettable())
+                                        if(componentWidget->IsResettable())
                                         {
                                             if (ImGui::MenuItem("Reset"))
                                             {
+                                                componentWidget->ResetComponent(entity);
                                             }
                                         }
 
-                                        if(child->IsRemovable())
+                                        if(componentWidget->IsRemovable())
                                         {
                                             if (ImGui::MenuItem("Remove"))
                                             {
+                                                componentWidget->RemoveComponent(entity);
                                             }
                                         }
 
@@ -66,9 +71,9 @@ namespace Waldem
                                     }
                                 }
 
-                                ImGui::Text(child->GetName().C_Str());
+                                ImGui::Text(componentWidget->GetName().C_Str());
                                 
-                                child->Update(deltaTime);
+                                componentWidget->Update(deltaTime);
                             }
                             ImGui::EndChild();
                             
@@ -82,6 +87,8 @@ namespace Waldem
                     {
                         // Add logic to handle adding a component
                     }
+
+                    break;
                 }
             }
             ImGui::End();

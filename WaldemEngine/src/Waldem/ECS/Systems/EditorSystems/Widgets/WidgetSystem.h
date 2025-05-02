@@ -9,8 +9,5 @@ namespace Waldem
     public:
         IWidgetSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
         virtual WString GetName() = 0;
-        virtual bool IsVisible() { return true; }
-        virtual bool IsRemovable() { return true; }
-        virtual bool IsResettable() { return true; }
     };
 }

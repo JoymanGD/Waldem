@@ -1,18 +1,17 @@
 #pragma once
+#include "ComponentWidget.h"
 #include "Waldem/ECS/Components/Selected.h"
 #include "Waldem/ECS/Systems/System.h"
-#include "Waldem/ECS/Systems/EditorSystems/Widgets/WidgetSystem.h"
 #include "Waldem/ECS/Components/Transform.h"
 
 namespace Waldem
 {
-    class WALDEM_API TransformComponentWidget : public IWidgetSystem
+    class WALDEM_API TransformComponentWidget : public ComponentWidget<Transform>
     {
     public:
-        TransformComponentWidget(ECSManager* eCSManager) : IWidgetSystem(eCSManager) {}
+        TransformComponentWidget(ECSManager* eCSManager) : ComponentWidget(eCSManager) {}
 
         WString GetName() override { return "Transform"; }
-        bool IsVisible() override { return Manager->EntitiesWith<Transform, Selected>().Count() > 0; }
         bool IsRemovable() override { return false; }
 
         void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override {}
