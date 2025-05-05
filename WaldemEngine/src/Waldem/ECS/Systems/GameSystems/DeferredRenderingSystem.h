@@ -100,7 +100,7 @@ namespace Waldem
             Renderer::Compute(GroupCount);
             int hoveredEntityId = 0;
             DeferredRenderingRootSignature->ReadbackResourceData("HoveredMeshes", &hoveredEntityId);
-            Editor::HoveredIntityID = hoveredEntityId - 1;
+            Editor::HoveredEntityID = hoveredEntityId - 1;
             Renderer::ResourceBarrier(TargetRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
         }
     };

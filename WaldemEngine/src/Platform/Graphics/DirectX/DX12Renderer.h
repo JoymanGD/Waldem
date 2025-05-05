@@ -6,6 +6,7 @@
 #include "DX12CommandList.h"
 #include "Waldem/Renderer/Pipeline.h"
 #include "Waldem/Renderer/RootSignature.h"
+#include "Waldem/Renderer/Viewport.h"
 
 namespace Waldem
 {
@@ -32,7 +33,7 @@ namespace Waldem
         RayTracingShader* LoadRayTracingShader(const Path& shaderName) override;
         void SetPipeline(Pipeline* pipeline) override;
         void SetRootSignature(RootSignature* rootSignature) override;
-        void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr, SViewport viewport = {}, SScissorRect scissor = {}) override;
+        void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr) override;
         void ResourceBarrier(RenderTarget* rt, ResourceStates before, ResourceStates after) override;
         void ResourceBarrier(Buffer* buffer, ResourceStates before, ResourceStates after) override;
         Pipeline* CreateGraphicPipeline(const WString& name, RootSignature* rootSignature, PixelShader* shader, WArray<TextureFormat> RTFormats, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout) override;
@@ -42,6 +43,8 @@ namespace Waldem
         Texture2D* CreateTexture(WString name, int width, int height, TextureFormat format, size_t dataSize, uint8_t* data = nullptr) override;
         Texture2D* CreateTexture(TextureDesc desc) override;
         RenderTarget* CreateRenderTarget(WString name, int width, int height, TextureFormat format) override;
+        SViewport* GetEditorViewport() override { return &EditorViewport; }
+        SViewport* GetGameViewport() override { return &GameViewport; }
         AccelerationStructure* CreateBLAS(WString name, WArray<RayTracingGeometry>& geometries) override;
         AccelerationStructure* CreateTLAS(WString name, WArray<RayTracingInstance>& instances) override;
         void UpdateBLAS(AccelerationStructure* BLAS, WArray<RayTracingGeometry>& geometries) override;
@@ -56,9 +59,7 @@ namespace Waldem
         void EndUI() override;
 
     private:
-        uint32_t FrameIndex = 0;
-
-        CWindow* CurrentWindow;
+        CWindow* CurrentWindow = nullptr;
         
         IDXGIFactory4* DxgiFactory = nullptr;
         ID3D12Device5* Device = nullptr;
@@ -66,27 +67,23 @@ namespace Waldem
         ID3D12CommandQueue* ComputeCommandQueue = nullptr;
         IDXGISwapChain* SwapChain = nullptr;
 
-        D3D12_VIEWPORT Viewport = { 0.0f, 0.0f, 800.0f, 600.0f, 0.0f, 1.0f };
-        D3D12_RECT ScissorRect = { 0, 0, 800, 600 };
-
         std::pair<DX12CommandList*, bool> WorldCommandList;
         
-        ID3D12DescriptorHeap* RTVHeap;
-        ID3D12DescriptorHeap* DSVHeap;
-        uint32_t RTVDescriptorSize;
-        ID3D12Resource* RenderTargets[SWAPCHAIN_SIZE];
-        ID3D12Resource* DepthStencilBuffer;
-        D3D12_CPU_DESCRIPTOR_HANDLE CurrentRenderTargetHandle;
-        D3D12_CPU_DESCRIPTOR_HANDLE DSVHandle;
-        ID3D12Debug* DebugController;
-        ID3D12Debug1* DebugController1;
-        ID3D12InfoQueue* InfoQueue;
-        ID3D12Fence* WaitFence;
-        UINT64 WaitFenceValue = 0;
-        ID3D12Fence* SecondaryWaitFence;
+        ID3D12DescriptorHeap* DSVHeap = nullptr;
+        ID3D12Resource* DepthStencilBuffer = nullptr;
+        D3D12_CPU_DESCRIPTOR_HANDLE CurrentRenderTargetHandle {};
+        D3D12_CPU_DESCRIPTOR_HANDLE DSVHandle {};
+        ID3D12Debug* DebugController = nullptr;
+        ID3D12Debug1* DebugController1 = nullptr;
+        ID3D12InfoQueue* InfoQueue = nullptr;
+        ID3D12Fence* WaitFence = nullptr;
+        ID3D12Fence* SecondaryWaitFence = nullptr;
         UINT64 SecondaryWaitFenceValue = 0;
+        SViewport MainViewport = {};
+        SViewport EditorViewport = {};
+        SViewport GameViewport = {};
 
         //ImGui
-        ID3D12DescriptorHeap* ImGuiHeap;
+        ID3D12DescriptorHeap* ImGuiHeap = nullptr;
     };
 }

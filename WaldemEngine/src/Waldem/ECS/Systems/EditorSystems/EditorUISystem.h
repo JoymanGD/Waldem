@@ -13,6 +13,7 @@
 #include "Waldem/ECS/Systems/EditorSystems/Widgets/ComponentWidgets/OceanComponentWidget.h"
 #include "Waldem/ECS/Systems/EditorSystems/Widgets/ComponentWidgets/TransformComponentWidget.h"
 #include "Widgets/ContentBrowserWidget.h"
+#include "Widgets/MainViewportWidget.h"
 
 namespace Waldem
 {
@@ -30,6 +31,7 @@ namespace Waldem
            MainWidget = new MainWidgetContainer(eCSManager,
            {
                new HierarchyWidget(eCSManager),
+               new MainViewportWidget(eCSManager),
                new EntityDetailsWidgetContainer(eCSManager,
                {
                    //put all component widgets here
@@ -50,8 +52,8 @@ namespace Waldem
             ImGui::CreateContext();
             ImGuiIO& io = ImGui::GetIO();
             io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable keyboard controls
-            // io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     // Enable docking
-            // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;   // Enable multi-viewport
+            io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     // Enable docking
+            io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;   // Enable multi-viewport
 
             SDL_Window* window = static_cast<SDL_Window*>(CWindow::GetNativeWindow());
             ImGui_ImplSDL2_InitForD3D(window);
@@ -78,8 +80,76 @@ namespace Waldem
             MainWidget->Deinitialize();
         }
 
+        void UpdateDockSpace()
+        {
+            // 🪟 Fullscreen invisible host window for the dockspace
+            ImGuiViewport* viewport = ImGui::GetMainViewport();
+            ImGui::SetNextWindowPos(viewport->WorkPos);
+            ImGui::SetNextWindowSize(viewport->WorkSize);
+            ImGui::SetNextWindowViewport(viewport->ID);
+
+            ImGuiWindowFlags host_window_flags =
+                ImGuiWindowFlags_NoTitleBar |
+                ImGuiWindowFlags_NoCollapse |
+                ImGuiWindowFlags_NoResize |
+                ImGuiWindowFlags_NoMove |
+                ImGuiWindowFlags_NoBringToFrontOnFocus |
+                ImGuiWindowFlags_NoNavFocus |
+                ImGuiWindowFlags_NoBackground;
+
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+    
+            ImGui::Begin("MainDockspaceHost", nullptr, host_window_flags); // Host window
+            ImGui::PopStyleVar(2);
+
+            ImGuiID dockspace_id = ImGui::GetID("MainDockspace");
+            ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f),
+                             ImGuiDockNodeFlags_PassthruCentralNode | ImGuiDockNodeFlags_NoDockingInCentralNode);
+
+            ImGui::End();
+            
+            static bool dockspaceInitialized = false;
+            
+            // Build the layout once
+            if(!dockspaceInitialized)
+            {
+                ImGui::DockBuilderRemoveNode(dockspace_id); // clear any previous layout
+                ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
+                ImGui::DockBuilderSetNodeSize(dockspace_id, ImGui::GetMainViewport()->Size);
+
+                // Start from root dockspace
+                ImGuiID dock_main_id = dockspace_id;
+
+                // Split horizontally: left (Entities) and right side (everything else)
+                ImGuiID dock_left, dock_right;
+                ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Left, 0.2f, &dock_left, &dock_main_id); // 20% left
+
+                // Split right side horizontally: right (Details) and center+bottom
+                ImGuiID dock_details, dock_centerblock;
+                ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Right, 0.25f, &dock_details, &dock_centerblock); // 25% right
+
+                // Split centerblock vertically: bottom (Content) and center
+                ImGuiID dock_bottom, dock_center;
+                ImGui::DockBuilderSplitNode(dock_centerblock, ImGuiDir_Down, 0.25f, &dock_bottom, &dock_center); // 25% bottom
+
+                // Now assign windows to docks
+                ImGui::DockBuilderDockWindow("Entities", dock_left);
+                ImGui::DockBuilderDockWindow("Details", dock_details);
+                ImGui::DockBuilderDockWindow("Content", dock_bottom);
+                ImGui::DockBuilderDockWindow("Viewport", dock_center);
+                // (Optional) nothing docked to center, can leave it empty or use a viewport/game window
+
+                ImGui::DockBuilderFinish(dockspace_id);
+
+                dockspaceInitialized = true;
+            }
+        }
+
         void Update(float deltaTime) override
         {
+            UpdateDockSpace();
+
             if (ImGui::BeginMainMenuBar())
             {
                 if (ImGui::BeginMenu("File"))

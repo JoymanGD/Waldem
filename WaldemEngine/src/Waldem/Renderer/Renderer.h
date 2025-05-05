@@ -11,6 +11,7 @@ namespace Waldem
 {
     class CMesh;
     class RenderTarget;
+    struct SViewport;
     struct CModel;
 
     enum class RendererAPI
@@ -40,7 +41,7 @@ namespace Waldem
         virtual RayTracingShader* LoadRayTracingShader(const Path& shaderName) = 0;
         virtual void SetPipeline(Pipeline* pipeline) = 0;
         virtual void SetRootSignature(RootSignature* rootSignature) = 0;
-        virtual void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr, SViewport viewport = {}, SScissorRect scissor = {}) = 0;
+        virtual void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr) = 0;
         virtual Pipeline* CreateGraphicPipeline(const WString& name, RootSignature* rootSignature, PixelShader* shader, WArray<TextureFormat> RTFormats, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout) = 0;
         virtual Pipeline* CreateComputePipeline(const WString& name, RootSignature* rootSignature, ComputeShader* shader) = 0;
         virtual Pipeline* CreateRayTracingPipeline(const WString& name, RootSignature* rootSignature, RayTracingShader* shader) = 0;
@@ -48,6 +49,8 @@ namespace Waldem
         virtual Texture2D* CreateTexture(WString name, int width, int height, TextureFormat format, size_t dataSize, uint8_t* data = nullptr) = 0;
         virtual Texture2D* CreateTexture(TextureDesc desc) = 0;
         virtual RenderTarget* CreateRenderTarget(WString name, int width, int height, TextureFormat format) = 0;
+        virtual SViewport* GetEditorViewport() = 0;
+        virtual SViewport* GetGameViewport() = 0;
         virtual AccelerationStructure* CreateBLAS(WString name, WArray<RayTracingGeometry>& geometries) = 0;
         virtual AccelerationStructure* CreateTLAS(WString name, WArray<RayTracingInstance>& instances) = 0;
         virtual void UpdateBLAS(AccelerationStructure* BLAS, WArray<RayTracingGeometry>& geometries) = 0;
@@ -88,7 +91,7 @@ namespace Waldem
         static RayTracingShader* LoadRayTracingShader(const Path& shaderName);
         static void SetPipeline(Pipeline* pipeline);
         static void SetRootSignature(RootSignature* rootSignature);
-        static void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr, SViewport viewport = {}, SScissorRect scissor = {});
+        static void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr);
         static Pipeline* CreateGraphicPipeline(const WString& name, RootSignature* rootSignature, PixelShader* shader, WArray<TextureFormat> RTFormats, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout);
         static Pipeline* CreateComputePipeline(const WString& name, RootSignature* rootSignature, ComputeShader* shader);
         static Pipeline* CreateRayTracingPipeline(const WString& name, RootSignature* rootSignature, RayTracingShader* shader);
@@ -96,6 +99,8 @@ namespace Waldem
         static Texture2D* CreateTexture(WString name, int width, int height, TextureFormat format, size_t dataSize, uint8_t* data = nullptr);
         static Texture2D* CreateTexture(TextureDesc desc);
         static RenderTarget* CreateRenderTarget(WString name, int width, int height, TextureFormat format);
+        static SViewport* GetEditorViewport();
+        static SViewport* GetGameViewport();
         static AccelerationStructure* CreateBLAS(WString name, WArray<RayTracingGeometry>& geometries);
         static AccelerationStructure* CreateTLAS(WString name, WArray<RayTracingInstance>& instances);
         static void UpdateBLAS(AccelerationStructure* BLAS, WArray<RayTracingGeometry>& geometries);

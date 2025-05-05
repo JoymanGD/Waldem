@@ -10,14 +10,22 @@ namespace Waldem
     {
     public:
         DX12RenderTarget(WString name, ID3D12Device* device, DX12CommandList* cmdList, int width, int height, TextureFormat format);
+        DX12RenderTarget(WString name, ID3D12Device* device, DX12CommandList* cmdList, int width, int height, TextureFormat format, ID3D12DescriptorHeap* srvHeap, uint slot);
+        DX12RenderTarget(WString name, ID3D12Device* device, int width, int height, TextureFormat format, ID3D12Resource* resource);
         virtual ~DX12RenderTarget() {}
         virtual void* GetPlatformResource() override { return Resource; }
-        D3D12_CPU_DESCRIPTOR_HANDLE GetRenderTargetHandle() const { return RenderTargetHandle; }
-        void Destroy() override { Resource->Release(); RTVHeap->Release(); }
+        void Destroy() override { Resource->Release(); RTVHeap->Release(); SRVHeap->Release(); }
+        size_t GetPlatformShaderResourceHandle() const override { return SRVGPUHandle.ptr; }
+        size_t GetPlatformRenderTargetHandle() const override { return RTVHandle.ptr;}
+        D3D12_CPU_DESCRIPTOR_HANDLE GetRTVHandle() { return RTVHandle; }
+        ID3D12DescriptorHeap* GetSRVHeap() { return SRVHeap; }
 
     private:
         ID3D12Resource* Resource;
         ID3D12DescriptorHeap* RTVHeap;
-        D3D12_CPU_DESCRIPTOR_HANDLE RenderTargetHandle;
+        ID3D12DescriptorHeap* SRVHeap;
+        D3D12_CPU_DESCRIPTOR_HANDLE RTVHandle;
+        D3D12_CPU_DESCRIPTOR_HANDLE SRVCPUHandle;
+        D3D12_GPU_DESCRIPTOR_HANDLE SRVGPUHandle;
     };
 }

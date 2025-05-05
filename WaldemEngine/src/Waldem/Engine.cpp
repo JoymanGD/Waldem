@@ -40,8 +40,6 @@ namespace Waldem
 		CurrentRenderer = {};
 		CurrentRenderer.Initialize(Window);
 
-		Renderer::Begin();
-		
 		InitializeTextures();
 		
 		Editor = new EditorLayer(Window, &CoreECSManager, &ResourceManager);
@@ -55,8 +53,6 @@ namespace Waldem
 
 		InitializeLayers();
 		
-		Renderer::End();
-
 		// OpenScene(new RenderingTestScene());
 	}
 
@@ -192,7 +188,6 @@ namespace Waldem
 			}
 			
 			Renderer::Begin();
-			
 			for (Layer* layer : LayerStack)
 			{
 				if(layer->Initialized)
@@ -200,8 +195,9 @@ namespace Waldem
 					layer->OnDraw(Time::DeltaTime);
 				}
 			}
+			Renderer::End();
 
-			Editor->Begin();
+			Renderer::BeginUI();
 			for (Layer* layer : LayerStack)
 			{
 				if(layer->Initialized)
@@ -209,9 +205,7 @@ namespace Waldem
 					layer->OnDrawUI(Time::DeltaTime);
 				}
 			}
-			Editor->End();
-			
-			Renderer::End();
+            Renderer::EndUI();
 			
 			Renderer::Present();
 

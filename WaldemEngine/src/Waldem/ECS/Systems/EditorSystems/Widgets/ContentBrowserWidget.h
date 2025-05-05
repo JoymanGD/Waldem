@@ -10,10 +10,7 @@ namespace Waldem
     class WALDEM_API ContentBrowserWidget : public IWidgetSystem
     {
     private:
-        float MinPanelHeight = 300.0f;
-        float MaxPanelHeight = 500.0f;
-        float PanelHeight = 300.0f;
-        ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoSavedSettings;
+        ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
         
     public:
         ContentBrowserWidget(ECSManager* eCSManager) : IWidgetSystem(eCSManager) {}
@@ -24,14 +21,8 @@ namespace Waldem
 
         void Update(float deltaTime) override
         {
-            // Stick to the bottom and stretch horizontally
-            ImGui::SetNextWindowPos(ImVec2(0, ImGui::GetIO().DisplaySize.y - PanelHeight), ImGuiCond_Always);
-            ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x, PanelHeight), ImGuiCond_Always);
-            ImGui::SetNextWindowSizeConstraints(ImVec2(-1, MinPanelHeight), ImVec2(-1, MaxPanelHeight));
-            
-            if (ImGui::Begin("Content", nullptr, WindowFlags))
+            if (ImGui::Begin("Content", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus))
             {
-                PanelHeight = ImGui::GetWindowHeight();
                 // Search bar
                 static char searchBuffer[128] = "";
                 ImGui::InputTextWithHint("##Search", "Search...", searchBuffer, IM_ARRAYSIZE(searchBuffer));

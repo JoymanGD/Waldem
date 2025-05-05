@@ -78,7 +78,7 @@ namespace Waldem
                     
                     for (auto [entity, mesh, transform] : Manager->EntitiesWith<MeshComponent, Transform>())
                     {
-                        if(meshId == Editor::HoveredIntityID)
+                        if(meshId == Editor::HoveredEntityID)
                         {
                             entity.Add<Selected>();
                             break;
@@ -93,7 +93,7 @@ namespace Waldem
         {
             ImGuizmo::SetOrthographic(false);
 
-            ImGuizmo::SetRect(0, 0, Window->GetWidth(), Window->GetHeight());
+            ImGuizmo::SetRect(Editor::EditorViewportPos.x, Editor::EditorViewportPos.y, Editor::EditorViewportSize.x, Editor::EditorViewportSize.y);
             for (auto [cameraEntity, camera, cameraTransform, mainCamera] : Manager->EntitiesWith<Camera, Transform, EditorCamera>())
             {
                 for (auto [transformEntity, transform, selected] : Manager->EntitiesWith<Transform, Selected>())

@@ -21,8 +21,7 @@
 #include "ImGuizmo.h"
 #include "backends/imgui_impl_dx12.h"
 #include "backends/imgui_impl_sdl2.h"
-#include "backends/imgui_impl_sdl2.h"
-#include "..\..\..\Waldem\Editor\UIStyles.h"
+#include "Waldem/Editor/UIStyles.h"
 
 struct ImGuiIO;
 
@@ -42,6 +41,9 @@ namespace Waldem
     {
         CurrentWindow = window;
         
+        int width = (int)CurrentWindow->GetWidth();
+        int height = (int)CurrentWindow->GetHeight();
+        
         if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&DebugController))))
         {
             DebugController->EnableDebugLayer();
@@ -51,12 +53,6 @@ namespace Waldem
         {
             DebugController1->SetEnableGPUBasedValidation(TRUE);
         }
-
-        Viewport.Width = window->GetWidth();
-        Viewport.Height = window->GetHeight();
-        
-        ScissorRect.right = window->GetWidth();
-        ScissorRect.bottom = window->GetHeight();
         
         HRESULT h = CreateDXGIFactory1(IID_PPV_ARGS(&DxgiFactory));
 
@@ -66,8 +62,6 @@ namespace Waldem
         }
 
         h = D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS(&Device));
-
-        bool rtSupported = IsDirectXRaytracingSupported(Device);
 
         if(FAILED(h))
         {
@@ -92,6 +86,12 @@ namespace Waldem
         {
             throw std::runtime_error("Failed to create D3D12 Device");
         }
+
+        //WorldCommandList
+        WorldCommandList.first = new DX12CommandList(Device);
+        
+        Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&WaitFence));
+        Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&SecondaryWaitFence));
 
         //Graphic command queue
         D3D12_COMMAND_QUEUE_DESC graphicQueueDesc = {};
@@ -135,31 +135,26 @@ namespace Waldem
             throw std::runtime_error("Failed to create D3D12 SwapChain");
         }
 
-        //create descriptor Heap for Render Target View (RTV)
-        D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-        rtvHeapDesc.NumDescriptors = SWAPCHAIN_SIZE;
-        rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-        h = Device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&RTVHeap));
-
-        if(FAILED(h))
-        {
-            throw std::runtime_error("Failed to create D3D12 RTV Heap");
-        }
+        //create main framebuffer and viewport
         
-        RTVDescriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-
-        D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle(RTVHeap->GetCPUDescriptorHandleForHeapStart());
+        auto mainFrameBuffer = new SFrameBuffer();
         for (uint32_t i = 0; i < SWAPCHAIN_SIZE; ++i)
         {
-            h = SwapChain->GetBuffer(i, IID_PPV_ARGS(&RenderTargets[i]));
+            ID3D12Resource* resource;
+            h = SwapChain->GetBuffer(i, IID_PPV_ARGS(&resource));
+
+            auto renderTarget = new DX12RenderTarget("MainViewport_FrameBuffer_" + std::to_string(i), Device, width, height, TextureFormat::R8G8B8A8_UNORM, resource);
+            ResourceBarrier(renderTarget, ALL_SHADER_RESOURCE, PRESENT);
 
             if(FAILED(h))
             {
                 throw std::runtime_error("Failed to get D3D12 SwapChain buffer");
             }
-            Device->CreateRenderTargetView(RenderTargets[i], nullptr, rtvHandle);
-            rtvHandle.ptr += RTVDescriptorSize;
+
+            mainFrameBuffer->AddRenderTarget(renderTarget);
         }
+        
+        MainViewport = SViewport(Vector2(0, 0), Vector2(width, height), Vector2(0, 1), mainFrameBuffer);
 
         //Create Depth Stencil Buffer
         D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
@@ -174,8 +169,8 @@ namespace Waldem
         
         D3D12_RESOURCE_DESC depthBufferDesc = {};
         depthBufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-        depthBufferDesc.Width = window->GetWidth();
-        depthBufferDesc.Height = window->GetHeight();
+        depthBufferDesc.Width = width;
+        depthBufferDesc.Height = height;
         depthBufferDesc.DepthOrArraySize = 1;
         depthBufferDesc.MipLevels = 1;
         depthBufferDesc.Format = DXGI_FORMAT_D32_FLOAT;
@@ -210,25 +205,31 @@ namespace Waldem
 
         DSVHandle = DSVHeap->GetCPUDescriptorHandleForHeapStart();
         Device->CreateDepthStencilView(DepthStencilBuffer, &dsvDesc, DSVHandle);
-        
-        WorldCommandList.first = new DX12CommandList(Device);
-        
-        Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&WaitFence));
-        Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&SecondaryWaitFence));
     }
 
     void DX12Renderer::InitializeUI()
     {
+        int width = (int)CurrentWindow->GetWidth();
+        int height = (int)CurrentWindow->GetHeight();
+        
         D3D12_DESCRIPTOR_HEAP_DESC desc = {};
         desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-        desc.NumDescriptors = 1;
+        desc.NumDescriptors = 3;
         desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
         Device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&ImGuiHeap));
+
+        WArray<RenderTarget*> editorRenderTargets = { new DX12RenderTarget("EditorViewRT", Device, WorldCommandList.first, width, height, TextureFormat::R8G8B8A8_UNORM, ImGuiHeap, 1) };
+        auto editorFrameBuffer = new SFrameBuffer(editorRenderTargets);
+        EditorViewport = SViewport(Vector2(0, 0), Vector2(width, height), Vector2(0, 1), editorFrameBuffer);
+        
+        WArray<RenderTarget*> gameRenderTargets = { new DX12RenderTarget("GameViewRT", Device, WorldCommandList.first, width, height, TextureFormat::R8G8B8A8_UNORM, ImGuiHeap, 2) };
+        auto gameFrameBuffer = new SFrameBuffer(gameRenderTargets);
+        GameViewport = SViewport(Vector2(0, 0), Vector2(width, height), Vector2(0, 1), gameFrameBuffer);
         
         // Platform/Renderer bindings
         ImGui_ImplDX12_Init(Device, SWAPCHAIN_SIZE, DXGI_FORMAT_R8G8B8A8_UNORM, ImGuiHeap, ImGuiHeap->GetCPUDescriptorHandleForHeapStart(), ImGuiHeap->GetGPUDescriptorHandleForHeapStart());
-            
+
         UIStyles::ApplyDefault();
     }
 
@@ -311,21 +312,11 @@ namespace Waldem
     {
         auto& worldCmd = WorldCommandList.first;
 
-        D3D12_RESOURCE_BARRIER barrier = {};
-        barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-        barrier.Transition.pResource = RenderTargets[FrameIndex];
-        barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-        barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-        barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-        worldCmd->ResourceBarrier(1, &barrier);
-
-        CurrentRenderTargetHandle = RTVHeap->GetCPUDescriptorHandleForHeapStart();
-        CurrentRenderTargetHandle.ptr += FrameIndex * RTVDescriptorSize;
+        ResourceBarrier(EditorViewport.FrameBuffer->GetCurrentRenderTarget(), ALL_SHADER_RESOURCE, RENDER_TARGET);
         
         if(!WorldCommandList.second)
         {
-            worldCmd->Clear(CurrentRenderTargetHandle, DSVHandle, { 0.0f, 0.0f, 0.0f });
-            worldCmd->BeginInternal(&Viewport, &ScissorRect, CurrentRenderTargetHandle, DSVHandle);
+            worldCmd->BeginInternal(EditorViewport, DSVHandle);
             
             WorldCommandList.second = true;
         }
@@ -342,13 +333,59 @@ namespace Waldem
             WorldCommandList.second = false;
         }
 
-        D3D12_RESOURCE_BARRIER barrier = {};
-        barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-        barrier.Transition.pResource = RenderTargets[FrameIndex];
-        barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-        barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-        barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-        worldCmd->ResourceBarrier(1, &barrier);
+        ResourceBarrier(EditorViewport.FrameBuffer->GetCurrentRenderTarget(), RENDER_TARGET, ALL_SHADER_RESOURCE);
+        
+        worldCmd->Close();
+
+        worldCmd->Execute(GraphicCommandQueue);
+
+        worldCmd->Reset();
+    }
+
+    void DX12Renderer::BeginUI()
+    {
+        auto& worldCmd = WorldCommandList.first;
+
+        ResourceBarrier(MainViewport.FrameBuffer->GetCurrentRenderTarget(), PRESENT, RENDER_TARGET);
+        
+        if(!WorldCommandList.second)
+        {
+            worldCmd->BeginInternal(MainViewport, DSVHandle);
+            
+            WorldCommandList.second = true;
+        }
+        
+        ImGui_ImplDX12_NewFrame();
+        ImGui_ImplSDL2_NewFrame();
+        ImGui::NewFrame();
+        ImGuizmo::BeginFrame();
+    }
+
+    void DX12Renderer::EndUI()
+    {
+        auto& worldCmd = WorldCommandList.first;
+
+        ImGui::Render();
+        ImDrawData* drawData = ImGui::GetDrawData();
+        worldCmd->SetDescriptorHeaps(1, &ImGuiHeap);
+        ImGui_ImplDX12_RenderDrawData(drawData, (ID3D12GraphicsCommandList*)worldCmd->GetNativeCommandList());
+
+        ImGuiIO& io = ImGui::GetIO();
+        
+        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        {
+            ImGui::UpdatePlatformWindows();
+            ImGui::RenderPlatformWindowsDefault();
+        }
+        
+        if(WorldCommandList.second)
+        {
+            worldCmd->EndInternal();
+            
+            WorldCommandList.second = false;
+        }
+
+        ResourceBarrier(MainViewport.FrameBuffer->GetCurrentRenderTarget(), RENDER_TARGET, PRESENT);
         
         worldCmd->Close();
 
@@ -367,8 +404,7 @@ namespace Waldem
             DX12Helper::PrintDeviceRemovedReason(Device);
         }
 
-        FrameIndex ++;
-        FrameIndex %= SWAPCHAIN_SIZE;
+        MainViewport.FrameBuffer->Advance();
     }
 
     PixelShader* DX12Renderer::LoadPixelShader(const Path& shaderName, WString entryPoint)
@@ -396,9 +432,9 @@ namespace Waldem
         WorldCommandList.first->SetRootSignature(rootSignature);
     }
 
-    void DX12Renderer::SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil, SViewport viewport, SScissorRect scissor)
+    void DX12Renderer::SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil)
     {
-        WorldCommandList.first->SetRenderTargets(renderTargets, depthStencil, viewport, scissor);
+        WorldCommandList.first->SetRenderTargets(renderTargets, depthStencil);
     }
 
     Pipeline* DX12Renderer::CreateGraphicPipeline(const WString& name, RootSignature* rootSignature, PixelShader* shader, WArray<TextureFormat> RTFormats, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout)
@@ -483,13 +519,13 @@ namespace Waldem
 
     void DX12Renderer::ClearRenderTarget(RenderTarget* rt)
     {
-        D3D12_CPU_DESCRIPTOR_HANDLE dx12RenderTarget = ((DX12RenderTarget*)rt)->GetRenderTargetHandle();
+        D3D12_CPU_DESCRIPTOR_HANDLE dx12RenderTarget = ((DX12RenderTarget*)rt)->GetRTVHandle();
         WorldCommandList.first->ClearRenderTarget(dx12RenderTarget);
     }
 
     void DX12Renderer::ClearDepthStencil(RenderTarget* ds)
     {
-        D3D12_CPU_DESCRIPTOR_HANDLE dx12DepthStencil = ((DX12RenderTarget*)ds)->GetRenderTargetHandle();
+        D3D12_CPU_DESCRIPTOR_HANDLE dx12DepthStencil = ((DX12RenderTarget*)ds)->GetRTVHandle();
         WorldCommandList.first->ClearDepthStencil(dx12DepthStencil);
     }
 
@@ -503,23 +539,5 @@ namespace Waldem
     {
         ID3D12Resource* resource = (ID3D12Resource*)buffer->GetPlatformResource();
         WorldCommandList.first->ResourceBarrier(resource, (D3D12_RESOURCE_STATES)before, (D3D12_RESOURCE_STATES)after);
-    }
-
-    void DX12Renderer::BeginUI()
-    {
-        ImGui_ImplDX12_NewFrame();
-        ImGui_ImplSDL2_NewFrame();
-        ImGui::NewFrame();
-        ImGuizmo::BeginFrame();
-    }
-
-    void DX12Renderer::EndUI()
-    {
-        auto& worldCmd = WorldCommandList.first;
-
-        ImGui::Render();
-        ImDrawData* drawData = ImGui::GetDrawData();
-        worldCmd->SetDescriptorHeaps(1, &ImGuiHeap);
-        ImGui_ImplDX12_RenderDrawData(drawData, (ID3D12GraphicsCommandList*)worldCmd->GetNativeCommandList());
     }
 }

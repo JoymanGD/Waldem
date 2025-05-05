@@ -65,12 +65,10 @@ namespace Waldem
         
         void Begin() override
         {
-            Renderer::BeginUI();
         }
         
         void End() override
         {
-            Renderer::EndUI();
         }
         
         void OnAttach() override
@@ -88,8 +86,11 @@ namespace Waldem
             if (BlockUIEvents)
             {
                 ImGuiIO& io = ImGui::GetIO();
-                event.Handled |= event.IsInCategory(EventCategoryMouse) & io.WantCaptureMouse;
-                event.Handled |= event.IsInCategory(EventCategoryKeyboard) & io.WantCaptureKeyboard;
+                bool shouldBlockMouse = io.WantCaptureMouse && !Editor::IsMouseOverEditorViewport;
+                bool shouldBlockKeyboard = io.WantCaptureKeyboard && !Editor::IsMouseOverEditorViewport;
+                
+                event.Handled |= event.IsInCategory(EventCategoryMouse) & shouldBlockMouse;
+                event.Handled |= event.IsInCategory(EventCategoryKeyboard) & shouldBlockKeyboard;
                 event.Handled |= ImGuizmo::IsUsing();
             }
             

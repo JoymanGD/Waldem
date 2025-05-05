@@ -51,6 +51,8 @@ namespace Waldem
         RenderTarget(WString name, int width, int height, TextureFormat format) : Texture2D(name, width, height, format, CALCULATE_IMAGE_DATA_SIZE(width, height, format), nullptr) {}
         virtual ~RenderTarget() {}
         bool IsDepthStencilBuffer() const { return IsDepthStencil; }
+        virtual size_t GetPlatformShaderResourceHandle() const = 0;
+        virtual size_t GetPlatformRenderTargetHandle() const = 0;
     protected:
         bool IsDepthStencil = false;
     };
