@@ -183,22 +183,6 @@ namespace Waldem
         return static_cast<ResourceStates>(static_cast<int>(a) | static_cast<int>(b));
     }
 
-    struct SViewport
-    {
-        float Width;
-        float Height;
-        float MinDepth = 0;
-        float MaxDepth = 1;
-    };
-
-    struct SScissorRect
-    {
-        long left;
-        long top;
-        long right;
-        long bottom;
-    };
-
     #define DEFAULT_INPUT_LAYOUT_DESC \
     {{ "POSITION", 0, TextureFormat::R32G32B32_FLOAT, 0, 0, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }, \
     { "NORMAL", 0, TextureFormat::R32G32B32_FLOAT, 0, 12, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }, \

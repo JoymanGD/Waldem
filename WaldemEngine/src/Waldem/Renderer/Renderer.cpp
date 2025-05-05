@@ -100,9 +100,9 @@ namespace Waldem
         Instance->PlatformRenderer->SetRootSignature(rootSignature);
     }
 
-    void Renderer::SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil, SViewport viewport, SScissorRect scissor)
+    void Renderer::SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil)
     {
-        Instance->PlatformRenderer->SetRenderTargets(renderTargets, depthStencil, viewport, scissor);
+        Instance->PlatformRenderer->SetRenderTargets(renderTargets, depthStencil);
     }
 
     Pipeline* Renderer::CreateGraphicPipeline(const WString& name,
@@ -148,6 +148,16 @@ namespace Waldem
     {
         RenderTarget* renderTarget = Instance->PlatformRenderer->CreateRenderTarget(name, width, height, format);
         return renderTarget;
+    }
+
+    SViewport* Renderer::GetEditorViewport()
+    {
+        return Instance->PlatformRenderer->GetEditorViewport();
+    }
+
+    SViewport* Renderer::GetGameViewport()
+    {
+        return Instance->PlatformRenderer->GetGameViewport();
     }
 
     AccelerationStructure* Renderer::CreateBLAS(WString name, WArray<RayTracingGeometry>& geometries)

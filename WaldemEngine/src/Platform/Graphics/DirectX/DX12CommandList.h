@@ -15,7 +15,7 @@ namespace Waldem
         DX12CommandList(ID3D12Device* device);
         ~DX12CommandList();
 
-        void BeginInternal(D3D12_VIEWPORT* viewport, D3D12_RECT* scissor, D3D12_CPU_DESCRIPTOR_HANDLE renderTargetHandle, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandle);
+        void BeginInternal(SViewport& viewport, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandle);
         void EndInternal();
 
         void Draw(CModel* model);
@@ -26,7 +26,7 @@ namespace Waldem
         
         void SetPipeline(Pipeline* pipeline);
         void SetRootSignature(RootSignature* rootSignature);
-        void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr, SViewport viewport = {}, SScissorRect scissor = {});
+        void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr);
         void SetDescriptorHeaps(uint32_t NumDescriptorHeaps, ID3D12DescriptorHeap* const* ppDescriptorHeaps);
 
         void* GetNativeCommandList() { return CommandList; }

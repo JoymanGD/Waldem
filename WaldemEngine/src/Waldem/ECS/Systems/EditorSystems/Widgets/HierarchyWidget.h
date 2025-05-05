@@ -10,11 +10,8 @@ namespace Waldem
     {
     private:
         std::string RenameString = "";
-        float PanelWidth = 300.0f;
-        float MinPanelWidth = 300.0f;
-        float MaxPanelWidth = 500.0f;
         bool DeleteSelectedEntity = false;
-        ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoSavedSettings;
+        ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
 
         void SelectEntity(ecs::Entity& entity)
         {
@@ -57,16 +54,8 @@ namespace Waldem
                 break;
             }
 
-            // Stick to the left side and stretch vertically
-            ImGui::SetNextWindowPos(ImVec2(0, ImGui::GetFrameHeight()), ImGuiCond_Always);
-            ImGui::SetNextWindowSize(ImVec2(PanelWidth, ImGui::GetIO().DisplaySize.y), ImGuiCond_Once);
-            ImGui::SetNextWindowSizeConstraints(ImVec2(MinPanelWidth, -1), ImVec2(MaxPanelWidth, -1));
-
-            if (ImGui::Begin("Entities", nullptr, WindowFlags | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_MenuBar))
+            if (ImGui::Begin("Entities", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus))
             {
-                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8, 6)); // adjust as needed
-                ImGui::BeginGroup();
-                ImGui::Text("Entities");
                 ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("+").x - ImGui::GetStyle().FramePadding.x * 2);
 
                 if (ImGui::Button("+"))
@@ -76,13 +65,9 @@ namespace Waldem
                     
                     SelectEntity(entity->NativeEntity);
                 }
-                ImGui::EndGroup();
-                ImGui::PopStyleVar();
 
                 ImGui::Separator();
                 
-                PanelWidth = ImGui::GetWindowWidth();
-
                 auto entities = Manager->Entities();
                 // Iterate through entities and create selectable list
                 for (auto [entity, nameComponent] : Manager->EntitiesWith<NameComponent>())

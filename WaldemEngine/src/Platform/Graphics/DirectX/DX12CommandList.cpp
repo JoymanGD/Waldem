@@ -11,6 +11,7 @@
 #include "DX12RayTracingPipeline.h"
 #include "DX12RenderTarget.h"
 #include "DX12RootSignature.h"
+#include "Waldem/Renderer/Viewport.h"
 #include "Waldem/Renderer/Model/Line.h"
 #include "Waldem/Utils/FileUtils.h"
 
@@ -64,18 +65,24 @@ namespace Waldem
         CloseHandle(FenceEvent);
     }
 
-    void DX12CommandList::BeginInternal(D3D12_VIEWPORT* viewport, D3D12_RECT* scissor, D3D12_CPU_DESCRIPTOR_HANDLE renderTargetHandle, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandle)
+    void DX12CommandList::BeginInternal(SViewport& viewport, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandle)
     {
-        CommandList->RSSetViewports(1, viewport);
-        CommandList->RSSetScissorRects(1, scissor);
+        D3D12_VIEWPORT* d3d12Viewport = (D3D12_VIEWPORT*)&viewport;
+        D3D12_RECT* d3d12ScissorRect = (D3D12_RECT*)&viewport.ScissorRect;
+        CommandList->RSSetViewports(1, d3d12Viewport);
+        CommandList->RSSetScissorRects(1, d3d12ScissorRect);
 
-        MainViewport = *viewport;
-        MainScissorRect = *scissor;
+        MainViewport = *d3d12Viewport;
+        MainScissorRect = *d3d12ScissorRect;
 
         //set render target
-        CommandList->OMSetRenderTargets(1, &renderTargetHandle, FALSE, &depthStencilHandle);
+        auto rtvHandle = ((DX12RenderTarget*)viewport.FrameBuffer->GetCurrentRenderTarget())->GetRTVHandle();
+        
+        Clear(rtvHandle, depthStencilHandle, Vector3(0.0f, 0.0f, 0.0f));
+        
+        CommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &depthStencilHandle);
 
-        MainRenderTargetHandles.Add(renderTargetHandle);
+        MainRenderTargetHandles.Add(rtvHandle);
         MainDepthStencilHandle = depthStencilHandle;
     }
 
@@ -286,7 +293,7 @@ namespace Waldem
         }
     }
 
-    void DX12CommandList::SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil, SViewport viewport, SScissorRect scissor)
+    void DX12CommandList::SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil)
     {
         WArray<D3D12_CPU_DESCRIPTOR_HANDLE> renderTargetHandlesToSet = MainRenderTargetHandles;
         D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandleToSet = MainDepthStencilHandle;
@@ -301,7 +308,7 @@ namespace Waldem
             {
                 if(renderTarget != nullptr)
                 {
-                    auto handle = ((DX12RenderTarget*)renderTarget)->GetRenderTargetHandle();
+                    auto handle = ((DX12RenderTarget*)renderTarget)->GetRTVHandle();
                     renderTargetHandlesToSet.Add(handle);
                 }
             }
@@ -309,21 +316,21 @@ namespace Waldem
 
         if(depthStencil)
         {
-            depthStencilHandleToSet = ((DX12RenderTarget*)depthStencil)->GetRenderTargetHandle();
+            depthStencilHandleToSet = ((DX12RenderTarget*)depthStencil)->GetRTVHandle();
         }
 
-        if(viewport.Width != 0.f && viewport.Height != 0.f)
-        {
-            viewportToSet.Height = viewport.Height;
-            viewportToSet.Width = viewport.Width;
-            viewportToSet.MinDepth = viewport.MinDepth;
-            viewportToSet.MaxDepth = viewport.MaxDepth;
-        }
-
-        if(scissor.bottom != 0 && scissor.right != 0)
-        {
-            scissorToSet = *(D3D12_RECT*)&scissor;
-        }
+        // if(viewport.Width != 0.f && viewport.Height != 0.f)
+        // {
+        //     viewportToSet.Height = viewport.Height;
+        //     viewportToSet.Width = viewport.Width;
+        //     viewportToSet.MinDepth = viewport.MinDepth;
+        //     viewportToSet.MaxDepth = viewport.MaxDepth;
+        // }
+        //
+        // if(scissor.bottom != 0 && scissor.right != 0)
+        // {
+        //     scissorToSet = *(D3D12_RECT*)&scissor;
+        // }
         
         CommandList->RSSetViewports(1, &viewportToSet);
         CommandList->RSSetScissorRects(1, &scissorToSet);
