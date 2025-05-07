@@ -104,8 +104,7 @@ namespace Waldem
             ImGui::PopStyleVar(2);
 
             ImGuiID dockspace_id = ImGui::GetID("MainDockspace");
-            ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f),
-                             ImGuiDockNodeFlags_PassthruCentralNode | ImGuiDockNodeFlags_NoDockingInCentralNode);
+            ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
 
             ImGui::End();
             
