@@ -26,6 +26,26 @@ namespace Waldem
         float Width, Height;
     };
     
+    class WALDEM_API WindowMovedEvent : public Event
+    {
+    public:
+        WindowMovedEvent(Point2 position) : Position(position) {}
+        
+        inline Point2 GetPosition() const { return Position; }
+
+        WString ToString() const override
+        {
+            std::stringstream ss;
+            ss << "WindowMoveEvent: " << Position.x << ", " << Position.y;
+            return ss.str();
+        }
+
+        EVENT_CLASS_TYPE(WindowMoved)
+        EVENT_CLASS_CATEGORY(EventCategoryApplication)
+    private:
+        Point2 Position;
+    };
+    
     class WALDEM_API WindowCloseEvent : public Event
     {
     public:

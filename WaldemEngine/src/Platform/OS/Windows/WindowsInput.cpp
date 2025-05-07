@@ -4,7 +4,7 @@
 #include <SDL_keyboard.h>
 #include <SDL_mouse.h>
 
-#include "..\..\..\Waldem\Engine.h"
+#include "Waldem/Engine.h"
 
 namespace Waldem
 {
@@ -25,26 +25,22 @@ namespace Waldem
         return (mouseState & SDL_BUTTON(button)) != 0;
     }
 
-    std::pair<float, float> WindowsInput::GetMousePosImpl()
+    Point2 WindowsInput::GetMousePosImpl()
     {
         int x, y;
         SDL_GetMouseState(&x, &y);
 
-        return std::pair((float)x, (float)y);
+        return Point2(x, y);
     }
 
-    float WindowsInput::GetMouseXImpl()
+    int WindowsInput::GetMouseXImpl()
     {
-        auto[x, y] = GetMousePosImpl();
-
-        return x;
+        return GetMousePosImpl().x;
     }
 
-    float WindowsInput::GetMouseYImpl()
+    int WindowsInput::GetMouseYImpl()
     {
-        auto[x, y] = GetMousePosImpl();
-
-        return y;
+        return GetMousePosImpl().y;
     }
 
     Point2 WindowsInput::GetMouseDeltaImpl()

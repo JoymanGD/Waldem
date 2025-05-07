@@ -14,7 +14,7 @@ namespace Waldem
     class WALDEM_API IScene
     {
     public:
-        virtual void Initialize(SceneData* sceneData, InputManager* inputManager, ECSManager* ecsManager, ResourceManager* resourceManager) = 0;
+        virtual void Initialize(InputManager* inputManager, ECSManager* ecsManager, ResourceManager* resourceManager) = 0;
         virtual void Draw(float deltaTime) = 0;
         virtual void Update(float deltaTime) = 0;
         virtual void FixedUpdate(float fixedDeltaTime) = 0;

@@ -17,7 +17,7 @@ namespace Waldem
 		WindowProps(const WString& title = "Waldem Engine",
 					float width = 1920,
 					float height = 1080,
-					Point2 position = { 50, 50 })
+					Point2 position = { 100, 100 })
 			: Title(title), Width(width), Height(height), Position(position) {}
 	};
 	
@@ -32,7 +32,7 @@ namespace Waldem
 		virtual float GetWidth() const = 0;
 		virtual float GetHeight() const = 0;
 		virtual Vector2 GetPosition() const = 0;
-		virtual std::array<float, 2> GetSize() const { return { GetWidth(), GetHeight() }; }
+		virtual Vector2 GetSize() const { return { GetWidth(), GetHeight() }; }
 
 		virtual void SetEventCallback(const EventCallbackFn& callback) = 0;
 		virtual void SetVSync(bool enabled) = 0;

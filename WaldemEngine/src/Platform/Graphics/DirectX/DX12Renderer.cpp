@@ -21,6 +21,7 @@
 #include "ImGuizmo.h"
 #include "backends/imgui_impl_dx12.h"
 #include "backends/imgui_impl_sdl2.h"
+#include "Waldem/Editor/Editor.h"
 #include "Waldem/Editor/UIStyles.h"
 
 struct ImGuiIO;
@@ -136,7 +137,6 @@ namespace Waldem
         }
 
         //create main framebuffer and viewport
-        
         auto mainFrameBuffer = new SFrameBuffer();
         for (uint32_t i = 0; i < SWAPCHAIN_SIZE; ++i)
         {
@@ -153,64 +153,23 @@ namespace Waldem
 
             mainFrameBuffer->AddRenderTarget(renderTarget);
         }
+        mainFrameBuffer->SetDepth(new DX12RenderTarget("MainViewport_Depth", Device, WorldCommandList.first, width, height, TextureFormat::D32_FLOAT));
         
         MainViewport = SViewport(Vector2(0, 0), Vector2(width, height), Vector2(0, 1), mainFrameBuffer);
 
-        //Create Depth Stencil Buffer
-        D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
-        dsvHeapDesc.NumDescriptors = 1;
-        dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-        h = Device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&DSVHeap));
-
-        if(FAILED(h))
+        Editor::SubscribeOnResize([this](Vector2 size)
         {
-            throw std::runtime_error("Failed to create D3D12 DSV Heap");
-        }
-        
-        D3D12_RESOURCE_DESC depthBufferDesc = {};
-        depthBufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-        depthBufferDesc.Width = width;
-        depthBufferDesc.Height = height;
-        depthBufferDesc.DepthOrArraySize = 1;
-        depthBufferDesc.MipLevels = 1;
-        depthBufferDesc.Format = DXGI_FORMAT_D32_FLOAT;
-        depthBufferDesc.SampleDesc.Count = 1;
-        depthBufferDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
-
-        D3D12_HEAP_PROPERTIES heapProperties = {};
-        heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
-        heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-        heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-        heapProperties.CreationNodeMask = 1;
-        heapProperties.VisibleNodeMask = 1;
-
-        D3D12_CLEAR_VALUE clearValue = {};
-        clearValue.Format = DXGI_FORMAT_D32_FLOAT;
-        clearValue.DepthStencil.Depth = 1.0f;
-        clearValue.DepthStencil.Stencil = 0;
-
-        Device->CreateCommittedResource(
-            &heapProperties,
-            D3D12_HEAP_FLAG_NONE,
-            &depthBufferDesc,
-            D3D12_RESOURCE_STATE_DEPTH_WRITE,
-            &clearValue,
-            IID_PPV_ARGS(&DepthStencilBuffer)
-        );
-
-        D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
-        dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
-        dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-        dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
-
-        DSVHandle = DSVHeap->GetCPUDescriptorHandleForHeapStart();
-        Device->CreateDepthStencilView(DepthStencilBuffer, &dsvDesc, DSVHandle);
+            if (length(size) > 0)
+            {
+                ResizeTriggered = true;
+                NewSize = size;
+            }
+        });
     }
 
     void DX12Renderer::InitializeUI()
     {
-        int width = (int)CurrentWindow->GetWidth();
-        int height = (int)CurrentWindow->GetHeight();
+        Vector2 size = length(Editor::EditorViewportSize) > 0 ? Editor::EditorViewportSize : Vector2(CurrentWindow->GetWidth(), CurrentWindow->GetHeight());
         
         D3D12_DESCRIPTOR_HEAP_DESC desc = {};
         desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
@@ -219,18 +178,73 @@ namespace Waldem
 
         Device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&ImGuiHeap));
 
-        WArray<RenderTarget*> editorRenderTargets = { new DX12RenderTarget("EditorViewRT", Device, WorldCommandList.first, width, height, TextureFormat::R8G8B8A8_UNORM, ImGuiHeap, 1) };
-        auto editorFrameBuffer = new SFrameBuffer(editorRenderTargets);
-        EditorViewport = SViewport(Vector2(0, 0), Vector2(width, height), Vector2(0, 1), editorFrameBuffer);
+        WArray<RenderTarget*> editorRenderTargets = { new DX12RenderTarget("EditorViewRT", Device, WorldCommandList.first, size.x, size.y, TextureFormat::R8G8B8A8_UNORM, ImGuiHeap, 1) };
+        RenderTarget* editorViewportDepth = new DX12RenderTarget("EditorViewDepth", Device, WorldCommandList.first, size.x, size.y, TextureFormat::D32_FLOAT);
+        auto editorFrameBuffer = new SFrameBuffer(editorRenderTargets, editorViewportDepth);
+        EditorViewport = SViewport(Vector2(0, 0), Vector2(size.x, size.y), Vector2(0, 1), editorFrameBuffer);
         
-        WArray<RenderTarget*> gameRenderTargets = { new DX12RenderTarget("GameViewRT", Device, WorldCommandList.first, width, height, TextureFormat::R8G8B8A8_UNORM, ImGuiHeap, 2) };
-        auto gameFrameBuffer = new SFrameBuffer(gameRenderTargets);
-        GameViewport = SViewport(Vector2(0, 0), Vector2(width, height), Vector2(0, 1), gameFrameBuffer);
+        WArray<RenderTarget*> gameRenderTargets = { new DX12RenderTarget("GameViewRT", Device, WorldCommandList.first, size.x, size.y, TextureFormat::R8G8B8A8_UNORM, ImGuiHeap, 2) };
+        RenderTarget* gameViewportDepth = new DX12RenderTarget("GameViewDepth", Device, WorldCommandList.first, size.x, size.y, TextureFormat::D32_FLOAT);
+        auto gameFrameBuffer = new SFrameBuffer(gameRenderTargets, gameViewportDepth);
+        GameViewport = SViewport(Vector2(0, 0), Vector2(size.x, size.y), Vector2(0, 1), gameFrameBuffer);
         
         // Platform/Renderer bindings
         ImGui_ImplDX12_Init(Device, SWAPCHAIN_SIZE, DXGI_FORMAT_R8G8B8A8_UNORM, ImGuiHeap, ImGuiHeap->GetCPUDescriptorHandleForHeapStart(), ImGuiHeap->GetGPUDescriptorHandleForHeapStart());
 
         UIStyles::ApplyDefault();
+    }
+
+    void DX12Renderer::ResizeSwapchain(Vector2 size)
+    {
+        Wait();
+        
+        // Release old RTVs
+        MainViewport.FrameBuffer->Destroy();
+
+        // Resize swapchain buffers
+        DXGI_SWAP_CHAIN_DESC desc = {};
+        SwapChain->GetDesc(&desc);
+        HRESULT h = SwapChain->ResizeBuffers(SWAPCHAIN_SIZE, size.x, size.y, desc.BufferDesc.Format, desc.Flags);
+        if (FAILED(h))
+        {
+            throw std::runtime_error("Failed to resize DX12 swapchain buffers.");
+        }
+        
+        for (uint32_t i = 0; i < SWAPCHAIN_SIZE; ++i)
+        {
+            ID3D12Resource* resource;
+            h = SwapChain->GetBuffer(i, IID_PPV_ARGS(&resource));
+
+            auto renderTarget = new DX12RenderTarget("MainViewport_FrameBuffer_" + std::to_string(i), Device, size.x, size.y, TextureFormat::R8G8B8A8_UNORM, resource);
+            ResourceBarrier(renderTarget, ALL_SHADER_RESOURCE, PRESENT);
+
+            if(FAILED(h))
+            {
+                throw std::runtime_error("Failed to get D3D12 SwapChain buffer");
+            }
+
+            MainViewport.FrameBuffer->AddRenderTarget(renderTarget);
+        }
+
+        MainViewport.FrameBuffer->SetDepth(new DX12RenderTarget("MainViewport_Depth", Device, WorldCommandList.first, size.x, size.y, TextureFormat::D32_FLOAT));
+
+        MainViewport.Resolution = size;
+        MainViewport.ScissorRect = { MainViewport.Position.x, MainViewport.Position.y, size.x, size.y };
+    }
+
+    void DX12Renderer::ResizeEditorViewport(Vector2 size)
+    {
+        // Release old RTVs
+        EditorViewport.FrameBuffer->Destroy();
+
+        RenderTarget* editorRenderTarget = { new DX12RenderTarget("EditorViewRT", Device, WorldCommandList.first, size.x, size.y, TextureFormat::R8G8B8A8_UNORM, ImGuiHeap, 1) };
+        EditorViewport.FrameBuffer->AddRenderTarget(editorRenderTarget);
+
+        RenderTarget* editorViewportDepth = new DX12RenderTarget("EditorViewDepth", Device, WorldCommandList.first, size.x, size.y, TextureFormat::D32_FLOAT);
+        EditorViewport.FrameBuffer->SetDepth(editorViewportDepth);
+
+        EditorViewport.Resolution = size;
+        EditorViewport.ScissorRect = { EditorViewport.Position.x, EditorViewport.Position.y, size.x, size.y };
     }
 
     void DX12Renderer::Draw(CModel* model)
@@ -254,6 +268,8 @@ namespace Waldem
 
     void DX12Renderer::Wait()
     {
+        Signal();
+        
         if (SecondaryWaitFence->GetCompletedValue() < SecondaryWaitFenceValue)
         {
             HANDLE eventHandle = CreateEvent(nullptr, FALSE, FALSE, nullptr);
@@ -313,10 +329,11 @@ namespace Waldem
         auto& worldCmd = WorldCommandList.first;
 
         ResourceBarrier(EditorViewport.FrameBuffer->GetCurrentRenderTarget(), ALL_SHADER_RESOURCE, RENDER_TARGET);
+        ResourceBarrier(EditorViewport.FrameBuffer->GetDepth(), ALL_SHADER_RESOURCE, DEPTH_WRITE);
         
         if(!WorldCommandList.second)
         {
-            worldCmd->BeginInternal(EditorViewport, DSVHandle);
+            worldCmd->BeginInternal(EditorViewport);
             
             WorldCommandList.second = true;
         }
@@ -334,6 +351,7 @@ namespace Waldem
         }
 
         ResourceBarrier(EditorViewport.FrameBuffer->GetCurrentRenderTarget(), RENDER_TARGET, ALL_SHADER_RESOURCE);
+        ResourceBarrier(EditorViewport.FrameBuffer->GetDepth(), DEPTH_WRITE, ALL_SHADER_RESOURCE);
         
         worldCmd->Close();
 
@@ -347,10 +365,11 @@ namespace Waldem
         auto& worldCmd = WorldCommandList.first;
 
         ResourceBarrier(MainViewport.FrameBuffer->GetCurrentRenderTarget(), PRESENT, RENDER_TARGET);
+        ResourceBarrier(MainViewport.FrameBuffer->GetDepth(), ALL_SHADER_RESOURCE, DEPTH_WRITE);
         
         if(!WorldCommandList.second)
         {
-            worldCmd->BeginInternal(MainViewport, DSVHandle);
+            worldCmd->BeginInternal(MainViewport);
             
             WorldCommandList.second = true;
         }
@@ -364,6 +383,12 @@ namespace Waldem
     void DX12Renderer::EndUI()
     {
         auto& worldCmd = WorldCommandList.first;
+
+        if(ResizeTriggered)
+        {
+            ResizeEditorViewport(NewSize);
+            ResizeTriggered = false;
+        }
 
         ImGui::Render();
         ImDrawData* drawData = ImGui::GetDrawData();
@@ -386,6 +411,7 @@ namespace Waldem
         }
 
         ResourceBarrier(MainViewport.FrameBuffer->GetCurrentRenderTarget(), RENDER_TARGET, PRESENT);
+        ResourceBarrier(MainViewport.FrameBuffer->GetDepth(), DEPTH_WRITE, ALL_SHADER_RESOURCE);
         
         worldCmd->Close();
 

@@ -63,8 +63,8 @@ namespace Waldem
         Data.VSync = false;
 
         NativeWindow = SDL_CreateWindow(Data.Title.C_Str(),
-                                    SDL_WINDOWPOS_CENTERED,
-                                    SDL_WINDOWPOS_CENTERED,
+                                    Data.Position.x,
+                                    Data.Position.y,
                                     Data.Width, Data.Height,
                                     SDL_WINDOW_RESIZABLE);
         if (!NativeWindow)
@@ -94,6 +94,41 @@ namespace Waldem
                     Data.EventCallback(event);
                     break;
                 }
+            case SDL_WINDOWEVENT:
+                switch (sdlEvent.window.event)
+                {
+                case SDL_WINDOWEVENT_RESIZED:
+                    {
+                        int newWidth = sdlEvent.window.data1;
+                        int newHeight = sdlEvent.window.data2;
+
+                        Data.Width = newWidth;
+                        Data.Height = newHeight;
+
+                        WindowResizeEvent event(newWidth, newHeight);
+                        Data.EventCallback(event);
+
+                        WD_CORE_INFO("Window Resized: {0}x{1}", newWidth, newHeight);
+                        break;
+                    }
+                case SDL_WINDOWEVENT_MOVED:
+                    {
+                        int newX = sdlEvent.window.data1;
+                        int newY = sdlEvent.window.data2;
+
+                        Data.Position.x = newX;
+                        Data.Position.y = newY;
+
+                        WindowMovedEvent event(Point2(newX, newY));
+                        Data.EventCallback(event);
+
+                        WD_CORE_INFO("Window Moved: {0}:{1}", newX, newY);
+                        break;
+                    }
+                default:
+                    break;
+                }
+                break;
             case SDL_KEYDOWN:
                 {
                     if(sdlEvent.key.state == 1 && sdlEvent.key.repeat == 0)

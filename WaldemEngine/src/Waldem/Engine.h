@@ -22,7 +22,6 @@ namespace Waldem
 		Engine();
 		void Initialize();
 		void InitializeLayers();
-		void InitializeTextures();
 		virtual ~Engine();
 		void Run();
 		void OnEvent(Event& e);
@@ -35,6 +34,7 @@ namespace Waldem
 		static Engine* Instance;
 	private:
 		bool OnWindowClose(WindowCloseEvent& e);
+		bool OnWindowResize(WindowResizeEvent& e);
 
 		CWindow* Window;
 		Renderer CurrentRenderer;
@@ -46,6 +46,9 @@ namespace Waldem
 		std::vector<float> FrameTimes;
 		int FrameCount = 0;
 		const int MaxFrames = 100;
+
+		bool SwapchainResizeTriggered = false;
+		Vector2 NewSwapchainSize = {};
 
 		//Layers
 		EditorLayer* Editor;

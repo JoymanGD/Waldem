@@ -292,7 +292,7 @@ namespace Waldem
             
             device->CreateRenderTargetView(Resource, nullptr, RTVHandle);
 
-            SRVHeap = srvHeap;
+            ExternalSRVHeap = srvHeap;
 
             // Create SRV
             D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -301,11 +301,11 @@ namespace Waldem
             srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
             srvDesc.Texture2D.MipLevels = 1;
 
-            SRVCPUHandle = SRVHeap->GetCPUDescriptorHandleForHeapStart();
+            SRVCPUHandle = ExternalSRVHeap->GetCPUDescriptorHandleForHeapStart();
             SRVCPUHandle.ptr += slot * device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
             device->CreateShaderResourceView(Resource, &srvDesc, SRVCPUHandle);
 
-            SRVGPUHandle = SRVHeap->GetGPUDescriptorHandleForHeapStart();
+            SRVGPUHandle = ExternalSRVHeap->GetGPUDescriptorHandleForHeapStart();
             SRVGPUHandle.ptr += slot * device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
         }
     }

@@ -14,16 +14,16 @@ namespace Waldem
         DX12RenderTarget(WString name, ID3D12Device* device, int width, int height, TextureFormat format, ID3D12Resource* resource);
         virtual ~DX12RenderTarget() {}
         virtual void* GetPlatformResource() override { return Resource; }
-        void Destroy() override { Resource->Release(); RTVHeap->Release(); SRVHeap->Release(); }
+        void Destroy() override { if(Resource) Resource->Release(); if(RTVHeap) RTVHeap->Release(); if(SRVHeap) SRVHeap->Release(); }
         size_t GetPlatformShaderResourceHandle() const override { return SRVGPUHandle.ptr; }
         size_t GetPlatformRenderTargetHandle() const override { return RTVHandle.ptr;}
         D3D12_CPU_DESCRIPTOR_HANDLE GetRTVHandle() { return RTVHandle; }
-        ID3D12DescriptorHeap* GetSRVHeap() { return SRVHeap; }
 
     private:
         ID3D12Resource* Resource;
-        ID3D12DescriptorHeap* RTVHeap;
-        ID3D12DescriptorHeap* SRVHeap;
+        ID3D12DescriptorHeap* RTVHeap = nullptr;
+        ID3D12DescriptorHeap* SRVHeap = nullptr;
+        ID3D12DescriptorHeap* ExternalSRVHeap = nullptr; 
         D3D12_CPU_DESCRIPTOR_HANDLE RTVHandle;
         D3D12_CPU_DESCRIPTOR_HANDLE SRVCPUHandle;
         D3D12_GPU_DESCRIPTOR_HANDLE SRVGPUHandle;

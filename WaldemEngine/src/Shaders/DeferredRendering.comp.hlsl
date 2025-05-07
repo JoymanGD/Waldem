@@ -10,7 +10,7 @@ RWStructuredBuffer<int> HoveredMeshes : register(u1);
 
 cbuffer RootConstants : register(b0)
 {
-    float2 MousePosition;
+    int2 MousePosition;
 };
 
 [numthreads(8, 8, 1)]

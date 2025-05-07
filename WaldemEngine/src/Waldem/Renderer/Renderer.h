@@ -66,6 +66,7 @@ namespace Waldem
         virtual void InitializeUI() = 0;
         virtual void BeginUI() = 0;
         virtual void EndUI() = 0;
+        virtual void ResizeSwapchain(Vector2 size) = 0;
     };
 
     class Renderer
@@ -116,6 +117,7 @@ namespace Waldem
         static void InitializeUI();
         static void BeginUI();
         static void EndUI();
+        static void ResizeSwapchain(Vector2 size);
 
         static RendererAPI RAPI;
         inline static Renderer* Instance;

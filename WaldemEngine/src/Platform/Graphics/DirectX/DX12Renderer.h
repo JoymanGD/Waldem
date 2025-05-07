@@ -16,6 +16,8 @@ namespace Waldem
         ~DX12Renderer() override = default;
         void Initialize(CWindow* window) override;
         void InitializeUI() override;
+        void ResizeSwapchain(Vector2 size) override;
+        void ResizeEditorViewport(Vector2 size);
         void Draw(CModel* model) override;
         void Draw(CMesh* mesh) override;
         void Signal() override;
@@ -27,7 +29,6 @@ namespace Waldem
         void End() override;
         void Present() override;
         D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentRenderTargetHandle() const { return CurrentRenderTargetHandle; }
-        D3D12_CPU_DESCRIPTOR_HANDLE GetDepthStencilHandle() const { return DSVHandle; }
         PixelShader* LoadPixelShader(const Path& shaderName, WString entryPoint) override;
         ComputeShader* LoadComputeShader(const Path& shaderName, WString entryPoint) override;
         RayTracingShader* LoadRayTracingShader(const Path& shaderName) override;
@@ -72,7 +73,6 @@ namespace Waldem
         ID3D12DescriptorHeap* DSVHeap = nullptr;
         ID3D12Resource* DepthStencilBuffer = nullptr;
         D3D12_CPU_DESCRIPTOR_HANDLE CurrentRenderTargetHandle {};
-        D3D12_CPU_DESCRIPTOR_HANDLE DSVHandle {};
         ID3D12Debug* DebugController = nullptr;
         ID3D12Debug1* DebugController1 = nullptr;
         ID3D12InfoQueue* InfoQueue = nullptr;
@@ -82,6 +82,8 @@ namespace Waldem
         SViewport MainViewport = {};
         SViewport EditorViewport = {};
         SViewport GameViewport = {};
+        bool ResizeTriggered = false;
+        Vector2 NewSize = {};
 
         //ImGui
         ID3D12DescriptorHeap* ImGuiHeap = nullptr;

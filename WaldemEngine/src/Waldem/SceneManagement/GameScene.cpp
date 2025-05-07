@@ -9,7 +9,7 @@ Waldem::GameScene::~GameScene()
     }
 }
 
-void Waldem::GameScene::Initialize(SceneData* sceneData, InputManager* inputManager, ECSManager* ecsManager, ResourceManager* resourceManager)
+void Waldem::GameScene::Initialize(InputManager* inputManager, ECSManager* ecsManager, ResourceManager* resourceManager)
 {
     EcsManager = ecsManager;
 }
