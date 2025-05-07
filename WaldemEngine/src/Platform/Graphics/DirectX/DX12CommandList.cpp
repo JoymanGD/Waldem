@@ -65,7 +65,7 @@ namespace Waldem
         CloseHandle(FenceEvent);
     }
 
-    void DX12CommandList::BeginInternal(SViewport& viewport, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandle)
+    void DX12CommandList::BeginInternal(SViewport& viewport)
     {
         D3D12_VIEWPORT* d3d12Viewport = (D3D12_VIEWPORT*)&viewport;
         D3D12_RECT* d3d12ScissorRect = (D3D12_RECT*)&viewport.ScissorRect;
@@ -77,6 +77,7 @@ namespace Waldem
 
         //set render target
         auto rtvHandle = ((DX12RenderTarget*)viewport.FrameBuffer->GetCurrentRenderTarget())->GetRTVHandle();
+        auto depthStencilHandle = ((DX12RenderTarget*)viewport.FrameBuffer->GetDepth())->GetRTVHandle();
         
         Clear(rtvHandle, depthStencilHandle, Vector3(0.0f, 0.0f, 0.0f));
         

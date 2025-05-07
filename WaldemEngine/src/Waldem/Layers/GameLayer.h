@@ -1,21 +1,21 @@
 #pragma once
 
-#include "Waldem/ECS/Systems/GameSystems/DeferredRenderingSystem.h"
-#include "Waldem/ECS/Systems/GameSystems/OceanSimulationSystem.h"
-#include "Waldem/ECS/Systems/GameSystems/ScreenQuadSystem.h"
-#include "Waldem/ECS/Systems/GameSystems/CollisionSystem.h"
-#include "Waldem/ECS/Systems/GameSystems/PhysicsUpdateSystem.h"
-#include "Waldem/ECS/Systems/GameSystems/PhysicsIntegrationSystem.h"
-#include "Waldem/ECS/Systems/GameSystems/GBufferSystem.h"
-#include "Waldem/ECS/Systems/GameSystems/RayTracingRadianceSystem.h"
 #include "Waldem/ECS/Systems/System.h"
+#include "Waldem/ECS/Systems/DrawSystems/DeferredRenderingSystem.h"
+#include "Waldem/ECS/Systems/DrawSystems/OceanSimulationSystem.h"
+#include "Waldem/ECS/Systems/DrawSystems/ScreenQuadSystem.h"
+#include "Waldem/ECS/Systems/DrawSystems/GBufferSystem.h"
+#include "Waldem/ECS/Systems/DrawSystems/RayTracingRadianceSystem.h"
+#include "Waldem/ECS/Systems/UpdateSystems/CollisionSystem.h"
+#include "Waldem/ECS/Systems/UpdateSystems/PhysicsUpdateSystem.h"
+#include "Waldem/ECS/Systems/UpdateSystems/PhysicsIntegrationSystem.h"
+#include "Waldem/ECS/Systems/UpdateSystems/ScriptExecutionSystem.h"
+#include "Waldem/ECS/Systems/UpdateSystems/SpatialAudioSystem.h"
 #include "Waldem/Input/InputManager.h"
 #include "Waldem/Layers/Layer.h"
 #include "Waldem/SceneManagement/Scene.h"
 #include "Waldem/Renderer/Renderer.h"
 #include <glm/gtc/integer.hpp>
-#include "Waldem/ECS/Systems/GameSystems/ScriptExecutionSystem.h"
-#include "Waldem/ECS/Systems/GameSystems/SpatialAudioSystem.h"
 #include "Waldem/SceneManagement/GameScene.h"
 
 namespace Waldem
@@ -27,44 +27,44 @@ namespace Waldem
 		{
 			InputManager = {};
 
-			DrawSystems.Add((ISystem*)new OceanSimulationSystem(ecsManager));
-			DrawSystems.Add((ISystem*)new SpatialAudioSystem(ecsManager));
-			DrawSystems.Add((ISystem*)new GBufferSystem(ecsManager));
-			DrawSystems.Add((ISystem*)new RayTracingRadianceSystem(ecsManager));
-			DrawSystems.Add((ISystem*)new DeferredRenderingSystem(ecsManager));
-			// DrawSystems.Add((ISystem*)new PostProcessSystem(ecsManager));
-			DrawSystems.Add((ISystem*)new ScreenQuadSystem(ecsManager));
+			DrawSystems.Add(new OceanSimulationSystem(ecsManager));
+			DrawSystems.Add(new GBufferSystem(ecsManager));
+			DrawSystems.Add(new RayTracingRadianceSystem(ecsManager));
+			DrawSystems.Add(new DeferredRenderingSystem(ecsManager));
+			// DrawSystems.Add(new PostProcessSystem(ecsManager));
+			DrawSystems.Add(new ScreenQuadSystem(ecsManager));
 			
-			// PhysicsSystems.Add((ISystem*)new PhysicsIntegrationSystem(ecsManager));
-			// PhysicsSystems.Add((ISystem*)new PhysicsUpdateSystem(ecsManager));
-			// PhysicsSystems.Add((ISystem*)new CollisionSystem(ecsManager));
+			UpdateSystems.Add(new SpatialAudioSystem(ecsManager));
+			// PhysicsSystems.Add(new PhysicsIntegrationSystem(ecsManager));
+			// PhysicsSystems.Add(new PhysicsUpdateSystem(ecsManager));
+			// PhysicsSystems.Add(new CollisionSystem(ecsManager));
 
 			ScriptSystem = new ScriptExecutionSystem(ecsManager);
 		}
 
-		void Initialize(SceneData* sceneData) override
+		void Initialize() override
 		{
 			for (ISystem* system : UISystems)
 			{
-				system->Initialize(sceneData, &InputManager, CurrentResourceManager);
+				system->Initialize(&InputManager, CurrentResourceManager);
 			}
         	
 			for (ISystem* system : UpdateSystems)
 			{
-				system->Initialize(sceneData, &InputManager, CurrentResourceManager);
+				system->Initialize(&InputManager, CurrentResourceManager);
 			}
         	
 			for (ISystem* system : DrawSystems)
 			{
-				system->Initialize(sceneData, &InputManager, CurrentResourceManager);
+				system->Initialize(&InputManager, CurrentResourceManager);
 			}
 			
 			for (ISystem* system : PhysicsSystems)
 			{
-				system->Initialize(sceneData, &InputManager, CurrentResourceManager);
+				system->Initialize(&InputManager, CurrentResourceManager);
 			}
 
-			ScriptSystem->Initialize(sceneData, &InputManager, CurrentResourceManager);
+			ScriptSystem->Initialize(&InputManager, CurrentResourceManager);
 
 			Initialized = true;
 		}
@@ -159,25 +159,25 @@ namespace Waldem
 		void OpenScene(GameScene* scene, SceneData* sceneData)
 		{
 			Renderer::Begin();
-			scene->Initialize(sceneData, &InputManager, CurrentECSManager, CurrentResourceManager);
+			scene->Initialize(&InputManager, CurrentECSManager, CurrentResourceManager);
 			
 			for (ISystem* system : DrawSystems)
 			{
-				system->Initialize(sceneData, &InputManager, CurrentResourceManager);
+				system->Initialize(&InputManager, CurrentResourceManager);
 			}
 			Renderer::End();
 			
 			for (ISystem* system : UpdateSystems)
 			{
-				system->Initialize(sceneData, &InputManager, CurrentResourceManager);
+				system->Initialize(&InputManager, CurrentResourceManager);
 			}
 			
 			for (ISystem* system : PhysicsSystems)
 			{
-				system->Initialize(sceneData, &InputManager, CurrentResourceManager);
+				system->Initialize(&InputManager, CurrentResourceManager);
 			}
 
-			ScriptSystem->Initialize(sceneData, &InputManager, CurrentResourceManager);
+			ScriptSystem->Initialize(&InputManager, CurrentResourceManager);
 			
 			// CurrentScene = scene;
 		}

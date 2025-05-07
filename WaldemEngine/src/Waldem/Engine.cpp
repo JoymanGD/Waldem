@@ -40,8 +40,6 @@ namespace Waldem
 		CurrentRenderer = {};
 		CurrentRenderer.Initialize(Window);
 
-		InitializeTextures();
-		
 		Editor = new EditorLayer(Window, &CoreECSManager, &ResourceManager);
 		PushOverlay(Editor);
 		
@@ -58,10 +56,8 @@ namespace Waldem
 
 	void Engine::InitializeLayers()
 	{
-		SceneData sceneData = { Window };
-
 #ifdef WD_EDITOR
-		Editor->Initialize(&sceneData);
+		Editor->Initialize();
 #endif
 		
 #ifdef WD_GAME
@@ -71,23 +67,9 @@ namespace Waldem
 		// Debug->Initialize(&sceneData);
 	}
 
-	void Engine::InitializeTextures()
-	{
-		Vector2 resolution = Vector2(Window->GetWidth(), Window->GetHeight());
-		ResourceManager.CreateRenderTarget("TargetRT", resolution.x, resolution.y, TextureFormat::R8G8B8A8_UNORM);
-		ResourceManager.CreateRenderTarget("WorldPositionRT", resolution.x, resolution.y, TextureFormat::R32G32B32A32_FLOAT);
-		ResourceManager.CreateRenderTarget("NormalRT", resolution.x, resolution.y, TextureFormat::R16G16B16A16_FLOAT);
-		ResourceManager.CreateRenderTarget("ColorRT", resolution.x, resolution.y, TextureFormat::R8G8B8A8_UNORM);
-		ResourceManager.CreateRenderTarget("ORMRT", resolution.x, resolution.y, TextureFormat::R32G32B32A32_FLOAT);
-		ResourceManager.CreateRenderTarget("MeshIDRT", resolution.x, resolution.y, TextureFormat::R32_SINT);
-		ResourceManager.CreateRenderTarget("DepthRT", resolution.x, resolution.y, TextureFormat::D32_FLOAT);
-		ResourceManager.CreateRenderTarget("RadianceRT", resolution.x, resolution.y, TextureFormat::R32G32B32A32_FLOAT);
-	}
-
 	void Engine::OpenScene(GameScene* scene)
 	{
-		SceneData sceneData = { Window };
-		Editor->OpenScene(scene, &sceneData);
+		Editor->OpenScene(scene);
 	}
 
 	Engine::~Engine()
@@ -110,6 +92,7 @@ namespace Waldem
 	{
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(Engine::OnWindowClose));
+		dispatcher.Dispatch<WindowResizeEvent>(BIND_EVENT_FN(Engine::OnWindowResize));
 
 		for (int i = LayerStack.Num() - 1; i >= 0; i--)
 		{
@@ -152,8 +135,6 @@ namespace Waldem
 
 		while (IsRunning)
 		{
-			Window->OnUpdate();
-
 			auto currentFrameTime = std::chrono::high_resolution_clock::now();
 			std::chrono::duration<float> deltaTimeDuration = currentFrameTime - lastFrameTime;
 			Time::DeltaTime = deltaTimeDuration.count();
@@ -209,14 +190,30 @@ namespace Waldem
 			
 			Renderer::Present();
 
+			if(SwapchainResizeTriggered)
+			{
+				CurrentRenderer.ResizeSwapchain(NewSwapchainSize);
+				SwapchainResizeTriggered = false;
+			}
+
 			float FPS = CalculateAverageFPS(Time::DeltaTime);
 			Window->SetTitle(std::to_string(FPS).substr(0, 4));
+			
+			Window->OnUpdate();
 		}
 	}
 
 	bool Engine::OnWindowClose(WindowCloseEvent& e)
 	{
 		IsRunning = false;
+		return true;
+	}
+
+	bool Engine::OnWindowResize(WindowResizeEvent& e)
+	{
+		auto size = Vector2(e.GetWidth(), e.GetHeight());
+		SwapchainResizeTriggered = true;
+		NewSwapchainSize = size;
 		return true;
 	}
 }

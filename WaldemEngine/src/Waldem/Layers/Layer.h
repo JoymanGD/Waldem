@@ -5,6 +5,7 @@
 #include "Waldem/Events/Event.h"
 #include "Waldem/ECS/ECSManager.h"
 #include "Waldem/ECS/Systems/System.h"
+#include "Waldem/ECS/Systems/DrawSystems/DrawSystem.h"
 #include "Waldem/Resources/ResourceManager.h"
 #include "Waldem/SceneManagement/Scene.h"
 
@@ -25,26 +26,26 @@ namespace Waldem
         virtual void OnDrawUI(float deltaTime) {}
         virtual void OnEvent(Event& event) {}
         
-        virtual void Initialize(SceneData* sceneData)
+        virtual void Initialize()
         {
             for (ISystem* system : UISystems)
             {
-                system->Initialize(sceneData, &InputManager, CurrentResourceManager);
+                system->Initialize(&InputManager, CurrentResourceManager);
             }
         	
             for (ISystem* system : UpdateSystems)
             {
-                system->Initialize(sceneData, &InputManager, CurrentResourceManager);
+                system->Initialize(&InputManager, CurrentResourceManager);
             }
         	
             for (ISystem* system : DrawSystems)
             {
-                system->Initialize(sceneData, &InputManager, CurrentResourceManager);
+                system->Initialize(&InputManager, CurrentResourceManager);
             }
 			
             for (ISystem* system : PhysicsSystems)
             {
-                system->Initialize(sceneData, &InputManager, CurrentResourceManager);
+                system->Initialize(&InputManager, CurrentResourceManager);
             }
 
             Initialized = true;
@@ -88,7 +89,7 @@ namespace Waldem
         
         WArray<ISystem*> UISystems;
         WArray<ISystem*> UpdateSystems;
-        WArray<ISystem*> DrawSystems;
+        WArray<DrawSystem*> DrawSystems;
 		WArray<ISystem*> PhysicsSystems;
     };
 }

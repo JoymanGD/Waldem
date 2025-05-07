@@ -15,7 +15,7 @@ namespace Waldem
         DX12CommandList(ID3D12Device* device);
         ~DX12CommandList();
 
-        void BeginInternal(SViewport& viewport, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandle);
+        void BeginInternal(SViewport& viewport);
         void EndInternal();
 
         void Draw(CModel* model);

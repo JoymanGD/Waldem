@@ -18,6 +18,7 @@ namespace Waldem
         ResourceManager() = default;
         
         static RenderTarget* CreateRenderTarget(WString name, int width, int height, TextureFormat format);
+        static RenderTarget* ResizeRenderTarget(WString name, int width, int height);
         static Buffer* CreateBuffer(WString name, BufferType type, void* data, uint32_t size, uint32_t stride);
         static RenderTarget* CloneRenderTarget(RenderTarget* renderTarget);
         static Buffer* CloneBuffer(Buffer* buffer);

@@ -105,11 +105,9 @@ namespace Waldem
         //     // }
         // }
 
-        void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
+        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
         {
             TestClip = Audio::Load("Content/Sounds/TestSound");
-            
-            Vector2 resolution = Vector2(sceneData->Window->GetWidth(), sceneData->Window->GetHeight());
             
             CacheFrustrumCorners();
 
@@ -216,6 +214,8 @@ namespace Waldem
             DebugRT_7 = resourceManager->GetRenderTarget("DebugRT_7");
             DebugRT_8 = resourceManager->GetRenderTarget("DebugRT_8");
             DebugRT_9 = resourceManager->GetRenderTarget("DebugRT_9");
+            
+            Vector2 resolution = Vector2(TargetRT->GetWidth(), TargetRT->GetHeight());
             
             ConstantBufferData.TargetResolution = Vector2(TargetRT->GetWidth(), TargetRT->GetHeight());
             ConstantBufferData.DebugResolution = Vector2(DebugRT_1->GetWidth(), DebugRT_1->GetHeight());

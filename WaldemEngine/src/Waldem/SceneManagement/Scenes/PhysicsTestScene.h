@@ -20,7 +20,7 @@ namespace Waldem
     class PhysicsTestScene : public IScene
     {
     public:
-        void Initialize(SceneData* sceneData, InputManager* inputManager, ECSManager* ecsManager, ResourceManager* resourceManager) override
+        void Initialize(InputManager* inputManager, ECSManager* ecsManager, ResourceManager* resourceManager) override
         {
 			ModelImporter importer;
 
@@ -52,12 +52,12 @@ namespace Waldem
 			
 			for (ISystem* system : UpdateSystems)
 			{
-				system->Initialize(sceneData, inputManager, resourceManager);
+				system->Initialize(inputManager, resourceManager);
 			}
 			
 			for (ISystem* system : DrawSystems)
 			{
-				system->Initialize(sceneData, inputManager, resourceManager);
+				system->Initialize(inputManager, resourceManager);
 			}
         }
     	

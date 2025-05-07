@@ -124,6 +124,7 @@ namespace Waldem
         
         Camera(float fov, float aspectRatio, float nearClip, float farClip, float movementSpeed, float rotationSpeed);
 
+        void UpdateProjectionMatrix(float fov, float aspectRatio, float nearClip, float farClip);
         void SetViewMatrix(Transform* transform) { ViewMatrix = transform->Inverse(); }
         void SetViewMatrix(Matrix4 matrix) { ViewMatrix = matrix; }
         WArray<FrustumPlane> ExtractFrustumPlanes() { return Frustrum.GetPlanes(ProjectionMatrix * ViewMatrix); }
@@ -131,6 +132,10 @@ namespace Waldem
         void Serialize(WDataBuffer& outData) override;
         void Deserialize(WDataBuffer& inData) override;
 
+        float FieldOfView = 60.f;
+        float AspectRatio = 1.f;
+        float NearPlane = 0.001f;
+        float FarPlane = 1000.0f;
         glm::mat4 ProjectionMatrix;
         glm::mat4 ViewMatrix;
         float MovementSpeed = 1.0f;

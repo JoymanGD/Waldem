@@ -14,7 +14,7 @@ namespace Waldem
         bool IsInitialized = false;
     public:
         ISystem(ECSManager* manager) : Manager(manager) {}
-        virtual void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) = 0;
+        virtual void Initialize(InputManager* inputManager, ResourceManager* resourceManager) = 0;
         virtual void Deinitialize() {}
         virtual void Update(float deltaTime) = 0;
     };

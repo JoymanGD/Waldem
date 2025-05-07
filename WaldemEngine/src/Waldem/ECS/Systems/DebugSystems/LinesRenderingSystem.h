@@ -21,7 +21,7 @@ namespace Waldem
     public:
         LinesRenderingSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
 
-        void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
+        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
         {
             WArray<GraphicResource> resources;
             resources.Add(GraphicResource("RootConstants", RTYPE_Constant, nullptr, sizeof(Matrix4), sizeof(Matrix4), 0));

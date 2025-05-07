@@ -234,4 +234,9 @@ namespace Waldem
     {
         Instance->PlatformRenderer->EndUI();
     }
+
+    void Renderer::ResizeSwapchain(Vector2 size)
+    {
+        Instance->PlatformRenderer->ResizeSwapchain(size);
+    }
 }

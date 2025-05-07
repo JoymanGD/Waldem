@@ -34,9 +34,9 @@ namespace Waldem
             resourceManager->CreateRenderTarget("DebugRT_8", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
             resourceManager->CreateRenderTarget("DebugRT_9", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
             
-            UpdateSystems.Add((ISystem*)new DebugSystem(CurrentECSManager));
+            UpdateSystems.Add(new DebugSystem(CurrentECSManager));
             // UpdateSystems.Add((ISystem*)new LinesRenderingSystem(CurrentECSManager));
-            UpdateSystems.Add((ISystem*)new CollisionRenderingSystem(CurrentECSManager));
+            UpdateSystems.Add(new CollisionRenderingSystem(CurrentECSManager));
 
             InputManager.SubscribeToKeyEvent(WD_KeyCode::F1, [&](bool isPressed)
             {
@@ -47,11 +47,11 @@ namespace Waldem
             });
         }
 
-        void Initialize(SceneData* sceneData) override
+        void Initialize() override
         {
             for (ISystem* system : UpdateSystems)
             {
-                system->Initialize(sceneData, &InputManager, CurrentResourceManager);
+                system->Initialize(&InputManager, CurrentResourceManager);
             }
 
 			Initialized = true;

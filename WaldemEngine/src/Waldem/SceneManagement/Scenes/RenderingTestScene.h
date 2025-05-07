@@ -19,7 +19,7 @@ namespace Waldem
     class RenderingTestScene : public GameScene
     {
     public:
-        void Initialize(SceneData* sceneData, InputManager* inputManager, ECSManager* ecsManager, ResourceManager* resourceManager) override
+        void Initialize(InputManager* inputManager, ECSManager* ecsManager, ResourceManager* resourceManager) override
         {        	
 			ModelImporter importer;
 

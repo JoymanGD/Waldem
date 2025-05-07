@@ -35,7 +35,7 @@ namespace Waldem
     public:
         CollisionRenderingSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
 
-        void Initialize(SceneData* sceneData, InputManager* inputManager, ResourceManager* resourceManager) override
+        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
         {
             DepthRT = resourceManager->GetRenderTarget("DepthRT");
             

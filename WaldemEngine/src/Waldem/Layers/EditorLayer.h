@@ -4,17 +4,18 @@
 #include <filesystem>
 #include "imgui.h"
 #include "Waldem/ECS/Components/AudioListener.h"
-#include "Waldem/ECS/Systems/EditorSystems/EditorControlSystem.h"
-#include "..\ECS\Systems\EditorSystems\EditorGuizmoSystem.h"
-#include "Waldem/ECS/Systems/GameSystems/FreeLookCameraSystem.h"
+#include "Waldem/ECS/Systems/UISystems/EditorControlSystem.h"
+#include "Waldem/ECS/Systems/UISystems/EditorGuizmoSystem.h"
+#include "Waldem/ECS/Systems/UpdateSystems/FreeLookCameraSystem.h"
 #include "Waldem/ECS/Components/Camera.h"
-#include "Waldem/ECS/Systems/EditorSystems/EditorUISystem.h"
-#include "Waldem/ECS/Systems/GameSystems/DeferredRenderingSystem.h"
-#include "Waldem/ECS/Systems/GameSystems/GBufferSystem.h"
-#include "Waldem/ECS/Systems/GameSystems/OceanSimulationSystem.h"
-#include "Waldem/ECS/Systems/GameSystems/RayTracingRadianceSystem.h"
-#include "Waldem/ECS/Systems/GameSystems/ScreenQuadSystem.h"
-#include "Waldem/ECS/Systems/GameSystems/SpatialAudioSystem.h"
+#include "Waldem/ECS/Systems/UISystems/EditorUISystem.h"
+#include "Waldem/ECS/Systems/DrawSystems/DeferredRenderingSystem.h"
+#include "Waldem/ECS/Systems/DrawSystems/GBufferSystem.h"
+#include "Waldem/ECS/Systems/DrawSystems/OceanSimulationSystem.h"
+#include "Waldem/ECS/Systems/DrawSystems/RayTracingRadianceSystem.h"
+#include "Waldem/ECS/Systems/DrawSystems/ScreenQuadSystem.h"
+#include "Waldem/ECS/Systems/UpdateSystems/SpatialAudioSystem.h"
+#include "Waldem/Events/ApplicationEvent.h"
 #include "Waldem/Input/InputManager.h"
 #include "Waldem/Layers/Layer.h"
 #include "Waldem/Renderer/Renderer.h"
@@ -31,14 +32,26 @@ namespace Waldem
         bool BlockUIEvents = true;
         Path CurrentScenePath;
         bool ImportSceneThisFrame = false;
+        bool EditorViewportResizeTriggered = false;
+        Vector2 NewEditorViewportSize = {};
         
     public:
         EditorLayer(CWindow* window, ECSManager* ecsManager, ResourceManager* resourceManager) : Layer("EditorLayer", window, ecsManager, resourceManager)
         {
             InputManager = {};
             
+            Vector2 size = { 1920, 1080 };
+            resourceManager->CreateRenderTarget("TargetRT", size.x, size.y, TextureFormat::R8G8B8A8_UNORM);
+            resourceManager->CreateRenderTarget("WorldPositionRT", size.x, size.y, TextureFormat::R32G32B32A32_FLOAT);
+            resourceManager->CreateRenderTarget("NormalRT", size.x, size.y, TextureFormat::R16G16B16A16_FLOAT);
+            resourceManager->CreateRenderTarget("ColorRT", size.x, size.y, TextureFormat::R8G8B8A8_UNORM);
+            resourceManager->CreateRenderTarget("ORMRT", size.x, size.y, TextureFormat::R32G32B32A32_FLOAT);
+            resourceManager->CreateRenderTarget("MeshIDRT", size.x, size.y, TextureFormat::R32_SINT);
+            resourceManager->CreateRenderTarget("DepthRT", size.x, size.y, TextureFormat::D32_FLOAT);
+            resourceManager->CreateRenderTarget("RadianceRT", size.x, size.y, TextureFormat::R32G32B32A32_FLOAT);
+            
             auto cameraEntity = CurrentECSManager->CreateEntity("Camera");
-            float aspectRatio = window->GetWidth() / window->GetHeight();
+            float aspectRatio = size.x / size.y;
             cameraEntity->Add<Transform>(Vector3(0, 0, 0));
             cameraEntity->Add<Camera>(60.0f, aspectRatio, 0.001f, 1000.0f, 30.0f, 30.0f);
             cameraEntity->Add<EditorCamera>();
@@ -53,7 +66,7 @@ namespace Waldem
             UpdateSystems.Add(new EditorControlSystem(CurrentECSManager));
             UpdateSystems.Add(new SpatialAudioSystem(ecsManager));
 
-            DrawSystems.Add(new OceanSimulationSystem(ecsManager));
+            // DrawSystems.Add(new OceanSimulationSystem(ecsManager));
             DrawSystems.Add(new GBufferSystem(ecsManager));
             DrawSystems.Add(new RayTracingRadianceSystem(ecsManager));
             DrawSystems.Add(new DeferredRenderingSystem(ecsManager));
@@ -61,6 +74,12 @@ namespace Waldem
             DrawSystems.Add(new ScreenQuadSystem(ecsManager));
 
             Window = window;
+
+            Editor::SubscribeOnResize([this](Vector2 size)
+            {
+                EditorViewportResizeTriggered = true;
+                NewEditorViewportSize = size;
+            });
         }
         
         void Begin() override
@@ -78,6 +97,32 @@ namespace Waldem
         void OnDetach() override
         {
         }
+
+        void OnResize(Vector2 size)
+        {
+            CurrentResourceManager->ResizeRenderTarget("TargetRT", size.x, size.y);
+            CurrentResourceManager->ResizeRenderTarget("WorldPositionRT", size.x, size.y);
+            CurrentResourceManager->ResizeRenderTarget("NormalRT", size.x, size.y);
+            CurrentResourceManager->ResizeRenderTarget("ColorRT", size.x, size.y);
+            CurrentResourceManager->ResizeRenderTarget("ORMRT", size.x, size.y);
+            CurrentResourceManager->ResizeRenderTarget("MeshIDRT", size.x, size.y);
+            CurrentResourceManager->ResizeRenderTarget("DepthRT", size.x, size.y);
+            CurrentResourceManager->ResizeRenderTarget("RadianceRT", size.x, size.y);
+            
+            for (DrawSystem* system : DrawSystems)
+            {
+                system->OnResize(size);
+
+                //TODO: this is a temporary solution, replace with only OnResize call
+                system->Deinitialize();
+                system->Initialize(&InputManager, CurrentResourceManager);
+            }
+            
+            for (auto [entity, camera] : CurrentECSManager->EntitiesWith<Camera>())
+            {
+                camera.UpdateProjectionMatrix(camera.FieldOfView, size.x/size.y, camera.NearPlane, camera.FarPlane); 
+            }
+        }
         
         void OnEvent(Event& event) override
         {
@@ -91,7 +136,7 @@ namespace Waldem
                 
                 event.Handled |= event.IsInCategory(EventCategoryMouse) & shouldBlockMouse;
                 event.Handled |= event.IsInCategory(EventCategoryKeyboard) & shouldBlockKeyboard;
-                event.Handled |= ImGuizmo::IsUsing();
+                event.Handled |= Editor::GizmoIsUsing;
             }
             
             switch (eventType)
@@ -130,6 +175,12 @@ namespace Waldem
                 ImportScene(CurrentScenePath);
                 ImportSceneThisFrame = false;
             }
+            
+            if(EditorViewportResizeTriggered)
+            {
+                OnResize(NewEditorViewportSize);
+                EditorViewportResizeTriggered = false;
+            }
 
             for (ISystem* system : UpdateSystems)
             {
@@ -162,26 +213,26 @@ namespace Waldem
             }
         }
 
-        void LoadScene(WDataBuffer& dataBuffer, SceneData& sceneData)
+        void LoadScene(WDataBuffer& dataBuffer)
         {
             //create new scene
             CurrentScene = new GameScene();
-            CurrentScene->Initialize(&sceneData, &InputManager, CurrentECSManager, CurrentResourceManager);
+            CurrentScene->Initialize(&InputManager, CurrentECSManager, CurrentResourceManager);
 
             //deserialize input data into the scene
             CurrentScene->Deserialize(dataBuffer);
         }
 
-        void OpenScene(GameScene* scene, SceneData* sceneData)
+        void OpenScene(GameScene* scene)
         {
             Deinitialize();
             
             CloseScene(CurrentScene);
             
             CurrentScene = scene;
-            CurrentScene->Initialize(sceneData, &InputManager, CurrentECSManager, CurrentResourceManager);
+            CurrentScene->Initialize(&InputManager, CurrentECSManager, CurrentResourceManager);
 
-            Initialize(sceneData);
+            Initialize();
         }
 
         void ImportScene(Path path)
@@ -201,11 +252,9 @@ namespace Waldem
 
                     WDataBuffer inData = WDataBuffer(buffer, size);
 
-                    SceneData sceneData = { Window };
-                    
-                    LoadScene(inData, sceneData);
+                    LoadScene(inData);
 
-                    Initialize(&sceneData);
+                    Initialize();
                 }
                 delete[] buffer;
                 inFile.close();

@@ -23,7 +23,23 @@ namespace Waldem
         
         return rt;
     }
-    
+
+    RenderTarget* ResourceManager::ResizeRenderTarget(WString name, int width, int height)
+    {
+        auto& renderTarget = RenderTargets[name];
+
+        if(renderTarget)
+        {
+            auto format = renderTarget->GetFormat();
+            
+            renderTarget->Destroy();
+            
+            renderTarget = Renderer::CreateRenderTarget(name, width, height, format);
+        }
+
+        return renderTarget;
+    }
+
     Buffer* ResourceManager::CreateBuffer(WString name, BufferType type, void* data, uint32_t size, uint32_t stride)
     {
         Buffer* buffer = Renderer::CreateBuffer(name, type, data, size, stride);
