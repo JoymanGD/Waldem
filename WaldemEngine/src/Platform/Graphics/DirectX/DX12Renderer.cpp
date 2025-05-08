@@ -136,40 +136,22 @@ namespace Waldem
             throw std::runtime_error("Failed to create D3D12 SwapChain");
         }
 
-        //create main framebuffer and viewport
-        auto mainFrameBuffer = new SFrameBuffer();
-        for (uint32_t i = 0; i < SWAPCHAIN_SIZE; ++i)
-        {
-            ID3D12Resource* resource;
-            h = SwapChain->GetBuffer(i, IID_PPV_ARGS(&resource));
-
-            auto renderTarget = new DX12RenderTarget("MainViewport_FrameBuffer_" + std::to_string(i), Device, width, height, TextureFormat::R8G8B8A8_UNORM, resource);
-            ResourceBarrier(renderTarget, ALL_SHADER_RESOURCE, PRESENT);
-
-            if(FAILED(h))
-            {
-                throw std::runtime_error("Failed to get D3D12 SwapChain buffer");
-            }
-
-            mainFrameBuffer->AddRenderTarget(renderTarget);
-        }
-        mainFrameBuffer->SetDepth(new DX12RenderTarget("MainViewport_Depth", Device, WorldCommandList.first, width, height, TextureFormat::D32_FLOAT));
-        
-        MainViewport = SViewport(Vector2(0, 0), Vector2(width, height), Vector2(0, 1), mainFrameBuffer);
-
-        Editor::SubscribeOnResize([this](Vector2 size)
-        {
-            if (length(size) > 0)
-            {
-                ResizeTriggered = true;
-                NewSize = size;
-            }
-        });
+        InitializeUI();
     }
 
     void DX12Renderer::InitializeUI()
     {
-        Vector2 size = length(Editor::EditorViewportSize) > 0 ? Editor::EditorViewportSize : Vector2(CurrentWindow->GetWidth(), CurrentWindow->GetHeight());
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+        ImGuiIO& io = ImGui::GetIO();
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable keyboard controls
+        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     // Enable docking
+        io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;   // Enable multi-viewport
+
+        SDL_Window* window = static_cast<SDL_Window*>(CWindow::GetNativeWindow());
+        ImGui_ImplSDL2_InitForD3D(window);
+        
+        Vector2 size = Vector2(CurrentWindow->GetWidth(), CurrentWindow->GetHeight());
         
         D3D12_DESCRIPTOR_HEAP_DESC desc = {};
         desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
@@ -182,6 +164,15 @@ namespace Waldem
         RenderTarget* editorViewportDepth = new DX12RenderTarget("EditorViewDepth", Device, WorldCommandList.first, size.x, size.y, TextureFormat::D32_FLOAT);
         auto editorFrameBuffer = new SFrameBuffer(editorRenderTargets, editorViewportDepth);
         EditorViewport = SViewport(Vector2(0, 0), Vector2(size.x, size.y), Vector2(0, 1), editorFrameBuffer);
+
+        EditorViewport.SubscribeOnResize([this](Point2 size)
+        {
+            if (size.x > 0 && size.y > 0)
+            {
+                ResizeTriggered = true;
+                NewSize = size;
+            }
+        });
         
         WArray<RenderTarget*> gameRenderTargets = { new DX12RenderTarget("GameViewRT", Device, WorldCommandList.first, size.x, size.y, TextureFormat::R8G8B8A8_UNORM, ImGuiHeap, 2) };
         RenderTarget* gameViewportDepth = new DX12RenderTarget("GameViewDepth", Device, WorldCommandList.first, size.x, size.y, TextureFormat::D32_FLOAT);
@@ -192,28 +183,13 @@ namespace Waldem
         ImGui_ImplDX12_Init(Device, SWAPCHAIN_SIZE, DXGI_FORMAT_R8G8B8A8_UNORM, ImGuiHeap, ImGuiHeap->GetCPUDescriptorHandleForHeapStart(), ImGuiHeap->GetGPUDescriptorHandleForHeapStart());
 
         UIStyles::ApplyDefault();
-    }
 
-    void DX12Renderer::ResizeSwapchain(Vector2 size)
-    {
-        Wait();
-        
-        // Release old RTVs
-        MainViewport.FrameBuffer->Destroy();
-
-        // Resize swapchain buffers
-        DXGI_SWAP_CHAIN_DESC desc = {};
-        SwapChain->GetDesc(&desc);
-        HRESULT h = SwapChain->ResizeBuffers(SWAPCHAIN_SIZE, size.x, size.y, desc.BufferDesc.Format, desc.Flags);
-        if (FAILED(h))
-        {
-            throw std::runtime_error("Failed to resize DX12 swapchain buffers.");
-        }
-        
+        //create main framebuffer and viewport
+        auto mainFrameBuffer = new SFrameBuffer();
         for (uint32_t i = 0; i < SWAPCHAIN_SIZE; ++i)
         {
             ID3D12Resource* resource;
-            h = SwapChain->GetBuffer(i, IID_PPV_ARGS(&resource));
+            HRESULT h = SwapChain->GetBuffer(i, IID_PPV_ARGS(&resource));
 
             auto renderTarget = new DX12RenderTarget("MainViewport_FrameBuffer_" + std::to_string(i), Device, size.x, size.y, TextureFormat::R8G8B8A8_UNORM, resource);
             ResourceBarrier(renderTarget, ALL_SHADER_RESOURCE, PRESENT);
@@ -223,13 +199,56 @@ namespace Waldem
                 throw std::runtime_error("Failed to get D3D12 SwapChain buffer");
             }
 
-            MainViewport.FrameBuffer->AddRenderTarget(renderTarget);
+            mainFrameBuffer->AddRenderTarget(renderTarget);
         }
+        mainFrameBuffer->SetDepth(new DX12RenderTarget("MainViewport_Depth", Device, WorldCommandList.first, size.x, size.y, TextureFormat::D32_FLOAT));
+        
+        MainViewport = SViewport(Point2(0, 0), Point2(size.x, size.y), Point2(0, 1), mainFrameBuffer);
 
-        MainViewport.FrameBuffer->SetDepth(new DX12RenderTarget("MainViewport_Depth", Device, WorldCommandList.first, size.x, size.y, TextureFormat::D32_FLOAT));
+        MainViewport.SubscribeOnResize([this](Point2 size)
+        {
+            if (size.x > 0 && size.y > 0)
+            {
+                Wait();
+                
+                // Release old RTVs
+                MainViewport.FrameBuffer->Destroy();
 
-        MainViewport.Resolution = size;
-        MainViewport.ScissorRect = { MainViewport.Position.x, MainViewport.Position.y, size.x, size.y };
+                // Resize swapchain buffers
+                DXGI_SWAP_CHAIN_DESC desc = {};
+                SwapChain->GetDesc(&desc);
+                HRESULT h = SwapChain->ResizeBuffers(SWAPCHAIN_SIZE, size.x, size.y, desc.BufferDesc.Format, desc.Flags);
+                if (FAILED(h))
+                {
+                    throw std::runtime_error("Failed to resize DX12 swapchain buffers.");
+                }
+                
+                for (uint32_t i = 0; i < SWAPCHAIN_SIZE; ++i)
+                {
+                    ID3D12Resource* resource;
+                    h = SwapChain->GetBuffer(i, IID_PPV_ARGS(&resource));
+
+                    auto renderTarget = new DX12RenderTarget("MainViewport_FrameBuffer_" + std::to_string(i), Device, size.x, size.y, TextureFormat::R8G8B8A8_UNORM, resource);
+                    ResourceBarrier(renderTarget, ALL_SHADER_RESOURCE, PRESENT);
+
+                    if(FAILED(h))
+                    {
+                        throw std::runtime_error("Failed to get D3D12 SwapChain buffer");
+                    }
+
+                    MainViewport.FrameBuffer->AddRenderTarget(renderTarget);
+                }
+
+                MainViewport.FrameBuffer->SetDepth(new DX12RenderTarget("MainViewport_Depth", Device, WorldCommandList.first, size.x, size.y, TextureFormat::D32_FLOAT));
+            }
+        });
+    }
+
+    void DX12Renderer::DeinitializeUI()
+    {
+        ImGui_ImplSDL2_Shutdown();
+        ImGui_ImplDX12_Shutdown();
+        ImGui::DestroyContext();
     }
 
     void DX12Renderer::ResizeEditorViewport(Vector2 size)
@@ -242,9 +261,6 @@ namespace Waldem
 
         RenderTarget* editorViewportDepth = new DX12RenderTarget("EditorViewDepth", Device, WorldCommandList.first, size.x, size.y, TextureFormat::D32_FLOAT);
         EditorViewport.FrameBuffer->SetDepth(editorViewportDepth);
-
-        EditorViewport.Resolution = size;
-        EditorViewport.ScissorRect = { EditorViewport.Position.x, EditorViewport.Position.y, size.x, size.y };
     }
 
     void DX12Renderer::Draw(CModel* model)

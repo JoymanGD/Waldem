@@ -67,13 +67,14 @@ namespace Waldem
 
     void DX12CommandList::BeginInternal(SViewport& viewport)
     {
-        D3D12_VIEWPORT* d3d12Viewport = (D3D12_VIEWPORT*)&viewport;
-        D3D12_RECT* d3d12ScissorRect = (D3D12_RECT*)&viewport.ScissorRect;
-        CommandList->RSSetViewports(1, d3d12Viewport);
-        CommandList->RSSetScissorRects(1, d3d12ScissorRect);
+        //we use 0;0 for viewport and scissor rect position to render full-size render target
+        D3D12_VIEWPORT d3d12Viewport = { 0, 0, (float)viewport.Size.x, (float)viewport.Size.y, (float)viewport.DepthRange.x, (float)viewport.DepthRange.y };
+        D3D12_RECT d3d12ScissorRect = { 0, 0, viewport.Size.x, viewport.Size.y };
+        CommandList->RSSetViewports(1, &d3d12Viewport);
+        CommandList->RSSetScissorRects(1, &d3d12ScissorRect);
 
-        MainViewport = *d3d12Viewport;
-        MainScissorRect = *d3d12ScissorRect;
+        MainViewport = d3d12Viewport;
+        MainScissorRect = d3d12ScissorRect;
 
         //set render target
         auto rtvHandle = ((DX12RenderTarget*)viewport.FrameBuffer->GetCurrentRenderTarget())->GetRTVHandle();

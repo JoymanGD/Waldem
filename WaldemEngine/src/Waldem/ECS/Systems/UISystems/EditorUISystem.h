@@ -45,38 +45,14 @@ namespace Waldem
                new ContentBrowserWidget(eCSManager),
            });
         }
-
-        void InitializeUI()
-        {
-            IMGUI_CHECKVERSION();
-            ImGui::CreateContext();
-            ImGuiIO& io = ImGui::GetIO();
-            io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable keyboard controls
-            io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     // Enable docking
-            io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;   // Enable multi-viewport
-
-            SDL_Window* window = static_cast<SDL_Window*>(CWindow::GetNativeWindow());
-            ImGui_ImplSDL2_InitForD3D(window);
-
-            Renderer::InitializeUI();
-        }
-
-        void DeinitializeUI()
-        {
-            ImGui_ImplSDL2_Shutdown();
-            ImGui_ImplDX12_Shutdown();
-            ImGui::DestroyContext();
-        }
         
         void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
         {
-            InitializeUI();
             MainWidget->Initialize(inputManager, resourceManager);
         }
 
         void Deinitialize() override
         {
-            DeinitializeUI();
             MainWidget->Deinitialize();
         }
 

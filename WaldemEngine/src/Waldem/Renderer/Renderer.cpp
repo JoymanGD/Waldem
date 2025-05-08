@@ -160,6 +160,11 @@ namespace Waldem
         return Instance->PlatformRenderer->GetGameViewport();
     }
 
+    SViewport* Renderer::GetMainViewport()
+    {
+        return Instance->PlatformRenderer->GetMainViewport();
+    }
+
     AccelerationStructure* Renderer::CreateBLAS(WString name, WArray<RayTracingGeometry>& geometries)
     {
         return Instance->PlatformRenderer->CreateBLAS(name, geometries);
@@ -233,10 +238,5 @@ namespace Waldem
     void Renderer::EndUI()
     {
         Instance->PlatformRenderer->EndUI();
-    }
-
-    void Renderer::ResizeSwapchain(Vector2 size)
-    {
-        Instance->PlatformRenderer->ResizeSwapchain(size);
     }
 }

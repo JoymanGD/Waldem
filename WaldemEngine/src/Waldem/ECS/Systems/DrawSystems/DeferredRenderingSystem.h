@@ -96,8 +96,9 @@ namespace Waldem
             Renderer::ResourceBarrier(TargetRT, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
             Renderer::SetPipeline(DeferredRenderingPipeline);
             Renderer::SetRootSignature(DeferredRenderingRootSignature);
-            Point2 mousePos = Editor::EditorViewportMousePos;
-            DeferredRenderingRootSignature->UpdateResourceData("RootConstants", &mousePos);
+            auto mousePos = Input::GetMousePos();
+            Point2 relativeMousePos = Renderer::GetEditorViewport()->TransformMousePosition(mousePos);
+            DeferredRenderingRootSignature->UpdateResourceData("RootConstants", &relativeMousePos);
             Renderer::Compute(GroupCount);
             int hoveredEntityId = 0;
             DeferredRenderingRootSignature->ReadbackResourceData("HoveredMeshes", &hoveredEntityId);

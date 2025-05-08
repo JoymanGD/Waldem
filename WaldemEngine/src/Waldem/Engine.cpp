@@ -192,7 +192,7 @@ namespace Waldem
 
 			if(SwapchainResizeTriggered)
 			{
-				CurrentRenderer.ResizeSwapchain(NewSwapchainSize);
+				CurrentRenderer.GetMainViewport()->Resize(NewSwapchainSize);
 				SwapchainResizeTriggered = false;
 			}
 
