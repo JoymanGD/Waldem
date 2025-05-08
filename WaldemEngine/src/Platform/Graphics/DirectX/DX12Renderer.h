@@ -16,7 +16,7 @@ namespace Waldem
         ~DX12Renderer() override = default;
         void Initialize(CWindow* window) override;
         void InitializeUI() override;
-        void ResizeSwapchain(Vector2 size) override;
+        void DeinitializeUI() override;
         void ResizeEditorViewport(Vector2 size);
         void Draw(CModel* model) override;
         void Draw(CMesh* mesh) override;
@@ -28,7 +28,6 @@ namespace Waldem
         void Begin() override;
         void End() override;
         void Present() override;
-        D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentRenderTargetHandle() const { return CurrentRenderTargetHandle; }
         PixelShader* LoadPixelShader(const Path& shaderName, WString entryPoint) override;
         ComputeShader* LoadComputeShader(const Path& shaderName, WString entryPoint) override;
         RayTracingShader* LoadRayTracingShader(const Path& shaderName) override;
@@ -46,6 +45,7 @@ namespace Waldem
         RenderTarget* CreateRenderTarget(WString name, int width, int height, TextureFormat format) override;
         SViewport* GetEditorViewport() override { return &EditorViewport; }
         SViewport* GetGameViewport() override { return &GameViewport; }
+        SViewport* GetMainViewport() override { return &MainViewport; }
         AccelerationStructure* CreateBLAS(WString name, WArray<RayTracingGeometry>& geometries) override;
         AccelerationStructure* CreateTLAS(WString name, WArray<RayTracingInstance>& instances) override;
         void UpdateBLAS(AccelerationStructure* BLAS, WArray<RayTracingGeometry>& geometries) override;
@@ -70,9 +70,6 @@ namespace Waldem
 
         std::pair<DX12CommandList*, bool> WorldCommandList;
         
-        ID3D12DescriptorHeap* DSVHeap = nullptr;
-        ID3D12Resource* DepthStencilBuffer = nullptr;
-        D3D12_CPU_DESCRIPTOR_HANDLE CurrentRenderTargetHandle {};
         ID3D12Debug* DebugController = nullptr;
         ID3D12Debug1* DebugController1 = nullptr;
         ID3D12InfoQueue* InfoQueue = nullptr;
@@ -83,7 +80,7 @@ namespace Waldem
         SViewport EditorViewport = {};
         SViewport GameViewport = {};
         bool ResizeTriggered = false;
-        Vector2 NewSize = {};
+        Point2 NewSize = {};
 
         //ImGui
         ID3D12DescriptorHeap* ImGuiHeap = nullptr;

@@ -28,6 +28,14 @@ namespace Waldem
     Point2 WindowsInput::GetMousePosImpl()
     {
         int x, y;
+        SDL_GetGlobalMouseState(&x, &y);
+
+        return Point2(x, y);
+    }
+
+    Point2 WindowsInput::GetRelativeMousePosImpl()
+    {
+        int x, y;
         SDL_GetMouseState(&x, &y);
 
         return Point2(x, y);

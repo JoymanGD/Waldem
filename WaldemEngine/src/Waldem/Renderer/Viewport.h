@@ -3,75 +3,76 @@
 
 namespace Waldem
 {
+    using ResizeCallback = std::function<void(Point2 size)>;
+    
     struct SScissorRect
     {
-        float left;
-        float top;
-        float right;
-        float bottom;
+        int left;
+        int top;
+        int right;
+        int bottom;
         
         SScissorRect() = default;
-        SScissorRect(float left, float top, float right, float bottom) : left(left), top(top), right(right), bottom(bottom) {}
+        SScissorRect(int left, int top, int right, int bottom) : left(left), top(top), right(right), bottom(bottom) {}
     };
 
     class WALDEM_API SViewport
     {
     public:
-        Vector2 Position = {};
-        Vector2 Resolution = { 1280, 720 };
-        Vector2 DepthRange = { 0, 1 };
+        Point2 Position = {};
+        Point2 Size = { 1280, 720 };
+        Point2 DepthRange = { 0, 1 };
         SFrameBuffer* FrameBuffer = nullptr;
-        SScissorRect ScissorRect = { Position.x, Position.y, Resolution.x, Resolution.y };
+        bool IsMouseOver = false;
+        bool GizmoIsUsing = false;
+    private:
+        WArray<ResizeCallback> ResizeCallbacks;
 
+    public:
         SViewport() = default;
         
-        SViewport(WString name, Vector2 position, Vector2 resolution, Vector2 depthRange, int frameBufferSize, bool fullScissor = true) : Position(position), Resolution(resolution), DepthRange(depthRange)
+        SViewport(WString name, Point2 position, Point2 size, Point2 depthRange, int frameBufferSize) : Position(position), Size(size), DepthRange(depthRange)
         {
-            if(fullScissor)
-            {
-                ScissorRect.left = position.x;
-                ScissorRect.top = position.y;
-                ScissorRect.right = position.x + resolution.x;
-                ScissorRect.bottom = position.y + resolution.y;
-            }
-
-            FrameBuffer = new SFrameBuffer(name, frameBufferSize, resolution);
+            FrameBuffer = new SFrameBuffer(name, frameBufferSize, size);
         }
         
-        SViewport(Vector2 position, Vector2 resolution, Vector2 depthRange, SFrameBuffer* frameBuffer, bool fullScissor = true) : Position(position), Resolution(resolution), DepthRange(depthRange)
+        SViewport(Point2 position, Point2 size, Point2 depthRange, SFrameBuffer* frameBuffer) : Position(position), Size(size), DepthRange(depthRange)
         {
-            if(fullScissor)
-            {
-                ScissorRect.left = position.x;
-                ScissorRect.top = position.y;
-                ScissorRect.right = position.x + resolution.x;
-                ScissorRect.bottom = position.y + resolution.y;
-            }
-
             FrameBuffer = frameBuffer;
         }
 
-        void SetViewport(Vector2 position, Vector2 size, Vector2 depthRange, bool fullScissor = true)
+        void SetViewport(Point2 position, Point2 size, Point2 depthRange)
         {
             Position = position;
-            Resolution = size;
+            Size = size;
             DepthRange = depthRange;
+        }
+
+        void Resize(Point2 size)
+        {
+            Size = size;
             
-            if(fullScissor)
+            for (auto& callback : ResizeCallbacks)
             {
-                ScissorRect.left = position.x;
-                ScissorRect.top = position.y;
-                ScissorRect.right = position.x + size.x;
-                ScissorRect.bottom = position.y + size.y;
+                callback(size);
             }
         }
 
-        void SetScissorRect(float left, float top, float right, float bottom)
+        void Move(Point2 position)
         {
-            ScissorRect.left = left;
-            ScissorRect.top = top;
-            ScissorRect.right = right;
-            ScissorRect.bottom = bottom;
+            Position = position;
+        }
+
+        void SubscribeOnResize(const ResizeCallback& callback)
+        {
+            ResizeCallbacks.Add(callback);
+        }
+
+        Point2 TransformMousePosition(Point2 mousePos)
+        {
+            Point2 transformedPos = mousePos - Position;
+
+            return transformedPos;
         }
     };
 }

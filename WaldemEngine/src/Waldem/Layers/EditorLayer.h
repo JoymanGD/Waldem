@@ -75,7 +75,7 @@ namespace Waldem
 
             Window = window;
 
-            Editor::SubscribeOnResize([this](Vector2 size)
+            Renderer::GetEditorViewport()->SubscribeOnResize([this](Vector2 size)
             {
                 EditorViewportResizeTriggered = true;
                 NewEditorViewportSize = size;
@@ -130,13 +130,15 @@ namespace Waldem
 
             if (BlockUIEvents)
             {
+                auto editorViewport = Renderer::GetEditorViewport();
+                
                 ImGuiIO& io = ImGui::GetIO();
-                bool shouldBlockMouse = io.WantCaptureMouse && !Editor::IsMouseOverEditorViewport;
-                bool shouldBlockKeyboard = io.WantCaptureKeyboard && !Editor::IsMouseOverEditorViewport;
+                bool shouldBlockMouse = io.WantCaptureMouse && !editorViewport->IsMouseOver;
+                bool shouldBlockKeyboard = io.WantCaptureKeyboard && !editorViewport->IsMouseOver;
                 
                 event.Handled |= event.IsInCategory(EventCategoryMouse) & shouldBlockMouse;
                 event.Handled |= event.IsInCategory(EventCategoryKeyboard) & shouldBlockKeyboard;
-                event.Handled |= Editor::GizmoIsUsing;
+                event.Handled |= editorViewport->GizmoIsUsing;
             }
             
             switch (eventType)

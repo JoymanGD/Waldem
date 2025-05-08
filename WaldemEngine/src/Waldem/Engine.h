@@ -48,7 +48,7 @@ namespace Waldem
 		const int MaxFrames = 100;
 
 		bool SwapchainResizeTriggered = false;
-		Vector2 NewSwapchainSize = {};
+		Point2 NewSwapchainSize = {};
 
 		//Layers
 		EditorLayer* Editor;

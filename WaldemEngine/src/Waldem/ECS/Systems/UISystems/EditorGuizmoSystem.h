@@ -11,6 +11,7 @@
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/Editor/Editor.h"
 #include "Waldem/ECS/Components/Camera.h"
+#include "Waldem/Renderer/Viewport.h"
 
 namespace Waldem
 {
@@ -89,7 +90,8 @@ namespace Waldem
 
         void Update(float deltaTime) override
         {
-            Editor::GizmoIsUsing = ImGuizmo::IsOver();
+            auto editorViewport = Renderer::GetEditorViewport();
+            editorViewport->GizmoIsUsing = ImGuizmo::IsUsing();
             
             for (auto [cameraEntity, camera, cameraTransform, mainCamera] : Manager->EntitiesWith<Camera, Transform, EditorCamera>())
             {
@@ -97,7 +99,7 @@ namespace Waldem
                 {
                     ImGuizmo::SetOrthographic(false);
 
-                    ImGuizmo::SetRect(Editor::EditorViewportPos.x, Editor::EditorViewportPos.y, Editor::EditorViewportSize.x, Editor::EditorViewportSize.y);
+                    ImGuizmo::SetRect(editorViewport->Position.x, editorViewport->Position.y, editorViewport->Size.x, editorViewport->Size.y);
                     // ImGuizmo::SetRect(0, 0, );
                     ImGuizmo::Manipulate(value_ptr(camera.ViewMatrix), value_ptr(camera.ProjectionMatrix), CurrentOperation, CurrentMode, value_ptr(transform.Matrix));
                     transform.DecompileMatrix();

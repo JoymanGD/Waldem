@@ -97,7 +97,7 @@ namespace Waldem
             case SDL_WINDOWEVENT:
                 switch (sdlEvent.window.event)
                 {
-                case SDL_WINDOWEVENT_RESIZED:
+                case SDL_WINDOWEVENT_SIZE_CHANGED:
                     {
                         int newWidth = sdlEvent.window.data1;
                         int newHeight = sdlEvent.window.data2;

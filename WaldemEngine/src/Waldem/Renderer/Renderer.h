@@ -51,6 +51,7 @@ namespace Waldem
         virtual RenderTarget* CreateRenderTarget(WString name, int width, int height, TextureFormat format) = 0;
         virtual SViewport* GetEditorViewport() = 0;
         virtual SViewport* GetGameViewport() = 0;
+        virtual SViewport* GetMainViewport() = 0;
         virtual AccelerationStructure* CreateBLAS(WString name, WArray<RayTracingGeometry>& geometries) = 0;
         virtual AccelerationStructure* CreateTLAS(WString name, WArray<RayTracingInstance>& instances) = 0;
         virtual void UpdateBLAS(AccelerationStructure* BLAS, WArray<RayTracingGeometry>& geometries) = 0;
@@ -64,9 +65,9 @@ namespace Waldem
         virtual void ClearRenderTarget(RenderTarget* rt) = 0;
         virtual void ClearDepthStencil(RenderTarget* ds) = 0;
         virtual void InitializeUI() = 0;
+        virtual void DeinitializeUI() = 0;
         virtual void BeginUI() = 0;
         virtual void EndUI() = 0;
-        virtual void ResizeSwapchain(Vector2 size) = 0;
     };
 
     class Renderer
@@ -102,6 +103,7 @@ namespace Waldem
         static RenderTarget* CreateRenderTarget(WString name, int width, int height, TextureFormat format);
         static SViewport* GetEditorViewport();
         static SViewport* GetGameViewport();
+        static SViewport* GetMainViewport();
         static AccelerationStructure* CreateBLAS(WString name, WArray<RayTracingGeometry>& geometries);
         static AccelerationStructure* CreateTLAS(WString name, WArray<RayTracingInstance>& instances);
         static void UpdateBLAS(AccelerationStructure* BLAS, WArray<RayTracingGeometry>& geometries);
@@ -117,7 +119,6 @@ namespace Waldem
         static void InitializeUI();
         static void BeginUI();
         static void EndUI();
-        static void ResizeSwapchain(Vector2 size);
 
         static RendererAPI RAPI;
         inline static Renderer* Instance;
