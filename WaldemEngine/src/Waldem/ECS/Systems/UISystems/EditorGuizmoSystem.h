@@ -91,12 +91,6 @@ namespace Waldem
         void Update(float deltaTime) override
         {
             auto editorViewport = Renderer::GetEditorViewport();
-
-            if(ImGui::IsMouseDown(0))
-            {
-                bool isOverGuizmo = ImGuizmo::IsOver();
-                WD_CORE_INFO("IsOverGuizmo: {0}", isOverGuizmo);
-            }
             
             for (auto [cameraEntity, camera, cameraTransform, mainCamera] : Manager->EntitiesWith<Camera, Transform, EditorCamera>())
             {
