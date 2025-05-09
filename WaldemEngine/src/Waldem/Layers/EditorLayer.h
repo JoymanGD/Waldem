@@ -126,18 +126,12 @@ namespace Waldem
         
         void OnEvent(Event& event) override
         {
+            auto editorViewport = Renderer::GetEditorViewport();
             auto eventType = event.GetEventType();
 
             if (BlockUIEvents)
             {
-                auto editorViewport = Renderer::GetEditorViewport();
-                
-                ImGuiIO& io = ImGui::GetIO();
-                bool shouldBlockMouse = io.WantCaptureMouse && !editorViewport->IsMouseOver;
-                bool shouldBlockKeyboard = io.WantCaptureKeyboard && !editorViewport->IsMouseOver;
-                
-                event.Handled |= event.IsInCategory(EventCategoryMouse) & shouldBlockMouse;
-                event.Handled |= event.IsInCategory(EventCategoryKeyboard) & shouldBlockKeyboard;
+                event.Handled |= event.IsInCategory(EventCategoryKeyboard) & ImGui::GetIO().WantCaptureKeyboard;
                 event.Handled |= ImGuizmo::IsUsing();
             }
             
@@ -157,9 +151,12 @@ namespace Waldem
                     break;
                 }
             case EventType::MouseButtonPressed:
+                {
+                    event.Handled |= event.IsInCategory(EventCategoryMouse) & (ImGui::GetIO().WantCaptureMouse && !editorViewport->IsMouseOver);
+                }
             case EventType::MouseButtonReleased:
                 {
-                    if(event.Handled) //for these events we dont want to broadcast them if they are already handled by UI handlers to avoid counter-behaving
+                    if(event.Handled)
                     {
                         break;
                     }
