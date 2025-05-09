@@ -79,14 +79,23 @@ namespace Waldem
         SDL_Quit();
     }
 
+    void WindowsWindow::RequestEvents()
+    {
+        SDL_Event* sdlEvent = new SDL_Event();
+        while (SDL_PollEvent(sdlEvent))
+        {
+            ImGui_ImplSDL2_ProcessEvent(sdlEvent);
+            SDL_Event* copiedEvent = new SDL_Event(); // Allocate default-initialized event
+            *copiedEvent = *sdlEvent;                  // Copy the contents
+            Events.Add(copiedEvent);
+        }
+    }
+
     void WindowsWindow::ProcessEvents()
     {
-        SDL_Event sdlEvent;
-        while (SDL_PollEvent(&sdlEvent))
+        for (auto sdlEvent : Events)
         {
-            ImGui_ImplSDL2_ProcessEvent(&sdlEvent);
-            
-            switch (sdlEvent.type)
+            switch (sdlEvent->type)
             {
             case SDL_QUIT:
                 {
@@ -95,12 +104,12 @@ namespace Waldem
                     break;
                 }
             case SDL_WINDOWEVENT:
-                switch (sdlEvent.window.event)
+                switch (sdlEvent->window.event)
                 {
                 case SDL_WINDOWEVENT_SIZE_CHANGED:
                     {
-                        int newWidth = sdlEvent.window.data1;
-                        int newHeight = sdlEvent.window.data2;
+                        int newWidth = sdlEvent->window.data1;
+                        int newHeight = sdlEvent->window.data2;
 
                         Data.Width = newWidth;
                         Data.Height = newHeight;
@@ -113,8 +122,8 @@ namespace Waldem
                     }
                 case SDL_WINDOWEVENT_MOVED:
                     {
-                        int newX = sdlEvent.window.data1;
-                        int newY = sdlEvent.window.data2;
+                        int newX = sdlEvent->window.data1;
+                        int newY = sdlEvent->window.data2;
 
                         Data.Position.x = newX;
                         Data.Position.y = newY;
@@ -131,55 +140,59 @@ namespace Waldem
                 break;
             case SDL_KEYDOWN:
                 {
-                    if(sdlEvent.key.state == 1 && sdlEvent.key.repeat == 0)
+                    if(sdlEvent->key.state == 1 && sdlEvent->key.repeat == 0)
                     {
-                        KeyPressedEvent event(sdlEvent.key.keysym.sym, 0);
+                        KeyPressedEvent event(sdlEvent->key.keysym.sym, 0);
                         Data.EventCallback(event);
-                        WD_CORE_INFO("Key Pressed: {0}", SDL_GetKeyName(sdlEvent.key.keysym.sym), sdlEvent.key.repeat);
+                        WD_CORE_INFO("Key Pressed: {0}", SDL_GetKeyName(sdlEvent->key.keysym.sym), sdlEvent->key.repeat);
                     }
                     break;
                 }
             case SDL_KEYUP:
                 {
-                    if(sdlEvent.key.state == 0 && sdlEvent.key.repeat == 0)
+                    if(sdlEvent->key.state == 0 && sdlEvent->key.repeat == 0)
                     {
-                        KeyReleasedEvent event(sdlEvent.key.keysym.sym);
+                        KeyReleasedEvent event(sdlEvent->key.keysym.sym);
                         Data.EventCallback(event);
-                        WD_CORE_INFO("Key Released: {0}", SDL_GetKeyName(sdlEvent.key.keysym.sym));
+                        WD_CORE_INFO("Key Released: {0}", SDL_GetKeyName(sdlEvent->key.keysym.sym));
                     }
                     
                     break;
                 }
             case SDL_MOUSEBUTTONDOWN:
                 {
-                    MouseButtonPressedEvent event(sdlEvent.button.button);
+                    MouseButtonPressedEvent event(sdlEvent->button.button);
                     Data.EventCallback(event);
-                    WD_CORE_INFO("Mouse Button Pressed: {0}", (int)sdlEvent.button.button);
+                    WD_CORE_INFO("Mouse Button Pressed: {0}", (int)sdlEvent->button.button);
                     break;
                 }
             case SDL_MOUSEBUTTONUP:
                 {
-                    MouseButtonReleasedEvent event(sdlEvent.button.button);
+                    MouseButtonReleasedEvent event(sdlEvent->button.button);
                     Data.EventCallback(event);
-                    WD_CORE_INFO("Mouse Button Released: {0}", (int)sdlEvent.button.button);
+                    WD_CORE_INFO("Mouse Button Released: {0}", (int)sdlEvent->button.button);
                     break;
                 }
             case SDL_MOUSEMOTION:
                 {
-                    MouseMovedEvent event(sdlEvent.motion.x, sdlEvent.motion.y);
+                    MouseMovedEvent event(sdlEvent->motion.x, sdlEvent->motion.y);
                     Data.EventCallback(event);
                     break;
                 }
             case SDL_MOUSEWHEEL:
                 {
-                    MouseScrolledEvent event(sdlEvent.wheel.x, sdlEvent.wheel.y);
+                    MouseScrolledEvent event(sdlEvent->wheel.x, sdlEvent->wheel.y);
                     Data.EventCallback(event);
                     break;
                 }
             default:
                 break;
             }
+
+            delete sdlEvent;
         }
+
+        Events.Clear();
     }
 
     void WindowsWindow::SetTitle(WString title)
@@ -187,7 +200,12 @@ namespace Waldem
         SDL_SetWindowTitle(NativeWindow, title.C_Str());
     }
 
-    void WindowsWindow::OnUpdate()
+    void WindowsWindow::Begin()
+    {
+        RequestEvents();
+    }
+
+    void WindowsWindow::End()
     {
         ProcessEvents();
     }

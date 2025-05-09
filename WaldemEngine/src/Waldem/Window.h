@@ -27,7 +27,8 @@ namespace Waldem
 
 		virtual ~CWindow() {}
 
-		virtual void OnUpdate() = 0;
+		virtual void Begin() = 0;
+		virtual void End() = 0;
 
 		virtual float GetWidth() const = 0;
 		virtual float GetHeight() const = 0;

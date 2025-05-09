@@ -91,16 +91,19 @@ namespace Waldem
         void Update(float deltaTime) override
         {
             auto editorViewport = Renderer::GetEditorViewport();
-            editorViewport->GizmoIsUsing = ImGuizmo::IsUsing();
+
+            if(ImGui::IsMouseDown(0))
+            {
+                bool isOverGuizmo = ImGuizmo::IsOver();
+                WD_CORE_INFO("IsOverGuizmo: {0}", isOverGuizmo);
+            }
             
             for (auto [cameraEntity, camera, cameraTransform, mainCamera] : Manager->EntitiesWith<Camera, Transform, EditorCamera>())
             {
                 for (auto [transformEntity, transform, selected] : Manager->EntitiesWith<Transform, Selected>())
                 {
                     ImGuizmo::SetOrthographic(false);
-
                     ImGuizmo::SetRect(editorViewport->Position.x, editorViewport->Position.y, editorViewport->Size.x, editorViewport->Size.y);
-                    // ImGuizmo::SetRect(0, 0, );
                     ImGuizmo::Manipulate(value_ptr(camera.ViewMatrix), value_ptr(camera.ProjectionMatrix), CurrentOperation, CurrentMode, value_ptr(transform.Matrix));
                     transform.DecompileMatrix();
                 }
