@@ -138,7 +138,7 @@ namespace Waldem
                 
                 event.Handled |= event.IsInCategory(EventCategoryMouse) & shouldBlockMouse;
                 event.Handled |= event.IsInCategory(EventCategoryKeyboard) & shouldBlockKeyboard;
-                event.Handled |= editorViewport->GizmoIsUsing;
+                event.Handled |= ImGuizmo::IsUsing();
             }
             
             switch (eventType)

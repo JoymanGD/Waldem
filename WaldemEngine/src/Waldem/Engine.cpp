@@ -135,6 +135,8 @@ namespace Waldem
 
 		while (IsRunning)
 		{
+			Window->Begin();
+			
 			auto currentFrameTime = std::chrono::high_resolution_clock::now();
 			std::chrono::duration<float> deltaTimeDuration = currentFrameTime - lastFrameTime;
 			Time::DeltaTime = deltaTimeDuration.count();
@@ -142,13 +144,10 @@ namespace Waldem
 			Time::ElapsedTime = elapsedTimeDuration.count();
 			lastFrameTime = currentFrameTime;
 
-			// Accumulate unprocessed time
 			accumulatedTime += Time::DeltaTime;
 
-			// Run FixedUpdate() as many times as needed
 			while (accumulatedTime >= Time::FixedDeltaTime)
 			{
-				// 🔁 Your fixed-timestep physics update
 				for (Layer* layer : LayerStack)
 				{
 					if(layer->Initialized)
@@ -198,8 +197,8 @@ namespace Waldem
 
 			float FPS = CalculateAverageFPS(Time::DeltaTime);
 			Window->SetTitle(std::to_string(FPS).substr(0, 4));
-			
-			Window->OnUpdate();
+
+			Window->End();
 		}
 	}
 

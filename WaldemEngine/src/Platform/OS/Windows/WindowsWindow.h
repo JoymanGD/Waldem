@@ -21,7 +21,8 @@ namespace Waldem
         WindowsWindow(const WindowProps& props);
         virtual ~WindowsWindow();
 
-        void OnUpdate() override;
+        void Begin() override;
+        void End() override;
     
         Vector2 GetPosition() const override { return Data.Position; }
         float GetWidth() const override { return Data.Width; }
@@ -40,9 +41,10 @@ namespace Waldem
         void Init(const WindowProps& props);
         void Shutdown();
     
+        void RequestEvents();
         void ProcessEvents();
 
-    private:
         WindowData Data;
+        WArray<SDL_Event*> Events;
     };
 }
