@@ -9,6 +9,7 @@
 #include <SDL.h>
 #include <SDL_syswm.h>
 #include "backends/imgui_impl_sdl2.h"
+#include "Waldem/Events/FileEvent.h"
 
 namespace Waldem
 {
@@ -182,6 +183,12 @@ namespace Waldem
             case SDL_MOUSEWHEEL:
                 {
                     MouseScrolledEvent event(sdlEvent->wheel.x, sdlEvent->wheel.y);
+                    Data.EventCallback(event);
+                    break;
+                }
+            case SDL_DROPFILE:
+                {
+                    FileDroppedEvent event(sdlEvent->drop.file);
                     Data.EventCallback(event);
                     break;
                 }

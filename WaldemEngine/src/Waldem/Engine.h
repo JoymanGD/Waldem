@@ -40,6 +40,7 @@ namespace Waldem
 		Renderer CurrentRenderer;
         ECSManager CoreECSManager;
 		ResourceManager ResourceManager;
+		Audio AudioManager;
 		Mono MonoRuntime;
 		bool IsRunning = true;
 		LayerStack LayerStack;

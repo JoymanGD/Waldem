@@ -1,5 +1,5 @@
 #pragma once
-#include "Waldem/Import/ImageImporter.h"
+#include "Waldem/ContentManagement/ImageImporter.h"
 #include "Waldem/Renderer/Buffer.h"
 #include "Waldem/Renderer/RenderTarget.h"
 #include "Waldem/Serialization/Asset.h"
@@ -132,6 +132,6 @@ namespace Waldem
         inline static WMap<WString, Texture2D*> Textures;
         inline static WMap<WString, Buffer*> Buffers;
 
-        inline static ImageImporter ImageImporter;
+        inline static CImageImporter ImageImporter;
     };
 }

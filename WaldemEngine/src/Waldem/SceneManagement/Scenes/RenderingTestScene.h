@@ -1,12 +1,13 @@
 #pragma once
 
 #include "Waldem/Audio/Audio.h"
+#include "Waldem/ContentManagement/ModelImporter.h"
 #include "Waldem/ECS/Components/AudioSource.h"
 #include "Waldem/SceneManagement/Scene.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/Input/InputManager.h"
 #include "Waldem/Resources/ResourceManager.h"
-#include "Waldem/Import/ModelImporter.h"
+#include "Waldem/ContentManagement/ModelImporter.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
 #include "Waldem/ECS/Components/Light.h"
 #include "Waldem/ECS/Components/Transform.h"
@@ -20,8 +21,8 @@ namespace Waldem
     {
     public:
         void Initialize(InputManager* inputManager, ECSManager* ecsManager, ResourceManager* resourceManager) override
-        {        	
-			ModelImporter importer;
+        {
+			CModelImporter importer;
 
 			//Entities
 			auto sponzaModel = importer.Import("Sponza/Sponza2.gltf");
@@ -74,7 +75,6 @@ namespace Waldem
         	pointLight1Entity->Add<Transform>(Vector3(2, 1, 2));
         	pointLight1Entity->Add<Light>(Vector3(1, .3f, 1), 10.0f, 2.0f);
 			Entities.Add(pointLight1Entity);
-        	pointLight1Entity->Add<AudioSource>(Audio::Load("Nuvaon"), 20.0f, true, 1.0f, true);
 
         	//point light 2
         	auto pointLight2Entity = ecsManager->CreateEntity("PointLight2");
