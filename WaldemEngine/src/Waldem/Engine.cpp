@@ -23,7 +23,8 @@ namespace Waldem
 	void Engine::Initialize()
 	{
 		PlatformInitializer::Initialize();
-		Audio::Create();
+
+		AudioManager = Audio();
 
 		MonoRuntime = Mono();
 		// MonoRuntime.Initialize();

@@ -20,27 +20,23 @@ namespace Waldem
         {
             if (ImGui::Begin("Content", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus))
             {
-                // Search bar
                 static char searchBuffer[128] = "";
                 ImGui::InputTextWithHint("##Search", "Search...", searchBuffer, IM_ARRAYSIZE(searchBuffer));
                 ImGui::Separator();
 
-                // Scrollable area for assets
                 ImGui::BeginChild("AssetList", ImVec2(0, 0), true, ImGuiWindowFlags_HorizontalScrollbar);
 
-                // Example assets (replace with actual asset data)
-                const char* assets[] = { "Texture1.png", "Texture2.png", "Model1.obj", "Script1.cs", "Material1.mat" };
-
-                for (int i = 0; i < IM_ARRAYSIZE(assets); i++)
+                //change to caching instead of iterating every frame
+                for (const auto& entry : std::filesystem::recursive_directory_iterator(CONTENT_PATH))
                 {
-                    // Filter assets based on search
-                    if (strlen(searchBuffer) > 0 && strstr(assets[i], searchBuffer) == nullptr)
-                        continue;
-
-                    // Display asset as selectable item
-                    if (ImGui::Selectable(assets[i]))
+                    if (entry.is_regular_file() && entry.path().extension() == ".ass")
                     {
-                        // Handle asset selection logic here
+                        if (strlen(searchBuffer) > 0 && entry.path().filename().string().find(searchBuffer) == std::string::npos)
+                            continue;
+
+                        if (ImGui::Selectable(entry.path().filename().string().c_str()))
+                        {
+                        }
                     }
                 }
 

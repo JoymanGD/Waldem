@@ -3,6 +3,7 @@
 #include <fstream>
 #include <filesystem>
 #include "imgui.h"
+#include "Waldem/ContentManagement/ContentManager.h"
 #include "Waldem/ECS/Components/AudioListener.h"
 #include "Waldem/ECS/Systems/UISystems/EditorControlSystem.h"
 #include "Waldem/ECS/Systems/UISystems/EditorGuizmoSystem.h"
@@ -16,6 +17,7 @@
 #include "Waldem/ECS/Systems/DrawSystems/ScreenQuadSystem.h"
 #include "Waldem/ECS/Systems/UpdateSystems/SpatialAudioSystem.h"
 #include "Waldem/Events/ApplicationEvent.h"
+#include "Waldem/Events/FileEvent.h"
 #include "Waldem/Input/InputManager.h"
 #include "Waldem/Layers/Layer.h"
 #include "Waldem/Renderer/Renderer.h"
@@ -29,6 +31,7 @@ namespace Waldem
     private:
         CWindow* Window;
         GameScene* CurrentScene = nullptr;
+        CContentManager ContentManager;
         bool BlockUIEvents = true;
         Path CurrentScenePath;
         bool ImportSceneThisFrame = false;
@@ -162,6 +165,12 @@ namespace Waldem
                     }
                     
                     event.Handled = InputManager.Broadcast(event);
+                    break;
+                }
+            case EventType::FileDropped:
+                {
+                    FileDroppedEvent& fileDroppedEvent = static_cast<FileDroppedEvent&>(event);
+                    event.Handled = ContentManager.ImportAsset(fileDroppedEvent.GetPath());
                     break;
                 }
             }

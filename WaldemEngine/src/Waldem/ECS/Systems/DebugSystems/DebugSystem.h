@@ -41,7 +41,6 @@ namespace Waldem
         RenderTarget* DebugRT_9 = nullptr;
         Point3 GroupCount;
         DebugSystemConstantBuffer ConstantBufferData;
-        AudioClip* TestClip;
         
     public:
         DebugSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
@@ -107,8 +106,6 @@ namespace Waldem
 
         void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
         {
-            TestClip = Audio::Load("Content/Sounds/TestSound");
-            
             CacheFrustrumCorners();
 
             inputManager->SubscribeToMouseMoveEvent([&](Vector2 mousePos)
@@ -193,14 +190,6 @@ namespace Waldem
                 if(isPressed)
                 {
                     ConstantBufferData.DebugRTIndex = 9;
-                }
-            });
-
-            inputManager->SubscribeToKeyEvent(KEY_1, [&](bool isPressed)
-            {
-                if(isPressed)
-                {
-                    Audio::Play(TestClip, 1.0f, false);
                 }
             });
 

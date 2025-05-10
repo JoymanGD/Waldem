@@ -113,6 +113,17 @@ namespace Waldem
             return *this;
         }
 
+        void Prepend(const void* data, size_t size)
+        {
+            unsigned char* newData = new unsigned char[Size + size];
+            memcpy(newData, data, size);             // Copy new data to the beginning
+            memcpy(newData + size, Data, Size);      // Append existing data after it
+            delete[] Data;
+            Data = newData;
+            Size += size;
+            Cursor += size; // Optional: move cursor forward if it should remain at the same logical place
+        }
+
         ~WDataBuffer()
         {
             delete[] Data;
