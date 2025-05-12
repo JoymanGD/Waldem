@@ -11,7 +11,7 @@ namespace Waldem
 
         virtual void OnResize(Vector2 size) {}
         
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
+        void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
         {
             IsInitialized = true;
         }

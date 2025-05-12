@@ -50,7 +50,7 @@ namespace Waldem
             DummyTexture = Renderer::CreateTexture("DummyTexture", width, height, format, sizeof(Vector4), image_data); 
         }
         
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
+        void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
         {
             if(Manager->EntitiesWith<MeshComponent, Transform>().Count() <= 0)
                 return;

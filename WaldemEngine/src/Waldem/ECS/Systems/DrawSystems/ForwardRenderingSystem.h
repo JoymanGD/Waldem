@@ -24,7 +24,7 @@ namespace Waldem
     public:
         ForwardRenderingSystem(ECSManager* eCSManager) : DrawSystem(eCSManager) {}
         
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
+        void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
         {
             RadianceRT = resourceManager->GetRenderTarget("RadianceRT");
             

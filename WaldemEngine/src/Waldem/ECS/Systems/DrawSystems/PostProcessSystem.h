@@ -28,7 +28,7 @@ namespace Waldem
     public:
         PostProcessSystem(ECSManager* eCSManager) : DrawSystem(eCSManager) {}
         
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
+        void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
         {
             for (auto [entity, bloom] : Manager->EntitiesWith<BloomPostProcess>())
             {

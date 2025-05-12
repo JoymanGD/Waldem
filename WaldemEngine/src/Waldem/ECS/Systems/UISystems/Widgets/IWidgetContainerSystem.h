@@ -15,11 +15,11 @@ namespace Waldem
         void AddChild(IWidgetSystem* child) { Children.Add(child); }
         void RemoveChild(IWidgetSystem* child) { Children.Remove(child); }
         
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
+        void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
         {
             for(auto child : Children)
             {
-                child->Initialize(inputManager, resourceManager);
+                child->Initialize(inputManager, resourceManager, contentManager);
             }
         }
 

@@ -498,7 +498,7 @@ namespace Waldem
     public:
         CollisionSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
         
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
+        void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
         {
             WArray<AABB> boundingBoxes;
             WArray<WString> names;

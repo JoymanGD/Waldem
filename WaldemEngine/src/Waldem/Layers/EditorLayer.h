@@ -31,7 +31,6 @@ namespace Waldem
     private:
         CWindow* Window;
         GameScene* CurrentScene = nullptr;
-        CContentManager ContentManager;
         bool BlockUIEvents = true;
         Path CurrentScenePath;
         bool ImportSceneThisFrame = false;
@@ -118,7 +117,7 @@ namespace Waldem
 
                 //TODO: this is a temporary solution, replace with only OnResize call
                 system->Deinitialize();
-                system->Initialize(&InputManager, CurrentResourceManager);
+                system->Initialize(&InputManager, CurrentResourceManager, &ContentManager);
             }
             
             for (auto [entity, camera] : CurrentECSManager->EntitiesWith<Camera>())
@@ -169,8 +168,7 @@ namespace Waldem
                 }
             case EventType::FileDropped:
                 {
-                    FileDroppedEvent& fileDroppedEvent = static_cast<FileDroppedEvent&>(event);
-                    event.Handled = ContentManager.ImportAsset(fileDroppedEvent.GetPath());
+                    event.Handled = ContentManager.Broadcast(event);
                     break;
                 }
             }

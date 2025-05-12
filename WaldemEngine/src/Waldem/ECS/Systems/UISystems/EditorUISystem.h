@@ -46,9 +46,9 @@ namespace Waldem
            });
         }
         
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
+        void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
         {
-            MainWidget->Initialize(inputManager, resourceManager);
+            MainWidget->Initialize(inputManager, resourceManager, contentManager);
         }
 
         void Deinitialize() override

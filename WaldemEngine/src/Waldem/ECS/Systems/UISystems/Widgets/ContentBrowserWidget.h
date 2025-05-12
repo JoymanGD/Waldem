@@ -8,21 +8,36 @@ namespace Waldem
     {
     private:
         ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
+        Path CurrentPath = CONTENT_PATH;
+        std::optional<Path> HoveredDropTargetFolder;
+        std::optional<Path> SelectedFolderTreePath;
+        std::optional<Path> SelectedAssetListPath;
+        float CellSize = 100.0f;
+        float Padding = 16.0f;
         
     public:
         ContentBrowserWidget(ECSManager* eCSManager) : IWidgetSystem(eCSManager) {}
 
         WString GetName() override { return "Content"; }
 
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override {}
+        void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
+        {
+            contentManager->SubscribeToFileDroppedEvent([contentManager, this](Path path)
+            {
+                Path target = HoveredDropTargetFolder.has_value() ? HoveredDropTargetFolder.value() : CurrentPath;
+                
+                if(!target.empty())
+                {
+                    contentManager->ImportAssetTo(path, target);
+                    SelectedAssetListPath = target;
+                }
+            });
+        }
 
         void Update(float deltaTime) override
         {
             if (ImGui::Begin("Content", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus))
             {
-                static std::filesystem::path contentPath = CONTENT_PATH;
-                static std::filesystem::path currentPath = contentPath;
-                
                 static char searchBuffer[128] = "";
 
                 ImGui::InputTextWithHint("##Search", "Search...", searchBuffer, IM_ARRAYSIZE(searchBuffer));
@@ -30,7 +45,7 @@ namespace Waldem
 
                 ImGui::BeginChild("FoldersTree", ImVec2(200, 0), true, ImGuiWindowFlags_HorizontalScrollbar);
 
-                for (const auto& entry : std::filesystem::directory_iterator(contentPath))
+                for (const auto& entry : std::filesystem::directory_iterator(CONTENT_PATH))
                 {
                     if (entry.is_directory())
                     {
@@ -39,9 +54,11 @@ namespace Waldem
 
                         const std::string folderName = entry.path().filename().string() + "/";
 
-                        if (ImGui::Selectable(folderName.c_str()))
+                        bool isSelected = SelectedFolderTreePath.has_value() && SelectedFolderTreePath.value() == entry.path();
+                        if (ImGui::Selectable(folderName.c_str(), isSelected))
                         {
-                            currentPath = entry.path();
+                            SelectedFolderTreePath = entry.path(); // Select on single click
+                            CurrentPath = entry.path(); // Enter folder only on double-click
                         }
 
                         // Context menu for folders
@@ -62,13 +79,15 @@ namespace Waldem
 
                 ImGui::BeginChild("AssetList", ImVec2(0, 0), true, ImGuiWindowFlags_HorizontalScrollbar);
 
-                if (currentPath != contentPath)
+                HoveredDropTargetFolder.reset();
+                
+                if (CurrentPath != CONTENT_PATH)
                 {
                     ImGui::Selectable("..");
 
                     if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                     {
-                        currentPath = currentPath.parent_path();
+                        CurrentPath = CurrentPath.parent_path();
                     }
                 }
 
@@ -100,7 +119,7 @@ namespace Waldem
                     {
                         if (strlen(folderName) > 0)
                         {
-                            std::filesystem::path newFolderPath = currentPath / folderName;
+                            std::filesystem::path newFolderPath = CurrentPath / folderName;
                             if (!std::filesystem::exists(newFolderPath))
                                 std::filesystem::create_directory(newFolderPath);
                         }
@@ -119,16 +138,13 @@ namespace Waldem
                     ImGui::EndPopup();
                 }
 
-                const float cellSize = 100.0f;
-                const float padding = 16.0f;
-
                 float panelWidth = ImGui::GetContentRegionAvail().x;
-                int columnCount = (int)(panelWidth / (cellSize + padding));
+                int columnCount = (int)(panelWidth / (CellSize + Padding));
                 if (columnCount < 1) columnCount = 1;
 
                 int itemIndex = 0;
 
-                for (const auto& entry : std::filesystem::directory_iterator(currentPath))
+                for (const auto& entry : std::filesystem::directory_iterator(CurrentPath))
                 {
                     bool isFolder = entry.is_directory();
                     const std::string itemName = entry.path().filename().string();
@@ -138,8 +154,45 @@ namespace Waldem
                     ImGui::BeginGroup();
 
                     std::string id = "##Icon_" + entry.path().string();
+
                     // Simulate icon box
-                    ImGui::Button(id.c_str(), ImVec2(cellSize, cellSize));
+                    if (ImGui::Button(id.c_str(), ImVec2(CellSize, CellSize)))
+                    {
+                        
+                    }
+
+                    // --- Selection on single click ---
+                    if (ImGui::IsItemClicked())
+                    {
+                        SelectedAssetListPath = entry.path(); // Works for both files and folders
+                    }
+
+                    // --- Highlight selected item ---
+                    if (SelectedAssetListPath.has_value() && SelectedAssetListPath.value() == entry.path())
+                    {
+                        ImDrawList* drawList = ImGui::GetWindowDrawList();
+                        drawList->AddRect(
+                            ImGui::GetItemRectMin(), ImGui::GetItemRectMax(),
+                            IM_COL32(255, 255, 0, 255), 4.0f // Yellow border
+                        );
+                    }
+
+                    // --- Double-click to enter folder or open file ---
+                    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                    {
+                        if (isFolder)
+                            CurrentPath = entry.path(); // Enter folder
+                        else
+                        {
+                            // Handle opening the asset (if applicable)
+                        }
+                    }
+
+                    // If it's a folder and being hovered, remember it
+                    if (isFolder && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup))
+                    {
+                        HoveredDropTargetFolder = entry.path();
+                    }
                     
                     // Drag and drop
                     if (entry.path().extension() == ".ass" && ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
@@ -161,14 +214,14 @@ namespace Waldem
                     if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                     {
                         if (isFolder)
-                            currentPath = entry.path();
+                            CurrentPath = entry.path();
                         else
                         {
                             // Handle asset open
                         }
                     }
 
-                    ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + cellSize);
+                    ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + CellSize);
                     ImGui::TextWrapped("%s", itemName.c_str());
                     ImGui::PopTextWrapPos();
 
@@ -180,9 +233,17 @@ namespace Waldem
                         ImGui::SameLine();
                 }
 
+                if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) &&
+                    ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
+                    !ImGui::IsAnyItemHovered())
+                {
+                    SelectedAssetListPath.reset(); // Deselect
+                }
+
                 ImGui::EndChild();
             }
             ImGui::End();
+
         }
     };
 }
