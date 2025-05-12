@@ -31,7 +31,7 @@ namespace Waldem
     public:
         ShadowmapRenderingSystem(ECSManager* eCSManager) : DrawSystem(eCSManager) {}
         
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
+        void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
         {
             this->resourceManager = resourceManager;
             

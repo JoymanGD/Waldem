@@ -13,7 +13,7 @@ namespace Waldem
 
         WString GetName() override { return "Ocean"; }
         
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override {}
+        void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override {}
 
         void Update(float deltaTime) override
         {

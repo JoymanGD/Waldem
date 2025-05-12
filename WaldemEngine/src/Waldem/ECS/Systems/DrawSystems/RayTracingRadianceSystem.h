@@ -35,7 +35,7 @@ namespace Waldem
     public:
         RayTracingRadianceSystem(ECSManager* eCSManager) : DrawSystem(eCSManager) {}
         
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
+        void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
         {
             if(Manager->EntitiesWith<MeshComponent, Transform>().Count() <= 0)
                 return;

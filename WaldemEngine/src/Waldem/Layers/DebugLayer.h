@@ -51,7 +51,7 @@ namespace Waldem
         {
             for (ISystem* system : UpdateSystems)
             {
-                system->Initialize(&InputManager, CurrentResourceManager);
+                system->Initialize(&InputManager, CurrentResourceManager, &ContentManager);
             }
 
 			Initialized = true;

@@ -14,7 +14,7 @@ namespace Waldem
         WString GetName() override { return "Transform"; }
         bool IsRemovable() override { return false; }
 
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override {}
+        void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override {}
 
         void Update(float deltaTime) override
         {

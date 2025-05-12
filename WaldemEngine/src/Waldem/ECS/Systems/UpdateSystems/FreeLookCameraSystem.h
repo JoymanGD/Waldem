@@ -19,7 +19,7 @@ namespace Waldem
     public:
         FreeLookCameraSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
         
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
+        void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
         {
             inputManager->SubscribeToKeyEvent(W, [&](bool isPressed) 
             {

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <ecs.h>
+
+#include "Waldem/ContentManagement/ContentManager.h"
 #include "Waldem/Resources/ResourceManager.h"
 #include "Waldem/SceneManagement/Scene.h"
 #include "Waldem/ECS/ECSManager.h"
@@ -14,7 +16,7 @@ namespace Waldem
         bool IsInitialized = false;
     public:
         ISystem(ECSManager* manager) : Manager(manager) {}
-        virtual void Initialize(InputManager* inputManager, ResourceManager* resourceManager) = 0;
+        virtual void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) = 0;
         virtual void Deinitialize() {}
         virtual void Update(float deltaTime) = 0;
     };

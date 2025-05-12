@@ -13,7 +13,7 @@ namespace Waldem
     public:
         NameWidget(ECSManager* eCSManager) : ComponentWidget(eCSManager) {}
         
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override {}
+        void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override {}
 
         WString GetName() override { return "Name"; }
         bool IsRemovable() override { return false; }

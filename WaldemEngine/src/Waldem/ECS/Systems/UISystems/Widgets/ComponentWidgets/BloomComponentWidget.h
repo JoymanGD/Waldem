@@ -12,7 +12,7 @@ namespace Waldem
     public:
         BloomComponentWidget(ECSManager* eCSManager) : ComponentWidget(eCSManager) {}
         
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override {}
+        void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override {}
 
         WString GetName() override { return "Bloom"; }
 
