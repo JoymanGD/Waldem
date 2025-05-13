@@ -1,5 +1,4 @@
 #pragma once
-#include "Waldem/ECS/Systems/UISystems/Widgets/IWidgetContainerSystem.h"
 #include "Waldem/ECS/Systems/System.h"
 
 namespace Waldem
