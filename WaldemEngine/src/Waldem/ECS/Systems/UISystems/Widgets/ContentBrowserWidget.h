@@ -8,6 +8,7 @@ namespace Waldem
     {
     private:
         ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
+        char SearchBuffer[128] = "";
         Path CurrentPath = CONTENT_PATH;
         std::optional<Path> HoveredDropTargetFolder;
         std::optional<Path> SelectedFolderTreePath;
@@ -72,220 +73,191 @@ namespace Waldem
             }
         }
 
+        void RenderAssetsList()
+        {
+            HoveredDropTargetFolder.reset();
+            
+            if (CurrentPath != CONTENT_PATH)
+            {
+                ImGui::Selectable("..");
+
+                if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                {
+                    CurrentPath = CurrentPath.parent_path();
+                }
+            }
+
+            static bool openCreateNewFolderPopup = false;
+            
+            if (ImGui::BeginPopupContextWindow("CreateNewFolderContextWindow"))
+            {
+                if (ImGui::MenuItem("Create Folder"))
+                {
+                    openCreateNewFolderPopup = true;
+                }
+                
+                ImGui::EndPopup();
+            }
+
+            if(openCreateNewFolderPopup)
+            {
+                ImGui::OpenPopup("CreateNewFolderPopup");
+                openCreateNewFolderPopup = false;
+            }
+
+            if (ImGui::BeginPopup("CreateNewFolderPopup"))
+            {
+                static char folderName[128] = "";
+
+                ImGui::InputText("Folder Name", folderName, IM_ARRAYSIZE(folderName));
+
+                if (ImGui::Button("Create"))
+                {
+                    if (strlen(folderName) > 0)
+                    {
+                        std::filesystem::path newFolderPath = CurrentPath / folderName;
+                        if (!std::filesystem::exists(newFolderPath))
+                            std::filesystem::create_directory(newFolderPath);
+                    }
+
+                    folderName[0] = '\0';
+                    ImGui::CloseCurrentPopup();
+                }
+
+                ImGui::SameLine();
+                if (ImGui::Button("Cancel"))
+                {
+                    folderName[0] = '\0';
+                    ImGui::CloseCurrentPopup();
+                }
+
+                ImGui::EndPopup();
+            }
+
+            float panelWidth = ImGui::GetContentRegionAvail().x;
+            int columnCount = (int)(panelWidth / (CellSize + Padding));
+            if (columnCount < 1) columnCount = 1;
+
+            int itemIndex = 0;
+
+            for (const auto& entry : std::filesystem::directory_iterator(CurrentPath))
+            {
+                bool isFolder = entry.is_directory();
+                const std::string itemName = entry.path().filename().string();
+                if (strlen(SearchBuffer) > 0 && itemName.find(SearchBuffer) == std::string::npos)
+                    continue;
+
+                ImGui::BeginGroup();
+
+                std::string id = "##Icon_" + entry.path().string();
+
+                // Simulate icon box
+                if (ImGui::Button(id.c_str(), ImVec2(CellSize, CellSize)))
+                {
+                    
+                }
+
+                // --- Selection on single click ---
+                if (ImGui::IsItemClicked())
+                {
+                    SelectedAssetListPath = entry.path(); // Works for both files and folders
+                }
+
+                // --- Highlight selected item ---
+                if (SelectedAssetListPath.has_value() && SelectedAssetListPath.value() == entry.path())
+                {
+                    ImDrawList* drawList = ImGui::GetWindowDrawList();
+                    drawList->AddRect(
+                        ImGui::GetItemRectMin(), ImGui::GetItemRectMax(),
+                        IM_COL32(255, 255, 0, 255), 4.0f // Yellow border
+                    );
+                }
+
+                // --- Double-click to enter folder or open file ---
+                if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                {
+                    if (isFolder)
+                        CurrentPath = entry.path(); // Enter folder
+                    else
+                    {
+                        // Handle opening the asset (if applicable)
+                    }
+                }
+
+                // If it's a folder and being hovered, remember it
+                if (isFolder && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup))
+                {
+                    HoveredDropTargetFolder = entry.path();
+                }
+                
+                // Drag and drop
+                if (entry.path().extension() == ".ass" && ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+                {
+                    std::string fullPath = entry.path().string();
+                    ImGui::SetDragDropPayload("CONTENT_BROWSER_ASSET", fullPath.c_str(), fullPath.size() + 1);
+                    ImGui::Text("%s", itemName.c_str());
+                    ImGui::EndDragDropSource();
+                }
+
+                // Context menu
+                if (ImGui::BeginPopupContextItem())
+                {
+                    if (ImGui::MenuItem("Delete"))
+                        std::filesystem::remove_all(entry.path());
+                    ImGui::EndPopup();
+                }
+
+                if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                {
+                    if (isFolder)
+                        CurrentPath = entry.path();
+                    else
+                    {
+                        // Handle asset open
+                    }
+                }
+
+                ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + CellSize);
+                ImGui::TextWrapped("%s", itemName.c_str());
+                ImGui::PopTextWrapPos();
+
+                ImGui::EndGroup();
+
+                // Layout in grid
+                itemIndex++;
+                if (itemIndex % columnCount != 0)
+                    ImGui::SameLine();
+            }
+
+            if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) &&
+                ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
+                !ImGui::IsAnyItemHovered())
+            {
+                SelectedAssetListPath.reset(); // Deselect
+            }
+        }
+
         void Update(float deltaTime) override
         {
             if (ImGui::Begin("Content", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus))
             {
-                static char searchBuffer[128] = "";
-
-                ImGui::InputTextWithHint("##Search", "Search...", searchBuffer, IM_ARRAYSIZE(searchBuffer));
+                //search bar
+                ImGui::InputTextWithHint("##Search", "Search...", SearchBuffer, IM_ARRAYSIZE(SearchBuffer));
                 ImGui::Separator();
 
-                // ImGui::BeginChild("FoldersTree", ImVec2(200, 0), true, ImGuiWindowFlags_HorizontalScrollbar);
-                //
-                // for (const auto& entry : std::filesystem::directory_iterator(CONTENT_PATH))
-                // {
-                //     if (entry.is_directory())
-                //     {
-                //         if (strlen(searchBuffer) > 0 && entry.path().filename().string().find(searchBuffer) == std::string::npos)
-                //             continue;
-                //
-                //         const std::string folderName = entry.path().filename().string() + "/";
-                //
-                //         bool isSelected = SelectedFolderTreePath.has_value() && SelectedFolderTreePath.value() == entry.path();
-                //         if (ImGui::Selectable(folderName.c_str(), isSelected))
-                //         {
-                //             SelectedFolderTreePath = entry.path(); // Select on single click
-                //             CurrentPath = entry.path(); // Enter folder only on double-click
-                //         }
-                //
-                //         // Context menu for folders
-                //         if (ImGui::BeginPopupContextItem())
-                //         {
-                //             if (ImGui::MenuItem("Delete"))
-                //             {
-                //                 std::filesystem::remove_all(entry.path());
-                //             }
-                //             ImGui::EndPopup();
-                //         }
-                //     }
-                // }
-                //
-                // ImGui::EndChild();
-
+                //folders tree
                 ImGui::BeginChild("FoldersTree", ImVec2(200, 0), true, ImGuiWindowFlags_HorizontalScrollbar);
                 RenderFolderTree(CONTENT_PATH);
                 ImGui::EndChild();
 
                 ImGui::SameLine();
 
+                //assets list
                 ImGui::BeginChild("AssetList", ImVec2(0, 0), true, ImGuiWindowFlags_HorizontalScrollbar);
-
-                HoveredDropTargetFolder.reset();
-                
-                if (CurrentPath != CONTENT_PATH)
-                {
-                    ImGui::Selectable("..");
-
-                    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-                    {
-                        CurrentPath = CurrentPath.parent_path();
-                    }
-                }
-
-                static bool openCreateNewFolderPopup = false;
-                
-                if (ImGui::BeginPopupContextWindow("CreateNewFolderContextWindow"))
-                {
-                    if (ImGui::MenuItem("Create Folder"))
-                    {
-                        openCreateNewFolderPopup = true;
-                    }
-                    
-                    ImGui::EndPopup();
-                }
-
-                if(openCreateNewFolderPopup)
-                {
-                    ImGui::OpenPopup("CreateNewFolderPopup");
-                    openCreateNewFolderPopup = false;
-                }
-
-                if (ImGui::BeginPopup("CreateNewFolderPopup"))
-                {
-                    static char folderName[128] = "";
-
-                    ImGui::InputText("Folder Name", folderName, IM_ARRAYSIZE(folderName));
-
-                    if (ImGui::Button("Create"))
-                    {
-                        if (strlen(folderName) > 0)
-                        {
-                            std::filesystem::path newFolderPath = CurrentPath / folderName;
-                            if (!std::filesystem::exists(newFolderPath))
-                                std::filesystem::create_directory(newFolderPath);
-                        }
-
-                        folderName[0] = '\0';
-                        ImGui::CloseCurrentPopup();
-                    }
-
-                    ImGui::SameLine();
-                    if (ImGui::Button("Cancel"))
-                    {
-                        folderName[0] = '\0';
-                        ImGui::CloseCurrentPopup();
-                    }
-
-                    ImGui::EndPopup();
-                }
-
-                float panelWidth = ImGui::GetContentRegionAvail().x;
-                int columnCount = (int)(panelWidth / (CellSize + Padding));
-                if (columnCount < 1) columnCount = 1;
-
-                int itemIndex = 0;
-
-                for (const auto& entry : std::filesystem::directory_iterator(CurrentPath))
-                {
-                    bool isFolder = entry.is_directory();
-                    const std::string itemName = entry.path().filename().string();
-                    if (strlen(searchBuffer) > 0 && itemName.find(searchBuffer) == std::string::npos)
-                        continue;
-
-                    ImGui::BeginGroup();
-
-                    std::string id = "##Icon_" + entry.path().string();
-
-                    // Simulate icon box
-                    if (ImGui::Button(id.c_str(), ImVec2(CellSize, CellSize)))
-                    {
-                        
-                    }
-
-                    // --- Selection on single click ---
-                    if (ImGui::IsItemClicked())
-                    {
-                        SelectedAssetListPath = entry.path(); // Works for both files and folders
-                    }
-
-                    // --- Highlight selected item ---
-                    if (SelectedAssetListPath.has_value() && SelectedAssetListPath.value() == entry.path())
-                    {
-                        ImDrawList* drawList = ImGui::GetWindowDrawList();
-                        drawList->AddRect(
-                            ImGui::GetItemRectMin(), ImGui::GetItemRectMax(),
-                            IM_COL32(255, 255, 0, 255), 4.0f // Yellow border
-                        );
-                    }
-
-                    // --- Double-click to enter folder or open file ---
-                    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-                    {
-                        if (isFolder)
-                            CurrentPath = entry.path(); // Enter folder
-                        else
-                        {
-                            // Handle opening the asset (if applicable)
-                        }
-                    }
-
-                    // If it's a folder and being hovered, remember it
-                    if (isFolder && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup))
-                    {
-                        HoveredDropTargetFolder = entry.path();
-                    }
-                    
-                    // Drag and drop
-                    if (entry.path().extension() == ".ass" && ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
-                    {
-                        std::string fullPath = entry.path().string();
-                        ImGui::SetDragDropPayload("CONTENT_BROWSER_ASSET", fullPath.c_str(), fullPath.size() + 1);
-                        ImGui::Text("%s", itemName.c_str());
-                        ImGui::EndDragDropSource();
-                    }
-
-                    // Context menu
-                    if (ImGui::BeginPopupContextItem())
-                    {
-                        if (ImGui::MenuItem("Delete"))
-                            std::filesystem::remove_all(entry.path());
-                        ImGui::EndPopup();
-                    }
-
-                    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-                    {
-                        if (isFolder)
-                            CurrentPath = entry.path();
-                        else
-                        {
-                            // Handle asset open
-                        }
-                    }
-
-                    ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + CellSize);
-                    ImGui::TextWrapped("%s", itemName.c_str());
-                    ImGui::PopTextWrapPos();
-
-                    ImGui::EndGroup();
-
-                    // Layout in grid
-                    itemIndex++;
-                    if (itemIndex % columnCount != 0)
-                        ImGui::SameLine();
-                }
-
-                if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) &&
-                    ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
-                    !ImGui::IsAnyItemHovered())
-                {
-                    SelectedAssetListPath.reset(); // Deselect
-                }
-
+                RenderAssetsList();
                 ImGui::EndChild();
             }
             ImGui::End();
-
         }
     };
 }
