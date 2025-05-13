@@ -54,6 +54,11 @@ namespace Waldem
                         CurrentPath = entry.path();
                     }
 
+                    if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup))
+                    {
+                        HoveredDropTargetFolder = entry.path();
+                    }
+
                     // Context menu for folders
                     if (ImGui::BeginPopupContextItem())
                     {
@@ -74,9 +79,7 @@ namespace Waldem
         }
 
         void RenderAssetsList()
-        {
-            HoveredDropTargetFolder.reset();
-            
+        {            
             if (CurrentPath != CONTENT_PATH)
             {
                 ImGui::Selectable("..");
@@ -241,6 +244,8 @@ namespace Waldem
         {
             if (ImGui::Begin("Content", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus))
             {
+                HoveredDropTargetFolder.reset();
+                
                 //search bar
                 ImGui::InputTextWithHint("##Search", "Search...", SearchBuffer, IM_ARRAYSIZE(SearchBuffer));
                 ImGui::Separator();
