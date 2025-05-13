@@ -34,6 +34,44 @@ namespace Waldem
             });
         }
 
+        void RenderFolderTree(const Path& path)
+        {
+            for (const auto& entry : std::filesystem::directory_iterator(path))
+            {
+                if (entry.is_directory())
+                {
+                    const std::string folderName = entry.path().filename().string() + "/";
+
+                    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
+                    if (SelectedFolderTreePath.has_value() && SelectedFolderTreePath.value() == entry.path())
+                        flags |= ImGuiTreeNodeFlags_Selected;
+
+                    bool isOpen = ImGui::TreeNodeEx(folderName.c_str(), flags);
+                    if (ImGui::IsItemClicked())
+                    {
+                        SelectedFolderTreePath = entry.path();
+                        CurrentPath = entry.path();
+                    }
+
+                    // Context menu for folders
+                    if (ImGui::BeginPopupContextItem())
+                    {
+                        if (ImGui::MenuItem("Delete"))
+                        {
+                            std::filesystem::remove_all(entry.path());
+                        }
+                        ImGui::EndPopup();
+                    }
+
+                    if (isOpen)
+                    {
+                        RenderFolderTree(entry.path()); // Recursive call for subfolders
+                        ImGui::TreePop();
+                    }
+                }
+            }
+        }
+
         void Update(float deltaTime) override
         {
             if (ImGui::Begin("Content", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus))
@@ -43,36 +81,40 @@ namespace Waldem
                 ImGui::InputTextWithHint("##Search", "Search...", searchBuffer, IM_ARRAYSIZE(searchBuffer));
                 ImGui::Separator();
 
+                // ImGui::BeginChild("FoldersTree", ImVec2(200, 0), true, ImGuiWindowFlags_HorizontalScrollbar);
+                //
+                // for (const auto& entry : std::filesystem::directory_iterator(CONTENT_PATH))
+                // {
+                //     if (entry.is_directory())
+                //     {
+                //         if (strlen(searchBuffer) > 0 && entry.path().filename().string().find(searchBuffer) == std::string::npos)
+                //             continue;
+                //
+                //         const std::string folderName = entry.path().filename().string() + "/";
+                //
+                //         bool isSelected = SelectedFolderTreePath.has_value() && SelectedFolderTreePath.value() == entry.path();
+                //         if (ImGui::Selectable(folderName.c_str(), isSelected))
+                //         {
+                //             SelectedFolderTreePath = entry.path(); // Select on single click
+                //             CurrentPath = entry.path(); // Enter folder only on double-click
+                //         }
+                //
+                //         // Context menu for folders
+                //         if (ImGui::BeginPopupContextItem())
+                //         {
+                //             if (ImGui::MenuItem("Delete"))
+                //             {
+                //                 std::filesystem::remove_all(entry.path());
+                //             }
+                //             ImGui::EndPopup();
+                //         }
+                //     }
+                // }
+                //
+                // ImGui::EndChild();
+
                 ImGui::BeginChild("FoldersTree", ImVec2(200, 0), true, ImGuiWindowFlags_HorizontalScrollbar);
-
-                for (const auto& entry : std::filesystem::directory_iterator(CONTENT_PATH))
-                {
-                    if (entry.is_directory())
-                    {
-                        if (strlen(searchBuffer) > 0 && entry.path().filename().string().find(searchBuffer) == std::string::npos)
-                            continue;
-
-                        const std::string folderName = entry.path().filename().string() + "/";
-
-                        bool isSelected = SelectedFolderTreePath.has_value() && SelectedFolderTreePath.value() == entry.path();
-                        if (ImGui::Selectable(folderName.c_str(), isSelected))
-                        {
-                            SelectedFolderTreePath = entry.path(); // Select on single click
-                            CurrentPath = entry.path(); // Enter folder only on double-click
-                        }
-
-                        // Context menu for folders
-                        if (ImGui::BeginPopupContextItem())
-                        {
-                            if (ImGui::MenuItem("Delete"))
-                            {
-                                std::filesystem::remove_all(entry.path());
-                            }
-                            ImGui::EndPopup();
-                        }
-                    }
-                }
-
+                RenderFolderTree(CONTENT_PATH);
                 ImGui::EndChild();
 
                 ImGui::SameLine();
