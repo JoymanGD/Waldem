@@ -22,6 +22,7 @@ namespace Waldem
     {
     public:
         WMap<WString, ComponentEntry> Entries;
+        WArray<WString> ComponentNames;
 
         static ComponentRegistry& Get()
         {
@@ -32,7 +33,7 @@ namespace Waldem
         void RegisterAllComponents();
 
         template <typename T>
-        void RegisterComponent(const std::string& typeName)
+        void RegisterComponent(const WString& typeName)
         {
             Entries[typeName] = ComponentEntry{
                 []() -> IComponentBase* {
@@ -45,6 +46,8 @@ namespace Waldem
                     return entity.Has<T>();
                 }
             };
+
+            ComponentNames.Add(typeName);
         }
 
         IComponentBase* CreateComponent(const WString& typeName)

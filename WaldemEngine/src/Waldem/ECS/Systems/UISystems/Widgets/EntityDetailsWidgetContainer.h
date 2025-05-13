@@ -1,6 +1,14 @@
 #pragma once
+#include <typeindex>
+
 #include "imgui_internal.h"
 #include "ComponentWidgets/ComponentWidgetSystem.h"
+#include "Waldem/ECS/Components/AudioSource.h"
+#include "Waldem/ECS/Components/BloomPostProcess.h"
+#include "Waldem/ECS/Components/LineComponent.h"
+#include "Waldem/ECS/Components/Ocean.h"
+#include "Waldem/ECS/Components/RigidBody.h"
+#include "Waldem/ECS/Components/ScriptComponent.h"
 #include "Waldem/ECS/Components/Selected.h"
 #include "Waldem/ECS/Systems/UISystems/Widgets/IWidgetContainerSystem.h"
 #include "Waldem/ECS/Systems/System.h"
@@ -75,7 +83,43 @@ namespace Waldem
 
                     if (ImGui::Button("Add component"))
                     {
-                        // Add logic to handle adding a component
+                        ImGui::OpenPopup("AddComponentPopup");
+                    }
+
+                    if (ImGui::BeginPopup("AddComponentPopup"))
+                    {
+                        static char searchBuffer[128] = "";
+                        ImGui::InputText("Search", searchBuffer, IM_ARRAYSIZE(searchBuffer));
+
+                        // Example list of components
+                        static int selectedComponent = -1;
+
+                        auto& componentNames = ComponentRegistry::Get().ComponentNames;
+
+                        for (int i = 0; i < componentNames.Num(); i++)
+                        {
+                            if (strstr(componentNames[i], searchBuffer) != nullptr) // Filter by search
+                            {
+                                if (ImGui::Selectable(componentNames[i], selectedComponent == i))
+                                {
+                                    selectedComponent = i;
+
+                                    //TODO: Add the selected component to the entity wrapper
+                                    IComponentBase* comp = ComponentRegistry::Get().CreateComponent(componentNames[i]);
+                                    comp->RegisterToNativeEntity(entity);
+                                }
+                            }
+                        }
+
+                        // if (ImGui::Button("Add Selected Component") && selectedComponent != -1)
+                        // {
+                        //     // Add the selected component to the entity
+                        //     // Example: Manager->AddComponent(entity, components[selectedComponent]);
+                        //     selectedComponent = -1; // Reset selection
+                        //     ImGui::CloseCurrentPopup();
+                        // }
+
+                        ImGui::EndPopup();
                     }
 
                     break;

@@ -13,6 +13,14 @@ namespace Waldem
     public:
         WMap() = default;
 
+        WMap(std::initializer_list<WPair<T1, T2>> initList)
+        {
+            for (const auto& pair : initList)
+            {
+                Data.PushBack(pair);
+            }
+        }
+
         void Insert(const T1& key, const T2& value)
         {
             Data.PushBack(WPair<T1, T2>(key, value));
@@ -117,7 +125,22 @@ namespace Waldem
             return Data.Last().value;
         }
 
+        WPair<T1, T2>& operator[](int index)
+        {
+            return Data[index];
+        }
+
+        WPair<T1, T2>& At(int index)
+        {
+            return Data[index];
+        }
+
         auto begin() { return Data.begin(); }
         auto end() { return Data.end(); }
+
+        uint Num() const
+        {
+            return Data.Num();
+        }
     };
 }
