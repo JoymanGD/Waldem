@@ -6,5 +6,6 @@ namespace Waldem
     {
     public:
         virtual void* GetNativeObject() const = 0;
+        virtual void Destroy() = 0;
     };
 }

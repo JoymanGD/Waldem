@@ -7,6 +7,7 @@
 #include "D3DX12.h"
 #include "DX12AccelerationStructure.h"
 #include "DX12Buffer.h"
+#include "DX12CommandSignature.h"
 #include "DX12ComputePipeline.h"
 #include "DX12ComputeShader.h"
 #include "DX12Helper.h"
@@ -277,6 +278,26 @@ namespace Waldem
         cmd->Draw(mesh);
     }
 
+    void DX12Renderer::DrawIndirect(CommandSignature* commandSignature, uint numCommands, Buffer* indirectBuffer)
+    {
+        auto& cmd = WorldCommandList.first;
+        auto nativeCommandSignature = (ID3D12CommandSignature*)commandSignature->GetNativeObject();
+
+        cmd->DrawIndirect(nativeCommandSignature, numCommands, indirectBuffer);
+    }
+
+    void DX12Renderer::SetIndexBuffer(Buffer* indexBuffer)
+    {
+        auto& cmd = WorldCommandList.first;
+        cmd->SetIndexBuffer(indexBuffer);
+    }
+
+    void DX12Renderer::SetVertexBuffers(Buffer* vertexBuffer, uint32 numBuffers, uint32 startIndex)
+    {
+        auto& cmd = WorldCommandList.first;
+        cmd->SetVertexBuffers(vertexBuffer, numBuffers, startIndex);
+    }
+
     void DX12Renderer::Signal()
     {
         GraphicCommandQueue->Signal(SecondaryWaitFence, ++SecondaryWaitFenceValue);
@@ -497,6 +518,12 @@ namespace Waldem
     RootSignature* DX12Renderer::CreateRootSignature(WArray<GraphicResource> resources)
     {
         return new DX12RootSignature(Device, WorldCommandList.first, resources);
+    }
+
+    CommandSignature* DX12Renderer::CreateCommandSignature(RootSignature* rootSignature)
+    {
+        CommandSignature* commandSignature = new DX12CommandSignature(Device, rootSignature);
+        return commandSignature;
     }
 
     Texture2D* DX12Renderer::CreateTexture(WString name, int width, int height, TextureFormat format, size_t dataSize, uint8_t* data)

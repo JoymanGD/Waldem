@@ -1,5 +1,6 @@
 #pragma once
 #include "AccelerationStructure.h"
+#include "CommandSignature.h"
 #include "Pipeline.h"
 #include "Waldem/Window.h"
 #include "GraphicResource.h"
@@ -31,6 +32,9 @@ namespace Waldem
         virtual void Present() = 0;
         virtual void Draw(CModel* model) = 0;
         virtual void Draw(CMesh* mesh) = 0;
+        virtual void DrawIndirect(CommandSignature* commandSignature, uint numCommands, Buffer* indirectBuffer) = 0;
+        virtual void SetIndexBuffer(Buffer* indexBuffer) = 0;
+        virtual void SetVertexBuffers(Buffer* vertexBuffer, uint32 numBuffers, uint32 startIndex = 0) = 0;
         virtual void Signal() = 0;
         virtual void Wait() = 0;
         virtual Point3 GetNumThreadsPerGroup(ComputeShader* computeShader) = 0;
@@ -46,6 +50,7 @@ namespace Waldem
         virtual Pipeline* CreateComputePipeline(const WString& name, RootSignature* rootSignature, ComputeShader* shader) = 0;
         virtual Pipeline* CreateRayTracingPipeline(const WString& name, RootSignature* rootSignature, RayTracingShader* shader) = 0;
         virtual RootSignature* CreateRootSignature(WArray<GraphicResource> resources) = 0;
+        virtual CommandSignature* CreateCommandSignature(RootSignature* rootSignature) = 0;
         virtual Texture2D* CreateTexture(WString name, int width, int height, TextureFormat format, size_t dataSize, uint8_t* data = nullptr) = 0;
         virtual Texture2D* CreateTexture(TextureDesc desc) = 0;
         virtual RenderTarget* CreateRenderTarget(WString name, int width, int height, TextureFormat format) = 0;
@@ -83,6 +88,9 @@ namespace Waldem
 
         static void Draw(CMesh* mesh);
         static void Draw(CModel* model);
+        static void DrawIndirect(CommandSignature* commandSignature, uint numCommands, Buffer* indirectBuffer);
+        static void SetIndexBuffer(Buffer* indexBuffer);
+        static void SetVertexBuffers(Buffer* vertexBuffer, uint32 numBuffers, uint32 startIndex = 0);
         static void Signal();
         static void Wait();
         static Point3 GetNumThreadsPerGroup(ComputeShader* computeShader);
@@ -98,6 +106,7 @@ namespace Waldem
         static Pipeline* CreateComputePipeline(const WString& name, RootSignature* rootSignature, ComputeShader* shader);
         static Pipeline* CreateRayTracingPipeline(const WString& name, RootSignature* rootSignature, RayTracingShader* shader);
         static RootSignature* CreateRootSignature(WArray<GraphicResource> resources);
+        static CommandSignature* CreateCommandSignature(RootSignature* rootSignature);
         static Texture2D* CreateTexture(WString name, int width, int height, TextureFormat format, size_t dataSize, uint8_t* data = nullptr);
         static Texture2D* CreateTexture(TextureDesc desc);
         static RenderTarget* CreateRenderTarget(WString name, int width, int height, TextureFormat format);

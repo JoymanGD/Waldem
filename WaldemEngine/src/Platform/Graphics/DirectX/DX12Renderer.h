@@ -20,6 +20,9 @@ namespace Waldem
         void ResizeEditorViewport(Vector2 size);
         void Draw(CModel* model) override;
         void Draw(CMesh* mesh) override;
+        void DrawIndirect(CommandSignature* commandSignature, uint numCommands, Buffer* indirectBuffer) override;
+        void SetIndexBuffer(Buffer* indexBuffer) override;
+        void SetVertexBuffers(Buffer* vertexBuffer, uint32 numBuffers, uint32 startIndex = 0) override;
         void Signal() override;
         void Wait() override;
         Point3 GetNumThreadsPerGroup(ComputeShader* computeShader) override;
@@ -40,6 +43,7 @@ namespace Waldem
         Pipeline* CreateComputePipeline(const WString& name, RootSignature* rootSignature, ComputeShader* shader) override;
         Pipeline* CreateRayTracingPipeline(const WString& name, RootSignature* rootSignature, RayTracingShader* shader) override;
         RootSignature* CreateRootSignature(WArray<GraphicResource> resources) override;
+        CommandSignature* CreateCommandSignature(RootSignature* rootSignature) override;
         Texture2D* CreateTexture(WString name, int width, int height, TextureFormat format, size_t dataSize, uint8_t* data = nullptr) override;
         Texture2D* CreateTexture(TextureDesc desc) override;
         RenderTarget* CreateRenderTarget(WString name, int width, int height, TextureFormat format) override;

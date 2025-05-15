@@ -19,6 +19,7 @@ namespace Waldem
         //GBuffer pass
         Pipeline* GBufferPipeline = nullptr;
         RootSignature* GBufferRootSignature = nullptr;
+        CommandSignature* GBufferCommandSignature = nullptr;
         PixelShader* GBufferPixelShader = nullptr;
         RenderTarget* WorldPositionRT = nullptr;
         RenderTarget* NormalRT = nullptr;
@@ -26,6 +27,10 @@ namespace Waldem
         RenderTarget* ORMRT = nullptr;
         RenderTarget* DepthRT = nullptr;
         RenderTarget* MeshIDRT = nullptr;
+        Buffer* IndirectBuffer = nullptr;
+        Buffer* VertexBuffer = nullptr;
+        Buffer* IndexBuffer = nullptr;
+        WArray<IndirectCommand> IndirectDrawIndexedArgsArray;
         
     public:
         GBufferSystem(ECSManager* eCSManager) : DrawSystem(eCSManager)
@@ -49,16 +54,48 @@ namespace Waldem
             TargetRT = resourceManager->GetRenderTarget("TargetRT");
             
             //Common resources
-            auto constantBufferResource = GraphicResource("MyConstantBuffer", RTYPE_ConstantBuffer, nullptr, sizeof(Matrix4), sizeof(Matrix4) * 4, 0);
+            auto constantBufferResource = GraphicResource("MyConstantBuffer", RTYPE_ConstantBuffer, nullptr, sizeof(Matrix4), sizeof(Matrix4) * 4, 1);
             
             //GBuffer pass
             WArray<MaterialShaderAttribute> materialAttributes;
             
+            WArray<Matrix4> worldTransforms;
+
             WArray materialTextures { DummyTexture };
 
-            for (auto [entity, mesh, transform] : Manager->EntitiesWith<MeshComponent, Transform>())
+            uint startIndexLocation = 0;
+            int baseVertexLocation = 0;
+
+            uint32_t meshID = 0;
+            
+            WArray<Vertex> vertices;
+            WArray<uint> indices;
+            
+            for (auto [entity, meshComponent, transform] : Manager->EntitiesWith<MeshComponent, Transform>())
             {
-                if(!mesh.Mesh->CurrentMaterial->HasDiffuseTexture())
+                worldTransforms.Add(transform.Matrix);
+                vertices.AddRange(meshComponent.Mesh->VertexData);
+                indices.AddRange(meshComponent.Mesh->IndexData);
+                
+                uint indexCountPerInstance = (uint)meshComponent.Mesh->IndexData.Num();
+
+                IndirectDrawIndexedArgsArray.Add(
+                {
+                    meshID,
+                    {
+                        indexCountPerInstance,
+                        1,
+                        startIndexLocation,
+                        baseVertexLocation,
+                        0
+                    }
+                });
+
+                startIndexLocation += indexCountPerInstance;
+                baseVertexLocation += (int)meshComponent.Mesh->VertexData.Num();
+                meshID++;
+                
+                if(!meshComponent.Mesh->CurrentMaterial->HasDiffuseTexture())
                 {
                     materialAttributes.Add(MaterialShaderAttribute()); //by default all texture indices = -1, so we can just add empty MaterialAttribute
                     continue;
@@ -66,27 +103,23 @@ namespace Waldem
 
                 int diffuseId = -1, normalId = -1, ormId = -1, clearCoat = -1;
                 
-                diffuseId = materialTextures.Add(mesh.Mesh->CurrentMaterial->GetDiffuseTexture());
+                diffuseId = materialTextures.Add(meshComponent.Mesh->CurrentMaterial->GetDiffuseTexture());
                 
-                if(mesh.Mesh->CurrentMaterial->HasNormalTexture())
-                    normalId = materialTextures.Add(mesh.Mesh->CurrentMaterial->GetNormalTexture());
-                if(mesh.Mesh->CurrentMaterial->HasORMTexture())
-                    ormId = materialTextures.Add(mesh.Mesh->CurrentMaterial->GetORMTexture());
+                if(meshComponent.Mesh->CurrentMaterial->HasNormalTexture())
+                    normalId = materialTextures.Add(meshComponent.Mesh->CurrentMaterial->GetNormalTexture());
+                if(meshComponent.Mesh->CurrentMaterial->HasORMTexture())
+                    ormId = materialTextures.Add(meshComponent.Mesh->CurrentMaterial->GetORMTexture());
 
-                materialAttributes.Add(MaterialShaderAttribute{ diffuseId, normalId, ormId, clearCoat, mesh.Mesh->CurrentMaterial->Albedo, mesh.Mesh->CurrentMaterial->Metallic, mesh.Mesh->CurrentMaterial->Roughness });
+                materialAttributes.Add(MaterialShaderAttribute{ diffuseId, normalId, ormId, clearCoat, meshComponent.Mesh->CurrentMaterial->Albedo, meshComponent.Mesh->CurrentMaterial->Metallic, meshComponent.Mesh->CurrentMaterial->Roughness });
             }
 
-            WArray<Matrix4> worldTransforms;
-            
-            for (auto [entity, mesh, transform] : Manager->EntitiesWith<MeshComponent, Transform>())
-            {
-                worldTransforms.Add(transform.Matrix);
-            }
+            IndirectBuffer = ResourceManager::CreateBuffer("IndirectDrawBuffer", BufferType::IndirectBuffer, IndirectDrawIndexedArgsArray.GetData(), IndirectDrawIndexedArgsArray.GetSize(), sizeof(IndirectCommand));
+            VertexBuffer = ResourceManager::CreateBuffer("VertexBuffer", BufferType::VertexBuffer, vertices.GetData(), vertices.GetSize(), sizeof(Vertex));
+            IndexBuffer = ResourceManager::CreateBuffer("IndexBuffer", BufferType::IndexBuffer, indices.GetData(), indices.GetSize(), sizeof(uint));
             
             WArray<GraphicResource> gBufferPassResources;
+            gBufferPassResources.Add(GraphicResource("RootConstants", RTYPE_Constant, nullptr, sizeof(uint32_t), sizeof(uint32_t), 0));
             gBufferPassResources.Add(constantBufferResource);
-            gBufferPassResources.Add(GraphicResource("RootConstants", RTYPE_Constant, nullptr, sizeof(uint32_t), sizeof(uint32_t), 1));
-            
             gBufferPassResources.Add(GraphicResource("WorldTransforms", RTYPE_Buffer, worldTransforms.GetData(), sizeof(Matrix4), worldTransforms.GetSize(), 0));
             gBufferPassResources.Add(GraphicResource("MaterialAttributes", RTYPE_Buffer, materialAttributes.GetData(), sizeof(MaterialShaderAttribute), materialAttributes.GetSize(), 1));
             gBufferPassResources.Add(GraphicResource("MaterialTextures", materialTextures, 2));
@@ -108,14 +141,23 @@ namespace Waldem
                                                             WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
                                                             DEFAULT_INPUT_LAYOUT_DESC);
 
+            GBufferCommandSignature = Renderer::CreateCommandSignature(GBufferRootSignature);
+
             IsInitialized = true;
         }
 
         void Deinitialize() override
         {
+            if(GBufferCommandSignature) GBufferCommandSignature->Destroy();
             if(GBufferRootSignature) GBufferRootSignature->Destroy();
             if(GBufferPixelShader) GBufferPixelShader->Destroy();
             if(GBufferPipeline) GBufferPipeline->Destroy();
+            if(IndirectBuffer) IndirectBuffer->Destroy();
+            if(VertexBuffer) VertexBuffer->Destroy();
+            if(IndexBuffer) IndexBuffer->Destroy();
+
+            IndirectDrawIndexedArgsArray.Clear();
+            
             IsInitialized = false;
         }
 
@@ -161,21 +203,9 @@ namespace Waldem
             Renderer::ClearRenderTarget(MeshIDRT);
             Renderer::ClearDepthStencil(DepthRT);
             
-            uint32_t meshID = 0;
-
-            for (auto [entity, mesh, transform] : Manager->EntitiesWith<MeshComponent, Transform>())
-            {
-                auto transformedBBox = mesh.Mesh->BBox.GetTransformed(transform.Matrix);
-
-                //Frustrum culling
-                if(transformedBBox.IsInFrustum(frustrumPlanes))
-                {
-                    GBufferRootSignature->UpdateResourceData("RootConstants", &meshID); 
-                    Renderer::Draw(mesh.Mesh);
-                }
-
-                meshID++;
-            }
+            Renderer::SetVertexBuffers(VertexBuffer, 1);
+            Renderer::SetIndexBuffer(IndexBuffer);
+            Renderer::DrawIndirect(GBufferCommandSignature, IndirectDrawIndexedArgsArray.Num(), IndirectBuffer);
             
             Renderer::SetRenderTargets({});
 

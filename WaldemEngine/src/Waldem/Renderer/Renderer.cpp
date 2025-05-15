@@ -55,6 +55,21 @@ namespace Waldem
         Instance->PlatformRenderer->Draw(model);
     }
 
+    void Renderer::DrawIndirect(CommandSignature* commandSignature, uint numCommands, Buffer* indirectBuffer)
+    {
+        Instance->PlatformRenderer->DrawIndirect(commandSignature, numCommands, indirectBuffer);
+    }
+
+    void Renderer::SetIndexBuffer(Buffer* indexBuffer)
+    {
+        Instance->PlatformRenderer->SetIndexBuffer(indexBuffer);
+    }
+
+    void Renderer::SetVertexBuffers(Buffer* vertexBuffer, uint32 numBuffers, uint32 startIndex)
+    {
+        Instance->PlatformRenderer->SetVertexBuffers(vertexBuffer, numBuffers, startIndex);
+    }
+
     void Renderer::Signal()
     {
         Instance->PlatformRenderer->Signal();
@@ -130,6 +145,11 @@ namespace Waldem
     RootSignature* Renderer::CreateRootSignature(WArray<GraphicResource> resources)
     {
         return Instance->PlatformRenderer->CreateRootSignature(resources);
+    }
+
+    CommandSignature* Renderer::CreateCommandSignature(RootSignature* rootSignature)
+    {
+        return Instance->PlatformRenderer->CreateCommandSignature(rootSignature);
     }
 
     Texture2D* Renderer::CreateTexture(WString name, int width, int height, TextureFormat format, size_t dataSize, uint8_t* data)

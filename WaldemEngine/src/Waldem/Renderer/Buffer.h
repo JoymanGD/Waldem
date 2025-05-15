@@ -117,7 +117,8 @@ namespace Waldem
     {
         VertexBuffer = 0,
         IndexBuffer = 1,
-        StorageBuffer = 2
+        StorageBuffer = 2,
+        IndirectBuffer = 3
     };
 
     class Buffer
