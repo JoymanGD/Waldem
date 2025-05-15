@@ -21,7 +21,7 @@ struct PS_OUTPUT
     int MeshIDRT : SV_TARGET4;
 };
 
-cbuffer RootConstants : register(b1)
+cbuffer RootConstants : register(b0)
 {
     uint MeshId;
 };

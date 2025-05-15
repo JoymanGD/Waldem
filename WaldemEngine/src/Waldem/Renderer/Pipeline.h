@@ -10,7 +10,6 @@ namespace Waldem
     public:
         Pipeline(const WString& name) : Name(name) {}
         virtual ~Pipeline() = default;
-        virtual void Destroy() = 0;
         PipelineType CurrentPipelineType; 
     protected:
         WString Name;

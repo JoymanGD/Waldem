@@ -26,6 +26,9 @@ namespace Waldem
         
         void SetPipeline(Pipeline* pipeline);
         void SetRootSignature(RootSignature* rootSignature);
+        void SetVertexBuffers(Buffer* vertexBuffer, uint32 numBuffers, uint32 startIndex = 0);
+        void SetIndexBuffer(Buffer* indexBuffer);
+        void DrawIndirect(ID3D12CommandSignature* CommandSignature, uint numCommands, Buffer* indirectBuffer);
         void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr);
         void SetDescriptorHeaps(uint32_t NumDescriptorHeaps, ID3D12DescriptorHeap* const* ppDescriptorHeaps);
 

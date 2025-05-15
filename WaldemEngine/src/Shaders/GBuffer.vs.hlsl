@@ -19,17 +19,17 @@ struct PS_INPUT
     uint MeshId : MESH_ID;
 };
 
-cbuffer MyConstantBuffer : register(b0)
+cbuffer RootConstants : register(b0)
+{
+    uint MeshId;
+};
+
+cbuffer MyConstantBuffer : register(b1)
 {
     matrix view;
     matrix proj;
     matrix invView;
     matrix invProj;
-};
-
-cbuffer RootConstants : register(b1)
-{
-    uint MeshId;
 };
 
 StructuredBuffer<float4x4> WorldTransforms : register(t0);

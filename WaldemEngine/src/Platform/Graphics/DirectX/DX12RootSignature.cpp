@@ -577,8 +577,6 @@ namespace Waldem
         NativeRootSignature->Release();
         ResourcesHeap->Release();
         SamplersHeap->Release();
-
-        
     }
 
     void DX12RootSignature::UpdateResourceData(WString name, void* data)

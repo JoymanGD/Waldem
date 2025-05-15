@@ -133,6 +133,21 @@ namespace Waldem
         uint32_t InstanceDataStepRate;
     };
 
+    struct IndirectDrawIndexedArgs
+    {
+        uint IndexCountPerInstance;
+        uint InstanceCount;
+        uint StartIndexLocation;
+        int BaseVertexLocation;
+        uint StartInstanceLocation;
+    };
+
+    struct IndirectCommand
+    {
+        uint DrawId;
+        IndirectDrawIndexedArgs DrawIndexed;
+    };
+
     enum PrimitiveTopologyType
     {
         WD_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED	= 0,

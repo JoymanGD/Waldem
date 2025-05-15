@@ -295,6 +295,25 @@ namespace Waldem
         }
     }
 
+    void DX12CommandList::SetVertexBuffers(Buffer* vertexBuffer, uint32 numBuffers, uint32 startIndex)
+    {
+        //Draw mesh
+        auto& vertexBufferView = ((DX12Buffer*)vertexBuffer)->GetVertexBufferView();
+        CommandList->IASetVertexBuffers(startIndex, numBuffers, &vertexBufferView);
+    }
+
+    void DX12CommandList::SetIndexBuffer(Buffer* indexBuffer)
+    {
+        auto& indexBufferView = ((DX12Buffer*)indexBuffer)->GetIndexBufferView();
+        CommandList->IASetIndexBuffer(&indexBufferView);
+    }
+
+    void DX12CommandList::DrawIndirect(ID3D12CommandSignature* CommandSignature, uint numCommands, Buffer* indirectBuffer)
+    {
+        ID3D12Resource* indirectBufferResource = (ID3D12Resource*)((DX12Buffer*)indirectBuffer)->GetPlatformResource();
+        CommandList->ExecuteIndirect(CommandSignature, numCommands, indirectBufferResource, 0, nullptr, 0);
+    }
+
     void DX12CommandList::SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil)
     {
         WArray<D3D12_CPU_DESCRIPTOR_HANDLE> renderTargetHandlesToSet = MainRenderTargetHandles;

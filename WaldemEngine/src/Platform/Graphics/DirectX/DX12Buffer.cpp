@@ -70,7 +70,6 @@ namespace Waldem
             cmdList->UpdateSubresoures(DefaultResource, UploadResource, 1, &subResourceData);
         }
 
-
         switch (type)
         {
         case VertexBuffer:
@@ -89,6 +88,11 @@ namespace Waldem
                 IndexBufferView.Format = DXGI_FORMAT_R32_UINT;
                 Count = IndexBufferView.SizeInBytes / sizeof(uint32_t);
                 cmdList->ResourceBarrier(DefaultResource, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+                break;
+            }
+        case IndirectBuffer:
+            {
+                cmdList->ResourceBarrier(DefaultResource, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
                 break;
             }
         default:
