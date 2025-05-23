@@ -74,7 +74,7 @@ namespace Waldem
         PipelineType CurrentPipelineType = PipelineType::Graphics;
         
         IDXGIFactory4* DxgiFactory = nullptr;
-        ID3D12Device* Device = nullptr;
+        ID3D12Device5* Device = nullptr;
         ID3D12CommandQueue* GraphicCommandQueue = nullptr;
         ID3D12CommandQueue* ComputeCommandQueue = nullptr;
         IDXGISwapChain* SwapChain = nullptr;

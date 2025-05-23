@@ -13,7 +13,7 @@ namespace Waldem
         DX12CommandList(ID3D12Device* device);
         ~DX12CommandList();
 
-        void BeginInternal(SViewport& viewport, ID3D12DescriptorHeap* rtvHeap);
+        void BeginInternal(SViewport& viewport, ID3D12DescriptorHeap* rtvHeap, ID3D12DescriptorHeap* dsvHeap);
         void EndInternal();
 
         void Draw(CMesh* mesh);
