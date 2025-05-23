@@ -78,7 +78,7 @@ namespace Waldem
 
             for (auto [entity, bloom] : Manager->EntitiesWith<BloomPostProcess>())
             {
-                Renderer::UpdateGraphicResource(BloomParamsBuffer, &bloom, sizeof(BloomPostProcess));
+                Renderer::UploadBuffer(BloomParamsBuffer, &bloom, sizeof(BloomPostProcess));
             }
             
             //Post process pass

@@ -189,7 +189,7 @@ namespace Waldem
                 matrices[1] = camera.ProjectionMatrix;
                 matrices[2] = cameraTransform.Matrix;
                 matrices[3] = inverse(camera.ProjectionMatrix);
-                Renderer::UpdateGraphicResource(SceneDataBuffer, matrices, sizeof(matrices));
+                Renderer::UploadBuffer(SceneDataBuffer, matrices, sizeof(matrices));
 
                 break;
             }
@@ -199,7 +199,7 @@ namespace Waldem
                 worldTransforms.Add(transform.Matrix);
             }
 
-            Renderer::UpdateGraphicResource(WorldTransformsBuffer, worldTransforms.GetData(), worldTransforms.GetSize());
+            Renderer::UploadBuffer(WorldTransformsBuffer, worldTransforms.GetData(), worldTransforms.GetSize());
             Renderer::SetPipeline(GBufferPipeline);
             Renderer::PushConstants(&RootConstants, sizeof(GBufferRootConstants));
             Renderer::SetRenderTargets({ WorldPositionRT, NormalRT, ColorRT, ORMRT, MeshIDRT }, DepthRT);
