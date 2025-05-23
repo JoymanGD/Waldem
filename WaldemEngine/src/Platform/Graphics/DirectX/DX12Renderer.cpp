@@ -380,6 +380,110 @@ namespace Waldem
         return renderTarget;
     }
 
+    RenderTarget* DX12Renderer::CreateRenderTarget(WString name, int width, int height, TextureFormat format, ID3D12Resource* resource)
+    {
+        RenderTarget* renderTarget = new RenderTarget(name, width, height, format);
+
+        uint index = RenderTargetAllocator.Allocate();
+        renderTarget->SetIndex(index, RTV);
+        
+        UINT descriptorSize;
+
+        HRESULT hr;
+
+        D3D12_RESOURCE_DESC textureDesc = {};
+        D3D12_CLEAR_VALUE clearValue = {};
+        D3D12_HEAP_PROPERTIES heapProperties = {};
+        heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
+        heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+        heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+        heapProperties.CreationNodeMask = 1;
+        heapProperties.VisibleNodeMask = 1;
+
+        if(format == TextureFormat::D32_FLOAT)
+        {
+            textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+            textureDesc.Width = width;
+            textureDesc.Height = height;
+            textureDesc.DepthOrArraySize = 1;
+            textureDesc.MipLevels = 1;
+            textureDesc.Format = DXGI_FORMAT_R32_TYPELESS;
+            textureDesc.SampleDesc.Count = 1;
+            textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+            clearValue.Format = DXGI_FORMAT_D32_FLOAT;
+            clearValue.DepthStencil.Depth = 1.0f;
+            clearValue.DepthStencil.Stencil = 0;
+
+            D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+            dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
+            dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+            dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
+
+            descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+            auto dsvHandle = DSVHeap->GetCPUDescriptorHandleForHeapStart();
+            dsvHandle.ptr += index * descriptorSize;
+            
+            //create dsv
+            Device->CreateDepthStencilView(resource, &dsvDesc, dsvHandle);
+
+            format = TextureFormat::R32_FLOAT;
+        }
+        else
+        {
+            textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+            textureDesc.Width = width;
+            textureDesc.Height = height;
+            textureDesc.DepthOrArraySize = 1;
+            textureDesc.MipLevels = 1;
+            textureDesc.Format = (DXGI_FORMAT)format;
+            textureDesc.SampleDesc.Count = 1;
+            textureDesc.SampleDesc.Quality = 0;
+            textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+            textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+
+            clearValue.Format = (DXGI_FORMAT)format;
+            clearValue.Color[0] = 0.0f;
+            clearValue.Color[1] = 0.0f;
+            clearValue.Color[2] = 0.0f;
+            clearValue.Color[3] = 1.0f;
+
+            descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+            auto rtvHandle = RTVHeap->GetCPUDescriptorHandleForHeapStart();
+            rtvHandle.ptr += index * descriptorSize;
+            
+            //create rtv
+            Device->CreateRenderTargetView(resource, nullptr, rtvHandle);
+        }
+
+        //create srv
+        index = GeneralAllocator.Allocate();
+        renderTarget->SetIndex(index, SRV_UAV_CBV);
+        
+        D3D12_CPU_DESCRIPTOR_HANDLE srvHandle = GeneralResourcesHeap->GetCPUDescriptorHandleForHeapStart();
+        descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        srvHandle.ptr += index * descriptorSize;
+
+        renderTarget->SetGPUAddress(srvHandle.ptr);
+
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.Format = DXGI_FORMAT(format);
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+        srvDesc.Texture2D.MipLevels = 1;
+        srvDesc.Texture2D.MostDetailedMip = 0;
+
+        Device->CreateShaderResourceView(resource, &srvDesc, srvHandle);
+
+        ResourceMap[(GraphicResource*)renderTarget] = resource;
+
+        renderTarget->SetCurrentState((ResourceStates)D3D12_RESOURCE_STATE_RENDER_TARGET);
+        
+        resource->SetName(std::wstring(name.Begin(), name.End()).c_str());
+
+        return renderTarget;
+    }
+
     void DX12Renderer::InitializeUI()
     {
         IMGUI_CHECKVERSION();
@@ -432,8 +536,7 @@ namespace Waldem
             ID3D12Resource* resource;
             HRESULT h = SwapChain->GetBuffer(i, IID_PPV_ARGS(&resource));
 
-            auto renderTarget = CreateRenderTarget("MainViewport_FrameBuffer_" + std::to_string(i), size.x, size.y, TextureFormat::R8G8B8A8_UNORM);
-            ResourceMap[(GraphicResource*)renderTarget] = resource;
+            auto renderTarget = CreateRenderTarget("MainViewport_FrameBuffer_" + std::to_string(i), size.x, size.y, TextureFormat::R8G8B8A8_UNORM, resource);
             ResourceBarrier(renderTarget, ALL_SHADER_RESOURCE, PRESENT);
 
             if(FAILED(h))
@@ -471,7 +574,6 @@ namespace Waldem
                     h = SwapChain->GetBuffer(i, IID_PPV_ARGS(&resource));
 
                     auto renderTarget = CreateRenderTarget("MainViewport_FrameBuffer_" + std::to_string(i), size.x, size.y, TextureFormat::R8G8B8A8_UNORM);
-                    ResourceMap[(GraphicResource*)renderTarget] = resource;
                     ResourceBarrier(renderTarget, ALL_SHADER_RESOURCE, PRESENT);
 
                     if(FAILED(h))

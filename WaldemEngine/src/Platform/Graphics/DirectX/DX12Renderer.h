@@ -68,6 +68,7 @@ namespace Waldem
         void InitializeBindless();
         void CreateGeneralRootSignature();
         RenderTarget* CreateRenderTarget(WString name, int width, int height, TextureFormat format, ID3D12DescriptorHeap* externalHeap, uint slot);
+        RenderTarget* CreateRenderTarget(WString name, int width, int height, TextureFormat format, ID3D12Resource* resource);
 
         CWindow* CurrentWindow = nullptr;
 
