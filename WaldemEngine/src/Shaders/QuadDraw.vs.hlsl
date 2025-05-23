@@ -1,3 +1,5 @@
+#pragma shader_model 6_6
+
 struct VS_INPUT
 {
     float3 Position : POSITION;

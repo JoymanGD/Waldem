@@ -60,7 +60,7 @@ namespace Waldem
         {
             if (Depth)
             {
-                Depth->Destroy();
+                Renderer::Destroy(Depth);
                 Depth = nullptr;
             }
             
@@ -71,12 +71,12 @@ namespace Waldem
         {
             for (int i = 0; i < Size; ++i)
             {
-                RenderTargets[i]->Destroy();
+                Renderer::Destroy(RenderTargets[i]);
             }
 
             RenderTargets.Clear();
 
-            Depth->Destroy();
+            Renderer::Destroy(Depth);
             Depth = nullptr;
 
             Size = 0;

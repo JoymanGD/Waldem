@@ -27,7 +27,7 @@ IncludeDir["mono"] = "Vendor/mono/include"
 
 filter { "files:**.hlsl" }
    flags { "ExcludeFromBuild", 'NoPCH' }
-   shadermodel "6.5"
+   shadermodel "6.6"
 filter { "files:**.ps.hlsl" }
    removeflags "ExcludeFromBuild"
    shadertype "Pixel"

@@ -55,7 +55,7 @@ namespace Waldem
         }
 
         const wchar_t* entryPointW = DX12Helper::WFromMB(entryPoint);
-        const wchar_t* targetProfile = L"cs_6_5";
+        const wchar_t* targetProfile = L"cs_6_6";
 
         // Compiler arguments
         const wchar_t* arguments[] = {

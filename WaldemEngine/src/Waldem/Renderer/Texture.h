@@ -1,8 +1,10 @@
 #pragma once
+#include "GraphicResource.h"
 #include "TextureFormat.h"
 #include "Waldem/Serialization/Asset.h"
 #include "Waldem/Types/DataBuffer.h"
 #include "Waldem/Types/String.h"
+#include "Waldem/Utils/ImageUtils.h"
 
 namespace Waldem
 {
@@ -10,7 +12,7 @@ namespace Waldem
     {
     public:
         TextureDesc() : Asset(AssetType::Texture) {}
-        TextureDesc(WString name, int width, int height, TextureFormat format, size_t dataSize, uint8* data) : Name(name), Width(width), Height(height), Format(format), DataSize(dataSize), Data(std::move(data))
+        TextureDesc(WString name, int width, int height, TextureFormat format, uint8* data = nullptr) : Name(name), Width(width), Height(height), Format(format), Data(std::move(data))
         {
             Type = AssetType::Texture;
         }
@@ -19,11 +21,11 @@ namespace Waldem
         int Width;
         int Height;
         TextureFormat Format;
-        size_t DataSize;
         uint8* Data;
         
         void Serialize(WDataBuffer& outData) override
         {
+            int DataSize = CALCULATE_IMAGE_DATA_SIZE(Width, Height, Format);
             Name.Serialize(outData);
             outData << Width;
             outData << Height;
@@ -34,6 +36,8 @@ namespace Waldem
         
         void Deserialize(WDataBuffer& inData) override
         {
+            int DataSize;
+            
             Name.Deserialize(inData);
             inData >> Width;
             inData >> Height;
@@ -41,22 +45,18 @@ namespace Waldem
             inData >> DataSize;
             Data = new uint8[DataSize];
             inData.Read(Data, DataSize);
-            
-            // *this = *Renderer::CreateTexture(Name, Width, Height, Format, DataSize, Data);
         }
     };
     
-    class Texture2D
+    class Texture2D : public GraphicResource
     {
     public:
-        Texture2D() = default;
-        Texture2D(WString name, int width, int height, TextureFormat format, size_t dataSize, uint8* data) : Desc(name, width, height, format, dataSize, data) {}
-        Texture2D(TextureDesc desc) : Desc(desc) {}
+        Texture2D() { SetType(RTYPE_Texture); }
+        Texture2D(WString name, int width, int height, TextureFormat format, uint8* data = nullptr) : Desc(name, width, height, format, data) { SetType(RTYPE_Texture); }
+        
         virtual ~Texture2D() = default;
         
         virtual WString GetName() { return Desc.Name; }
-        virtual void* GetPlatformResource() { return nullptr; }
-        virtual void Destroy() {}
         TextureFormat GetFormat() { return Desc.Format; }
         int GetWidth() { return Desc.Width; }
         int GetHeight() { return Desc.Height; }

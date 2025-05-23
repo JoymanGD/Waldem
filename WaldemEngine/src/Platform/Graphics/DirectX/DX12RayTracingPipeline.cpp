@@ -98,10 +98,9 @@ namespace Waldem
         }
     }
     
-    DX12RayTracingPipeline::DX12RayTracingPipeline(const WString& name, ID3D12Device5* device, RootSignature* rootSignature, RayTracingShader* shader) : Pipeline(name)
+    DX12RayTracingPipeline::DX12RayTracingPipeline(const WString& name, ID3D12Device5* device, ID3D12RootSignature* rootSignature, RayTracingShader* shader) : Pipeline(name)
     {
         CurrentPipelineType = PipelineType::RayTracing;
-        rootSignature->CurrentPipelineType = PipelineType::Compute;
 
         CD3DX12_STATE_OBJECT_DESC raytracingPipeline(D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE);
         
@@ -142,7 +141,7 @@ namespace Waldem
         // Global root signature
         // This is a root signature that is shared across all raytracing shaders invoked during a DispatchRays() call.
         auto globalRootSignature = raytracingPipeline.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
-        globalRootSignature->SetRootSignature((ID3D12RootSignature*)rootSignature->GetNativeObject());
+        globalRootSignature->SetRootSignature(rootSignature);
 
         // Pipeline config
         // Defines the maximum TraceRay() recursion depth.

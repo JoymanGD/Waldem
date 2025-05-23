@@ -5,9 +5,6 @@
 #include <d3dcompiler.h>
 
 #include "D3DX12.h"
-#include "DX12AccelerationStructure.h"
-#include "DX12Buffer.h"
-#include "DX12CommandSignature.h"
 #include "DX12ComputePipeline.h"
 #include "DX12ComputeShader.h"
 #include "DX12Helper.h"
@@ -15,9 +12,6 @@
 #include "DX12PixelShader.h"
 #include "DX12RayTracingPipeline.h"
 #include "DX12RayTracingShader.h"
-#include "DX12RenderTarget.h"
-#include "DX12RootSignature.h"
-#include "DX12Texture.h"
 #include "imgui.h"
 #include "ImGuizmo.h"
 #include "backends/imgui_impl_dx12.h"
@@ -26,6 +20,8 @@
 #include "Waldem/Editor/UIStyles.h"
 
 struct ImGuiIO;
+
+using Microsoft::WRL::ComPtr;
 
 namespace Waldem
 {
@@ -42,9 +38,6 @@ namespace Waldem
     void DX12Renderer::Initialize(CWindow* window)
     {
         CurrentWindow = window;
-        
-        int width = (int)CurrentWindow->GetWidth();
-        int height = (int)CurrentWindow->GetHeight();
         
         if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&DebugController))))
         {
@@ -67,7 +60,7 @@ namespace Waldem
 
         if(FAILED(h))
         {
-            throw std::runtime_error("Failed to create DXGIDevice");
+            DX12Helper::PrintHResultError(h);
         }
 
         //Break on any D3D12 error
@@ -137,7 +130,236 @@ namespace Waldem
             throw std::runtime_error("Failed to create D3D12 SwapChain");
         }
 
+        //create descriptor Heap for Render Target View (RTV)
+        D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
+        rtvHeapDesc.NumDescriptors = RTV_MAX_DESCRIPTORS;
+        rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+        h = Device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&RTVHeap));
+
+        if(FAILED(h))
+        {
+            throw std::runtime_error("Failed to create RTV descriptor heap");
+        }
+
+        //create descriptor Heap for Render Target View (RTV)
+        D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
+        dsvHeapDesc.NumDescriptors = RTV_MAX_DESCRIPTORS;
+        dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+        h = Device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&DSVHeap));
+
+        if(FAILED(h))
+        {
+            throw std::runtime_error("Failed to create RTV descriptor heap");
+        }
+
+        InitializeBindless();
         InitializeUI();
+    }
+
+    void DX12Renderer::InitializeBindless()
+    {
+        D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
+        heapDesc.NumDescriptors = BINDLESS_MAX_DESCRIPTORS;
+        heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+
+        HRESULT h = Device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&GeneralResourcesHeap));
+
+        if(FAILED(h))
+        {
+            throw std::runtime_error("Failed to create General resources descriptor heap");
+        }
+
+        D3D12_DESCRIPTOR_HEAP_DESC samplerHeapDesc = {};
+        samplerHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
+        samplerHeapDesc.NumDescriptors = 32;
+        samplerHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+
+        h = Device->CreateDescriptorHeap(&samplerHeapDesc, IID_PPV_ARGS(&GeneralSamplerHeap));
+
+        if(FAILED(h))
+        {
+            throw std::runtime_error("Failed to create General samplers descriptor heap");
+        }
+
+        CreateGeneralRootSignature();
+        
+        D3D12_INDIRECT_ARGUMENT_DESC args[2] = {};
+        args[0].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT;
+        args[0].Constant.RootParameterIndex = 0;
+        args[0].Constant.Num32BitValuesToSet = 32;
+        args[0].Constant.DestOffsetIn32BitValues = 0;
+        
+        args[1].Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED;
+
+        D3D12_COMMAND_SIGNATURE_DESC commandSigDesc = {};
+        commandSigDesc.ByteStride = sizeof(uint) * 32 + sizeof(D3D12_DRAW_INDEXED_ARGUMENTS);
+        commandSigDesc.NumArgumentDescs = 2;
+        commandSigDesc.pArgumentDescs = args;
+
+        Device->CreateCommandSignature(&commandSigDesc, GeneralRootSignature, IID_PPV_ARGS(&GeneralCommandSignature));
+    }
+
+    void DX12Renderer::CreateGeneralRootSignature()
+    {
+        CD3DX12_ROOT_PARAMETER1 rootParameters[1];
+        rootParameters[0].InitAsConstants(32, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
+        
+        CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSigDesc;
+        rootSigDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED | D3D12_ROOT_SIGNATURE_FLAG_SAMPLER_HEAP_DIRECTLY_INDEXED);
+
+        // === Serialize and Create Root Signature ===
+        ComPtr<ID3DBlob> serializedRootSig = nullptr;
+        ComPtr<ID3DBlob> errorBlob = nullptr;
+
+        HRESULT hr = D3DX12SerializeVersionedRootSignature(
+            &rootSigDesc,
+            D3D_ROOT_SIGNATURE_VERSION_1_1,
+            &serializedRootSig,
+            &errorBlob
+        );
+
+        if (FAILED(hr)) {
+            if (errorBlob) {
+                OutputDebugStringA((char*)errorBlob->GetBufferPointer());
+            }
+            DX12Helper::PrintHResultError(hr);
+        }
+
+        hr = Device->CreateRootSignature(
+            0,
+            serializedRootSig->GetBufferPointer(),
+            serializedRootSig->GetBufferSize(),
+            IID_PPV_ARGS(&GeneralRootSignature)
+        );
+
+        if (FAILED(hr))
+        {
+            throw std::runtime_error("Failed to create root signature.");
+        }
+    }
+
+    RenderTarget* DX12Renderer::CreateRenderTarget(WString name, int width, int height, TextureFormat format, ID3D12DescriptorHeap* externalHeap, uint slot)
+    {
+        RenderTarget* renderTarget = new RenderTarget(name, width, height, format);
+
+        uint index = RenderTargetAllocator.Allocate();
+        renderTarget->SetIndex(index, RTV);
+        
+        UINT descriptorSize;
+
+        HRESULT hr;
+
+        ID3D12Resource* Resource;
+        
+        D3D12_RESOURCE_DESC textureDesc = {};
+        D3D12_CLEAR_VALUE clearValue = {};
+        D3D12_HEAP_PROPERTIES heapProperties = {};
+        heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
+        heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+        heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+        heapProperties.CreationNodeMask = 1;
+        heapProperties.VisibleNodeMask = 1;
+
+        if(format == TextureFormat::D32_FLOAT)
+        {
+            textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+            textureDesc.Width = width;
+            textureDesc.Height = height;
+            textureDesc.DepthOrArraySize = 1;
+            textureDesc.MipLevels = 1;
+            textureDesc.Format = DXGI_FORMAT_R32_TYPELESS;
+            textureDesc.SampleDesc.Count = 1;
+            textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+            clearValue.Format = DXGI_FORMAT_D32_FLOAT;
+            clearValue.DepthStencil.Depth = 1.0f;
+            clearValue.DepthStencil.Stencil = 0;
+
+            D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+            dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
+            dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+            dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
+            
+            hr = Device->CreateCommittedResource(
+                &heapProperties,
+                D3D12_HEAP_FLAG_NONE,
+                &textureDesc,
+                D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE,
+                &clearValue,
+                IID_PPV_ARGS(&Resource));
+
+            descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+            auto dsvHandle = DSVHeap->GetCPUDescriptorHandleForHeapStart();
+            dsvHandle.ptr += index * descriptorSize;
+            //create dsv
+            Device->CreateDepthStencilView(Resource, &dsvDesc, dsvHandle);
+        }
+        else
+        {
+            textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+            textureDesc.Width = width;
+            textureDesc.Height = height;
+            textureDesc.DepthOrArraySize = 1;
+            textureDesc.MipLevels = 1;
+            textureDesc.Format = (DXGI_FORMAT)format;
+            textureDesc.SampleDesc.Count = 1;
+            textureDesc.SampleDesc.Quality = 0;
+            textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+            textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+
+            clearValue.Format = (DXGI_FORMAT)format;
+            clearValue.Color[0] = 0.0f;
+            clearValue.Color[1] = 0.0f;
+            clearValue.Color[2] = 0.0f;
+            clearValue.Color[3] = 1.0f;
+            
+            hr = Device->CreateCommittedResource(
+                &heapProperties,
+                D3D12_HEAP_FLAG_NONE,
+                &textureDesc,
+                D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE,
+                &clearValue,
+                IID_PPV_ARGS(&Resource));
+
+            descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+            auto rtvHandle = RTVHeap->GetCPUDescriptorHandleForHeapStart();
+            rtvHandle.ptr += index * descriptorSize;
+            
+            //create rtv
+            Device->CreateRenderTargetView(Resource, nullptr, rtvHandle);
+        }
+
+        //create srv
+        renderTarget->SetIndex(slot, SRV_UAV_CBV);
+        
+        D3D12_CPU_DESCRIPTOR_HANDLE srvHandle = externalHeap->GetCPUDescriptorHandleForHeapStart();
+        descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        srvHandle.ptr += slot * descriptorSize;
+
+        renderTarget->SetGPUAddress(srvHandle.ptr);
+
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.Format = DXGI_FORMAT(format);
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+        srvDesc.Texture2D.MipLevels = 1;
+        srvDesc.Texture2D.MostDetailedMip = 0;
+
+        Device->CreateShaderResourceView(Resource, &srvDesc, srvHandle);
+
+        ResourceMap[(GraphicResource*)renderTarget] = Resource;
+
+        renderTarget->SetCurrentState((ResourceStates)D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
+
+        if(FAILED(hr))
+        {
+            DX12Helper::PrintHResultError(hr);
+        }
+        
+        Resource->SetName(std::wstring(name.Begin(), name.End()).c_str());
+
+        return renderTarget;
     }
 
     void DX12Renderer::InitializeUI()
@@ -161,8 +383,8 @@ namespace Waldem
 
         Device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&ImGuiHeap));
 
-        WArray<RenderTarget*> editorRenderTargets = { new DX12RenderTarget("EditorViewRT", Device, WorldCommandList.first, size.x, size.y, TextureFormat::R8G8B8A8_UNORM, ImGuiHeap, 1) };
-        RenderTarget* editorViewportDepth = new DX12RenderTarget("EditorViewDepth", Device, WorldCommandList.first, size.x, size.y, TextureFormat::D32_FLOAT);
+        WArray editorRenderTargets = { CreateRenderTarget("EditorViewRT", size.x, size.y, TextureFormat::R8G8B8A8_UNORM, ImGuiHeap, 1) };
+        RenderTarget* editorViewportDepth = CreateRenderTarget("EditorViewDepth", size.x, size.y, TextureFormat::D32_FLOAT);
         auto editorFrameBuffer = new SFrameBuffer(editorRenderTargets, editorViewportDepth);
         EditorViewport = SViewport(Vector2(0, 0), Vector2(size.x, size.y), Vector2(0, 1), editorFrameBuffer);
 
@@ -175,8 +397,8 @@ namespace Waldem
             }
         });
         
-        WArray<RenderTarget*> gameRenderTargets = { new DX12RenderTarget("GameViewRT", Device, WorldCommandList.first, size.x, size.y, TextureFormat::R8G8B8A8_UNORM, ImGuiHeap, 2) };
-        RenderTarget* gameViewportDepth = new DX12RenderTarget("GameViewDepth", Device, WorldCommandList.first, size.x, size.y, TextureFormat::D32_FLOAT);
+        WArray gameRenderTargets = { CreateRenderTarget("GameViewRT", size.x, size.y, TextureFormat::R8G8B8A8_UNORM, ImGuiHeap, 2) };
+        RenderTarget* gameViewportDepth = CreateRenderTarget("GameViewDepth", size.x, size.y, TextureFormat::D32_FLOAT);
         auto gameFrameBuffer = new SFrameBuffer(gameRenderTargets, gameViewportDepth);
         GameViewport = SViewport(Vector2(0, 0), Vector2(size.x, size.y), Vector2(0, 1), gameFrameBuffer);
         
@@ -192,7 +414,8 @@ namespace Waldem
             ID3D12Resource* resource;
             HRESULT h = SwapChain->GetBuffer(i, IID_PPV_ARGS(&resource));
 
-            auto renderTarget = new DX12RenderTarget("MainViewport_FrameBuffer_" + std::to_string(i), Device, size.x, size.y, TextureFormat::R8G8B8A8_UNORM, resource);
+            auto renderTarget = CreateRenderTarget("MainViewport_FrameBuffer_" + std::to_string(i), size.x, size.y, TextureFormat::R8G8B8A8_UNORM);
+            ResourceMap[(GraphicResource*)renderTarget] = resource;
             ResourceBarrier(renderTarget, ALL_SHADER_RESOURCE, PRESENT);
 
             if(FAILED(h))
@@ -202,7 +425,7 @@ namespace Waldem
 
             mainFrameBuffer->AddRenderTarget(renderTarget);
         }
-        mainFrameBuffer->SetDepth(new DX12RenderTarget("MainViewport_Depth", Device, WorldCommandList.first, size.x, size.y, TextureFormat::D32_FLOAT));
+        mainFrameBuffer->SetDepth(CreateRenderTarget("MainViewport_Depth", size.x, size.y, TextureFormat::D32_FLOAT));
         
         MainViewport = SViewport(Point2(0, 0), Point2(size.x, size.y), Point2(0, 1), mainFrameBuffer);
 
@@ -229,7 +452,8 @@ namespace Waldem
                     ID3D12Resource* resource;
                     h = SwapChain->GetBuffer(i, IID_PPV_ARGS(&resource));
 
-                    auto renderTarget = new DX12RenderTarget("MainViewport_FrameBuffer_" + std::to_string(i), Device, size.x, size.y, TextureFormat::R8G8B8A8_UNORM, resource);
+                    auto renderTarget = CreateRenderTarget("MainViewport_FrameBuffer_" + std::to_string(i), size.x, size.y, TextureFormat::R8G8B8A8_UNORM);
+                    ResourceMap[(GraphicResource*)renderTarget] = resource;
                     ResourceBarrier(renderTarget, ALL_SHADER_RESOURCE, PRESENT);
 
                     if(FAILED(h))
@@ -240,7 +464,7 @@ namespace Waldem
                     MainViewport.FrameBuffer->AddRenderTarget(renderTarget);
                 }
 
-                MainViewport.FrameBuffer->SetDepth(new DX12RenderTarget("MainViewport_Depth", Device, WorldCommandList.first, size.x, size.y, TextureFormat::D32_FLOAT));
+                MainViewport.FrameBuffer->SetDepth(CreateRenderTarget("MainViewport_Depth", size.x, size.y, TextureFormat::D32_FLOAT));
             }
         });
     }
@@ -257,18 +481,11 @@ namespace Waldem
         // Release old RTVs
         EditorViewport.FrameBuffer->Destroy();
 
-        RenderTarget* editorRenderTarget = { new DX12RenderTarget("EditorViewRT", Device, WorldCommandList.first, size.x, size.y, TextureFormat::R8G8B8A8_UNORM, ImGuiHeap, 1) };
+        RenderTarget* editorRenderTarget = { CreateRenderTarget("EditorViewRT", size.x, size.y, TextureFormat::R8G8B8A8_UNORM, ImGuiHeap, 1) };
         EditorViewport.FrameBuffer->AddRenderTarget(editorRenderTarget);
 
-        RenderTarget* editorViewportDepth = new DX12RenderTarget("EditorViewDepth", Device, WorldCommandList.first, size.x, size.y, TextureFormat::D32_FLOAT);
+        RenderTarget* editorViewportDepth = CreateRenderTarget("EditorViewDepth", size.x, size.y, TextureFormat::D32_FLOAT);
         EditorViewport.FrameBuffer->SetDepth(editorViewportDepth);
-    }
-
-    void DX12Renderer::Draw(CModel* model)
-    {
-        auto& cmd = WorldCommandList.first;
-
-        cmd->Draw(model);
     }
 
     void DX12Renderer::Draw(CMesh* mesh)
@@ -278,12 +495,11 @@ namespace Waldem
         cmd->Draw(mesh);
     }
 
-    void DX12Renderer::DrawIndirect(CommandSignature* commandSignature, uint numCommands, Buffer* indirectBuffer)
+    void DX12Renderer::DrawIndirect(uint numCommands, Buffer* indirectBuffer)
     {
         auto& cmd = WorldCommandList.first;
-        auto nativeCommandSignature = (ID3D12CommandSignature*)commandSignature->GetNativeObject();
-
-        cmd->DrawIndirect(nativeCommandSignature, numCommands, indirectBuffer);
+        ID3D12Resource* resource = ResourceMap[(GraphicResource*)indirectBuffer];
+        cmd->DrawIndirect(GeneralCommandSignature, numCommands, resource);
     }
 
     void DX12Renderer::SetIndexBuffer(Buffer* indexBuffer)
@@ -368,9 +584,12 @@ namespace Waldem
         ResourceBarrier(EditorViewport.FrameBuffer->GetCurrentRenderTarget(), ALL_SHADER_RESOURCE, RENDER_TARGET);
         ResourceBarrier(EditorViewport.FrameBuffer->GetDepth(), ALL_SHADER_RESOURCE, DEPTH_WRITE);
         
+        WorldCommandList.first->SetRootSignature(GeneralRootSignature);
+        WorldCommandList.first->SetGeneralDescriptorHeaps(GeneralResourcesHeap, GeneralSamplerHeap);
+        
         if(!WorldCommandList.second)
         {
-            worldCmd->BeginInternal(EditorViewport);
+            worldCmd->BeginInternal(EditorViewport, RTVHeap);
             
             WorldCommandList.second = true;
         }
@@ -406,7 +625,7 @@ namespace Waldem
         
         if(!WorldCommandList.second)
         {
-            worldCmd->BeginInternal(MainViewport);
+            worldCmd->BeginInternal(MainViewport, RTVHeap);
             
             WorldCommandList.second = true;
         }
@@ -457,6 +676,38 @@ namespace Waldem
         worldCmd->Reset();
     }
 
+    void DX12Renderer::Destroy(GraphicResource* resource)
+    {
+        auto dx12Resource = ResourceMap[resource];
+
+        if(!dx12Resource)
+        {
+            WD_CORE_ERROR("Resource not found in ResourceMap");
+        }
+
+        dx12Resource->Release();
+        
+        ResourceMap.Remove(resource);
+
+        if(resource->GetType() == RTYPE_Texture)
+        {
+            GeneralAllocator.Free(resource->GetIndex(SRV_UAV_CBV));
+        }
+        else if(resource->GetType() == RTYPE_RenderTarget)
+        {
+            RenderTargetAllocator.Free(resource->GetIndex(RTV));
+        }
+        else
+        {
+            WD_CORE_ERROR("Unknown resource type");
+        }
+    }
+
+    void* DX12Renderer::GetPlatformResource(GraphicResource* resource)
+    {
+        return ResourceMap[resource];
+    }
+
     void DX12Renderer::Present()
     {
         HRESULT h = SwapChain->Present(0, 0);
@@ -488,125 +739,876 @@ namespace Waldem
     void DX12Renderer::SetPipeline(Pipeline* pipeline)
     {
         WorldCommandList.first->SetPipeline(pipeline);
+        CurrentPipelineType = pipeline->CurrentPipelineType;
     }
 
-    void DX12Renderer::SetRootSignature(RootSignature* rootSignature)
+    void DX12Renderer::PushConstants(void* data, size_t size)
     {
-        WorldCommandList.first->SetRootSignature(rootSignature);
+        if(size > 128)
+        {
+            WD_CORE_ERROR("PushConstants size exceeds 128 bytes");
+            return;
+        }
+
+        uint num = size / sizeof(uint);
+        
+        WorldCommandList.first->SetConstants(4, num, data, CurrentPipelineType);
     }
 
     void DX12Renderer::SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil)
     {
-        WorldCommandList.first->SetRenderTargets(renderTargets, depthStencil);
+        WArray<D3D12_CPU_DESCRIPTOR_HANDLE> rtvHandles;
+        D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = {};
+        
+        for (auto rt : renderTargets)
+        {
+            D3D12_CPU_DESCRIPTOR_HANDLE rtv = RTVHeap->GetCPUDescriptorHandleForHeapStart();
+            rtv.ptr += rt->GetIndex(RTV) * Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+            rtvHandles.Add(rtv);
+        }
+        
+        if(depthStencil)
+        {
+            dsvHandle = RTVHeap->GetCPUDescriptorHandleForHeapStart();
+            dsvHandle.ptr += depthStencil->GetIndex(RTV) * Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+        }
+        
+        WorldCommandList.first->SetRenderTargets(rtvHandles, dsvHandle);
     }
 
-    Pipeline* DX12Renderer::CreateGraphicPipeline(const WString& name, RootSignature* rootSignature, PixelShader* shader, WArray<TextureFormat> RTFormats, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout)
+    Pipeline* DX12Renderer::CreateGraphicPipeline(const WString& name, PixelShader* shader, WArray<TextureFormat> RTFormats, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout)
     {
-        return new DX12GraphicPipeline(name, Device, rootSignature, shader, RTFormats, rasterizerDesc, depthStencilDesc, primitiveTopologyType, inputLayout);
+        return new DX12GraphicPipeline(name, Device, GeneralRootSignature, shader, RTFormats, rasterizerDesc, depthStencilDesc, primitiveTopologyType, inputLayout);
     }
 
-    Pipeline* DX12Renderer::CreateComputePipeline(const WString& name, RootSignature* rootSignature, ComputeShader* shader)
+    Pipeline* DX12Renderer::CreateComputePipeline(const WString& name, ComputeShader* shader)
     {
-        return new DX12ComputePipeline(name, Device, rootSignature, shader);
+        return new DX12ComputePipeline(name, Device, GeneralRootSignature, shader);
     }
 
-    Pipeline* DX12Renderer::CreateRayTracingPipeline(const WString& name, RootSignature* rootSignature, RayTracingShader* shader)
+    Pipeline* DX12Renderer::CreateRayTracingPipeline(const WString& name, RayTracingShader* shader)
     {
-        return new DX12RayTracingPipeline(name, Device, rootSignature, shader);
+        return new DX12RayTracingPipeline(name, Device, GeneralRootSignature, shader);
     }
 
-    RootSignature* DX12Renderer::CreateRootSignature(WArray<GraphicResource> resources)
+    Texture2D* DX12Renderer::CreateTexture(WString name, int width, int height, TextureFormat format, uint8_t* data)
     {
-        return new DX12RootSignature(Device, WorldCommandList.first, resources);
-    }
+        auto cmdList = WorldCommandList.first;
+        
+        Texture2D* texture = new Texture2D(name, width, height, format, data);
+        
+        HRESULT hr;
+        
+        D3D12_RESOURCE_DESC textureDesc = {};
+        textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+        textureDesc.Width = width;
+        textureDesc.Height = height;
+        textureDesc.DepthOrArraySize = 1;
+        textureDesc.MipLevels = 1;
+        textureDesc.Format = DXGI_FORMAT(format);
+        textureDesc.SampleDesc.Count = 1;
+        textureDesc.SampleDesc.Quality = 0;
+        textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+        textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
-    CommandSignature* DX12Renderer::CreateCommandSignature(RootSignature* rootSignature)
-    {
-        CommandSignature* commandSignature = new DX12CommandSignature(Device, rootSignature);
-        return commandSignature;
-    }
+        // Create the texture resource
+        D3D12_HEAP_PROPERTIES heapProperties = {};
+        heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
+        heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+        heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+        heapProperties.CreationNodeMask = 1;
+        heapProperties.VisibleNodeMask = 1;
 
-    Texture2D* DX12Renderer::CreateTexture(WString name, int width, int height, TextureFormat format, size_t dataSize, uint8_t* data)
-    {
-        Texture2D* texture = new DX12Texture(name, Device, WorldCommandList.first, width, height, format, dataSize, data);
-        return texture;
-    }
+        ID3D12Resource* Resource;
+        
+        hr = Device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &textureDesc,
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            nullptr,
+            IID_PPV_ARGS(&Resource));
 
-    Texture2D* DX12Renderer::CreateTexture(TextureDesc desc)
-    {
-        Texture2D* texture = new DX12Texture(Device, WorldCommandList.first, desc);
+        if(FAILED(hr))
+        {
+            DX12Helper::PrintHResultError(hr);
+        }
+
+        std::wstring widestr = std::wstring(name.Begin(), name.End());
+        Resource->SetName(widestr.c_str());
+
+        if(data)
+        {
+            D3D12_HEAP_PROPERTIES uploadHeapProps = {};
+            uploadHeapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+            uploadHeapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+            uploadHeapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+            uploadHeapProps.CreationNodeMask = 1;
+            uploadHeapProps.VisibleNodeMask = 1;
+            
+            UINT64 uploadBufferSize;
+            Device->GetCopyableFootprints(&textureDesc, 0, 1, 0, nullptr, nullptr, nullptr, &uploadBufferSize);
+
+            D3D12_RESOURCE_DESC uploadBufferDesc = {};
+            uploadBufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+            uploadBufferDesc.Width = uploadBufferSize;
+            uploadBufferDesc.Height = 1;
+            uploadBufferDesc.DepthOrArraySize = 1;
+            uploadBufferDesc.MipLevels = 1;
+            uploadBufferDesc.Format = DXGI_FORMAT_UNKNOWN;
+            uploadBufferDesc.SampleDesc.Count = 1;
+            uploadBufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+            uploadBufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+            
+            ID3D12Resource* textureUploadHeap;
+            hr = Device->CreateCommittedResource(&uploadHeapProps, D3D12_HEAP_FLAG_NONE, &uploadBufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&textureUploadHeap));
+            
+            if(FAILED(hr))
+            {
+                DX12Helper::PrintHResultError(hr);
+            }
+
+            D3D12_SUBRESOURCE_DATA subResourceData;
+            subResourceData.pData = data;
+            subResourceData.RowPitch = uploadBufferSize / height;
+            subResourceData.SlicePitch = uploadBufferSize;
+
+            cmdList->UpdateSubresoures(Resource, textureUploadHeap, 1, &subResourceData);
+        }
+
+        D3D12_RESOURCE_BARRIER barrier = {};
+        barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+        barrier.Transition.pResource = Resource;
+        barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+        barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COMMON;
+        barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+        cmdList->ResourceBarrier(1, &barrier);
+
+        texture->SetCurrentState((ResourceStates)D3D12_RESOURCE_STATE_COMMON);
+
+        ResourceMap[(GraphicResource*)texture] = Resource;
+        
+        uint index = GeneralAllocator.Allocate();
+        texture->SetIndex(index, SRV_UAV_CBV);
+        
+        D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = GeneralResourcesHeap->GetCPUDescriptorHandleForHeapStart();
+        UINT descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        cpuHandle.ptr += index * descriptorSize;
+
+        texture->SetGPUAddress(cpuHandle.ptr);
+
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.Format = DXGI_FORMAT(format);
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+        srvDesc.Texture2D.MipLevels = 1;
+        srvDesc.Texture2D.MostDetailedMip = 0;
+
+        Device->CreateShaderResourceView(Resource, &srvDesc, cpuHandle);
+        
         return texture;
     }
 
     RenderTarget* DX12Renderer::CreateRenderTarget(WString name, int width, int height, TextureFormat format)
     {
-        DX12RenderTarget* renderTarget = new DX12RenderTarget(name, Device, WorldCommandList.first, width, height, format);
+        RenderTarget* renderTarget = new RenderTarget(name, width, height, format);
+
+        uint index = RenderTargetAllocator.Allocate();
+        renderTarget->SetIndex(index, RTV);
+        
+        UINT descriptorSize;
+
+        HRESULT hr;
+
+        ID3D12Resource* Resource;
+        
+        D3D12_RESOURCE_DESC textureDesc = {};
+        D3D12_CLEAR_VALUE clearValue = {};
+        D3D12_HEAP_PROPERTIES heapProperties = {};
+        heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
+        heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+        heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+        heapProperties.CreationNodeMask = 1;
+        heapProperties.VisibleNodeMask = 1;
+
+        if(format == TextureFormat::D32_FLOAT)
+        {
+            textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+            textureDesc.Width = width;
+            textureDesc.Height = height;
+            textureDesc.DepthOrArraySize = 1;
+            textureDesc.MipLevels = 1;
+            textureDesc.Format = DXGI_FORMAT_R32_TYPELESS;
+            textureDesc.SampleDesc.Count = 1;
+            textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+            clearValue.Format = DXGI_FORMAT_D32_FLOAT;
+            clearValue.DepthStencil.Depth = 1.0f;
+            clearValue.DepthStencil.Stencil = 0;
+
+            D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+            dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
+            dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+            dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
+            
+            hr = Device->CreateCommittedResource(
+                &heapProperties,
+                D3D12_HEAP_FLAG_NONE,
+                &textureDesc,
+                D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE,
+                &clearValue,
+                IID_PPV_ARGS(&Resource));
+
+            descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+            auto dsvHandle = DSVHeap->GetCPUDescriptorHandleForHeapStart();
+            dsvHandle.ptr += index * descriptorSize;
+            
+            //create dsv
+            Device->CreateDepthStencilView(Resource, &dsvDesc, dsvHandle);
+
+            format = TextureFormat::R32_FLOAT;
+        }
+        else
+        {
+            textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+            textureDesc.Width = width;
+            textureDesc.Height = height;
+            textureDesc.DepthOrArraySize = 1;
+            textureDesc.MipLevels = 1;
+            textureDesc.Format = (DXGI_FORMAT)format;
+            textureDesc.SampleDesc.Count = 1;
+            textureDesc.SampleDesc.Quality = 0;
+            textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+            textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+
+            clearValue.Format = (DXGI_FORMAT)format;
+            clearValue.Color[0] = 0.0f;
+            clearValue.Color[1] = 0.0f;
+            clearValue.Color[2] = 0.0f;
+            clearValue.Color[3] = 1.0f;
+            
+            hr = Device->CreateCommittedResource(
+                &heapProperties,
+                D3D12_HEAP_FLAG_NONE,
+                &textureDesc,
+                D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE,
+                &clearValue,
+                IID_PPV_ARGS(&Resource));
+
+            descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+            auto rtvHandle = RTVHeap->GetCPUDescriptorHandleForHeapStart();
+            rtvHandle.ptr += index * descriptorSize;
+            
+            //create rtv
+            Device->CreateRenderTargetView(Resource, nullptr, rtvHandle);
+        }
+
+        //create srv
+        index = GeneralAllocator.Allocate();
+        renderTarget->SetIndex(index, SRV_UAV_CBV);
+        
+        D3D12_CPU_DESCRIPTOR_HANDLE srvHandle = GeneralResourcesHeap->GetCPUDescriptorHandleForHeapStart();
+        descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        srvHandle.ptr += index * descriptorSize;
+
+        renderTarget->SetGPUAddress(srvHandle.ptr);
+
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.Format = DXGI_FORMAT(format);
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+        srvDesc.Texture2D.MipLevels = 1;
+        srvDesc.Texture2D.MostDetailedMip = 0;
+
+        Device->CreateShaderResourceView(Resource, &srvDesc, srvHandle);
+
+        ResourceMap[(GraphicResource*)renderTarget] = Resource;
+
+        renderTarget->SetCurrentState((ResourceStates)D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
+
+        if(FAILED(hr))
+        {
+            DX12Helper::PrintHResultError(hr);
+        }
+        
+        Resource->SetName(std::wstring(name.Begin(), name.End()).c_str());
+
         return renderTarget;
     }
 
     AccelerationStructure* DX12Renderer::CreateBLAS(WString name, WArray<RayTracingGeometry>& geometries)
     {
-        return new DX12AccelerationStructure(name, Device, WorldCommandList.first, AccelerationStructureType::BottomLevel, geometries);
+        auto cmdList = WorldCommandList.first;
+
+        AccelerationStructure* blas = new AccelerationStructure(name, AccelerationStructureType::BottomLevel);
+        
+        WArray<D3D12_RAYTRACING_GEOMETRY_DESC> dx12Geometries;
+
+        for (auto& geometry : geometries)
+        {
+            D3D12_RAYTRACING_GEOMETRY_DESC geomDesc = {};
+            geomDesc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
+            geomDesc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
+            
+            geomDesc.Triangles.VertexBuffer.StartAddress = geometry.VertexBuffer->GetGPUAddress();
+            geomDesc.Triangles.VertexBuffer.StrideInBytes = geometry.VertexBuffer->GetStride();
+            geomDesc.Triangles.VertexCount = geometry.VertexBuffer->GetCount();
+            geomDesc.Triangles.VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT;
+            geomDesc.Triangles.IndexBuffer = geometry.IndexBuffer->GetGPUAddress();
+            geomDesc.Triangles.IndexCount = geometry.IndexBuffer->GetCount();
+            geomDesc.Triangles.IndexFormat = geometry.IndexBuffer->GetStride() == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT;
+            geomDesc.Triangles.Transform3x4 = 0; //No transform for the BLAS, better to use instances' transforms
+            
+            dx12Geometries.Add(geomDesc);
+        }
+        
+        D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS asInputs = {};
+        asInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
+        asInputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
+        asInputs.NumDescs = static_cast<UINT>(dx12Geometries.Num());
+        asInputs.pGeometryDescs = dx12Geometries.GetData();
+        asInputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE | D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_UPDATE;
+
+        D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO prebuildInfo = {};
+        Device->GetRaytracingAccelerationStructurePrebuildInfo(&asInputs, &prebuildInfo);
+
+        prebuildInfo.ScratchDataSizeInBytes = (prebuildInfo.ScratchDataSizeInBytes + 255) & ~255;
+        prebuildInfo.ResultDataMaxSizeInBytes = (prebuildInfo.ResultDataMaxSizeInBytes + 255) & ~255;
+
+        //create scratch buffer
+        D3D12_HEAP_PROPERTIES heapProps = {};
+        heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
+        heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+        heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+
+        D3D12_RESOURCE_DESC resourceDesc = {};
+        resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+        resourceDesc.Alignment = 0;
+        resourceDesc.Width = prebuildInfo.ScratchDataSizeInBytes;
+        resourceDesc.Height = 1;
+        resourceDesc.DepthOrArraySize = 1;
+        resourceDesc.MipLevels = 1;
+        resourceDesc.Format = DXGI_FORMAT_UNKNOWN;
+        resourceDesc.SampleDesc.Count = 1;
+        resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+        resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+        ID3D12Resource* ScratchBuffer;
+        Device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(&ScratchBuffer));
+
+        Buffer* scratchBuffer = new Buffer();
+        scratchBuffer->SetGPUAddress(ScratchBuffer->GetGPUVirtualAddress());
+        blas->SetScratchBuffer(scratchBuffer);
+
+        //create resource
+        resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+        resourceDesc.Alignment = 0;
+        resourceDesc.Width = prebuildInfo.ResultDataMaxSizeInBytes;
+        resourceDesc.Height = 1;
+        resourceDesc.DepthOrArraySize = 1;
+        resourceDesc.MipLevels = 1;
+        resourceDesc.Format = DXGI_FORMAT_UNKNOWN;
+        resourceDesc.SampleDesc.Count = 1;
+        resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+        resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+        ID3D12Resource* Resource;
+        Device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE, nullptr, IID_PPV_ARGS(&Resource));
+
+        blas->SetCurrentState((ResourceStates)D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE);
+
+        std::wstring widestr = std::wstring(name.Begin(), name.End());
+        Resource->SetName(widestr.c_str());
+        
+        ResourceMap[(GraphicResource*)blas] = Resource;
+
+        blas->SetGPUAddress(Resource->GetGPUVirtualAddress());
+        
+        D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC asDesc = {};
+        asDesc.Inputs = asInputs;
+        asDesc.ScratchAccelerationStructureData = ScratchBuffer->GetGPUVirtualAddress();
+        asDesc.DestAccelerationStructureData = Resource->GetGPUVirtualAddress();
+
+        cmdList->BuildRaytracingAccelerationStructure(&asDesc);
+
+        cmdList->UAVBarrier(Resource);
+
+        return blas;
     }
 
     AccelerationStructure* DX12Renderer::CreateTLAS(WString name, WArray<RayTracingInstance>& instances)
     {
-        return new DX12AccelerationStructure(name, Device, WorldCommandList.first, AccelerationStructureType::TopLevel, instances);
+        auto cmdList = WorldCommandList.first;
+
+        AccelerationStructure* tlas = new AccelerationStructure(name, AccelerationStructureType::TopLevel);
+        uint index = GeneralAllocator.Allocate();
+        tlas->SetIndex(index, SRV_UAV_CBV);
+        
+        WArray<D3D12_RAYTRACING_INSTANCE_DESC> dx12Instances;
+
+        for(int i = 0; i < instances.Num(); i++)
+        {
+            auto& instance = instances[i];
+            
+            D3D12_RAYTRACING_INSTANCE_DESC instanceDesc = {};
+            instanceDesc.InstanceID = static_cast<UINT>(i);
+            instanceDesc.InstanceMask = 0xFF;
+            instanceDesc.InstanceContributionToHitGroupIndex = 0;
+            instanceDesc.Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
+            Matrix4 transposedMatrix = transpose(instance.Transform);
+            memcpy(instanceDesc.Transform, &transposedMatrix, sizeof(instanceDesc.Transform));
+
+            instanceDesc.AccelerationStructure = instance.BLAS->GetGPUAddress();
+            
+            dx12Instances.Add(instanceDesc);
+        }
+        
+        D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS asInputs = {};
+        asInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
+        asInputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
+        asInputs.NumDescs = static_cast<UINT>(dx12Instances.Num());
+        asInputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE | D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_UPDATE;
+
+        //create instance buffer
+        D3D12_HEAP_PROPERTIES heapProps = {};
+        heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+        heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+        heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+
+        D3D12_RESOURCE_DESC resourceDesc = {};
+        resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+        resourceDesc.Alignment = 0;
+        resourceDesc.Width = sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * dx12Instances.Num();
+        resourceDesc.Height = 1;
+        resourceDesc.DepthOrArraySize = 1;
+        resourceDesc.MipLevels = 1;
+        resourceDesc.Format = DXGI_FORMAT_UNKNOWN;
+        resourceDesc.SampleDesc.Count = 1;
+        resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+        resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+        ID3D12Resource* UploadResource;
+        Device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&UploadResource));
+        
+        void* mappedData;
+        UploadResource->Map(0, nullptr, &mappedData);
+        memcpy(mappedData, dx12Instances.GetData(), sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * dx12Instances.Num());
+        UploadResource->Unmap(0, nullptr);
+
+        GraphicResource* instancesBuffer = new GraphicResource();
+        instancesBuffer->SetGPUAddress(UploadResource->GetGPUVirtualAddress());
+        tlas->SetUploadResource(instancesBuffer);
+
+        asInputs.InstanceDescs = instancesBuffer->GetGPUAddress();
+
+        D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO prebuildInfo = {};
+        Device->GetRaytracingAccelerationStructurePrebuildInfo(&asInputs, &prebuildInfo);
+
+        prebuildInfo.ScratchDataSizeInBytes = (prebuildInfo.ScratchDataSizeInBytes + 255) & ~255;
+        prebuildInfo.ResultDataMaxSizeInBytes = (prebuildInfo.ResultDataMaxSizeInBytes + 255) & ~255;
+
+        //create scratch buffer
+        heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
+        heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+        heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+
+        resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+        resourceDesc.Alignment = 0;
+        resourceDesc.Width = prebuildInfo.ScratchDataSizeInBytes;
+        resourceDesc.Height = 1;
+        resourceDesc.DepthOrArraySize = 1;
+        resourceDesc.MipLevels = 1;
+        resourceDesc.Format = DXGI_FORMAT_UNKNOWN;
+        resourceDesc.SampleDesc.Count = 1;
+        resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+        resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+        ID3D12Resource* ScratchBuffer;
+        Device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(&ScratchBuffer));
+
+        Buffer* scratchBuffer = new Buffer();
+        scratchBuffer->SetGPUAddress(ScratchBuffer->GetGPUVirtualAddress());
+        tlas->SetScratchBuffer(scratchBuffer);
+
+        //create resource
+        resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+        resourceDesc.Alignment = 0;
+        resourceDesc.Width = prebuildInfo.ResultDataMaxSizeInBytes;
+        resourceDesc.Height = 1;
+        resourceDesc.DepthOrArraySize = 1;
+        resourceDesc.MipLevels = 1;
+        resourceDesc.Format = DXGI_FORMAT_UNKNOWN;
+        resourceDesc.SampleDesc.Count = 1;
+        resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+        resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+        ID3D12Resource* Resource;
+        Device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE, nullptr, IID_PPV_ARGS(&Resource));
+
+        tlas->SetCurrentState((ResourceStates)D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE);
+
+        std::wstring widestr = std::wstring(name.Begin(), name.End());
+        Resource->SetName(widestr.c_str());
+        
+        ResourceMap[(GraphicResource*)tlas] = Resource;
+        
+        D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC asDesc = {};
+        asDesc.Inputs = asInputs;
+        asDesc.ScratchAccelerationStructureData = ScratchBuffer->GetGPUVirtualAddress();
+        asDesc.DestAccelerationStructureData = Resource->GetGPUVirtualAddress();
+
+        cmdList->BuildRaytracingAccelerationStructure(&asDesc);
+
+        cmdList->UAVBarrier(Resource);
+        
+        D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = GeneralResourcesHeap->GetCPUDescriptorHandleForHeapStart();
+        UINT descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        cpuHandle.ptr += index * descriptorSize;
+
+        tlas->SetGPUAddress(cpuHandle.ptr);
+
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE;
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.RaytracingAccelerationStructure.Location = asDesc.DestAccelerationStructureData;
+
+        Device->CreateShaderResourceView(Resource, &srvDesc, cpuHandle);
+
+        return tlas;
     }
 
     void DX12Renderer::UpdateBLAS(AccelerationStructure* BLAS, WArray<RayTracingGeometry>& geometries)
     {
-        DX12AccelerationStructure* dx12BLAS = (DX12AccelerationStructure*)BLAS;
-        dx12BLAS->Update(WorldCommandList.first, geometries);
+        auto cmdList = WorldCommandList.first;
+        
+        // Update geometry descriptions
+        WArray<D3D12_RAYTRACING_GEOMETRY_DESC> dx12Geometries;
+        for (auto& geometry : geometries)
+        {
+            D3D12_RAYTRACING_GEOMETRY_DESC geomDesc = {};
+            geomDesc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
+            geomDesc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
+
+            geomDesc.Triangles.VertexBuffer.StartAddress = geometry.VertexBuffer->GetGPUAddress();
+            geomDesc.Triangles.VertexBuffer.StrideInBytes = geometry.VertexBuffer->GetStride();
+            geomDesc.Triangles.VertexCount = geometry.VertexBuffer->GetCount();
+            geomDesc.Triangles.VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT;
+            geomDesc.Triangles.IndexBuffer = geometry.IndexBuffer->GetGPUAddress();
+            geomDesc.Triangles.IndexCount = geometry.IndexBuffer->GetCount();
+            geomDesc.Triangles.IndexFormat = geometry.IndexBuffer->GetStride() == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT;
+            geomDesc.Triangles.Transform3x4 = 0;
+
+            dx12Geometries.Add(geomDesc);
+        }
+
+        // Acceleration structure inputs
+        D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS asInputs = {};
+        asInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
+        asInputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
+        asInputs.NumDescs = static_cast<UINT>(dx12Geometries.Num());
+        asInputs.pGeometryDescs = dx12Geometries.GetData();
+        asInputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE |
+                         D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_UPDATE |
+                         D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PERFORM_UPDATE;
+
+        // Build the updated acceleration structure
+        D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC asDesc;
+        asDesc.Inputs = asInputs;
+        asDesc.ScratchAccelerationStructureData = BLAS->GetScratchBuffer()->GetGPUAddress();
+        asDesc.DestAccelerationStructureData = BLAS->GetGPUAddress();
+        asDesc.SourceAccelerationStructureData = BLAS->GetGPUAddress();
+
+        cmdList->BuildRaytracingAccelerationStructure(&asDesc);
+
+        cmdList->UAVBarrier(ResourceMap[(GraphicResource*)BLAS]);
     }
 
     void DX12Renderer::UpdateTLAS(AccelerationStructure* TLAS, WArray<RayTracingInstance>& instances)
     {
-        DX12AccelerationStructure* dx12TLAS = (DX12AccelerationStructure*)TLAS;
-        dx12TLAS->Update(WorldCommandList.first, instances);
-    }
+        auto cmdList = WorldCommandList.first;
+        
+        // Update instance descriptors
+        WArray<D3D12_RAYTRACING_INSTANCE_DESC> dx12Instances;
+        for (int i = 0; i < instances.Num(); i++)
+        {
+            auto& instance = instances[i];
 
-    void DX12Renderer::CopyRenderTarget(RenderTarget* dstRT, RenderTarget* srcRT)
-    {
-        WorldCommandList.first->CopyRenderTarget(dstRT, srcRT);
-    }
+            D3D12_RAYTRACING_INSTANCE_DESC instanceDesc = {};
+            instanceDesc.InstanceID = static_cast<UINT>(i);
+            instanceDesc.InstanceMask = 0xFF;
+            instanceDesc.InstanceContributionToHitGroupIndex = 0;
+            instanceDesc.Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
+            Matrix4 transposedMatrix = transpose(instance.Transform);
+            memcpy(instanceDesc.Transform, &transposedMatrix, sizeof(instanceDesc.Transform));
 
-    void DX12Renderer::CopyBuffer(Buffer* dstBuffer, Buffer* srcBuffer)
-    {
-        WorldCommandList.first->CopyBuffer(dstBuffer, srcBuffer);
+            instanceDesc.AccelerationStructure = instance.BLAS->GetGPUAddress();
+
+            dx12Instances.Add(instanceDesc);
+        }
+
+        // Update the instance buffer with new transforms
+        auto InstanceBuffer = ResourceMap[TLAS->GetUploadResource()];
+        
+        void* mappedData;
+        InstanceBuffer->Map(0, nullptr, &mappedData);
+        memcpy(mappedData, dx12Instances.GetData(), sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * dx12Instances.Num());
+        InstanceBuffer->Unmap(0, nullptr);
+
+        // Prepare the acceleration structure inputs for update
+        D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS asInputs = {};
+        asInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
+        asInputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
+        asInputs.NumDescs = static_cast<UINT>(dx12Instances.Num());
+        asInputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE |
+                         D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_UPDATE |
+                         D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PERFORM_UPDATE;  // Important for refit
+        asInputs.InstanceDescs = TLAS->GetUploadResource()->GetGPUAddress();
+
+        // Describe the acceleration structure build for update
+        D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC asDesc = {};
+        asDesc.Inputs = asInputs;
+        asDesc.ScratchAccelerationStructureData = TLAS->GetScratchBuffer()->GetGPUAddress();
+        asDesc.DestAccelerationStructureData = TLAS->GetGPUAddress();
+        asDesc.SourceAccelerationStructureData = TLAS->GetGPUAddress();  // Source is the existing TLAS
+
+        // Build the updated TLAS
+        cmdList->BuildRaytracingAccelerationStructure(&asDesc);
+
+        // Insert a barrier to ensure completion
+        cmdList->UAVBarrier(ResourceMap[(GraphicResource*)TLAS]);
     }
 
     Buffer* DX12Renderer::CreateBuffer(WString name, BufferType type, void* data, uint32_t size, uint32_t stride)
     {
-        return new DX12Buffer(Device, WorldCommandList.first, name, type, data, size, stride);
+        auto cmdList = WorldCommandList.first;
+
+        Buffer* buffer = new Buffer(name, type, size, stride);
+        
+        D3D12_HEAP_PROPERTIES heapProps = {};
+        heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
+        
+        D3D12_RESOURCE_DESC bufferDesc = {};
+        bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+        bufferDesc.Width = size;
+        bufferDesc.Height = 1;
+        bufferDesc.DepthOrArraySize = 1;
+        bufferDesc.MipLevels = 1;
+        bufferDesc.SampleDesc.Count = 1;
+        bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+        bufferDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+
+        ID3D12Resource* Resource;
+        
+        HRESULT hr = Device->CreateCommittedResource(
+            &heapProps,
+            D3D12_HEAP_FLAG_NONE,
+            &bufferDesc,
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            nullptr,
+            IID_PPV_ARGS(&Resource));
+
+        if (FAILED(hr))
+        {
+            throw std::runtime_error("Failed to create buffer!");
+        }
+
+        buffer->SetGPUAddress(Resource->GetGPUVirtualAddress());
+        ResourceMap[(GraphicResource*)buffer] = Resource;
+        
+        D3D12_HEAP_PROPERTIES uploadHeapProps;
+        uploadHeapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+        uploadHeapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+        uploadHeapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+        uploadHeapProps.CreationNodeMask = 1;
+        uploadHeapProps.VisibleNodeMask = 1;
+            
+        UINT64 uploadBufferSize;
+        Device->GetCopyableFootprints(&bufferDesc, 0, 1, 0, nullptr, nullptr, nullptr, &uploadBufferSize);
+
+        D3D12_RESOURCE_DESC uploadBufferDesc = {};
+        uploadBufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+        uploadBufferDesc.Width = uploadBufferSize;
+        uploadBufferDesc.Height = 1;
+        uploadBufferDesc.DepthOrArraySize = 1;
+        uploadBufferDesc.MipLevels = 1;
+        uploadBufferDesc.Format = DXGI_FORMAT_UNKNOWN;
+        uploadBufferDesc.SampleDesc.Count = 1;
+        uploadBufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+        uploadBufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+        ID3D12Resource* UploadResource;
+        hr = Device->CreateCommittedResource(&uploadHeapProps, D3D12_HEAP_FLAG_NONE, &uploadBufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&UploadResource));
+
+        if(FAILED(hr))
+        {
+            DX12Helper::PrintHResultError(hr);
+        }
+        
+        auto uploadGraphicResource = new GraphicResource();
+        ResourceMap[uploadGraphicResource] = UploadResource;
+        
+        buffer->SetUploadResource(uploadGraphicResource);
+
+        if(data)
+        {
+            D3D12_SUBRESOURCE_DATA subResourceData;
+            subResourceData.pData = data;
+            subResourceData.RowPitch = uploadBufferSize;
+            subResourceData.SlicePitch = uploadBufferSize;
+
+            cmdList->UpdateSubresoures(Resource, UploadResource, 1, &subResourceData);
+        }
+
+        D3D12_RESOURCE_STATES beforeState = D3D12_RESOURCE_STATE_COPY_DEST;
+        D3D12_RESOURCE_STATES afterState = D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
+        
+        switch (type)
+        {
+        case VertexBuffer:
+            {
+                afterState = D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
+                break;
+            }
+        case IndexBuffer:
+            {
+                afterState = D3D12_RESOURCE_STATE_INDEX_BUFFER;
+                break;
+            }
+        case IndirectBuffer:
+            {                
+                afterState = D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT;
+                break;
+            }
+        }
+        
+        cmdList->ResourceBarrier(Resource, beforeState, afterState | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+
+        buffer->SetCurrentState((ResourceStates)(afterState | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
+        
+        uint index = GeneralAllocator.Allocate();
+        buffer->SetIndex(index, SRV_UAV_CBV);
+        
+        D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = GeneralResourcesHeap->GetCPUDescriptorHandleForHeapStart();
+        UINT descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        cpuHandle.ptr += index * descriptorSize;
+
+        buffer->SetGPUAddress(cpuHandle.ptr);
+
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+        srvDesc.Buffer.FirstElement = 0;
+        srvDesc.Buffer.NumElements = buffer->GetCount();
+        srvDesc.Buffer.StructureByteStride = buffer->GetStride();
+        srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+
+        Device->CreateShaderResourceView(Resource, &srvDesc, cpuHandle);
+
+        ComPtr<ID3D12Resource> readbackBuffer;
+        auto heapDesc = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK);
+        Device->CreateCommittedResource(
+            &heapDesc,
+            D3D12_HEAP_FLAG_NONE,
+            &uploadBufferDesc, // must match GPU buffer size
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            nullptr,
+            IID_PPV_ARGS(&readbackBuffer));
+        
+        auto readbackGraphicResource = new GraphicResource();
+        ResourceMap[readbackGraphicResource] = readbackBuffer.Get();
+        
+        buffer->SetReadbackResource(readbackGraphicResource);
+
+        return buffer;
     }
 
-    void DX12Renderer::UpdateBuffer(Buffer* buffer, void* data, uint32_t size)
+    void DX12Renderer::CopyResource(GraphicResource* dstResource, GraphicResource* srcResource)
     {
-        WorldCommandList.first->UpdateBuffer(buffer, data, size);
+        ID3D12Resource* dx12DstResource = ResourceMap[dstResource];
+        ID3D12Resource* dx12SrcResource = ResourceMap[srcResource];
+
+        if(!dx12DstResource || !dx12SrcResource)
+        {
+            WD_CORE_ERROR("Resource not found in ResourceMap");
+        }
+        
+        WorldCommandList.first->CopyResource(dx12DstResource, dx12SrcResource);
+    }
+
+    void DX12Renderer::UpdateGraphicResource(GraphicResource* graphicResource, void* data, uint32_t size)
+    {
+        ID3D12Resource* resource = ResourceMap[graphicResource];
+        ID3D12Resource* uploadResource = ResourceMap[graphicResource->GetUploadResource()];
+        D3D12_RESOURCE_STATES beforeState = (D3D12_RESOURCE_STATES)graphicResource->GetCurrentState();
+        WorldCommandList.first->UpdateRes(resource, uploadResource, data, size, beforeState);
+    }
+
+    void DX12Renderer::ReadbackBuffer(Buffer* buffer, void* data)
+    {
+        if(data)
+        {
+            auto readbackBuffer = buffer->GetReadbackResource();
+            
+            if(readbackBuffer)
+            {
+                auto resource = ResourceMap[readbackBuffer];
+                
+                if(resource)
+                {
+                    //copy the GPU buffer to the readback buffer
+                    ResourceBarrier(buffer, UNORDERED_ACCESS, COPY_SOURCE);
+                    CopyResource(readbackBuffer, buffer);
+                    ResourceBarrier(buffer, COPY_SOURCE, UNORDERED_ACCESS);
+                    //map and copy data
+                    UINT8* pMappedData;
+                    HRESULT hr = resource->Map(0, nullptr, reinterpret_cast<void**>(&pMappedData));
+                    if(FAILED(hr))
+                    {
+                        DX12Helper::PrintHResultError(hr);
+                    }
+                    memcpy(data, pMappedData, buffer->GetSize());
+                    resource->Unmap(0, nullptr);
+                }
+                else
+                {
+                    WD_CORE_ERROR("DX12Resource not found for the bound readback resource");
+                }
+            }
+            else
+            {
+                WD_CORE_ERROR("Current graphic resource doesnt have readback resource");
+            }
+        }
+        else
+        {
+            WD_CORE_ERROR("Wrong destination for the readback");
+        }
     }
 
     void DX12Renderer::ClearRenderTarget(RenderTarget* rt)
     {
-        D3D12_CPU_DESCRIPTOR_HANDLE dx12RenderTarget = ((DX12RenderTarget*)rt)->GetRTVHandle();
-        WorldCommandList.first->ClearRenderTarget(dx12RenderTarget);
+        uint index = rt->GetIndex(RTV);
+        auto handle = RTVHeap->GetCPUDescriptorHandleForHeapStart();
+        handle.ptr += index * Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+        WorldCommandList.first->ClearRenderTarget(handle);
     }
 
     void DX12Renderer::ClearDepthStencil(RenderTarget* ds)
     {
-        D3D12_CPU_DESCRIPTOR_HANDLE dx12DepthStencil = ((DX12RenderTarget*)ds)->GetRTVHandle();
-        WorldCommandList.first->ClearDepthStencil(dx12DepthStencil);
+        uint index = ds->GetIndex(RTV);
+        auto handle = DSVHeap->GetCPUDescriptorHandleForHeapStart();
+        handle.ptr += index * Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+        WorldCommandList.first->ClearDepthStencil(handle);
     }
 
-    void DX12Renderer::ResourceBarrier(RenderTarget* rt, ResourceStates before, ResourceStates after)
+    void DX12Renderer::ResourceBarrier(GraphicResource* resource, ResourceStates before, ResourceStates after)
     {
-        ID3D12Resource* resource = (ID3D12Resource*)rt->GetPlatformResource();
-        WorldCommandList.first->ResourceBarrier(resource, (D3D12_RESOURCE_STATES)before, (D3D12_RESOURCE_STATES)after);
-    }
+        ID3D12Resource* dx12Resource = ResourceMap[resource];
 
-    void DX12Renderer::ResourceBarrier(Buffer* buffer, ResourceStates before, ResourceStates after)
-    {
-        ID3D12Resource* resource = (ID3D12Resource*)buffer->GetPlatformResource();
-        WorldCommandList.first->ResourceBarrier(resource, (D3D12_RESOURCE_STATES)before, (D3D12_RESOURCE_STATES)after);
+        if(dx12Resource == nullptr)
+        {
+            WD_CORE_ERROR("Resource not found in ResourceMap");
+        }
+
+        resource->SetCurrentState(after);
+        
+        WorldCommandList.first->ResourceBarrier(dx12Resource, (D3D12_RESOURCE_STATES)before, (D3D12_RESOURCE_STATES)after);
     }
 }

@@ -17,20 +17,20 @@ namespace Waldem
     
     class RayTracingInstance;
     
-    class AccelerationStructure
+    class AccelerationStructure : public GraphicResource
     {
     public:
-        AccelerationStructure(WString name, AccelerationStructureType type) : Name(name), Type(type) {}
+        AccelerationStructure(WString name, AccelerationStructureType type) : Name(name), Type(type) { SetType(RTYPE_AccelerationStructure); }
         virtual ~AccelerationStructure() {}
         virtual WString GetName() { return Name; }
         virtual AccelerationStructureType GetType() { return Type; }
-        virtual void* GetPlatformResource() = 0;
-        virtual void Destroy() = 0;
-        // virtual void Build() = 0;
-        // virtual void Update() = 0;
+        Buffer* GetScratchBuffer() { return ScratchBuffer; }
+        void SetScratchBuffer(Buffer* scratchBuffer) { ScratchBuffer = scratchBuffer; }
     protected:
         WString Name;
         AccelerationStructureType Type;
+        Buffer* ScratchBuffer = nullptr;
+        Buffer* InstanceBuffer = nullptr;
     };
     
     class RayTracingInstance

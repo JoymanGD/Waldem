@@ -45,7 +45,7 @@ namespace Waldem
                 editorViewport->IsMouseOver = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
                 
                 auto renderTarget = editorViewport->FrameBuffer->GetCurrentRenderTarget();
-                ImGui::Image(renderTarget->GetPlatformShaderResourceHandle(), viewportSize);
+                ImGui::Image(renderTarget->GetGPUAddress(), viewportSize);
             }
             ImGui::End();
         }

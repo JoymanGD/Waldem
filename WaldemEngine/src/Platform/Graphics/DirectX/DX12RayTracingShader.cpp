@@ -54,7 +54,7 @@ namespace Waldem
             WD_CORE_ERROR("Failed to load shader file: {0}", DX12Helper::MBFromW(shaderPath.c_str(), 0));
         }
 
-        const wchar_t* targetProfile = L"lib_6_5";
+        const wchar_t* targetProfile = L"lib_6_6";
 
         // Compiler arguments
         const wchar_t* arguments[] = {

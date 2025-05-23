@@ -34,7 +34,7 @@ namespace Waldem
                 }
             }
             
-            result = Renderer::CreateTexture(fileName, width, height, TextureFormat::R8G8B8A8_UNORM, dataSize, rgbaData);
+            result = Renderer::CreateTexture(fileName, width, height, TextureFormat::R8G8B8A8_UNORM, rgbaData);
             stbi_image_free(data);
 
             if(channels == 3)

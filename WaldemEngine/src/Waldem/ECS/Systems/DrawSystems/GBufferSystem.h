@@ -12,14 +12,32 @@
 
 namespace Waldem
 {
+    struct GBufferBuffers
+    {
+        uint WorldTransforms;
+        uint MaterialAttributes;
+    };
+    
+    struct GBufferSceneData
+    {
+        Matrix4 ViewMatrix;
+        Matrix4 ProjectionMatrix;
+        Matrix4 WorldMatrix;
+        Matrix4 InverseProjectionMatrix;
+    };
+
+    struct GBufferRootConstants
+    {
+        uint BuffersIndicesBuffer;
+        uint SceneDataBuffer;
+    };
+    
     class WALDEM_API GBufferSystem : public DrawSystem
     {
         RenderTarget* TargetRT = nullptr;
         Texture2D* DummyTexture = nullptr;
         //GBuffer pass
         Pipeline* GBufferPipeline = nullptr;
-        RootSignature* GBufferRootSignature = nullptr;
-        CommandSignature* GBufferCommandSignature = nullptr;
         PixelShader* GBufferPixelShader = nullptr;
         RenderTarget* WorldPositionRT = nullptr;
         RenderTarget* NormalRT = nullptr;
@@ -30,7 +48,12 @@ namespace Waldem
         Buffer* IndirectBuffer = nullptr;
         Buffer* VertexBuffer = nullptr;
         Buffer* IndexBuffer = nullptr;
+        Buffer* WorldTransformsBuffer = nullptr;
+        Buffer* MaterialAttributesBuffer = nullptr;
+        Buffer* SceneDataBuffer = nullptr;
+        Buffer* BuffersIndicesBuffer = nullptr;
         WArray<IndirectCommand> IndirectDrawIndexedArgsArray;
+        GBufferRootConstants RootConstants;
         
     public:
         GBufferSystem(ECSManager* eCSManager) : DrawSystem(eCSManager)
@@ -38,12 +61,7 @@ namespace Waldem
             Vector4 dummyColor = Vector4(1.f, 1.f, 1.f, 1.f);
             uint8_t* image_data = (uint8_t*)&dummyColor;
 
-            int width = 1;
-            int height = 1;
-
-            TextureFormat format = TextureFormat::R8G8B8A8_UNORM;
-
-            DummyTexture = Renderer::CreateTexture("DummyTexture", width, height, format, sizeof(Vector4), image_data); 
+            DummyTexture = Renderer::CreateTexture("DummyTexture", 1, 1, TextureFormat::R8G8B8A8_UNORM, image_data); 
         }
         
         void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
@@ -53,15 +71,10 @@ namespace Waldem
             
             TargetRT = resourceManager->GetRenderTarget("TargetRT");
             
-            //Common resources
-            auto constantBufferResource = GraphicResource("MyConstantBuffer", RTYPE_ConstantBuffer, nullptr, sizeof(Matrix4), sizeof(Matrix4) * 4, 1);
-            
             //GBuffer pass
             WArray<MaterialShaderAttribute> materialAttributes;
             
             WArray<Matrix4> worldTransforms;
-
-            WArray materialTextures { DummyTexture };
 
             uint startIndexLocation = 0;
             int baseVertexLocation = 0;
@@ -79,17 +92,17 @@ namespace Waldem
                 
                 uint indexCountPerInstance = (uint)meshComponent.Mesh->IndexData.Num();
 
-                IndirectDrawIndexedArgsArray.Add(
-                {
-                    meshID,
-                    {
-                        indexCountPerInstance,
-                        1,
-                        startIndexLocation,
-                        baseVertexLocation,
-                        0
-                    }
-                });
+                IndirectCommand command;
+                command.DrawId = meshID;
+                command.DrawIndexed = {
+                    indexCountPerInstance,
+                    1,
+                    startIndexLocation,
+                    baseVertexLocation,
+                    0
+                };
+                
+                IndirectDrawIndexedArgsArray.Add(command);
 
                 startIndexLocation += indexCountPerInstance;
                 baseVertexLocation += (int)meshComponent.Mesh->VertexData.Num();
@@ -103,12 +116,12 @@ namespace Waldem
 
                 int diffuseId = -1, normalId = -1, ormId = -1, clearCoat = -1;
                 
-                diffuseId = materialTextures.Add(meshComponent.Mesh->CurrentMaterial->GetDiffuseTexture());
+                diffuseId = meshComponent.Mesh->CurrentMaterial->GetDiffuseTexture()->GetIndex(SRV_UAV_CBV);
                 
                 if(meshComponent.Mesh->CurrentMaterial->HasNormalTexture())
-                    normalId = materialTextures.Add(meshComponent.Mesh->CurrentMaterial->GetNormalTexture());
+                    normalId = meshComponent.Mesh->CurrentMaterial->GetNormalTexture()->GetIndex(SRV_UAV_CBV);
                 if(meshComponent.Mesh->CurrentMaterial->HasORMTexture())
-                    ormId = materialTextures.Add(meshComponent.Mesh->CurrentMaterial->GetORMTexture());
+                    ormId = meshComponent.Mesh->CurrentMaterial->GetORMTexture()->GetIndex(SRV_UAV_CBV);
 
                 materialAttributes.Add(MaterialShaderAttribute{ diffuseId, normalId, ormId, clearCoat, meshComponent.Mesh->CurrentMaterial->Albedo, meshComponent.Mesh->CurrentMaterial->Metallic, meshComponent.Mesh->CurrentMaterial->Roughness });
             }
@@ -116,24 +129,23 @@ namespace Waldem
             IndirectBuffer = ResourceManager::CreateBuffer("IndirectDrawBuffer", BufferType::IndirectBuffer, IndirectDrawIndexedArgsArray.GetData(), IndirectDrawIndexedArgsArray.GetSize(), sizeof(IndirectCommand));
             VertexBuffer = ResourceManager::CreateBuffer("VertexBuffer", BufferType::VertexBuffer, vertices.GetData(), vertices.GetSize(), sizeof(Vertex));
             IndexBuffer = ResourceManager::CreateBuffer("IndexBuffer", BufferType::IndexBuffer, indices.GetData(), indices.GetSize(), sizeof(uint));
-            
-            WArray<GraphicResource> gBufferPassResources;
-            gBufferPassResources.Add(GraphicResource("RootConstants", RTYPE_Constant, nullptr, sizeof(uint32_t), sizeof(uint32_t), 0));
-            gBufferPassResources.Add(constantBufferResource);
-            gBufferPassResources.Add(GraphicResource("WorldTransforms", RTYPE_Buffer, worldTransforms.GetData(), sizeof(Matrix4), worldTransforms.GetSize(), 0));
-            gBufferPassResources.Add(GraphicResource("MaterialAttributes", RTYPE_Buffer, materialAttributes.GetData(), sizeof(MaterialShaderAttribute), materialAttributes.GetSize(), 1));
-            gBufferPassResources.Add(GraphicResource("MaterialTextures", materialTextures, 2));
+            WorldTransformsBuffer = ResourceManager::CreateBuffer("WorldTransformsBuffer", StorageBuffer, worldTransforms.GetData(), worldTransforms.GetSize(), sizeof(Matrix4));
+            MaterialAttributesBuffer = ResourceManager::CreateBuffer("MaterialAttributesBuffer", StorageBuffer, materialAttributes.GetData(), materialAttributes.GetSize(), sizeof(MaterialShaderAttribute));
+            SceneDataBuffer = ResourceManager::CreateBuffer("SceneDataBuffer", StorageBuffer, nullptr, sizeof(GBufferSceneData), sizeof(GBufferSceneData));
+            GBufferBuffers buffersData { WorldTransformsBuffer->GetIndex(SRV_UAV_CBV), MaterialAttributesBuffer->GetIndex(SRV_UAV_CBV) };
+            BuffersIndicesBuffer = ResourceManager::CreateBuffer("BuffersIndicesBuffer", StorageBuffer, &buffersData, sizeof(GBufferBuffers), sizeof(GBufferBuffers));
 
+            RootConstants.BuffersIndicesBuffer = BuffersIndicesBuffer->GetIndex(SRV_UAV_CBV);
+            RootConstants.SceneDataBuffer = SceneDataBuffer->GetIndex(SRV_UAV_CBV);
+            
             WorldPositionRT = resourceManager->GetRenderTarget("WorldPositionRT");
             NormalRT = resourceManager->GetRenderTarget("NormalRT");
             ColorRT = resourceManager->GetRenderTarget("ColorRT");
             ORMRT = resourceManager->GetRenderTarget("ORMRT");
             MeshIDRT = resourceManager->GetRenderTarget("MeshIDRT");
             DepthRT = resourceManager->GetRenderTarget("DepthRT");
-            GBufferRootSignature = Renderer::CreateRootSignature(gBufferPassResources);
             GBufferPixelShader = Renderer::LoadPixelShader("GBuffer");
             GBufferPipeline = Renderer::CreateGraphicPipeline("GBufferPipeline",
-                                                            GBufferRootSignature,
                                                             GBufferPixelShader,
                                                             { WorldPositionRT->GetFormat(), NormalRT->GetFormat(), ColorRT->GetFormat(), ORMRT->GetFormat(), MeshIDRT->GetFormat() },
                                                             DEFAULT_RASTERIZER_DESC,
@@ -141,20 +153,16 @@ namespace Waldem
                                                             WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
                                                             DEFAULT_INPUT_LAYOUT_DESC);
 
-            GBufferCommandSignature = Renderer::CreateCommandSignature(GBufferRootSignature);
-
             IsInitialized = true;
         }
 
         void Deinitialize() override
         {
-            if(GBufferCommandSignature) GBufferCommandSignature->Destroy();
-            if(GBufferRootSignature) GBufferRootSignature->Destroy();
             if(GBufferPixelShader) GBufferPixelShader->Destroy();
             if(GBufferPipeline) GBufferPipeline->Destroy();
-            if(IndirectBuffer) IndirectBuffer->Destroy();
-            if(VertexBuffer) VertexBuffer->Destroy();
-            if(IndexBuffer) IndexBuffer->Destroy();
+            if(IndirectBuffer) Renderer::Destroy(IndirectBuffer);
+            if(VertexBuffer) Renderer::Destroy(VertexBuffer);
+            if(IndexBuffer) Renderer::Destroy(IndexBuffer);
 
             IndirectDrawIndexedArgsArray.Clear();
             
@@ -174,7 +182,6 @@ namespace Waldem
             Renderer::ResourceBarrier(DepthRT, ALL_SHADER_RESOURCE, DEPTH_WRITE);
             
             //GBuffer pass
-            WArray<FrustumPlane> frustrumPlanes;
             Matrix4 matrices[4];
             for (auto [entity, camera, mainCamera, cameraTransform] : Manager->EntitiesWith<Camera, EditorCamera, Transform>())
             {
@@ -182,8 +189,7 @@ namespace Waldem
                 matrices[1] = camera.ProjectionMatrix;
                 matrices[2] = cameraTransform.Matrix;
                 matrices[3] = inverse(camera.ProjectionMatrix);
-                GBufferRootSignature->UpdateResourceData("MyConstantBuffer", matrices);
-                frustrumPlanes = camera.ExtractFrustumPlanes();
+                Renderer::UpdateGraphicResource(SceneDataBuffer, matrices, sizeof(matrices));
 
                 break;
             }
@@ -192,9 +198,10 @@ namespace Waldem
             {
                 worldTransforms.Add(transform.Matrix);
             }
-            GBufferRootSignature->UpdateResourceData("WorldTransforms", worldTransforms.GetData());
+
+            Renderer::UpdateGraphicResource(WorldTransformsBuffer, worldTransforms.GetData(), worldTransforms.GetSize());
             Renderer::SetPipeline(GBufferPipeline);
-            Renderer::SetRootSignature(GBufferRootSignature);
+            Renderer::PushConstants(&RootConstants, sizeof(GBufferRootConstants));
             Renderer::SetRenderTargets({ WorldPositionRT, NormalRT, ColorRT, ORMRT, MeshIDRT }, DepthRT);
             Renderer::ClearRenderTarget(WorldPositionRT);
             Renderer::ClearRenderTarget(NormalRT);
@@ -205,7 +212,7 @@ namespace Waldem
             
             Renderer::SetVertexBuffers(VertexBuffer, 1);
             Renderer::SetIndexBuffer(IndexBuffer);
-            Renderer::DrawIndirect(GBufferCommandSignature, IndirectDrawIndexedArgsArray.Num(), IndirectBuffer);
+            Renderer::DrawIndirect(IndirectDrawIndexedArgsArray.Num(), IndirectBuffer);
             
             Renderer::SetRenderTargets({});
 

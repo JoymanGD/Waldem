@@ -50,14 +50,9 @@ namespace Waldem
         Instance->PlatformRenderer->Draw(mesh);
     }
 
-    void Renderer::Draw(CModel* model)
+    void Renderer::DrawIndirect(uint numCommands, Buffer* indirectBuffer)
     {
-        Instance->PlatformRenderer->Draw(model);
-    }
-
-    void Renderer::DrawIndirect(CommandSignature* commandSignature, uint numCommands, Buffer* indirectBuffer)
-    {
-        Instance->PlatformRenderer->DrawIndirect(commandSignature, numCommands, indirectBuffer);
+        Instance->PlatformRenderer->DrawIndirect(numCommands, indirectBuffer);
     }
 
     void Renderer::SetIndexBuffer(Buffer* indexBuffer)
@@ -110,9 +105,9 @@ namespace Waldem
         Instance->PlatformRenderer->SetPipeline(pipeline);
     }
 
-    void Renderer::SetRootSignature(RootSignature* rootSignature)
+    void Renderer::PushConstants(void* data, size_t size)
     {
-        Instance->PlatformRenderer->SetRootSignature(rootSignature);
+        Instance->PlatformRenderer->PushConstants(data, size);
     }
 
     void Renderer::SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil)
@@ -121,7 +116,6 @@ namespace Waldem
     }
 
     Pipeline* Renderer::CreateGraphicPipeline(const WString& name,
-                                                RootSignature* rootSignature,
                                                 PixelShader* shader,
                                                 WArray<TextureFormat> RTFormats = { TextureFormat::R8G8B8A8_UNORM },
                                                 RasterizerDesc rasterizerDesc = DEFAULT_RASTERIZER_DESC,
@@ -129,38 +123,22 @@ namespace Waldem
                                                 PrimitiveTopologyType primitiveTopologyType = WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
                                                 const WArray<InputLayoutDesc>& inputLayout = DEFAULT_INPUT_LAYOUT_DESC)
     {
-        return Instance->PlatformRenderer->CreateGraphicPipeline(name, rootSignature, shader, RTFormats, rasterizerDesc, depthStencilDesc, primitiveTopologyType, inputLayout);
+        return Instance->PlatformRenderer->CreateGraphicPipeline(name, shader, RTFormats, rasterizerDesc, depthStencilDesc, primitiveTopologyType, inputLayout);
     }
 
-    Pipeline* Renderer::CreateComputePipeline(const WString& name, RootSignature* rootSignature, ComputeShader* shader)
+    Pipeline* Renderer::CreateComputePipeline(const WString& name, ComputeShader* shader)
     {
-        return Instance->PlatformRenderer->CreateComputePipeline(name, rootSignature, shader);
+        return Instance->PlatformRenderer->CreateComputePipeline(name, shader);
     }
 
-    Pipeline* Renderer::CreateRayTracingPipeline(const WString& name, RootSignature* rootSignature, RayTracingShader* shader)
+    Pipeline* Renderer::CreateRayTracingPipeline(const WString& name, RayTracingShader* shader)
     {
-        return Instance->PlatformRenderer->CreateRayTracingPipeline(name, rootSignature, shader);
+        return Instance->PlatformRenderer->CreateRayTracingPipeline(name, shader);
     }
 
-    RootSignature* Renderer::CreateRootSignature(WArray<GraphicResource> resources)
+    Texture2D* Renderer::CreateTexture(WString name, int width, int height, TextureFormat format, uint8_t* data)
     {
-        return Instance->PlatformRenderer->CreateRootSignature(resources);
-    }
-
-    CommandSignature* Renderer::CreateCommandSignature(RootSignature* rootSignature)
-    {
-        return Instance->PlatformRenderer->CreateCommandSignature(rootSignature);
-    }
-
-    Texture2D* Renderer::CreateTexture(WString name, int width, int height, TextureFormat format, size_t dataSize, uint8_t* data)
-    {
-        Texture2D* texture = Instance->PlatformRenderer->CreateTexture(name, width, height, format, dataSize, data);
-        return texture;
-    }
-
-    Texture2D* Renderer::CreateTexture(TextureDesc desc)
-    {
-        Texture2D* texture = Instance->PlatformRenderer->CreateTexture(desc);
+        Texture2D* texture = Instance->PlatformRenderer->CreateTexture(name, width, height, format, data);
         return texture;
     }
 
@@ -205,14 +183,9 @@ namespace Waldem
         Instance->PlatformRenderer->UpdateTLAS(TLAS, instances);
     }
 
-    void Renderer::CopyRenderTarget(RenderTarget* dstRT, RenderTarget* srcRT)
+    void Renderer::CopyResource(GraphicResource* dstResource, GraphicResource* srcResource)
     {
-        Instance->PlatformRenderer->CopyRenderTarget(dstRT, srcRT);
-    }
-
-    void Renderer::CopyBuffer(Buffer* dstBuffer, Buffer* srcBuffer)
-    {
-        Instance->PlatformRenderer->CopyBuffer(dstBuffer, srcBuffer);
+        Instance->PlatformRenderer->CopyResource(dstResource, srcResource);
     }
 
     Buffer* Renderer::CreateBuffer(WString name, BufferType type, void* data, uint32_t size, uint32_t stride)
@@ -220,19 +193,19 @@ namespace Waldem
         return Instance->PlatformRenderer->CreateBuffer(name, type, data, size, stride);
     }
 
-    void Renderer::UpdateBuffer(Buffer* buffer, void* data, uint32_t size)
+    void Renderer::UpdateGraphicResource(GraphicResource* graphicResource, void* data, uint32_t size)
     {
-        Instance->PlatformRenderer->UpdateBuffer(buffer, data, size);
+        Instance->PlatformRenderer->UpdateGraphicResource(graphicResource, data, size);
     }
 
-    void Renderer::ResourceBarrier(RenderTarget* rt, ResourceStates before, ResourceStates after)
+    void Renderer::ReadbackBuffer(Buffer* buffer, void* data)
     {
-        Instance->PlatformRenderer->ResourceBarrier(rt, before, after);
+        Instance->PlatformRenderer->ReadbackBuffer(buffer, data);
     }
 
-    void Renderer::ResourceBarrier(Buffer* buffer, ResourceStates before, ResourceStates after)
+    void Renderer::ResourceBarrier(GraphicResource* resource, ResourceStates before, ResourceStates after)
     {
-        Instance->PlatformRenderer->ResourceBarrier(buffer, before, after);
+        Instance->PlatformRenderer->ResourceBarrier(resource, before, after);
     }
 
     void Renderer::ClearRenderTarget(RenderTarget* rt)
@@ -258,5 +231,15 @@ namespace Waldem
     void Renderer::EndUI()
     {
         Instance->PlatformRenderer->EndUI();
+    }
+
+    void Renderer::Destroy(GraphicResource* resource)
+    {
+        Instance->PlatformRenderer->Destroy(resource);
+    }
+
+    void* Renderer::GetPlatformResource(GraphicResource* resource)
+    {
+        return Instance->PlatformRenderer->GetPlatformResource(resource);
     }
 }

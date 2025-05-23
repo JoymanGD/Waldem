@@ -1,5 +1,4 @@
 #include "wdpch.h"
-#include <d3dcompiler.h>
 #include "DX12PixelShader.h"
 
 #include <regex>
@@ -57,7 +56,7 @@ namespace Waldem
         }
 
         const wchar_t* entryPointW = DX12Helper::WFromMB(entryPoint);
-        const wchar_t* targetProfile = L"vs_6_5";
+        const wchar_t* targetProfile = L"vs_6_6";
 
         // Compiler arguments
         const wchar_t* arguments[] = {
@@ -115,7 +114,7 @@ namespace Waldem
         }
 
         entryPointW = DX12Helper::WFromMB(entryPoint);
-        targetProfile = L"ps_6_5";
+        targetProfile = L"ps_6_6";
 
         // Compiler arguments
         const wchar_t* psArguments[] = {
