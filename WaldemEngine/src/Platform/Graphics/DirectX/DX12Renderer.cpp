@@ -204,9 +204,25 @@ namespace Waldem
     {
         CD3DX12_ROOT_PARAMETER1 rootParameters[1];
         rootParameters[0].InitAsConstants(32, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
+
+        // Define a static sampler
+        D3D12_STATIC_SAMPLER_DESC staticSampler = {};
+        staticSampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+        staticSampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        staticSampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        staticSampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        staticSampler.MipLODBias = 0;
+        staticSampler.MaxAnisotropy = 1;
+        staticSampler.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+        staticSampler.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE;
+        staticSampler.MinLOD = 0.0f;
+        staticSampler.MaxLOD = D3D12_FLOAT32_MAX;
+        staticSampler.ShaderRegister = 0;
+        staticSampler.RegisterSpace = 0;
+        staticSampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
         
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSigDesc;
-        rootSigDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED | D3D12_ROOT_SIGNATURE_FLAG_SAMPLER_HEAP_DIRECTLY_INDEXED);
+        rootSigDesc.Init_1_1(_countof(rootParameters), rootParameters, 1, &staticSampler, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED | D3D12_ROOT_SIGNATURE_FLAG_SAMPLER_HEAP_DIRECTLY_INDEXED);
 
         // === Serialize and Create Root Signature ===
         ComPtr<ID3DBlob> serializedRootSig = nullptr;
@@ -337,7 +353,9 @@ namespace Waldem
         descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
         srvHandle.ptr += slot * descriptorSize;
 
-        renderTarget->SetGPUAddress(srvHandle.ptr);
+        auto gpuHandle = externalHeap->GetGPUDescriptorHandleForHeapStart();
+        gpuHandle.ptr += slot * descriptorSize;
+        renderTarget->SetGPUAddress(gpuHandle.ptr);
 
         D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
         srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -350,7 +368,7 @@ namespace Waldem
 
         ResourceMap[(GraphicResource*)renderTarget] = Resource;
 
-        renderTarget->SetCurrentState((ResourceStates)D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
+        renderTarget->SetCurrentState((ResourceStates)D3D12_RESOURCE_STATE_RENDER_TARGET);
 
         if(FAILED(hr))
         {
@@ -589,7 +607,7 @@ namespace Waldem
         
         if(!WorldCommandList.second)
         {
-            worldCmd->BeginInternal(EditorViewport, RTVHeap);
+            worldCmd->BeginInternal(EditorViewport, RTVHeap, DSVHeap);
             
             WorldCommandList.second = true;
         }
@@ -625,7 +643,7 @@ namespace Waldem
         
         if(!WorldCommandList.second)
         {
-            worldCmd->BeginInternal(MainViewport, RTVHeap);
+            worldCmd->BeginInternal(MainViewport, RTVHeap, DSVHeap);
             
             WorldCommandList.second = true;
         }
@@ -752,7 +770,7 @@ namespace Waldem
 
         uint num = size / sizeof(uint);
         
-        WorldCommandList.first->SetConstants(4, num, data, CurrentPipelineType);
+        WorldCommandList.first->SetConstants(0, num, data, CurrentPipelineType);
     }
 
     void DX12Renderer::SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil)
@@ -991,7 +1009,7 @@ namespace Waldem
                 &heapProperties,
                 D3D12_HEAP_FLAG_NONE,
                 &textureDesc,
-                D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE,
+                D3D12_RESOURCE_STATE_RENDER_TARGET,
                 &clearValue,
                 IID_PPV_ARGS(&Resource));
 
@@ -1024,7 +1042,7 @@ namespace Waldem
 
         ResourceMap[(GraphicResource*)renderTarget] = Resource;
 
-        renderTarget->SetCurrentState((ResourceStates)D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
+        renderTarget->SetCurrentState((ResourceStates)D3D12_RESOURCE_STATE_RENDER_TARGET);
 
         if(FAILED(hr))
         {
@@ -1487,8 +1505,6 @@ namespace Waldem
         D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = GeneralResourcesHeap->GetCPUDescriptorHandleForHeapStart();
         UINT descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
         cpuHandle.ptr += index * descriptorSize;
-
-        buffer->SetGPUAddress(cpuHandle.ptr);
 
         D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
         srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;

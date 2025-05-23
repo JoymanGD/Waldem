@@ -62,7 +62,7 @@ namespace Waldem
         CloseHandle(FenceEvent);
     }
 
-    void DX12CommandList::BeginInternal(SViewport& viewport, ID3D12DescriptorHeap* rtvHeap)
+    void DX12CommandList::BeginInternal(SViewport& viewport, ID3D12DescriptorHeap* rtvHeap, ID3D12DescriptorHeap* dsvHeap)
     {
         //we use 0;0 for viewport and scissor rect position to render full-size render target
         D3D12_VIEWPORT d3d12Viewport = { 0, 0, (float)viewport.Size.x, (float)viewport.Size.y, (float)viewport.DepthRange.x, (float)viewport.DepthRange.y };
@@ -78,7 +78,7 @@ namespace Waldem
         rtv.ptr += index * Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
         index = viewport.FrameBuffer->GetDepth()->GetIndex(RTV);
-        D3D12_CPU_DESCRIPTOR_HANDLE dsv = rtvHeap->GetCPUDescriptorHandleForHeapStart();
+        D3D12_CPU_DESCRIPTOR_HANDLE dsv = dsvHeap->GetCPUDescriptorHandleForHeapStart();
         dsv.ptr += index * Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
         //set render target
@@ -212,27 +212,6 @@ namespace Waldem
     {
         ID3D12DescriptorHeap* heaps[] = { resourcesHeap, samplersHeap };
         SetDescriptorHeaps(_countof(heaps), &resourcesHeap);
-        
-        D3D12_GPU_DESCRIPTOR_HANDLE heapBase = resourcesHeap->GetGPUDescriptorHandleForHeapStart();
-        UINT descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-        D3D12_GPU_DESCRIPTOR_HANDLE texturesHandle = heapBase;
-        CommandList->SetGraphicsRootDescriptorTable(0, texturesHandle);
-        CommandList->SetComputeRootDescriptorTable(0, texturesHandle);
-        
-        D3D12_GPU_DESCRIPTOR_HANDLE rwTexturesHandle = heapBase;
-        rwTexturesHandle.ptr += 4096 * descriptorSize;
-        CommandList->SetGraphicsRootDescriptorTable(1, rwTexturesHandle);
-        CommandList->SetComputeRootDescriptorTable(1, rwTexturesHandle);
-        
-        D3D12_GPU_DESCRIPTOR_HANDLE ASHandle = heapBase;
-        ASHandle.ptr += 6144 * descriptorSize;
-        CommandList->SetGraphicsRootDescriptorTable(2, ASHandle);
-        CommandList->SetComputeRootDescriptorTable(2, ASHandle);
-
-        D3D12_GPU_DESCRIPTOR_HANDLE samplersHeapBase = samplersHeap->GetGPUDescriptorHandleForHeapStart();
-        CommandList->SetGraphicsRootDescriptorTable(3, samplersHeapBase);
-        CommandList->SetComputeRootDescriptorTable(3, samplersHeapBase);
     }
 
     void DX12CommandList::SetVertexBuffers(Buffer* vertexBuffer, uint32 numBuffers, uint32 startIndex)
