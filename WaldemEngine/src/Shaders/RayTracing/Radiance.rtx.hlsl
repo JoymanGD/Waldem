@@ -14,20 +14,24 @@ struct Attributes
     float2 barycentrics;
 };
 
-RaytracingAccelerationStructure g_TLAS : register(t0);
-StructuredBuffer<Light> Lights : register(t1);
-StructuredBuffer<matrix> LightTransforms : register(t2);
-Texture2D WorldPositionsRT : register(t3);
-Texture2D NormalRT : register(t4);
-Texture2D ColorRT : register(t5);
-Texture2D ORMRT : register(t6);
-RWTexture2D<float4> OutputColor : register(u0);
-
-cbuffer MyConstantBuffer : register(b0)
+struct RayTracingSceneData
 {
-    matrix InvView;
-    matrix InvProj;
+    float4x4 InvViewMatrix;
+    float4x4 InvProjectionMatrix;
     int NumLights;
+};
+
+cbuffer RootConstants : register(b0)
+{
+    uint WorldPositionRTID;
+    uint NormalRTID;
+    uint ColorRTID;
+    uint ORMRTID;
+    uint OutputColorRTID;
+    uint LightsBufferID;
+    uint LightTransformsBufferID;
+    uint SceneDataBufferID; 
+    uint TLASID;
 };
 
 float smoothstep(float edge0, float edge1, float x)
@@ -39,6 +43,17 @@ float smoothstep(float edge0, float edge1, float x)
 [shader("raygeneration")]
 void RayGenShader()
 {
+    RaytracingAccelerationStructure g_TLAS = ResourceDescriptorHeap[TLASID];
+    StructuredBuffer<Light> Lights = ResourceDescriptorHeap[LightsBufferID];
+    StructuredBuffer<float4x4> LightTransforms = ResourceDescriptorHeap[LightTransformsBufferID];
+    StructuredBuffer<RayTracingSceneData> SceneDataBuffer = ResourceDescriptorHeap[SceneDataBufferID];
+    RayTracingSceneData sceneData = SceneDataBuffer[0];
+    Texture2D WorldPositionsRT = ResourceDescriptorHeap[WorldPositionRTID];
+    Texture2D NormalRT = ResourceDescriptorHeap[NormalRTID];
+    Texture2D ColorRT = ResourceDescriptorHeap[ColorRTID];
+    Texture2D ORMRT = ResourceDescriptorHeap[ORMRTID];
+    RWTexture2D<float4> OutputColor = ResourceDescriptorHeap[OutputColorRTID];
+    
     float3 radiance = 0.0f;
     float3 diffuse = float3(0.0f, 0.0f, 0.0f);
     float3 finalColor = float3(0.0f, 0.0f, 0.0f);
@@ -54,7 +69,7 @@ void RayGenShader()
     uint RayFlags = RAY_FLAG_FORCE_OPAQUE | RAY_FLAG_SKIP_CLOSEST_HIT_SHADER | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH;
             
     //shadow ray
-    for (int i = 0; i < NumLights; i++)
+    for (int i = 0; i < sceneData.NumLights; i++)
     {
         payload.Missed = false;
         Light light = Lights[i];
@@ -71,7 +86,7 @@ void RayGenShader()
         {
             lightDirection = -GetForwardVector(lightTransform);
             
-            diffuse = GetDiffuseColor(lightDirection, worldPosition, normal, albedo, orm, InvView);
+            diffuse = GetDiffuseColor(lightDirection, worldPosition, normal, albedo, orm, sceneData.InvViewMatrix);
             
             float NdotL = saturate(dot(normal.xyz, lightDirection));
             
@@ -99,7 +114,7 @@ void RayGenShader()
             
             if(distance <= light.Radius)
             {
-                diffuse = GetDiffuseColor(lightDirection, worldPosition, normal, albedo, orm, InvView);
+                diffuse = GetDiffuseColor(lightDirection, worldPosition, normal, albedo, orm, sceneData.InvViewMatrix);
                 
                 float NdotL = saturate(dot(normal.xyz, lightDirection));
                 
@@ -130,7 +145,7 @@ void RayGenShader()
 
             if(distance <= light.Radius)
             {
-                diffuse = GetDiffuseColor(lightDirection, worldPosition, normal, albedo, orm, InvView);
+                diffuse = GetDiffuseColor(lightDirection, worldPosition, normal, albedo, orm, sceneData.InvViewMatrix);
                 
                 float NdotL = saturate(dot(normal.xyz, lightDirection));
                 

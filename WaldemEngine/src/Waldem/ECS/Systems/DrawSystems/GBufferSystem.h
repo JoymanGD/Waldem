@@ -189,7 +189,7 @@ namespace Waldem
                 matrices[1] = camera.ProjectionMatrix;
                 matrices[2] = cameraTransform.Matrix;
                 matrices[3] = inverse(camera.ProjectionMatrix);
-                Renderer::UploadBuffer(SceneDataBuffer, matrices, sizeof(matrices));
+                Renderer::UploadBuffer(SceneDataBuffer, matrices, sizeof(matrices)); 
 
                 break;
             }

@@ -13,25 +13,14 @@
 
 namespace Waldem
 {
-    struct TexturesData
+    struct DeferredRootConstants
     {
+        Point2 MousePos;
         uint AlbedoRT;
         uint MeshIDRT;
         uint RadianceRT;
         uint TargetRT;
-        uint DummyTexture;
-    };
-    
-    struct BuffersData
-    {
         uint HoveredMeshes;
-    };
-    
-    struct DeferredRootConstants
-    {
-        uint TexturesIndicesBuffer;
-        uint BuffersIndicesBuffer;
-        Point2 MousePos;
     };
     
     class WALDEM_API DeferredRenderingSystem : public DrawSystem
@@ -45,8 +34,6 @@ namespace Waldem
         Pipeline* DeferredRenderingPipeline = nullptr;
         ComputeShader* DeferredRenderingComputeShader = nullptr;
         Point3 GroupCount;
-        TexturesData TexturesData;
-        BuffersData BuffersData;
         DeferredRootConstants RootConstants;
         Buffer* HoveredMeshesBuffer = nullptr;
         
@@ -73,18 +60,13 @@ namespace Waldem
             Vector2 resolution = Vector2(TargetRT->GetWidth(), TargetRT->GetHeight());
 
             //Deferred rendering pass
-            TexturesData.AlbedoRT = resourceManager->GetRenderTarget("ColorRT")->GetIndex(SRV_UAV_CBV);
-            TexturesData.MeshIDRT = resourceManager->GetRenderTarget("MeshIDRT")->GetIndex(SRV_UAV_CBV);
-            TexturesData.RadianceRT = resourceManager->GetRenderTarget("RadianceRT")->GetIndex(SRV_UAV_CBV);
-            TexturesData.TargetRT = resourceManager->GetRenderTarget("TargetRT")->GetIndex(SRV_UAV_CBV);
-
+            RootConstants.AlbedoRT = resourceManager->GetRenderTarget("ColorRT")->GetIndex(SRV_UAV_CBV);
+            RootConstants.MeshIDRT = resourceManager->GetRenderTarget("MeshIDRT")->GetIndex(SRV_UAV_CBV);
+            RootConstants.RadianceRT = resourceManager->GetRenderTarget("RadianceRT")->GetIndex(SRV_UAV_CBV);
+            RootConstants.TargetRT = resourceManager->GetRenderTarget("TargetRT")->GetIndex(SRV_UAV_CBV);
             HoveredMeshesBuffer = Renderer::CreateBuffer("HoveredMeshes", StorageBuffer, nullptr, sizeof(int), sizeof(int));
-            
-            BuffersData.HoveredMeshes = HoveredMeshesBuffer->GetIndex(SRV_UAV_CBV);
+            RootConstants.HoveredMeshes = HoveredMeshesBuffer->GetIndex(SRV_UAV_CBV);
 
-            RootConstants.TexturesIndicesBuffer = Renderer::CreateBuffer("TexturesIndicesBuffer", StorageBuffer, &TexturesData, sizeof(TexturesData), sizeof(TexturesData))->GetIndex(SRV_UAV_CBV);
-            RootConstants.BuffersIndicesBuffer = Renderer::CreateBuffer("BuffersIndicesBuffer", StorageBuffer, &BuffersData, sizeof(BuffersData), sizeof(BuffersData))->GetIndex(SRV_UAV_CBV);
-            
             DeferredRenderingComputeShader = Renderer::LoadComputeShader("DeferredRendering");
             DeferredRenderingPipeline = Renderer::CreateComputePipeline("DeferredLightingPipeline", DeferredRenderingComputeShader);
             Point3 numThreads = Renderer::GetNumThreadsPerGroup(DeferredRenderingComputeShader);
@@ -113,7 +95,7 @@ namespace Waldem
             Renderer::PushConstants(&RootConstants, sizeof(DeferredRootConstants));
             Renderer::Compute(GroupCount);
             int hoveredEntityId = 0;
-            Renderer::DownloadBuffer(HoveredMeshesBuffer, &hoveredEntityId);
+            // Renderer::DownloadBuffer(HoveredMeshesBuffer, &hoveredEntityId);
             Editor::HoveredEntityID = hoveredEntityId - 1;
             Renderer::ResourceBarrier(TargetRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
         }
