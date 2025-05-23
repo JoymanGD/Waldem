@@ -186,14 +186,14 @@ namespace Waldem
         
         D3D12_INDIRECT_ARGUMENT_DESC args[2] = {};
         args[0].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT;
-        args[0].Constant.RootParameterIndex = 0;
-        args[0].Constant.Num32BitValuesToSet = 32;
+        args[0].Constant.RootParameterIndex = 1;
+        args[0].Constant.Num32BitValuesToSet = 1;
         args[0].Constant.DestOffsetIn32BitValues = 0;
         
         args[1].Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED;
 
         D3D12_COMMAND_SIGNATURE_DESC commandSigDesc = {};
-        commandSigDesc.ByteStride = sizeof(uint) * 32 + sizeof(D3D12_DRAW_INDEXED_ARGUMENTS);
+        commandSigDesc.ByteStride = sizeof(uint) + sizeof(D3D12_DRAW_INDEXED_ARGUMENTS);
         commandSigDesc.NumArgumentDescs = 2;
         commandSigDesc.pArgumentDescs = args;
 
@@ -202,11 +202,12 @@ namespace Waldem
 
     void DX12Renderer::CreateGeneralRootSignature()
     {
-        CD3DX12_ROOT_PARAMETER1 rootParameters[1];
+        CD3DX12_ROOT_PARAMETER1 rootParameters[2];
         rootParameters[0].InitAsConstants(32, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
+        rootParameters[1].InitAsConstants(1, 1, 0, D3D12_SHADER_VISIBILITY_ALL);
 
         // Define a static sampler
-        D3D12_STATIC_SAMPLER_DESC staticSampler = {};
+        D3D12_STATIC_SAMPLER_DESC staticSampler;
         staticSampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
         staticSampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
         staticSampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
@@ -889,7 +890,7 @@ namespace Waldem
         
         if(depthStencil)
         {
-            dsvHandle = RTVHeap->GetCPUDescriptorHandleForHeapStart();
+            dsvHandle = DSVHeap->GetCPUDescriptorHandleForHeapStart();
             dsvHandle.ptr += depthStencil->GetIndex(RTV) * Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
         }
         
@@ -1111,7 +1112,7 @@ namespace Waldem
                 &heapProperties,
                 D3D12_HEAP_FLAG_NONE,
                 &textureDesc,
-                D3D12_RESOURCE_STATE_RENDER_TARGET,
+                D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE,
                 &clearValue,
                 IID_PPV_ARGS(&Resource));
 
@@ -1213,7 +1214,7 @@ namespace Waldem
         resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
         resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
         ID3D12Resource* ScratchBuffer;
-        Device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(&ScratchBuffer));
+        Device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&ScratchBuffer));
 
         Buffer* scratchBuffer = new Buffer();
         scratchBuffer->SetGPUAddress(ScratchBuffer->GetGPUVirtualAddress());
@@ -1315,6 +1316,7 @@ namespace Waldem
         GraphicResource* instancesBuffer = new GraphicResource();
         instancesBuffer->SetGPUAddress(UploadResource->GetGPUVirtualAddress());
         tlas->SetUploadResource(instancesBuffer);
+        ResourceMap[instancesBuffer] = UploadResource;
 
         asInputs.InstanceDescs = instancesBuffer->GetGPUAddress();
 
@@ -1340,7 +1342,7 @@ namespace Waldem
         resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
         resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
         ID3D12Resource* ScratchBuffer;
-        Device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(&ScratchBuffer));
+        Device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&ScratchBuffer));
 
         Buffer* scratchBuffer = new Buffer();
         scratchBuffer->SetGPUAddress(ScratchBuffer->GetGPUVirtualAddress());
@@ -1366,6 +1368,7 @@ namespace Waldem
         Resource->SetName(widestr.c_str());
         
         ResourceMap[(GraphicResource*)tlas] = Resource;
+        tlas->SetGPUAddress(Resource->GetGPUVirtualAddress());
         
         D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC asDesc = {};
         asDesc.Inputs = asInputs;
@@ -1380,15 +1383,13 @@ namespace Waldem
         UINT descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
         cpuHandle.ptr += index * descriptorSize;
 
-        tlas->SetGPUAddress(cpuHandle.ptr);
-
         D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
         srvDesc.Format = DXGI_FORMAT_UNKNOWN;
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE;
         srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
         srvDesc.RaytracingAccelerationStructure.Location = asDesc.DestAccelerationStructureData;
 
-        Device->CreateShaderResourceView(Resource, &srvDesc, cpuHandle);
+        Device->CreateShaderResourceView(nullptr, &srvDesc, cpuHandle);
 
         return tlas;
     }
@@ -1519,7 +1520,7 @@ namespace Waldem
             &heapProps,
             D3D12_HEAP_FLAG_NONE,
             &bufferDesc,
-            D3D12_RESOURCE_STATE_COPY_DEST,
+            D3D12_RESOURCE_STATE_COMMON,
             nullptr,
             IID_PPV_ARGS(&Resource));
 
@@ -1530,6 +1531,7 @@ namespace Waldem
 
         buffer->SetGPUAddress(Resource->GetGPUVirtualAddress());
         ResourceMap[(GraphicResource*)buffer] = Resource;
+        Resource->SetName(std::wstring(name.Begin(), name.End()).c_str());
         
         D3D12_HEAP_PROPERTIES uploadHeapProps;
         uploadHeapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
@@ -1554,6 +1556,8 @@ namespace Waldem
 
         ID3D12Resource* UploadResource;
         hr = Device->CreateCommittedResource(&uploadHeapProps, D3D12_HEAP_FLAG_NONE, &uploadBufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&UploadResource));
+        WString uploadResourceName = name + " Upload Resource";
+        UploadResource->SetName(std::wstring(uploadResourceName.Begin(), uploadResourceName.End()).c_str());
 
         if(FAILED(hr))
         {
@@ -1621,13 +1625,28 @@ namespace Waldem
 
         ComPtr<ID3D12Resource> readbackBuffer;
         auto heapDesc = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK);
+
+        D3D12_RESOURCE_DESC readbackBufferDesc = {};
+        readbackBufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+        readbackBufferDesc.Width = size;
+        readbackBufferDesc.Height = 1;
+        readbackBufferDesc.DepthOrArraySize = 1;
+        readbackBufferDesc.MipLevels = 1;
+        readbackBufferDesc.Format = DXGI_FORMAT_UNKNOWN;
+        readbackBufferDesc.SampleDesc.Count = 1;
+        readbackBufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+        readbackBufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+        
         Device->CreateCommittedResource(
             &heapDesc,
             D3D12_HEAP_FLAG_NONE,
-            &uploadBufferDesc, // must match GPU buffer size
-            D3D12_RESOURCE_STATE_COPY_DEST,
+            &readbackBufferDesc, // must match GPU buffer size
+            D3D12_RESOURCE_STATE_COMMON,
             nullptr,
             IID_PPV_ARGS(&readbackBuffer));
+        
+        WString readbackResourceName = name + " Readback Resource";
+        readbackBuffer->SetName(std::wstring(readbackResourceName.Begin(), readbackResourceName.End()).c_str());
         
         auto readbackGraphicResource = new GraphicResource();
         ResourceMap[readbackGraphicResource] = readbackBuffer.Get();
@@ -1670,10 +1689,11 @@ namespace Waldem
                 
                 if(resource)
                 {
+                    auto beforeState = buffer->GetCurrentState();
                     //copy the GPU buffer to the readback buffer
-                    ResourceBarrier(buffer, UNORDERED_ACCESS, COPY_SOURCE);
+                    ResourceBarrier(buffer, beforeState, COPY_SOURCE);
                     CopyResource(readbackBuffer, buffer);
-                    ResourceBarrier(buffer, COPY_SOURCE, UNORDERED_ACCESS);
+                    ResourceBarrier(buffer, COPY_SOURCE, beforeState);
                     //map and copy data
                     UINT8* pMappedData;
                     HRESULT hr = resource->Map(0, nullptr, reinterpret_cast<void**>(&pMappedData));

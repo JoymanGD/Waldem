@@ -24,7 +24,7 @@ namespace Waldem
         uint NormalRT;
         uint ColorRT;
         uint ORMRT;
-        uint ShadowsRT;
+        uint OutputColorRT;
         uint LightsBuffer;
         uint LightTransformsBuffer;
         uint SceneDataBuffer; 
@@ -92,7 +92,7 @@ namespace Waldem
             RootConstants.NormalRT = normalRT->GetIndex(SRV_UAV_CBV);
             RootConstants.ColorRT = albedoRT->GetIndex(SRV_UAV_CBV);
             RootConstants.ORMRT = ormRT->GetIndex(SRV_UAV_CBV);
-            RootConstants.ShadowsRT = RadianceRT->GetIndex(SRV_UAV_CBV);
+            RootConstants.OutputColorRT = RadianceRT->GetIndex(SRV_UAV_CBV);
             RootConstants.LightsBuffer = LightsBuffer->GetIndex(SRV_UAV_CBV);
             RootConstants.LightTransformsBuffer = LightTransformsBuffer->GetIndex(SRV_UAV_CBV);
             RootConstants.SceneDataBuffer = SceneDataBuffer->GetIndex(SRV_UAV_CBV);

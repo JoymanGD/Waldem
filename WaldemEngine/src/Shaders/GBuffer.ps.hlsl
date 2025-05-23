@@ -1,5 +1,6 @@
 #include "Core.hlsl"
 #include "Materials.hlsl"
+#include "GBufferCommon.hlsl"
 
 struct PS_INPUT
 {
@@ -21,16 +22,7 @@ struct PS_OUTPUT
     int MeshIDRT : SV_TARGET4;
 };
 
-cbuffer RootConstants : register(b0)
-{
-    uint MeshId;
-};
-
 SamplerState myStaticSampler : register(s0);
-
-StructuredBuffer<float4x4> WorldTransforms : register(t0);
-StructuredBuffer<MaterialAttribute> MaterialAttributes : register(t1);
-Texture2D MaterialTextures[MAX_TEXTURES] : register(t2);
 
 float3 GetNormal(float3 normal, float3 tangent, float3 bitangent, float4 normalMap)
 {
@@ -41,13 +33,18 @@ float3 GetNormal(float3 normal, float3 tangent, float3 bitangent, float4 normalM
 PS_OUTPUT main(PS_INPUT input)
 {
     PS_OUTPUT output;
+    
+    StructuredBuffer<Buffers> buffersBuffer = ResourceDescriptorHeap[BuffersBufferId];
+    StructuredBuffer<float4x4> worldTransforms = ResourceDescriptorHeap[buffersBuffer[0].WorldTransforms];
+    StructuredBuffer<MaterialAttribute> materialAttributes = ResourceDescriptorHeap[buffersBuffer[0].MaterialAttributes];
 
-    MaterialAttribute matAttr = MaterialAttributes[MeshId];
+    MaterialAttribute matAttr = materialAttributes[MeshId];
     float4 color, normal, orm;
 
     if(matAttr.DiffuseTextureIndex != -1)
     {
-        color = MaterialTextures[matAttr.DiffuseTextureIndex].Sample(myStaticSampler, input.UV);
+        Texture2D ColorTexture = ResourceDescriptorHeap[matAttr.DiffuseTextureIndex];
+        color = ColorTexture.Sample(myStaticSampler, input.UV);
         
         if(color.a < 0.1f)
             discard;
@@ -59,7 +56,8 @@ PS_OUTPUT main(PS_INPUT input)
 
     if(matAttr.NormalTextureIndex != -1)
     {
-        normal = MaterialTextures[matAttr.NormalTextureIndex].Sample(myStaticSampler, input.UV);
+        Texture2D NormalTexture = ResourceDescriptorHeap[matAttr.NormalTextureIndex];
+        normal = NormalTexture.Sample(myStaticSampler, input.UV);
         normal = float4(GetNormal(input.Normal, input.Tangent, input.Bitangent, normal), 0.0f);
     }
     else
@@ -69,7 +67,8 @@ PS_OUTPUT main(PS_INPUT input)
 
     if(matAttr.ORMTextureIndex != -1)
     {
-        orm = MaterialTextures[matAttr.ORMTextureIndex].Sample(myStaticSampler, input.UV);
+        Texture2D ORMTexture = ResourceDescriptorHeap[matAttr.ORMTextureIndex];
+        orm = ORMTexture.Sample(myStaticSampler, input.UV);
     }
     else
     {
@@ -77,7 +76,7 @@ PS_OUTPUT main(PS_INPUT input)
     }
     
     output.ColorRT = color;
-    output.NormalRT = normalize(mul(WorldTransforms[MeshId], normal));
+    output.NormalRT = normalize(mul(worldTransforms[MeshId], normal));
     output.WorldPositionRT = input.WorldPosition;
     output.ORM = orm;
     output.MeshIDRT = MeshId+1;

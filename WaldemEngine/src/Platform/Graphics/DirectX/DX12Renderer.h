@@ -2,8 +2,6 @@
 #include "Waldem/Renderer/Renderer.h"
 #include <d3d12.h>
 #include <dxgi1_6.h>
-#include <queue>
-
 #include "DescriptorAllocator.h"
 #include "DX12CommandList.h"
 #include "Waldem/Renderer/Pipeline.h"
@@ -102,7 +100,7 @@ namespace Waldem
 
         //bindless
         WMap<GraphicResource*, ID3D12Resource*> ResourceMap;
-        DescriptorAllocator GeneralAllocator = DescriptorAllocator(8192); //0..4095
+        DescriptorAllocator GeneralAllocator = DescriptorAllocator(BINDLESS_MAX_DESCRIPTORS);
         ID3D12DescriptorHeap* GeneralResourcesHeap = nullptr;
         ID3D12DescriptorHeap* GeneralSamplerHeap = nullptr;
         ID3D12RootSignature* GeneralRootSignature = nullptr;

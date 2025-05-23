@@ -145,7 +145,6 @@ namespace Waldem
     struct IndirectCommand
     {
         uint DrawId;
-        uint Padding[31];
         IndirectDrawIndexedArgs DrawIndexed;
     };
 

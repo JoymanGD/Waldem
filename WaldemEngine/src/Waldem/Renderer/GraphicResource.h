@@ -58,6 +58,6 @@ namespace Waldem
         
         void SetUploadResource(GraphicResource* uploadResource) { UploadResource = uploadResource; }
         
-        void SetReadbackResource(GraphicResource* readbackResource) { ReadbackResource = readbackResource; }
+        void SetReadbackResource(GraphicResource* readbackResource) { ReadbackResource = readbackResource; } 
     };
 }
