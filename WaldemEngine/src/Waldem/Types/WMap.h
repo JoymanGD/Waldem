@@ -47,7 +47,7 @@ namespace Waldem
             {
                 if (Data[i].key == key)
                 {
-                    Data.Erase(i);
+                    Data.RemoveAt(i);
                     return true;
                 }
             }

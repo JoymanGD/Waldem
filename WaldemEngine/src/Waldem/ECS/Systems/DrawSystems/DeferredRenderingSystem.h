@@ -13,13 +13,25 @@
 
 namespace Waldem
 {
-    struct DefferedContantData
+    struct TexturesData
     {
-        Matrix4 view;
-        Matrix4 proj;
-        Matrix4 invView;
-        Matrix4 invProj;
-        int NumLights;
+        uint AlbedoRT;
+        uint MeshIDRT;
+        uint RadianceRT;
+        uint TargetRT;
+        uint DummyTexture;
+    };
+    
+    struct BuffersData
+    {
+        uint HoveredMeshes;
+    };
+    
+    struct DeferredRootConstants
+    {
+        uint TexturesIndicesBuffer;
+        uint BuffersIndicesBuffer;
+        Point2 MousePos;
     };
     
     class WALDEM_API DeferredRenderingSystem : public DrawSystem
@@ -32,9 +44,11 @@ namespace Waldem
         //Deferred rendering pass
         Pipeline* DeferredRenderingPipeline = nullptr;
         ComputeShader* DeferredRenderingComputeShader = nullptr;
-        RootSignature* DeferredRenderingRootSignature = nullptr;
         Point3 GroupCount;
-        DefferedContantData ConstantData;
+        TexturesData TexturesData;
+        BuffersData BuffersData;
+        DeferredRootConstants RootConstants;
+        Buffer* HoveredMeshesBuffer = nullptr;
         
     public:
         DeferredRenderingSystem(ECSManager* eCSManager) : DrawSystem(eCSManager)
@@ -42,12 +56,7 @@ namespace Waldem
             Vector4 dummyColor = Vector4(1.f, 1.f, 1.f, 1.f);
             uint8_t* image_data = (uint8_t*)&dummyColor;
 
-            int width = 1;
-            int height = 1;
-
-            TextureFormat format = TextureFormat::R8G8B8A8_UNORM;
-
-            DummyTexture = Renderer::CreateTexture("DummyTexture", width, height, format, sizeof(Vector4), image_data); 
+            DummyTexture = Renderer::CreateTexture("DummyTexture", 1, 1, TextureFormat::R8G8B8A8_UNORM, image_data); 
         }
         
         void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
@@ -64,16 +73,20 @@ namespace Waldem
             Vector2 resolution = Vector2(TargetRT->GetWidth(), TargetRT->GetHeight());
 
             //Deferred rendering pass
-            WArray<GraphicResource> deferredRenderingPassResources;
-            deferredRenderingPassResources.Add(GraphicResource("AlbedoRT", AlbedoRT, 0));
-            deferredRenderingPassResources.Add(GraphicResource("MeshIDRT", MeshIDRT, 1));
-            deferredRenderingPassResources.Add(GraphicResource("RadianceRT", RadianceRT, 2));
-            deferredRenderingPassResources.Add(GraphicResource("TargetRT", TargetRT, 0, true));
-            deferredRenderingPassResources.Add(GraphicResource("HoveredMeshes", RTYPE_RWBuffer, nullptr, sizeof(int), sizeof(int), 1));
-            deferredRenderingPassResources.Add(GraphicResource("RootConstants", RTYPE_Constant, nullptr, sizeof(float) * 2, sizeof(float) * 2, 0));
-            DeferredRenderingRootSignature = Renderer::CreateRootSignature(deferredRenderingPassResources);
+            TexturesData.AlbedoRT = resourceManager->GetRenderTarget("ColorRT")->GetIndex(SRV_UAV_CBV);
+            TexturesData.MeshIDRT = resourceManager->GetRenderTarget("MeshIDRT")->GetIndex(SRV_UAV_CBV);
+            TexturesData.RadianceRT = resourceManager->GetRenderTarget("RadianceRT")->GetIndex(SRV_UAV_CBV);
+            TexturesData.TargetRT = resourceManager->GetRenderTarget("TargetRT")->GetIndex(SRV_UAV_CBV);
+
+            HoveredMeshesBuffer = Renderer::CreateBuffer("HoveredMeshes", StorageBuffer, nullptr, sizeof(int), sizeof(int));
+            
+            BuffersData.HoveredMeshes = HoveredMeshesBuffer->GetIndex(SRV_UAV_CBV);
+
+            RootConstants.TexturesIndicesBuffer = Renderer::CreateBuffer("TexturesIndicesBuffer", StorageBuffer, &TexturesData, sizeof(TexturesData), sizeof(TexturesData))->GetIndex(SRV_UAV_CBV);
+            RootConstants.BuffersIndicesBuffer = Renderer::CreateBuffer("BuffersIndicesBuffer", StorageBuffer, &BuffersData, sizeof(BuffersData), sizeof(BuffersData))->GetIndex(SRV_UAV_CBV);
+            
             DeferredRenderingComputeShader = Renderer::LoadComputeShader("DeferredRendering");
-            DeferredRenderingPipeline = Renderer::CreateComputePipeline("DeferredLightingPipeline", DeferredRenderingRootSignature, DeferredRenderingComputeShader);
+            DeferredRenderingPipeline = Renderer::CreateComputePipeline("DeferredLightingPipeline", DeferredRenderingComputeShader);
             Point3 numThreads = Renderer::GetNumThreadsPerGroup(DeferredRenderingComputeShader);
             GroupCount = Point3((resolution.x + numThreads.x - 1) / numThreads.x, (resolution.y + numThreads.y - 1) / numThreads.y, 1);
 
@@ -82,7 +95,6 @@ namespace Waldem
 
         void Deinitialize() override
         {
-            if(DeferredRenderingRootSignature) DeferredRenderingRootSignature->Destroy();
             if(DeferredRenderingComputeShader) DeferredRenderingComputeShader->Destroy();
             if(DeferredRenderingPipeline) DeferredRenderingPipeline->Destroy();
             IsInitialized = false;
@@ -95,13 +107,13 @@ namespace Waldem
             
             Renderer::ResourceBarrier(TargetRT, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
             Renderer::SetPipeline(DeferredRenderingPipeline);
-            Renderer::SetRootSignature(DeferredRenderingRootSignature);
             auto mousePos = Input::GetMousePos();
             Point2 relativeMousePos = Renderer::GetEditorViewport()->TransformMousePosition(mousePos);
-            DeferredRenderingRootSignature->UpdateResourceData("RootConstants", &relativeMousePos);
+            RootConstants.MousePos = relativeMousePos;
+            Renderer::PushConstants(&RootConstants, sizeof(DeferredRootConstants));
             Renderer::Compute(GroupCount);
             int hoveredEntityId = 0;
-            DeferredRenderingRootSignature->ReadbackResourceData("HoveredMeshes", &hoveredEntityId);
+            Renderer::ReadbackBuffer(HoveredMeshesBuffer, &hoveredEntityId);
             Editor::HoveredEntityID = hoveredEntityId - 1;
             Renderer::ResourceBarrier(TargetRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
         }

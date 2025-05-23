@@ -1,7 +1,6 @@
 #pragma once
 #include <d3d12.h>
 #include "Waldem/Renderer/Pipeline.h"
-#include "Waldem/Renderer/RootSignature.h"
 #include "Waldem/Renderer/Shader.h"
 
 namespace Waldem
@@ -17,7 +16,7 @@ namespace Waldem
     public:
         void BuildShaderTables(ID3D12Device5* device, LPCWSTR RayGenShaderName, LPCWSTR MissShaderName,
                                LPCWSTR HitGroupName);
-        DX12RayTracingPipeline(const WString& name, ID3D12Device5* device, RootSignature* rootSignature, RayTracingShader* shader);
+        DX12RayTracingPipeline(const WString& name, ID3D12Device5* device, ID3D12RootSignature* rootSignature, RayTracingShader* shader);
         ~DX12RayTracingPipeline() override;
         void* GetNativeObject() const override { return NativePipeline; }
         ShaderBindingTable* GetRayGenSBT() const { return RayGenSBT; }

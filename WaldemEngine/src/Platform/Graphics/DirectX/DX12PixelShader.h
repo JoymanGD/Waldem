@@ -4,7 +4,6 @@
 #include <dxcapi.h>
 
 #include "DX12CommandList.h"
-#include "DX12Resource.h"
 #include "DX12Shader.h"
 #include "Waldem/Renderer/RenderTarget.h"
 #include "Waldem/Renderer/GraphicResource.h"

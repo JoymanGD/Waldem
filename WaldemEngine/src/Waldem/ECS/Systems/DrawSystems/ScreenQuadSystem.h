@@ -8,13 +8,18 @@
 
 namespace Waldem
 {
+    struct ScreenQuadRootConstants
+    {
+        uint TargetRT;
+    };
+    
     class WALDEM_API ScreenQuadSystem : public DrawSystem
     {
         RenderTarget* TargetRT = nullptr;
         Pipeline* QuadDrawPipeline = nullptr;
         PixelShader* QuadDrawPixelShader = nullptr;
-        RootSignature* QuadDrawRootSignature = nullptr;
         Quad FullscreenQuad = {};
+        ScreenQuadRootConstants RootConstants;
         
     public:
         ScreenQuadSystem(ECSManager* eCSManager) : DrawSystem(eCSManager) {}
@@ -27,12 +32,11 @@ namespace Waldem
             };
             
             TargetRT = resourceManager->GetRenderTarget("TargetRT");
-            WArray<GraphicResource> QuadDrawPassResources;
-            QuadDrawPassResources.Add(GraphicResource("TargetRT", TargetRT, 0));
-            QuadDrawRootSignature = Renderer::CreateRootSignature(QuadDrawPassResources);
+            
+            RootConstants.TargetRT = TargetRT->GetIndex(SRV_UAV_CBV);
+            
             QuadDrawPixelShader = Renderer::LoadPixelShader("QuadDraw");
             QuadDrawPipeline = Renderer::CreateGraphicPipeline("QuadDrawPipeline",
-                                                            QuadDrawRootSignature,
                                                             QuadDrawPixelShader,
                                                             { TextureFormat::R8G8B8A8_UNORM },
                                                             DEFAULT_RASTERIZER_DESC,
@@ -45,7 +49,6 @@ namespace Waldem
 
         void Deinitialize() override
         {
-            if(QuadDrawRootSignature) QuadDrawRootSignature->Destroy();
             if(QuadDrawPixelShader) QuadDrawPixelShader->Destroy();
             if(QuadDrawPipeline) QuadDrawPipeline->Destroy();
             IsInitialized = false;
@@ -58,7 +61,7 @@ namespace Waldem
             
             //Quad drawing pass
             Renderer::SetPipeline(QuadDrawPipeline);
-            Renderer::SetRootSignature(QuadDrawRootSignature);
+            Renderer::PushConstants(&RootConstants, sizeof(ScreenQuadRootConstants));
             Renderer::Draw(&FullscreenQuad);
         }
 

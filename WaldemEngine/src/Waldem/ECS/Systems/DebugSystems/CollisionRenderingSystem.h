@@ -22,14 +22,12 @@ namespace Waldem
         
         //AABB rendering
         Pipeline* AABBRenderingPipeline = nullptr;
-        RootSignature* AABBRenderingRootSignature = nullptr;
         PixelShader* LinePixelShader = nullptr;
         LineMesh LMesh = {};
 
         //Mesh colliders rendering
         SMeshColliderRenderingConstants MeshColliderRenderingConstants;
         Pipeline* MeshCollidersRenderingPipeline = nullptr;
-        RootSignature* MeshCollidersRenderingRootSignature = nullptr;
         PixelShader* MeshPixelShader = nullptr;
         
     public:
@@ -39,18 +37,13 @@ namespace Waldem
         {
             DepthRT = resourceManager->GetRenderTarget("DepthRT");
             
-            WArray<GraphicResource> resources;
-            resources.Add(GraphicResource("RootConstants", RTYPE_Constant, nullptr, sizeof(Matrix4), sizeof(Matrix4), 0));
-            
             WArray<InputLayoutDesc> inputElementDescs = {
                 { "POSITION", 0, TextureFormat::R32G32B32A32_FLOAT, 0, 0, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
                 { "COLOR", 0, TextureFormat::R32G32B32A32_FLOAT, 0, 16, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
             };
             
-            AABBRenderingRootSignature = Renderer::CreateRootSignature(resources);
             LinePixelShader = Renderer::LoadPixelShader("Line");
             AABBRenderingPipeline = Renderer::CreateGraphicPipeline("LinePipeline",
-                                                            AABBRenderingRootSignature,
                                                             LinePixelShader,
                                                             { TextureFormat::R8G8B8A8_UNORM },
                                                             DEFAULT_RASTERIZER_DESC,
@@ -58,10 +51,6 @@ namespace Waldem
                                                             WD_PRIMITIVE_TOPOLOGY_TYPE_LINE,
                                                             inputElementDescs);
             
-            WArray<GraphicResource> meshColliderRenderingResources;
-            meshColliderRenderingResources.Add(GraphicResource("RootConstants", RTYPE_Constant, nullptr, sizeof(SMeshColliderRenderingConstants), sizeof(SMeshColliderRenderingConstants), 0));
-            
-            MeshCollidersRenderingRootSignature = Renderer::CreateRootSignature(meshColliderRenderingResources);
             MeshPixelShader = Renderer::LoadPixelShader("SimpleMesh");
 
             RasterizerDesc rasterizerDesc = DEFAULT_RASTERIZER_DESC;
@@ -69,7 +58,6 @@ namespace Waldem
             rasterizerDesc.DepthBias = -30;
             rasterizerDesc.DepthBiasClamp = 0;
             MeshCollidersRenderingPipeline = Renderer::CreateGraphicPipeline("MeshCollidersRenderingPipeline",
-                                                            MeshCollidersRenderingRootSignature,
                                                             MeshPixelShader,
                                                             { TextureFormat::R8G8B8A8_UNORM },
                                                             rasterizerDesc,
@@ -100,17 +88,15 @@ namespace Waldem
                 MeshColliderRenderingConstants.WorldViewProj = viewProj * transform.Matrix;
                 MeshColliderRenderingConstants.Color = color;
                 Renderer::SetPipeline(MeshCollidersRenderingPipeline);
-                Renderer::SetRootSignature(MeshCollidersRenderingRootSignature);
-                MeshCollidersRenderingRootSignature->UpdateResourceData("RootConstants", &MeshColliderRenderingConstants);
+                Renderer::PushConstants(&MeshColliderRenderingConstants, sizeof(SMeshColliderRenderingConstants));
                 // Renderer::Draw(collider.MeshData.Mesh);
                 
                 lines.AddRange(meshComponent.Mesh->BBox.GetTransformed(transform).GetLines(color));
             }
 
-            Renderer::UpdateBuffer(LMesh.VertexBuffer, lines.GetData(), sizeof(Line) * lines.Num());
+            Renderer::UpdateGraphicResource(LMesh.VertexBuffer, lines.GetData(), sizeof(Line) * lines.Num());
             Renderer::SetPipeline(AABBRenderingPipeline);
-            Renderer::SetRootSignature(AABBRenderingRootSignature);
-            AABBRenderingRootSignature->UpdateResourceData("RootConstants", &viewProj);
+            Renderer::PushConstants(&viewProj, sizeof(Matrix4));
             Renderer::Draw(&LMesh);
             
             Renderer::SetRenderTargets({});

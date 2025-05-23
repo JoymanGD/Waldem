@@ -27,7 +27,7 @@ namespace Waldem
 		{
 			InputManager = {};
 
-			DrawSystems.Add(new OceanSimulationSystem(ecsManager));
+			// DrawSystems.Add(new OceanSimulationSystem(ecsManager));
 			DrawSystems.Add(new GBufferSystem(ecsManager));
 			DrawSystems.Add(new RayTracingRadianceSystem(ecsManager));
 			DrawSystems.Add(new DeferredRenderingSystem(ecsManager));

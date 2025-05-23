@@ -5,8 +5,6 @@
 #include "Waldem/Renderer/Pipeline.h"
 #include "Waldem/Renderer/Renderer.h"
 #include "Waldem/Renderer/GraphicResource.h"
-#include "Platform/Graphics/DirectX/DX12AccelerationStructure.h"
-#include "Waldem/Renderer/RootSignature.h"
 #include "Waldem/Renderer/Shader.h"
 #include "Waldem/ECS/Components/Camera.h"
 #include "Waldem/ECS/Components/Light.h"
@@ -19,18 +17,34 @@ namespace Waldem
         Matrix4 InvProjectionMatrix;
         int NumLights;
     };
+
+    struct RayTracingRootConstants
+    {
+        uint WorldPositionRT;
+        uint NormalRT;
+        uint ColorRT;
+        uint ORMRT;
+        uint ShadowsRT;
+        uint LightsBuffer;
+        uint LightTransformsBuffer;
+        uint SceneDataBuffer; 
+        uint TLAS;
+    };
     
     class WALDEM_API RayTracingRadianceSystem : public DrawSystem
     {
         RenderTarget* RadianceRT = nullptr;
         Pipeline* RTPipeline = nullptr;
         RayTracingShader* RTShader = nullptr;
-        RootSignature* RTRootSignature = nullptr;
         WArray<AccelerationStructure*> BLAS;
         WMap<CMesh*, AccelerationStructure*> BLASToUpdate;
         AccelerationStructure* TLAS = nullptr;
         RayTracingSceneData RTSceneData;
         WArray<RayTracingInstance> Instances;
+        Buffer* LightsBuffer = nullptr;
+        Buffer* LightTransformsBuffer = nullptr;
+        Buffer* SceneDataBuffer = nullptr;
+        RayTracingRootConstants RootConstants;
         
     public:
         RayTracingRadianceSystem(ECSManager* eCSManager) : DrawSystem(eCSManager) {}
@@ -70,34 +84,35 @@ namespace Waldem
             }
             
             TLAS = Renderer::CreateTLAS("RayTracingTLAS", Instances);
+            LightsBuffer = Renderer::CreateBuffer("LightsBuffer", StorageBuffer, &LightDatas[0], LightDatas.GetSize(), sizeof(LightData));
+            LightTransformsBuffer = Renderer::CreateBuffer("LightTransformsBuffer", StorageBuffer, &LightTransforms[0], LightTransforms.GetSize(), sizeof(Matrix4));
+            SceneDataBuffer = Renderer::CreateBuffer("SceneDataBuffer", StorageBuffer, &RTSceneData, sizeof(RTSceneData), sizeof(RTSceneData));
+
+            RootConstants.WorldPositionRT = worldPositionRT->GetIndex(SRV_UAV_CBV);
+            RootConstants.NormalRT = normalRT->GetIndex(SRV_UAV_CBV);
+            RootConstants.ColorRT = albedoRT->GetIndex(SRV_UAV_CBV);
+            RootConstants.ORMRT = ormRT->GetIndex(SRV_UAV_CBV);
+            RootConstants.ShadowsRT = RadianceRT->GetIndex(SRV_UAV_CBV);
+            RootConstants.LightsBuffer = LightsBuffer->GetIndex(SRV_UAV_CBV);
+            RootConstants.LightTransformsBuffer = LightTransformsBuffer->GetIndex(SRV_UAV_CBV);
+            RootConstants.SceneDataBuffer = SceneDataBuffer->GetIndex(SRV_UAV_CBV);
+            RootConstants.TLAS = TLAS->GetIndex(SRV_UAV_CBV);
             
-            WArray<GraphicResource> rtResources;
-            rtResources.Add(GraphicResource("TLAS", TLAS, 0));
-            rtResources.Add(GraphicResource("LightsBuffer", RTYPE_Buffer, nullptr, sizeof(LightData), LightDatas.GetSize(), 1));
-            rtResources.Add(GraphicResource("LightTransforms", RTYPE_Buffer, nullptr, sizeof(Matrix4), LightTransforms.GetSize(), 2));
-            rtResources.Add(GraphicResource("WorldPositionRT", worldPositionRT, 3));
-            rtResources.Add(GraphicResource("NormalRT", normalRT, 4));
-            rtResources.Add(GraphicResource("ColorRT", albedoRT, 5));
-            rtResources.Add(GraphicResource("ORMRT", ormRT, 6));
-            rtResources.Add(GraphicResource("ShadowsRT", RadianceRT, 0, true));
-            rtResources.Add(GraphicResource("MyConstantBuffer", RTYPE_ConstantBuffer, nullptr, sizeof(RayTracingSceneData), sizeof(RayTracingSceneData), 0)); 
-            RTRootSignature = Renderer::CreateRootSignature(rtResources);
             RTShader = Renderer::LoadRayTracingShader("RayTracing/Radiance");
-            RTPipeline = Renderer::CreateRayTracingPipeline("PostProcessPipeline", RTRootSignature, RTShader);
+            RTPipeline = Renderer::CreateRayTracingPipeline("PostProcessPipeline", RTShader);
 
             IsInitialized = true;
         }
 
         void Deinitialize() override
         {
-            if(RTRootSignature) RTRootSignature->Destroy();
             if(RTShader) RTShader->Destroy();
             if(RTPipeline) RTPipeline->Destroy();
-            if(TLAS) TLAS->Destroy();
+            if(TLAS) Renderer::Destroy(TLAS);
 
             for (auto blas : BLAS)
             {
-                if(blas) blas->Destroy();
+                if(blas) Renderer::Destroy(blas);
             }
 
             BLAS.Clear();
@@ -121,9 +136,9 @@ namespace Waldem
                 LightTransforms.Add(transform);
             }
             if(!LightDatas.IsEmpty())
-                RTRootSignature->UpdateResourceData("LightsBuffer", LightDatas.GetData());
+                Renderer::UpdateGraphicResource(LightsBuffer, LightDatas.GetData(), LightDatas.GetSize());
             if(!LightTransforms.IsEmpty())
-                RTRootSignature->UpdateResourceData("LightTransforms", LightTransforms.GetData());
+                Renderer::UpdateGraphicResource(LightTransformsBuffer, LightTransforms.GetData(), LightTransforms.GetSize());
             
             //constant buffer update
             for (auto [entity, camera, mainCamera, cameraTransform] : Manager->EntitiesWith<Camera, EditorCamera, Transform>())
@@ -151,12 +166,12 @@ namespace Waldem
             
             RTSceneData.NumLights = LightDatas.Num();
             
-            RTRootSignature->UpdateResourceData("MyConstantBuffer", &RTSceneData);
+            Renderer::UpdateGraphicResource(SceneDataBuffer, &RTSceneData, sizeof(RTSceneData));
 
             //dispatching
             Renderer::ResourceBarrier(RadianceRT, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
             Renderer::SetPipeline(RTPipeline);
-            Renderer::SetRootSignature(RTRootSignature);
+            Renderer::PushConstants(&RootConstants, sizeof(RayTracingRootConstants));
             Renderer::TraceRays(RTPipeline, Point3(RadianceRT->GetWidth(), RadianceRT->GetHeight(), 1));
             Renderer::ResourceBarrier(RadianceRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
         }

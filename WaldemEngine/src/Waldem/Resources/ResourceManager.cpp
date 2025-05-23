@@ -32,7 +32,7 @@ namespace Waldem
         {
             auto format = renderTarget->GetFormat();
             
-            renderTarget->Destroy();
+            Renderer::Destroy(renderTarget);
             
             renderTarget = Renderer::CreateRenderTarget(name, width, height, format);
         }
@@ -62,7 +62,7 @@ namespace Waldem
 
         Renderer::ResourceBarrier(renderTarget, ALL_SHADER_RESOURCE, COPY_SOURCE);
         Renderer::ResourceBarrier(destRT, ALL_SHADER_RESOURCE, COPY_DEST);
-        Renderer::CopyRenderTarget(destRT, renderTarget);
+        Renderer::CopyResource(destRT, renderTarget);
         Renderer::ResourceBarrier(renderTarget, COPY_SOURCE, ALL_SHADER_RESOURCE);
         Renderer::ResourceBarrier(destRT, COPY_DEST, ALL_SHADER_RESOURCE);
 
@@ -75,7 +75,7 @@ namespace Waldem
 
         Renderer::ResourceBarrier(buffer, VERTEX_AND_CONSTANT_BUFFER | NON_PIXEL_SHADER_RESOURCE, COPY_SOURCE);
         Renderer::ResourceBarrier(destBuffer, VERTEX_AND_CONSTANT_BUFFER | NON_PIXEL_SHADER_RESOURCE, COPY_DEST);
-        Renderer::CopyBuffer(destBuffer, buffer);
+        Renderer::CopyResource(destBuffer, buffer);
         Renderer::ResourceBarrier(buffer, COPY_SOURCE, VERTEX_AND_CONSTANT_BUFFER | NON_PIXEL_SHADER_RESOURCE);
         Renderer::ResourceBarrier(destBuffer, COPY_DEST, VERTEX_AND_CONSTANT_BUFFER | NON_PIXEL_SHADER_RESOURCE);
 

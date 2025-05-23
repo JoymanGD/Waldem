@@ -8,22 +8,23 @@
 
 namespace Waldem
 {
-    struct BloomParams
+    struct PostProcessRootConstants
     {
-        float BrightThreshold;
-        float BloomIntensity;
-        Vector2 TexelSize;
+        uint TargetRT;
+        uint TargetRTBack;
+        uint BloomParamsBuffer;
     };
-
+    
     class WALDEM_API PostProcessSystem : public DrawSystem
     {
         RenderTarget* TargetRT = nullptr;
         //Post process pass
         Pipeline* PostProcessPipeline = nullptr;
         ComputeShader* PostProcessComputeShader = nullptr;
-        RootSignature* PostProcessRootSignature = nullptr;
         RenderTarget* TargetRTBack = nullptr;
         Point3 GroupCount;
+        PostProcessRootConstants RootConstants;
+        Buffer* BloomParamsBuffer = nullptr;
         
     public:
         PostProcessSystem(ECSManager* eCSManager) : DrawSystem(eCSManager) {}
@@ -35,17 +36,18 @@ namespace Waldem
                 TargetRT = resourceManager->GetRenderTarget("TargetRT");
                 
                 Vector2 resolution = Vector2(TargetRT->GetWidth(), TargetRT->GetHeight());
+                bloom.TexelSize = Vector2(1.f / resolution.x, 1.f / resolution.y);
                 
                 TargetRTBack = resourceManager->CreateRenderTarget("TargetRTBack", resolution.x, resolution.y, TextureFormat::R8G8B8A8_UNORM);
-                WArray<GraphicResource> postProcessPassResources;
-                postProcessPassResources.Add(GraphicResource("TargetRT", TargetRT, 0, true));
-                postProcessPassResources.Add(GraphicResource("TargetRTBack", TargetRTBack, 0));
-                postProcessPassResources.Add(GraphicResource("MyConstantBuffer", RTYPE_ConstantBuffer, &resolution, sizeof(Vector2), sizeof(Vector2), 0));
-                bloom.TexelSize = Vector2(1.f / resolution.x, 1.f / resolution.y);
-                postProcessPassResources.Add(GraphicResource("BloomParams", RTYPE_ConstantBuffer, &bloom, sizeof(BloomPostProcess), sizeof(BloomPostProcess), 1));
-                PostProcessRootSignature = Renderer::CreateRootSignature(postProcessPassResources);
+
+                BloomParamsBuffer = Renderer::CreateBuffer("BloomParamsBuffer", StorageBuffer, &bloom, sizeof(BloomPostProcess), sizeof(BloomPostProcess));
+
+                RootConstants.TargetRT = TargetRT->GetIndex();
+                RootConstants.TargetRTBack = TargetRTBack->GetIndex();
+                RootConstants.BloomParamsBuffer = BloomParamsBuffer->GetIndex();
+                
                 PostProcessComputeShader = Renderer::LoadComputeShader("PostProcess");
-                PostProcessPipeline = Renderer::CreateComputePipeline("PostProcessPipeline", PostProcessRootSignature, PostProcessComputeShader);
+                PostProcessPipeline = Renderer::CreateComputePipeline("PostProcessPipeline", PostProcessComputeShader);
                 
                 Point3 numThreads = Renderer::GetNumThreadsPerGroup(PostProcessComputeShader);
                 GroupCount = Point3((resolution.x + numThreads.x - 1) / numThreads.x, (resolution.y + numThreads.y - 1) / numThreads.y, 1);
@@ -56,10 +58,9 @@ namespace Waldem
 
         void Deinitialize() override
         {
-            if(PostProcessRootSignature) PostProcessRootSignature->Destroy();
             if(PostProcessComputeShader) PostProcessComputeShader->Destroy();
             if(PostProcessPipeline) PostProcessPipeline->Destroy();
-            if(TargetRTBack) TargetRTBack->Destroy();
+            if(TargetRTBack) Renderer::Destroy(TargetRTBack);
             IsInitialized = false;
         }
 
@@ -71,18 +72,18 @@ namespace Waldem
             //Fill back buffer
             Renderer::ResourceBarrier(TargetRT, ALL_SHADER_RESOURCE, COPY_SOURCE);
             Renderer::ResourceBarrier(TargetRTBack, ALL_SHADER_RESOURCE, COPY_DEST);
-            Renderer::CopyRenderTarget(TargetRTBack, TargetRT);
+            Renderer::CopyResource(TargetRTBack, TargetRT);
             Renderer::ResourceBarrier(TargetRT, COPY_SOURCE, UNORDERED_ACCESS);
             Renderer::ResourceBarrier(TargetRTBack, COPY_DEST, ALL_SHADER_RESOURCE);
 
             for (auto [entity, bloom] : Manager->EntitiesWith<BloomPostProcess>())
             {
-                PostProcessRootSignature->UpdateResourceData("BloomParams", &bloom);
+                Renderer::UpdateGraphicResource(BloomParamsBuffer, &bloom, sizeof(BloomPostProcess));
             }
             
             //Post process pass
             Renderer::SetPipeline(PostProcessPipeline);
-            Renderer::SetRootSignature(PostProcessRootSignature);
+            Renderer::PushConstants(&RootConstants, sizeof(PostProcessRootConstants));
             Renderer::Compute(GroupCount);
             Renderer::ResourceBarrier(TargetRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
         }

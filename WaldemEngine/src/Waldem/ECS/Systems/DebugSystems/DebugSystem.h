@@ -27,7 +27,6 @@ namespace Waldem
         //Displaying debugRTs
         bool DisplayDebugRTs = false;
         Pipeline* DebugRenderTargetsPipeline = nullptr;
-        RootSignature* DebugRenderTargetsRootSignature = nullptr;
         ComputeShader* DebugRenderTargetsComputeShader = nullptr;
         RenderTarget* TargetRT = nullptr;
         RenderTarget* DebugRT_1 = nullptr;
@@ -210,21 +209,8 @@ namespace Waldem
             ConstantBufferData.DebugResolution = Vector2(DebugRT_1->GetWidth(), DebugRT_1->GetHeight());
             ConstantBufferData.DebugRTIndex = 1;
             
-            WArray<GraphicResource> resources;
-            resources.Add(GraphicResource("TargetRT", TargetRT, 0, true));
-            resources.Add(GraphicResource("DebugRT_1", DebugRT_1, 0));
-            resources.Add(GraphicResource("DebugRT_2", DebugRT_2, 1));
-            resources.Add(GraphicResource("DebugRT_3", DebugRT_3, 2));
-            resources.Add(GraphicResource("DebugRT_4", DebugRT_4, 3));
-            resources.Add(GraphicResource("DebugRT_5", DebugRT_5, 4));
-            resources.Add(GraphicResource("DebugRT_6", DebugRT_6, 5));
-            resources.Add(GraphicResource("DebugRT_7", DebugRT_7, 6));
-            resources.Add(GraphicResource("DebugRT_8", DebugRT_8, 7));
-            resources.Add(GraphicResource("DebugRT_9", DebugRT_9, 8));
-            resources.Add(GraphicResource("MyConstantBuffer", RTYPE_ConstantBuffer, &ConstantBufferData, sizeof(DebugSystemConstantBuffer), sizeof(DebugSystemConstantBuffer), 0));
-            DebugRenderTargetsRootSignature = Renderer::CreateRootSignature(resources);
             DebugRenderTargetsComputeShader = Renderer::LoadComputeShader("DebugRenderTargets");
-            DebugRenderTargetsPipeline = Renderer::CreateComputePipeline("DebugRenderTargetsPipeline", DebugRenderTargetsRootSignature, DebugRenderTargetsComputeShader);
+            DebugRenderTargetsPipeline = Renderer::CreateComputePipeline("DebugRenderTargetsPipeline", DebugRenderTargetsComputeShader);
             
             Point3 numThreads = Renderer::GetNumThreadsPerGroup(DebugRenderTargetsComputeShader);
             GroupCount = Point3((resolution.x + numThreads.x - 1) / numThreads.x, (resolution.y + numThreads.y - 1) / numThreads.y, 1);
@@ -234,10 +220,9 @@ namespace Waldem
         {
             if(DisplayDebugRTs)
             {
-                DebugRenderTargetsRootSignature->UpdateResourceData("MyConstantBuffer", &ConstantBufferData);
                 Renderer::ResourceBarrier(TargetRT, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
                 Renderer::SetPipeline(DebugRenderTargetsPipeline);
-                Renderer::SetRootSignature(DebugRenderTargetsRootSignature);
+                Renderer::PushConstants(&ConstantBufferData, sizeof(DebugSystemConstantBuffer));
                 Renderer::Compute(GroupCount);
                 Renderer::ResourceBarrier(TargetRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
             }

@@ -4,8 +4,6 @@
 #include "Waldem/Renderer/Pipeline.h"
 #include "Waldem/Renderer/Model/Mesh.h"
 #include "Waldem/Renderer/Shader.h"
-#include "Waldem/Renderer/Model/Model.h"
-#include "Waldem/Renderer/RootSignature.h"
 
 namespace Waldem
 {
@@ -15,21 +13,21 @@ namespace Waldem
         DX12CommandList(ID3D12Device* device);
         ~DX12CommandList();
 
-        void BeginInternal(SViewport& viewport);
+        void BeginInternal(SViewport& viewport, ID3D12DescriptorHeap* rtvHeap);
         void EndInternal();
 
-        void Draw(CModel* model);
         void Draw(CMesh* mesh);
         void Dispatch(Point3 groupCount);
         void TraceRays(Pipeline* rayTracingPipeline, Point3 numRays);
         void Clear(D3D12_CPU_DESCRIPTOR_HANDLE renderTarget, D3D12_CPU_DESCRIPTOR_HANDLE depthStencil, Vector3 clearColor);
         
         void SetPipeline(Pipeline* pipeline);
-        void SetRootSignature(RootSignature* rootSignature);
+        void SetRootSignature(ID3D12RootSignature* rootSignature);
+        void SetGeneralDescriptorHeaps(ID3D12DescriptorHeap* resourcesHeap, ID3D12DescriptorHeap* samplersHeap);
         void SetVertexBuffers(Buffer* vertexBuffer, uint32 numBuffers, uint32 startIndex = 0);
         void SetIndexBuffer(Buffer* indexBuffer);
-        void DrawIndirect(ID3D12CommandSignature* CommandSignature, uint numCommands, Buffer* indirectBuffer);
-        void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr);
+        void DrawIndirect(ID3D12CommandSignature* CommandSignature, uint numCommands, ID3D12Resource* indirectBuffer);
+        void SetRenderTargets(WArray<D3D12_CPU_DESCRIPTOR_HANDLE>& renderTargets, D3D12_CPU_DESCRIPTOR_HANDLE& depthStencil);
         void SetDescriptorHeaps(uint32_t NumDescriptorHeaps, ID3D12DescriptorHeap* const* ppDescriptorHeaps);
 
         void* GetNativeCommandList() { return CommandList; }
@@ -48,9 +46,7 @@ namespace Waldem
         void BuildRaytracingAccelerationStructure(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC* asDesc);
         void CopyTextureRegion(const D3D12_TEXTURE_COPY_LOCATION* dst, uint32_t dstX, uint32_t dstY, uint32_t dstZ, const D3D12_TEXTURE_COPY_LOCATION* src, const D3D12_BOX* srcBox);
         void CopyResource(ID3D12Resource* dst, ID3D12Resource* src);
-        void CopyRenderTarget(RenderTarget* dst, RenderTarget* src);
-        void CopyBuffer(Buffer* dstBuffer, Buffer* srcBuffer);
-        void UpdateBuffer(Buffer* buffer, void* data, uint32_t size);
+        void UpdateRes(ID3D12Resource* resource, ID3D12Resource* uploadResource, void* data, uint32_t size, D3D12_RESOURCE_STATES beforeState);
 
         void UpdateSubresoures(ID3D12Resource* destResource, ID3D12Resource* srcResource, uint32_t numSubresources, D3D12_SUBRESOURCE_DATA* subresourceData);
         

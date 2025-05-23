@@ -39,17 +39,15 @@ namespace Waldem
         dx12State.BackFace.StencilFunc = (D3D12_COMPARISON_FUNC)wdState.BackFace.StencilFunc;
     }
     
-    DX12GraphicPipeline::DX12GraphicPipeline(const WString& name, ID3D12Device* device, RootSignature* rootSignature, PixelShader* shader, WArray<TextureFormat> RTFormats, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout) : Pipeline(name)
+    DX12GraphicPipeline::DX12GraphicPipeline(const WString& name, ID3D12Device* device, ID3D12RootSignature* rootSignature, PixelShader* shader, WArray<TextureFormat> RTFormats, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout) : Pipeline(name)
     {
         CurrentPipelineType = PipelineType::Graphics;
         
-        rootSignature->CurrentPipelineType = PipelineType::Graphics;
-
         IDxcBlob* VertexShaderBlob = (IDxcBlob*)shader->GetVS();
         IDxcBlob* PixelShaderBlob = (IDxcBlob*)shader->GetPS();
         
         PsoDesc = {};
-        PsoDesc.pRootSignature = (ID3D12RootSignature*)rootSignature->GetNativeObject();
+        PsoDesc.pRootSignature = rootSignature;
         PsoDesc.VS = { VertexShaderBlob->GetBufferPointer(), VertexShaderBlob->GetBufferSize() };
         PsoDesc.PS = { PixelShaderBlob->GetBufferPointer(), PixelShaderBlob->GetBufferSize() };
         FillRasterizerState(PsoDesc.RasterizerState, rasterizerDesc);
@@ -76,12 +74,13 @@ namespace Waldem
         
         PsoDesc.InputLayout = { inputElementDescs.GetData(), (UINT)inputElementDescs.Num() };
         HRESULT hr = device->CreateGraphicsPipelineState(&PsoDesc, IID_PPV_ARGS(&NativePipeline));
-        NativePipeline->SetName(DX12Helper::WFromMB(name));
 
         if(FAILED(hr))
         {
             throw std::runtime_error("Failed to create pipeline state!");
         }
+        
+        NativePipeline->SetName(DX12Helper::WFromMB(name));
     }
 
     DX12GraphicPipeline::~DX12GraphicPipeline()

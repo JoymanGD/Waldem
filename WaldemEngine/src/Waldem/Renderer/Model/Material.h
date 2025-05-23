@@ -54,7 +54,7 @@ namespace Waldem
             {
                 auto textureDesc = ResourceManager::ImportAsset<TextureDesc>(hash);
 
-                texture = Renderer::CreateTexture(*textureDesc);
+                texture = Renderer::CreateTexture(textureDesc->Name, textureDesc->Width, textureDesc->Height, textureDesc->Format, textureDesc->Data);
             }
         }
         

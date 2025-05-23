@@ -28,12 +28,7 @@ namespace Waldem
         Vector4 dummyColor = Vector4(1.f, 1.f, 1.f, 1.f);
         uint8_t* image_data = (uint8_t*)&dummyColor;
 
-        int width = 1;
-        int height = 1;
-
-        TextureFormat format = TextureFormat::R8G8B8A8_UNORM;
-
-        return Renderer::CreateTexture(name, width, height, format, sizeof(Vector4), image_data);
+        return Renderer::CreateTexture(name, 1, 1, TextureFormat::R8G8B8A8_UNORM, image_data);
     }
 
     Texture2D* CreateTexture(Path& path, WString name, TextureType textureType, const aiScene* assimpModel, aiMaterial* assimpMaterial)
@@ -61,11 +56,7 @@ namespace Waldem
                 image_data = stbi_load(externalTexturePath.string().c_str(), &width, &height, &componentsCount, 4);
             }
 
-            size_t dataSize = width * height * 4;
-
-            TextureFormat format = TextureFormat::R8G8B8A8_UNORM;
-            
-            return Renderer::CreateTexture(name, width, height, format, dataSize, image_data);
+            return Renderer::CreateTexture(name, width, height, TextureFormat::R8G8B8A8_UNORM, image_data);
         }
 
         return nullptr;

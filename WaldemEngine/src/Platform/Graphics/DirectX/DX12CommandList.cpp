@@ -4,13 +4,10 @@
 #include <d3dcompiler.h>
 
 #include "D3DX12.h"
-#include "DX12Buffer.h"
 #include "DX12Helper.h"
 #include "DX12GraphicPipeline.h"
 #include "DX12PixelShader.h"
 #include "DX12RayTracingPipeline.h"
-#include "DX12RenderTarget.h"
-#include "DX12RootSignature.h"
 #include "Waldem/Renderer/Viewport.h"
 #include "Waldem/Renderer/Model/Line.h"
 #include "Waldem/Utils/FileUtils.h"
@@ -28,7 +25,7 @@ namespace Waldem
         
         if (FAILED(hr))
         {
-            throw std::runtime_error("Failed to create command allocator!");
+            DX12Helper::PrintHResultError(hr);
         }
 
         // Create the command list
@@ -65,7 +62,7 @@ namespace Waldem
         CloseHandle(FenceEvent);
     }
 
-    void DX12CommandList::BeginInternal(SViewport& viewport)
+    void DX12CommandList::BeginInternal(SViewport& viewport, ID3D12DescriptorHeap* rtvHeap)
     {
         //we use 0;0 for viewport and scissor rect position to render full-size render target
         D3D12_VIEWPORT d3d12Viewport = { 0, 0, (float)viewport.Size.x, (float)viewport.Size.y, (float)viewport.DepthRange.x, (float)viewport.DepthRange.y };
@@ -75,17 +72,22 @@ namespace Waldem
 
         MainViewport = d3d12Viewport;
         MainScissorRect = d3d12ScissorRect;
+        
+        uint32 index = viewport.FrameBuffer->GetCurrentRenderTarget()->GetIndex(RTV);
+        D3D12_CPU_DESCRIPTOR_HANDLE rtv = rtvHeap->GetCPUDescriptorHandleForHeapStart();
+        rtv.ptr += index * Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+        index = viewport.FrameBuffer->GetDepth()->GetIndex(RTV);
+        D3D12_CPU_DESCRIPTOR_HANDLE dsv = rtvHeap->GetCPUDescriptorHandleForHeapStart();
+        dsv.ptr += index * Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
         //set render target
-        auto rtvHandle = ((DX12RenderTarget*)viewport.FrameBuffer->GetCurrentRenderTarget())->GetRTVHandle();
-        auto depthStencilHandle = ((DX12RenderTarget*)viewport.FrameBuffer->GetDepth())->GetRTVHandle();
+        Clear(rtv, dsv, Vector3(0.0f, 0.0f, 0.0f));
         
-        Clear(rtvHandle, depthStencilHandle, Vector3(0.0f, 0.0f, 0.0f));
-        
-        CommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &depthStencilHandle);
+        CommandList->OMSetRenderTargets(1, &rtv, FALSE, &dsv);
 
-        MainRenderTargetHandles.Add(rtvHandle);
-        MainDepthStencilHandle = depthStencilHandle;
+        MainRenderTargetHandles.Add(rtv);
+        MainDepthStencilHandle = dsv;
     }
 
     void DX12CommandList::EndInternal()
@@ -94,29 +96,20 @@ namespace Waldem
         CurrentExecutableShader = nullptr;
     }
 
-    void DX12CommandList::Draw(CModel* model)
-    {
-        //Draw meshes
-        auto meshes = model->GetMeshes();
-
-        for (auto mesh : meshes)
-        {
-            Draw(mesh);
-        }
-    }
-
     void DX12CommandList::Draw(CMesh* mesh)
     {
         //Draw mesh
         if(mesh->VertexBuffer)
         {
-            auto& vertexBufferView = ((DX12Buffer*)mesh->VertexBuffer)->GetVertexBufferView();
+            D3D12_VERTEX_BUFFER_VIEW vertexBufferView { mesh->VertexBuffer->GetGPUAddress(), mesh->VertexBuffer->GetSize(), mesh->VertexBuffer->GetStride() };
+            
             CommandList->IASetVertexBuffers(0, 1, &vertexBufferView);
         }
 
         if(mesh->IndexBuffer)
         {
-            auto& indexBufferView = ((DX12Buffer*)mesh->IndexBuffer)->GetIndexBufferView();
+            D3D12_INDEX_BUFFER_VIEW indexBufferView { mesh->IndexBuffer->GetGPUAddress(), mesh->IndexBuffer->GetSize(), DXGI_FORMAT_R32_UINT };
+            
             CommandList->IASetIndexBuffer(&indexBufferView);
             CommandList->DrawIndexedInstanced(mesh->IndexBuffer->GetCount(), 1, 0, 0, 0);
         }
@@ -209,112 +202,60 @@ namespace Waldem
         }
     }
 
-    void DX12CommandList::SetRootSignature(RootSignature* rootSignature)
+    void DX12CommandList::SetRootSignature(ID3D12RootSignature* rootSignature)
     {
-        DX12RootSignature* dx12RootSignature = (DX12RootSignature*)rootSignature;
-        ID3D12RootSignature* rootSignatureObject = (ID3D12RootSignature*)dx12RootSignature->GetNativeObject();
+        CommandList->SetComputeRootSignature(rootSignature);
+        CommandList->SetGraphicsRootSignature(rootSignature);
+    }
 
-        if(rootSignature->CurrentPipelineType == PipelineType::Compute)
-        {
-            CommandList->SetComputeRootSignature(rootSignatureObject);
-        }
-        else
-        {
-            CommandList->SetGraphicsRootSignature(rootSignatureObject);
-        }
+    void DX12CommandList::SetGeneralDescriptorHeaps(ID3D12DescriptorHeap* resourcesHeap, ID3D12DescriptorHeap* samplersHeap)
+    {
+        ID3D12DescriptorHeap* heaps[] = { resourcesHeap, samplersHeap };
+        SetDescriptorHeaps(_countof(heaps), &resourcesHeap);
         
-        auto rootParamDatas = dx12RootSignature->GetRootParamDatas();
+        D3D12_GPU_DESCRIPTOR_HANDLE heapBase = resourcesHeap->GetGPUDescriptorHandleForHeapStart();
+        UINT descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-        WArray<ID3D12DescriptorHeap*> heaps;
-
-        auto resourcesHeap = dx12RootSignature->GetResourcesHeap();
-        if(resourcesHeap)
-        {
-            heaps.Add(resourcesHeap);
-        }
+        D3D12_GPU_DESCRIPTOR_HANDLE texturesHandle = heapBase;
+        CommandList->SetGraphicsRootDescriptorTable(0, texturesHandle);
+        CommandList->SetComputeRootDescriptorTable(0, texturesHandle);
         
-        auto samplersHeap = dx12RootSignature->GetSamplersHeap();
-        if(samplersHeap)
-        {
-            heaps.Add(samplersHeap);
-        }
-
-        if(!heaps.IsEmpty())
-        {
-            CommandList->SetDescriptorHeaps(heaps.Num(), heaps.GetData());
-        }
-
-        if(resourcesHeap)
-        {
-            UINT descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-            D3D12_GPU_DESCRIPTOR_HANDLE handle = resourcesHeap->GetGPUDescriptorHandleForHeapStart();
-
-            for (uint32_t i = 0; i < rootParamDatas.Num(); ++i)
-            {
-                auto& rootParamData = rootParamDatas[i];
-                
-                if(rootParamData.Type != RTYPE_Sampler && rootParamData.Type != RTYPE_Constant)
-                {
-                    if(rootSignature->CurrentPipelineType == PipelineType::Compute)
-                    {
-                        CommandList->SetComputeRootDescriptorTable(i, handle);
-                    }
-                    else
-                    {
-                        CommandList->SetGraphicsRootDescriptorTable(i, handle);
-                    }
+        D3D12_GPU_DESCRIPTOR_HANDLE rwTexturesHandle = heapBase;
+        rwTexturesHandle.ptr += 4096 * descriptorSize;
+        CommandList->SetGraphicsRootDescriptorTable(1, rwTexturesHandle);
+        CommandList->SetComputeRootDescriptorTable(1, rwTexturesHandle);
         
-                    handle.ptr += descriptorSize * rootParamData.NumDescriptors;
-                }
-            }
-        }
+        D3D12_GPU_DESCRIPTOR_HANDLE ASHandle = heapBase;
+        ASHandle.ptr += 6144 * descriptorSize;
+        CommandList->SetGraphicsRootDescriptorTable(2, ASHandle);
+        CommandList->SetComputeRootDescriptorTable(2, ASHandle);
 
-        if(samplersHeap)
-        {
-            UINT samplerDescriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
-            D3D12_GPU_DESCRIPTOR_HANDLE samplersHandle = samplersHeap->GetGPUDescriptorHandleForHeapStart();
-
-            for (uint32_t i = 0; i < rootParamDatas.Num(); ++i)
-            {
-                auto& rootParamData = rootParamDatas[i];
-        
-                if(rootParamData.Type == RTYPE_Sampler)
-                {
-                    if(rootSignature->CurrentPipelineType == PipelineType::Compute)
-                    {
-                        CommandList->SetComputeRootDescriptorTable(i, samplersHandle);
-                    }
-                    else
-                    {
-                        CommandList->SetGraphicsRootDescriptorTable(i, samplersHandle);
-                    }
-        
-                    samplersHandle.ptr += samplerDescriptorSize;
-                }
-            }
-        }
+        D3D12_GPU_DESCRIPTOR_HANDLE samplersHeapBase = samplersHeap->GetGPUDescriptorHandleForHeapStart();
+        CommandList->SetGraphicsRootDescriptorTable(3, samplersHeapBase);
+        CommandList->SetComputeRootDescriptorTable(3, samplersHeapBase);
     }
 
     void DX12CommandList::SetVertexBuffers(Buffer* vertexBuffer, uint32 numBuffers, uint32 startIndex)
     {
         //Draw mesh
-        auto& vertexBufferView = ((DX12Buffer*)vertexBuffer)->GetVertexBufferView();
+        D3D12_VERTEX_BUFFER_VIEW vertexBufferView { vertexBuffer->GetGPUAddress(), (uint)vertexBuffer->GetSize(), vertexBuffer->GetStride() };
+            
         CommandList->IASetVertexBuffers(startIndex, numBuffers, &vertexBufferView);
     }
 
     void DX12CommandList::SetIndexBuffer(Buffer* indexBuffer)
     {
-        auto& indexBufferView = ((DX12Buffer*)indexBuffer)->GetIndexBufferView();
+        D3D12_INDEX_BUFFER_VIEW indexBufferView { indexBuffer->GetGPUAddress(), (uint)indexBuffer->GetSize(), DXGI_FORMAT_R32_UINT };
+            
         CommandList->IASetIndexBuffer(&indexBufferView);
     }
 
-    void DX12CommandList::DrawIndirect(ID3D12CommandSignature* CommandSignature, uint numCommands, Buffer* indirectBuffer)
+    void DX12CommandList::DrawIndirect(ID3D12CommandSignature* CommandSignature, uint numCommands, ID3D12Resource* indirectBuffer)
     {
-        ID3D12Resource* indirectBufferResource = (ID3D12Resource*)((DX12Buffer*)indirectBuffer)->GetPlatformResource();
-        CommandList->ExecuteIndirect(CommandSignature, numCommands, indirectBufferResource, 0, nullptr, 0);
+        CommandList->ExecuteIndirect(CommandSignature, numCommands, indirectBuffer, 0, nullptr, 0);
     }
 
-    void DX12CommandList::SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil)
+    void DX12CommandList::SetRenderTargets(WArray<D3D12_CPU_DESCRIPTOR_HANDLE>& renderTargets, D3D12_CPU_DESCRIPTOR_HANDLE& depthStencil)
     {
         WArray<D3D12_CPU_DESCRIPTOR_HANDLE> renderTargetHandlesToSet = MainRenderTargetHandles;
         D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandleToSet = MainDepthStencilHandle;
@@ -324,20 +265,13 @@ namespace Waldem
         if(!renderTargets.IsEmpty())
         {
             renderTargetHandlesToSet.Clear();
-            
-            for(auto renderTarget : renderTargets)
-            {
-                if(renderTarget != nullptr)
-                {
-                    auto handle = ((DX12RenderTarget*)renderTarget)->GetRTVHandle();
-                    renderTargetHandlesToSet.Add(handle);
-                }
-            }
+
+            renderTargetHandlesToSet.AddRange(renderTargets);
         }
 
-        if(depthStencil)
+        if(depthStencil.ptr != 0)
         {
-            depthStencilHandleToSet = ((DX12RenderTarget*)depthStencil)->GetRTVHandle();
+            depthStencilHandleToSet = depthStencil;
         }
 
         // if(viewport.Width != 0.f && viewport.Height != 0.f)
@@ -408,37 +342,18 @@ namespace Waldem
         CommandList->CopyResource(dst, src);
     }
 
-    void DX12CommandList::CopyRenderTarget(RenderTarget* dstRT, RenderTarget* srcRT)
+    void DX12CommandList::UpdateRes(ID3D12Resource* resource, ID3D12Resource* uploadResource, void* data, uint32_t size, D3D12_RESOURCE_STATES beforeState)
     {
-        ID3D12Resource* dst = (ID3D12Resource*)dstRT->GetPlatformResource();
-        ID3D12Resource* src = (ID3D12Resource*)srcRT->GetPlatformResource();
-        CommandList->CopyResource(dst, src);
-    }
-
-    void DX12CommandList::CopyBuffer(Buffer* dstBuffer, Buffer* srcBuffer)
-    {
-        ID3D12Resource* dst = (ID3D12Resource*)dstBuffer->GetPlatformResource();
-        ID3D12Resource* src = (ID3D12Resource*)srcBuffer->GetPlatformResource();
-        CommandList->CopyResource(dst, src);
-    }
-
-    void DX12CommandList::UpdateBuffer(Buffer* buffer, void* data, uint32_t size)
-    {
-        DX12Buffer* dx12Buffer = (DX12Buffer*)buffer;
-        ID3D12Resource* uploadResource = dx12Buffer->GetUploadResource();
-        ID3D12Resource* defaultResource = dx12Buffer->GetDefaultResource();
         void* mappedData;
         uploadResource->Map(0, nullptr, &mappedData);
         memcpy(mappedData, data, size);
         uploadResource->Unmap(0, nullptr);
 
-        ResourceBarrier(defaultResource, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, D3D12_RESOURCE_STATE_COPY_DEST);
+        ResourceBarrier(resource, beforeState, D3D12_RESOURCE_STATE_COPY_DEST);
 
-        CommandList->CopyBufferRegion(defaultResource, 0, uploadResource, 0, size);
+        CommandList->CopyBufferRegion(resource, 0, uploadResource, 0, size);
 
-        ResourceBarrier(defaultResource, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
-
-        buffer->SetCount(size / buffer->GetStride());
+        ResourceBarrier(resource, D3D12_RESOURCE_STATE_COPY_DEST, beforeState);
     }
 
     void DX12CommandList::UpdateSubresoures(ID3D12Resource* destResource, ID3D12Resource* srcResource, uint32_t numSubresources, D3D12_SUBRESOURCE_DATA* subresourceData)

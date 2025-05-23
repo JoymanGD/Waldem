@@ -13,7 +13,6 @@ namespace Waldem
     class WALDEM_API LinesRenderingSystem : public ISystem
     {
         Pipeline* LinePipeline = nullptr;
-        RootSignature* LineRootSignature = nullptr;
         PixelShader* LinePixelShader = nullptr;
 
         LineMesh LMesh = {};
@@ -23,9 +22,6 @@ namespace Waldem
 
         void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
         {
-            WArray<GraphicResource> resources;
-            resources.Add(GraphicResource("RootConstants", RTYPE_Constant, nullptr, sizeof(Matrix4), sizeof(Matrix4), 0));
-            
             WArray<InputLayoutDesc> inputElementDescs = {
                 { "POSITION", 0, TextureFormat::R32G32B32A32_FLOAT, 0, 0, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
                 { "COLOR", 0, TextureFormat::R32G32B32A32_FLOAT, 0, 16, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
@@ -34,10 +30,8 @@ namespace Waldem
             DepthStencilDesc depthStencilDesc = DEFAULT_DEPTH_STENCIL_DESC;
             depthStencilDesc.DepthEnable = false;
             
-            LineRootSignature = Renderer::CreateRootSignature(resources);
             LinePixelShader = Renderer::LoadPixelShader("Line");
             LinePipeline = Renderer::CreateGraphicPipeline("LinePipeline",
-                                                            LineRootSignature,
                                                             LinePixelShader,
                                                             { TextureFormat::R8G8B8A8_UNORM },
                                                             DEFAULT_RASTERIZER_DESC,
@@ -64,10 +58,9 @@ namespace Waldem
                 lines.AddRange(meshComponent.Mesh->BBox.GetTransformed(transform).GetLines(color));
             }
 
-            Renderer::UpdateBuffer(LMesh.VertexBuffer, lines.GetData(), sizeof(Line) * lines.Num());
+            Renderer::UpdateGraphicResource(LMesh.VertexBuffer, lines.GetData(), sizeof(Line) * lines.Num());
             Renderer::SetPipeline(LinePipeline);
-            Renderer::SetRootSignature(LineRootSignature);
-            LineRootSignature->UpdateResourceData("RootConstants", &viewProj);
+            Renderer::PushConstants(&viewProj, sizeof(Matrix4));
             Renderer::Draw(&LMesh);
         }
     };

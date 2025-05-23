@@ -7,16 +7,14 @@
 
 namespace Waldem
 {
-    DX12ComputePipeline::DX12ComputePipeline(const WString& name, ID3D12Device* device, RootSignature* rootSignature, ComputeShader* shader) : Pipeline(name)
+    DX12ComputePipeline::DX12ComputePipeline(const WString& name, ID3D12Device* device, ID3D12RootSignature* rootSignature, ComputeShader* shader) : Pipeline(name)
     {
         CurrentPipelineType = PipelineType::Compute;
-        
-        rootSignature->CurrentPipelineType = PipelineType::Compute;
         
         IDxcBlob* ComputeShaderBlob = (IDxcBlob*)shader->GetPlatformData();
         
         PsoDesc = {};
-        PsoDesc.pRootSignature = (ID3D12RootSignature*)rootSignature->GetNativeObject();
+        PsoDesc.pRootSignature = rootSignature;
         PsoDesc.CS = { ComputeShaderBlob->GetBufferPointer(), ComputeShaderBlob->GetBufferSize() };
         
         HRESULT hr = device->CreateComputePipelineState(&PsoDesc, IID_PPV_ARGS(&NativePipeline));
