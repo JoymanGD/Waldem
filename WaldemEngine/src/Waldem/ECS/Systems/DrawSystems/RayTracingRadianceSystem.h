@@ -136,9 +136,9 @@ namespace Waldem
                 LightTransforms.Add(transform);
             }
             if(!LightDatas.IsEmpty())
-                Renderer::UpdateGraphicResource(LightsBuffer, LightDatas.GetData(), LightDatas.GetSize());
+                Renderer::UploadBuffer(LightsBuffer, LightDatas.GetData(), LightDatas.GetSize());
             if(!LightTransforms.IsEmpty())
-                Renderer::UpdateGraphicResource(LightTransformsBuffer, LightTransforms.GetData(), LightTransforms.GetSize());
+                Renderer::UploadBuffer(LightTransformsBuffer, LightTransforms.GetData(), LightTransforms.GetSize());
             
             //constant buffer update
             for (auto [entity, camera, mainCamera, cameraTransform] : Manager->EntitiesWith<Camera, EditorCamera, Transform>())
@@ -166,7 +166,7 @@ namespace Waldem
             
             RTSceneData.NumLights = LightDatas.Num();
             
-            Renderer::UpdateGraphicResource(SceneDataBuffer, &RTSceneData, sizeof(RTSceneData));
+            Renderer::UploadBuffer(SceneDataBuffer, &RTSceneData, sizeof(RTSceneData));
 
             //dispatching
             Renderer::ResourceBarrier(RadianceRT, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);

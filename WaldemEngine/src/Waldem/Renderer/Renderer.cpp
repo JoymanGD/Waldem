@@ -193,14 +193,14 @@ namespace Waldem
         return Instance->PlatformRenderer->CreateBuffer(name, type, data, size, stride);
     }
 
-    void Renderer::UpdateGraphicResource(GraphicResource* graphicResource, void* data, uint32_t size)
+    void Renderer::UploadBuffer(Buffer* buffer, void* data, uint32_t size)
     {
-        Instance->PlatformRenderer->UpdateGraphicResource(graphicResource, data, size);
+        Instance->PlatformRenderer->UploadBuffer(buffer, data, size);
     }
 
-    void Renderer::ReadbackBuffer(Buffer* buffer, void* data)
+    void Renderer::DownloadBuffer(Buffer* buffer, void* data)
     {
-        Instance->PlatformRenderer->ReadbackBuffer(buffer, data);
+        Instance->PlatformRenderer->DownloadBuffer(buffer, data);
     }
 
     void Renderer::ResourceBarrier(GraphicResource* resource, ResourceStates before, ResourceStates after)

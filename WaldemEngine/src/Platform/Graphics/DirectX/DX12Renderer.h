@@ -55,8 +55,8 @@ namespace Waldem
         SViewport* GetGameViewport() override { return &GameViewport; }
         SViewport* GetMainViewport() override { return &MainViewport; }
         void CopyResource(GraphicResource* dstResource, GraphicResource* srcResource) override;
-        void UpdateGraphicResource(GraphicResource* graphicResource, void* data, uint32_t size) override;
-        void ReadbackBuffer(Buffer* buffer, void* data) override;
+        void UploadBuffer(Buffer* buffer, void* data, uint32_t size) override;
+        void DownloadBuffer(Buffer* buffer, void* data) override;
         void ClearRenderTarget(RenderTarget* rt) override;
         void ClearDepthStencil(RenderTarget* ds) override;
         void BeginUI() override;

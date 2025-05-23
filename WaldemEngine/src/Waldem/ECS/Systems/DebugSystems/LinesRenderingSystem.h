@@ -58,7 +58,7 @@ namespace Waldem
                 lines.AddRange(meshComponent.Mesh->BBox.GetTransformed(transform).GetLines(color));
             }
 
-            Renderer::UpdateGraphicResource(LMesh.VertexBuffer, lines.GetData(), sizeof(Line) * lines.Num());
+            Renderer::UploadBuffer(LMesh.VertexBuffer, lines.GetData(), sizeof(Line) * lines.Num());
             Renderer::SetPipeline(LinePipeline);
             Renderer::PushConstants(&viewProj, sizeof(Matrix4));
             Renderer::Draw(&LMesh);
