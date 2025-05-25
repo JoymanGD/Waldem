@@ -23,7 +23,7 @@ namespace Waldem
     enum ResourceHeapType
     {
         SRV_UAV_CBV = 0,
-        RTV = 1,
+        RTV_DSV = 1,
     };
     
     class WALDEM_API GraphicResource

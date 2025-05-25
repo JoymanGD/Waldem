@@ -261,7 +261,7 @@ namespace Waldem
         RenderTarget* renderTarget = new RenderTarget(name, width, height, format);
 
         uint index = RenderTargetAllocator.Allocate();
-        renderTarget->SetIndex(index, RTV);
+        renderTarget->SetIndex(index, RTV_DSV);
         
         UINT descriptorSize;
 
@@ -386,7 +386,7 @@ namespace Waldem
         RenderTarget* renderTarget = new RenderTarget(name, width, height, format);
 
         uint index = RenderTargetAllocator.Allocate();
-        renderTarget->SetIndex(index, RTV);
+        renderTarget->SetIndex(index, RTV_DSV);
         
         UINT descriptorSize;
 
@@ -816,7 +816,7 @@ namespace Waldem
         }
         else if(resource->GetType() == RTYPE_RenderTarget)
         {
-            RenderTargetAllocator.Free(resource->GetIndex(RTV));
+            RenderTargetAllocator.Free(resource->GetIndex(RTV_DSV));
         }
         else
         {
@@ -884,14 +884,14 @@ namespace Waldem
         for (auto rt : renderTargets)
         {
             D3D12_CPU_DESCRIPTOR_HANDLE rtv = RTVHeap->GetCPUDescriptorHandleForHeapStart();
-            rtv.ptr += rt->GetIndex(RTV) * Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+            rtv.ptr += rt->GetIndex(RTV_DSV) * Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
             rtvHandles.Add(rtv);
         }
         
         if(depthStencil)
         {
             dsvHandle = DSVHeap->GetCPUDescriptorHandleForHeapStart();
-            dsvHandle.ptr += depthStencil->GetIndex(RTV) * Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+            dsvHandle.ptr += depthStencil->GetIndex(RTV_DSV) * Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
         }
         
         WorldCommandList.first->SetRenderTargets(rtvHandles, dsvHandle);
@@ -1035,7 +1035,7 @@ namespace Waldem
         RenderTarget* renderTarget = new RenderTarget(name, width, height, format);
 
         uint index = RenderTargetAllocator.Allocate();
-        renderTarget->SetIndex(index, RTV);
+        renderTarget->SetIndex(index, RTV_DSV);
         
         UINT descriptorSize;
 
@@ -1722,7 +1722,7 @@ namespace Waldem
 
     void DX12Renderer::ClearRenderTarget(RenderTarget* rt)
     {
-        uint index = rt->GetIndex(RTV);
+        uint index = rt->GetIndex(RTV_DSV);
         auto handle = RTVHeap->GetCPUDescriptorHandleForHeapStart();
         handle.ptr += index * Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
         WorldCommandList.first->ClearRenderTarget(handle);
@@ -1730,7 +1730,7 @@ namespace Waldem
 
     void DX12Renderer::ClearDepthStencil(RenderTarget* ds)
     {
-        uint index = ds->GetIndex(RTV);
+        uint index = ds->GetIndex(RTV_DSV);
         auto handle = DSVHeap->GetCPUDescriptorHandleForHeapStart();
         handle.ptr += index * Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
         WorldCommandList.first->ClearDepthStencil(handle);

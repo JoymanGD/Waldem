@@ -73,11 +73,11 @@ namespace Waldem
         MainViewport = d3d12Viewport;
         MainScissorRect = d3d12ScissorRect;
         
-        uint32 index = viewport.FrameBuffer->GetCurrentRenderTarget()->GetIndex(RTV);
+        uint32 index = viewport.FrameBuffer->GetCurrentRenderTarget()->GetIndex(RTV_DSV);
         D3D12_CPU_DESCRIPTOR_HANDLE rtv = rtvHeap->GetCPUDescriptorHandleForHeapStart();
         rtv.ptr += index * Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
-        index = viewport.FrameBuffer->GetDepth()->GetIndex(RTV);
+        index = viewport.FrameBuffer->GetDepth()->GetIndex(RTV_DSV);
         D3D12_CPU_DESCRIPTOR_HANDLE dsv = dsvHeap->GetCPUDescriptorHandleForHeapStart();
         dsv.ptr += index * Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
