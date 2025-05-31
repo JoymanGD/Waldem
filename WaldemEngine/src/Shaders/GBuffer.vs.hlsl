@@ -25,8 +25,7 @@ PS_INPUT main(VS_INPUT input)
 {
     PS_INPUT output;
     StructuredBuffer<SceneData> sceneDataBuffer = ResourceDescriptorHeap[SceneDataBufferId];
-    StructuredBuffer<Buffers> buffersBuffer = ResourceDescriptorHeap[BuffersBufferId];
-    StructuredBuffer<float4x4> worldTransforms = ResourceDescriptorHeap[buffersBuffer[0].WorldTransforms];
+    StructuredBuffer<float4x4> worldTransforms = ResourceDescriptorHeap[WorldTransforms];
     SceneData sceneData = sceneDataBuffer[0];
     
     output.WorldPosition = mul(worldTransforms[MeshId], float4(input.Position, 1));
@@ -39,7 +38,7 @@ PS_INPUT main(VS_INPUT input)
     output.Tangent = input.Tangent;
     output.Bitangent = input.Bitangent;
     output.UV = input.UV;
-    output.MeshId = input.MeshId;
+    output.MeshId = MeshId;
 
     return output;
 }

@@ -147,7 +147,7 @@ namespace Waldem
         uint DrawId;
         IndirectDrawIndexedArgs DrawIndexed;
     };
-
+    
     enum PrimitiveTopologyType
     {
         WD_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED	= 0,

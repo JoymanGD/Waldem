@@ -27,7 +27,8 @@ namespace Waldem
         void SetVertexBuffers(Buffer* vertexBuffer, uint32 numBuffers, uint32 startIndex = 0);
         void SetIndexBuffer(Buffer* indexBuffer);
         void DrawIndirect(ID3D12CommandSignature* CommandSignature, uint numCommands, ID3D12Resource* indirectBuffer);
-        void SetRenderTargets(WArray<D3D12_CPU_DESCRIPTOR_HANDLE>& renderTargets, D3D12_CPU_DESCRIPTOR_HANDLE& depthStencil);
+        void SetRenderTargets(WArray<D3D12_CPU_DESCRIPTOR_HANDLE>& renderTargets, D3D12_CPU_DESCRIPTOR_HANDLE* depthStencil);
+        void SetViewport(D3D12_VIEWPORT& viewport, D3D12_RECT& scissor);
         void SetDescriptorHeaps(uint32_t NumDescriptorHeaps, ID3D12DescriptorHeap* const* ppDescriptorHeaps);
 
         void* GetNativeCommandList() { return CommandList; }
@@ -64,10 +65,6 @@ namespace Waldem
         D3D12_CPU_DESCRIPTOR_HANDLE CurrentDepthStencilHandle;
         D3D12_VIEWPORT CurrentViewport;
         D3D12_RECT CurrentScissorRect;
-        WArray<D3D12_CPU_DESCRIPTOR_HANDLE> MainRenderTargetHandles;
-        D3D12_CPU_DESCRIPTOR_HANDLE MainDepthStencilHandle;
-        D3D12_VIEWPORT MainViewport;
-        D3D12_RECT MainScissorRect;
         PixelShader* CurrentExecutableShader;
     };
 }

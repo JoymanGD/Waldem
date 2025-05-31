@@ -45,8 +45,10 @@ namespace Waldem
         virtual RayTracingShader* LoadRayTracingShader(const Path& shaderName) = 0;
         virtual void SetPipeline(Pipeline* pipeline) = 0;
         virtual void PushConstants(void* data, size_t size) = 0;
-        virtual void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr) = 0;
-        virtual Pipeline* CreateGraphicPipeline(const WString& name, PixelShader* shader, WArray<TextureFormat> RTFormats, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout) = 0;
+        virtual void BindRenderTargets(WArray<RenderTarget*> renderTargets = {}) = 0;
+        virtual void BindDepthStencil(RenderTarget* depthStencil = nullptr) = 0;
+        virtual void SetViewport(SViewport& viewport) = 0;
+        virtual Pipeline* CreateGraphicPipeline(const WString& name, PixelShader* shader, WArray<TextureFormat> RTFormats, TextureFormat depthFormat, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout) = 0;
         virtual Pipeline* CreateComputePipeline(const WString& name, ComputeShader* shader) = 0;
         virtual Pipeline* CreateRayTracingPipeline(const WString& name, RayTracingShader* shader) = 0;
         virtual Texture2D* CreateTexture(WString name, int width, int height, TextureFormat format, uint8_t* data = nullptr) = 0;
@@ -98,8 +100,11 @@ namespace Waldem
         static RayTracingShader* LoadRayTracingShader(const Path& shaderName);
         static void SetPipeline(Pipeline* pipeline);
         static void PushConstants(void* data, size_t size);
-        static void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr);
-        static Pipeline* CreateGraphicPipeline(const WString& name, PixelShader* shader, WArray<TextureFormat> RTFormats, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout);
+        static void BindRenderTargets(RenderTarget* renderTarget = nullptr);
+        static void BindRenderTargets(WArray<RenderTarget*> renderTargets = {});
+        static void BindDepthStencil(RenderTarget* depthStencil = nullptr);
+        static void SetViewport(SViewport& viewport);
+        static Pipeline* CreateGraphicPipeline(const WString& name, PixelShader* shader, WArray<TextureFormat> RTFormats, TextureFormat depthFormat = TextureFormat::D32_FLOAT, RasterizerDesc rasterizerDesc = DEFAULT_RASTERIZER_DESC, DepthStencilDesc depthStencilDesc = DEFAULT_DEPTH_STENCIL_DESC, PrimitiveTopologyType primitiveTopologyType = WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, const WArray<InputLayoutDesc>& inputLayout = DEFAULT_INPUT_LAYOUT_DESC);
         static Pipeline* CreateComputePipeline(const WString& name, ComputeShader* shader);
         static Pipeline* CreateRayTracingPipeline(const WString& name, RayTracingShader* shader);
         static Texture2D* CreateTexture(WString name, int width, int height, TextureFormat format, uint8_t* data = nullptr);

@@ -34,16 +34,15 @@ PS_OUTPUT main(PS_INPUT input)
 {
     PS_OUTPUT output;
     
-    StructuredBuffer<Buffers> buffersBuffer = ResourceDescriptorHeap[BuffersBufferId];
-    StructuredBuffer<float4x4> worldTransforms = ResourceDescriptorHeap[buffersBuffer[0].WorldTransforms];
-    StructuredBuffer<MaterialAttribute> materialAttributes = ResourceDescriptorHeap[buffersBuffer[0].MaterialAttributes];
+    StructuredBuffer<float4x4> worldTransforms = ResourceDescriptorHeap[WorldTransforms];
+    StructuredBuffer<MaterialAttribute> materialAttributes = ResourceDescriptorHeap[MaterialAttributes];
 
     MaterialAttribute matAttr = materialAttributes[MeshId];
     float4 color, normal, orm;
 
     if(matAttr.DiffuseTextureIndex != -1)
     {
-        Texture2D ColorTexture = ResourceDescriptorHeap[matAttr.DiffuseTextureIndex];
+        Texture2D<float4> ColorTexture = ResourceDescriptorHeap[NonUniformResourceIndex(matAttr.DiffuseTextureIndex)];
         color = ColorTexture.Sample(myStaticSampler, input.UV);
         
         if(color.a < 0.1f)
@@ -56,7 +55,7 @@ PS_OUTPUT main(PS_INPUT input)
 
     if(matAttr.NormalTextureIndex != -1)
     {
-        Texture2D NormalTexture = ResourceDescriptorHeap[matAttr.NormalTextureIndex];
+        Texture2D<float4> NormalTexture = ResourceDescriptorHeap[NonUniformResourceIndex(matAttr.NormalTextureIndex)]; 
         normal = NormalTexture.Sample(myStaticSampler, input.UV);
         normal = float4(GetNormal(input.Normal, input.Tangent, input.Bitangent, normal), 0.0f);
     }
@@ -67,7 +66,7 @@ PS_OUTPUT main(PS_INPUT input)
 
     if(matAttr.ORMTextureIndex != -1)
     {
-        Texture2D ORMTexture = ResourceDescriptorHeap[matAttr.ORMTextureIndex];
+        Texture2D<float4> ORMTexture = ResourceDescriptorHeap[NonUniformResourceIndex(matAttr.ORMTextureIndex)];
         orm = ORMTexture.Sample(myStaticSampler, input.UV);
     }
     else
@@ -75,11 +74,15 @@ PS_OUTPUT main(PS_INPUT input)
         orm = float4(0.0f, matAttr.Roughness, matAttr.Metallic, 0.0f);
     }
     
+    // output.ColorRT = float4(1,0,0,1);
+    // output.NormalRT = float4(1,1,0,1);
+    // output.WorldPositionRT = float4(0,0,1,1);
+    // output.ORM = float4(1,0,1,1);
+    // output.MeshIDRT = 69;
     output.ColorRT = color;
     output.NormalRT = normalize(mul(worldTransforms[MeshId], normal));
     output.WorldPositionRT = input.WorldPosition;
     output.ORM = orm;
     output.MeshIDRT = MeshId+1;
-
     return output;
 }

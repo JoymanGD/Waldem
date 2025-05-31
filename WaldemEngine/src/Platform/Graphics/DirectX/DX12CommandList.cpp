@@ -70,29 +70,29 @@ namespace Waldem
         CommandList->RSSetViewports(1, &d3d12Viewport);
         CommandList->RSSetScissorRects(1, &d3d12ScissorRect);
 
-        MainViewport = d3d12Viewport;
-        MainScissorRect = d3d12ScissorRect;
-        
         uint32 index = viewport.FrameBuffer->GetCurrentRenderTarget()->GetIndex(RTV_DSV);
         D3D12_CPU_DESCRIPTOR_HANDLE rtv = rtvHeap->GetCPUDescriptorHandleForHeapStart();
         rtv.ptr += index * Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
-        index = viewport.FrameBuffer->GetDepth()->GetIndex(RTV_DSV);
-        D3D12_CPU_DESCRIPTOR_HANDLE dsv = dsvHeap->GetCPUDescriptorHandleForHeapStart();
-        dsv.ptr += index * Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+        auto depth = viewport.FrameBuffer->GetDepth();
+
+        D3D12_CPU_DESCRIPTOR_HANDLE dsv = {};
+        
+        if(depth)
+        {
+            index = viewport.FrameBuffer->GetDepth()->GetIndex(RTV_DSV);
+            dsv = dsvHeap->GetCPUDescriptorHandleForHeapStart();
+            dsv.ptr += index * Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+        }
 
         //set render target
         Clear(rtv, dsv, Vector3(0.0f, 0.0f, 0.0f));
         
-        CommandList->OMSetRenderTargets(1, &rtv, FALSE, &dsv);
-
-        MainRenderTargetHandles.Add(rtv);
-        MainDepthStencilHandle = dsv;
+        CommandList->OMSetRenderTargets(1, &rtv, FALSE, dsv.ptr > 0 ? &dsv : nullptr);
     }
 
     void DX12CommandList::EndInternal()
     {
-        MainRenderTargetHandles.Clear();
         CurrentExecutableShader = nullptr;
     }
 
@@ -234,41 +234,17 @@ namespace Waldem
         CommandList->ExecuteIndirect(CommandSignature, numCommands, indirectBuffer, 0, nullptr, 0);
     }
 
-    void DX12CommandList::SetRenderTargets(WArray<D3D12_CPU_DESCRIPTOR_HANDLE>& renderTargets, D3D12_CPU_DESCRIPTOR_HANDLE& depthStencil)
+    void DX12CommandList::SetRenderTargets(WArray<D3D12_CPU_DESCRIPTOR_HANDLE>& renderTargets, D3D12_CPU_DESCRIPTOR_HANDLE* depthStencil)
     {
-        WArray<D3D12_CPU_DESCRIPTOR_HANDLE> renderTargetHandlesToSet = MainRenderTargetHandles;
-        D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandleToSet = MainDepthStencilHandle;
-        D3D12_VIEWPORT viewportToSet = MainViewport;
-        D3D12_RECT scissorToSet = MainScissorRect;
+        WArray renderTargetHandlesToSet = { renderTargets };
 
-        if(!renderTargets.IsEmpty())
-        {
-            renderTargetHandlesToSet.Clear();
+        CommandList->OMSetRenderTargets(renderTargetHandlesToSet.Num(), renderTargetHandlesToSet.GetData(), FALSE, depthStencil);
+    }
 
-            renderTargetHandlesToSet.AddRange(renderTargets);
-        }
-
-        if(depthStencil.ptr != 0)
-        {
-            depthStencilHandleToSet = depthStencil;
-        }
-
-        // if(viewport.Width != 0.f && viewport.Height != 0.f)
-        // {
-        //     viewportToSet.Height = viewport.Height;
-        //     viewportToSet.Width = viewport.Width;
-        //     viewportToSet.MinDepth = viewport.MinDepth;
-        //     viewportToSet.MaxDepth = viewport.MaxDepth;
-        // }
-        //
-        // if(scissor.bottom != 0 && scissor.right != 0)
-        // {
-        //     scissorToSet = *(D3D12_RECT*)&scissor;
-        // }
-        
-        CommandList->RSSetViewports(1, &viewportToSet);
-        CommandList->RSSetScissorRects(1, &scissorToSet);
-        CommandList->OMSetRenderTargets(renderTargetHandlesToSet.Num(), renderTargetHandlesToSet.GetData(), FALSE, &depthStencilHandleToSet);
+    void DX12CommandList::SetViewport(D3D12_VIEWPORT& viewport, D3D12_RECT& scissor)
+    {
+        CommandList->RSSetViewports(1, &viewport);
+        CommandList->RSSetScissorRects(1, &scissor);
     }
 
     void DX12CommandList::SetDescriptorHeaps(uint32_t NumDescriptorHeaps, ID3D12DescriptorHeap* const* ppDescriptorHeaps)
@@ -296,7 +272,7 @@ namespace Waldem
 
     void DX12CommandList::SetConstants(uint32_t rootParamIndex, uint32_t numConstants, void* data, PipelineType pipelineType)
     {
-        if(pipelineType == PipelineType::Compute)
+        if(pipelineType == PipelineType::Compute || pipelineType == PipelineType::RayTracing)
         {
             CommandList->SetComputeRoot32BitConstants(rootParamIndex, numConstants, data, 0);
         }

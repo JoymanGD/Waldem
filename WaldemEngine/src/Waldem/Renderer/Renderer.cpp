@@ -110,20 +110,36 @@ namespace Waldem
         Instance->PlatformRenderer->PushConstants(data, size);
     }
 
-    void Renderer::SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil)
+    void Renderer::BindRenderTargets(RenderTarget* renderTarget)
     {
-        Instance->PlatformRenderer->SetRenderTargets(renderTargets, depthStencil);
+        Instance->PlatformRenderer->BindRenderTargets({ renderTarget });
+    }
+
+    void Renderer::BindRenderTargets(WArray<RenderTarget*> renderTargets)
+    {
+        Instance->PlatformRenderer->BindRenderTargets(renderTargets);
+    }
+
+    void Renderer::BindDepthStencil(RenderTarget* depthStencil)
+    {
+        Instance->PlatformRenderer->BindDepthStencil(depthStencil);
+    }
+
+    void Renderer::SetViewport(SViewport& viewport)
+    {
+        Instance->PlatformRenderer->SetViewport(viewport);
     }
 
     Pipeline* Renderer::CreateGraphicPipeline(const WString& name,
-                                                PixelShader* shader,
-                                                WArray<TextureFormat> RTFormats = { TextureFormat::R8G8B8A8_UNORM },
-                                                RasterizerDesc rasterizerDesc = DEFAULT_RASTERIZER_DESC,
-                                                DepthStencilDesc depthStencilDesc = DEFAULT_DEPTH_STENCIL_DESC,
-                                                PrimitiveTopologyType primitiveTopologyType = WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
-                                                const WArray<InputLayoutDesc>& inputLayout = DEFAULT_INPUT_LAYOUT_DESC)
+                                              PixelShader* shader,
+                                              WArray<TextureFormat> RTFormats = { TextureFormat::R8G8B8A8_UNORM },
+                                              TextureFormat depthFormat,
+                                              RasterizerDesc rasterizerDesc,
+                                              DepthStencilDesc depthStencilDesc,
+                                              PrimitiveTopologyType primitiveTopologyType,
+                                              const WArray<InputLayoutDesc>& inputLayout)
     {
-        return Instance->PlatformRenderer->CreateGraphicPipeline(name, shader, RTFormats, rasterizerDesc, depthStencilDesc, primitiveTopologyType, inputLayout);
+        return Instance->PlatformRenderer->CreateGraphicPipeline(name, shader, RTFormats, depthFormat, rasterizerDesc, depthStencilDesc, primitiveTopologyType, inputLayout);
     }
 
     Pipeline* Renderer::CreateComputePipeline(const WString& name, ComputeShader* shader)

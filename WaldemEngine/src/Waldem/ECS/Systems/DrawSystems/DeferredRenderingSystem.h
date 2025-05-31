@@ -86,8 +86,10 @@ namespace Waldem
         {
             if(!IsInitialized)
                 return;
-            
-            Renderer::ResourceBarrier(TargetRT, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
+
+            Renderer::ResourceBarrier(TargetRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
+            Renderer::ClearRenderTarget(TargetRT);
+            Renderer::ResourceBarrier(TargetRT, RENDER_TARGET, UNORDERED_ACCESS);
             Renderer::SetPipeline(DeferredRenderingPipeline);
             auto mousePos = Input::GetMousePos();
             Point2 relativeMousePos = Renderer::GetEditorViewport()->TransformMousePosition(mousePos);

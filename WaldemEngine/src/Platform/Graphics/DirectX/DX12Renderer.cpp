@@ -186,14 +186,14 @@ namespace Waldem
         
         D3D12_INDIRECT_ARGUMENT_DESC args[2] = {};
         args[0].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT;
-        args[0].Constant.RootParameterIndex = 1;
+        args[0].Constant.RootParameterIndex = 0;
         args[0].Constant.Num32BitValuesToSet = 1;
         args[0].Constant.DestOffsetIn32BitValues = 0;
         
         args[1].Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED;
 
         D3D12_COMMAND_SIGNATURE_DESC commandSigDesc = {};
-        commandSigDesc.ByteStride = sizeof(uint) + sizeof(D3D12_DRAW_INDEXED_ARGUMENTS);
+        commandSigDesc.ByteStride = sizeof(IndirectCommand);
         commandSigDesc.NumArgumentDescs = 2;
         commandSigDesc.pArgumentDescs = args;
 
@@ -203,8 +203,8 @@ namespace Waldem
     void DX12Renderer::CreateGeneralRootSignature()
     {
         CD3DX12_ROOT_PARAMETER1 rootParameters[2];
-        rootParameters[0].InitAsConstants(32, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
-        rootParameters[1].InitAsConstants(1, 1, 0, D3D12_SHADER_VISIBILITY_ALL);
+        rootParameters[0].InitAsConstants(1, 1, 0, D3D12_SHADER_VISIBILITY_ALL);
+        rootParameters[1].InitAsConstants(32, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
 
         // Define a static sampler
         D3D12_STATIC_SAMPLER_DESC staticSampler;
@@ -360,7 +360,7 @@ namespace Waldem
 
         D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
         srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-        srvDesc.Format = DXGI_FORMAT(format);
+        srvDesc.Format = (DXGI_FORMAT)format;
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
         srvDesc.Texture2D.MipLevels = 1;
         srvDesc.Texture2D.MostDetailedMip = 0;
@@ -469,7 +469,7 @@ namespace Waldem
 
         D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
         srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-        srvDesc.Format = DXGI_FORMAT(format);
+        srvDesc.Format = (DXGI_FORMAT)format;
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
         srvDesc.Texture2D.MipLevels = 1;
         srvDesc.Texture2D.MostDetailedMip = 0;
@@ -483,6 +483,43 @@ namespace Waldem
         resource->SetName(std::wstring(name.Begin(), name.End()).c_str());
 
         return renderTarget;
+    }
+
+    void DX12Renderer::SetRenderTargets()
+    {
+        WArray<D3D12_CPU_DESCRIPTOR_HANDLE> rtvHandles;
+        D3D12_CPU_DESCRIPTOR_HANDLE* dsvHandle = nullptr;
+
+        WArray<RenderTarget*>& renderTargets = DefaultRenderPassState.RenderTargets;
+        RenderTarget* depthStencil = DefaultRenderPassState.DepthStencil;
+        
+        if(CurrentRenderPassState.RenderTargetsDirty && CurrentRenderPassState.RenderTargets.Num() > 0)
+        {
+            renderTargets = CurrentRenderPassState.RenderTargets;
+            CurrentRenderPassState.RenderTargetsDirty = false;
+        }
+
+        if(CurrentRenderPassState.DepthStencilDirty)
+        {
+            depthStencil = CurrentRenderPassState.DepthStencil;
+            CurrentRenderPassState.DepthStencilDirty = false;
+        }
+        
+        for (auto rt : renderTargets)
+        {
+            D3D12_CPU_DESCRIPTOR_HANDLE rtv = RTVHeap->GetCPUDescriptorHandleForHeapStart();
+            rtv.ptr += rt->GetIndex(RTV_DSV) * Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+            rtvHandles.Add(rtv);
+        }
+        
+        if(depthStencil)
+        {
+            auto cpuHandle = DSVHeap->GetCPUDescriptorHandleForHeapStart();
+            cpuHandle.ptr += depthStencil->GetIndex(RTV_DSV) * Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+            dsvHandle = &cpuHandle;
+        }
+        
+        WorldCommandList.first->SetRenderTargets(rtvHandles, dsvHandle);
     }
 
     void DX12Renderer::InitializeUI()
@@ -574,7 +611,7 @@ namespace Waldem
                     ID3D12Resource* resource;
                     h = SwapChain->GetBuffer(i, IID_PPV_ARGS(&resource));
 
-                    auto renderTarget = CreateRenderTarget("MainViewport_FrameBuffer_" + std::to_string(i), size.x, size.y, TextureFormat::R8G8B8A8_UNORM);
+                    auto renderTarget = CreateRenderTarget("MainViewport_FrameBuffer_" + std::to_string(i), size.x, size.y, TextureFormat::R8G8B8A8_UNORM, resource);
                     ResourceBarrier(renderTarget, ALL_SHADER_RESOURCE, PRESENT);
 
                     if(FAILED(h))
@@ -611,6 +648,8 @@ namespace Waldem
 
     void DX12Renderer::Draw(CMesh* mesh)
     {
+        SetRenderTargets();
+        
         auto& cmd = WorldCommandList.first;
 
         cmd->Draw(mesh);
@@ -618,6 +657,8 @@ namespace Waldem
 
     void DX12Renderer::DrawIndirect(uint numCommands, Buffer* indirectBuffer)
     {
+        SetRenderTargets();
+        
         auto& cmd = WorldCommandList.first;
         ID3D12Resource* resource = ResourceMap[(GraphicResource*)indirectBuffer];
         cmd->DrawIndirect(GeneralCommandSignature, numCommands, resource);
@@ -700,17 +741,30 @@ namespace Waldem
 
     void DX12Renderer::Begin()
     {
-        auto& worldCmd = WorldCommandList.first;
+        auto color = EditorViewport.FrameBuffer->GetCurrentRenderTarget();
+        auto depth = EditorViewport.FrameBuffer->GetDepth();
 
-        ResourceBarrier(EditorViewport.FrameBuffer->GetCurrentRenderTarget(), ALL_SHADER_RESOURCE, RENDER_TARGET);
-        ResourceBarrier(EditorViewport.FrameBuffer->GetDepth(), ALL_SHADER_RESOURCE, DEPTH_WRITE);
+        DefaultRenderPassState.RenderTargets = { color };
+        DefaultRenderPassState.DepthStencil = depth;
+        DefaultRenderPassState.RenderTargetsDirty = true;
+        DefaultRenderPassState.DepthStencilDirty = true;
+
+        ResourceBarrier(color, ALL_SHADER_RESOURCE, RENDER_TARGET);
+        ResourceBarrier(depth, ALL_SHADER_RESOURCE, DEPTH_WRITE);
         
-        WorldCommandList.first->SetRootSignature(GeneralRootSignature);
         WorldCommandList.first->SetGeneralDescriptorHeaps(GeneralResourcesHeap, GeneralSamplerHeap);
+        WorldCommandList.first->SetRootSignature(GeneralRootSignature);
+        uint data = 999;
+        WorldCommandList.first->SetConstants(0, 1, &data, PipelineType::Graphics);
         
         if(!WorldCommandList.second)
         {
-            worldCmd->BeginInternal(EditorViewport, RTVHeap, DSVHeap);
+            ClearRenderTarget(color);
+            ClearDepthStencil(depth);
+            
+            SetViewport(EditorViewport);
+            
+            // worldCmd->BeginInternal(EditorViewport, RTVHeap, DSVHeap);
             
             WorldCommandList.second = true;
         }
@@ -739,18 +793,26 @@ namespace Waldem
 
     void DX12Renderer::BeginUI()
     {
-        auto& worldCmd = WorldCommandList.first;
-
-        ResourceBarrier(MainViewport.FrameBuffer->GetCurrentRenderTarget(), PRESENT, RENDER_TARGET);
-        ResourceBarrier(MainViewport.FrameBuffer->GetDepth(), ALL_SHADER_RESOURCE, DEPTH_WRITE);
+        auto color = MainViewport.FrameBuffer->GetCurrentRenderTarget();
+        auto depth = MainViewport.FrameBuffer->GetDepth();
+        
+        ResourceBarrier(color, PRESENT, RENDER_TARGET);
+        ResourceBarrier(depth, ALL_SHADER_RESOURCE, DEPTH_WRITE);
         
         if(!WorldCommandList.second)
         {
-            worldCmd->BeginInternal(MainViewport, RTVHeap, DSVHeap);
+            ClearRenderTarget(color);
+            ClearDepthStencil(depth);
+            
+            SetViewport(MainViewport);
+            BindRenderTargets({color});
+            BindDepthStencil(depth);
+            // worldCmd->BeginInternal(MainViewport, RTVHeap, DSVHeap);
             
             WorldCommandList.second = true;
         }
-        
+
+        SetRenderTargets();
         ImGui_ImplDX12_NewFrame();
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
@@ -873,33 +935,32 @@ namespace Waldem
 
         uint num = size / sizeof(uint);
         
-        WorldCommandList.first->SetConstants(0, num, data, CurrentPipelineType);
+        WorldCommandList.first->SetConstants(1, num, data, CurrentPipelineType);
     }
 
-    void DX12Renderer::SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil)
+    void DX12Renderer::BindRenderTargets(WArray<RenderTarget*> renderTargets)
     {
-        WArray<D3D12_CPU_DESCRIPTOR_HANDLE> rtvHandles;
-        D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = {};
-        
-        for (auto rt : renderTargets)
-        {
-            D3D12_CPU_DESCRIPTOR_HANDLE rtv = RTVHeap->GetCPUDescriptorHandleForHeapStart();
-            rtv.ptr += rt->GetIndex(RTV_DSV) * Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-            rtvHandles.Add(rtv);
-        }
-        
-        if(depthStencil)
-        {
-            dsvHandle = DSVHeap->GetCPUDescriptorHandleForHeapStart();
-            dsvHandle.ptr += depthStencil->GetIndex(RTV_DSV) * Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-        }
-        
-        WorldCommandList.first->SetRenderTargets(rtvHandles, dsvHandle);
+        CurrentRenderPassState.RenderTargets = renderTargets;
+        CurrentRenderPassState.RenderTargetsDirty = true;
     }
 
-    Pipeline* DX12Renderer::CreateGraphicPipeline(const WString& name, PixelShader* shader, WArray<TextureFormat> RTFormats, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout)
+    void DX12Renderer::BindDepthStencil(RenderTarget* depthStencil)
     {
-        return new DX12GraphicPipeline(name, Device, GeneralRootSignature, shader, RTFormats, rasterizerDesc, depthStencilDesc, primitiveTopologyType, inputLayout);
+        CurrentRenderPassState.DepthStencil = depthStencil;
+        CurrentRenderPassState.DepthStencilDirty = true;
+    }
+
+    void DX12Renderer::SetViewport(SViewport& viewport)
+    {
+        D3D12_VIEWPORT d3d12Viewport = { 0, 0, (float)viewport.Size.x, (float)viewport.Size.y, (float)viewport.DepthRange.x, (float)viewport.DepthRange.y };
+        D3D12_RECT d3d12ScissorRect = { 0, 0, viewport.Size.x, viewport.Size.y };
+
+        WorldCommandList.first->SetViewport(d3d12Viewport, d3d12ScissorRect);
+    }
+
+    Pipeline* DX12Renderer::CreateGraphicPipeline(const WString& name, PixelShader* shader, WArray<TextureFormat> RTFormats, TextureFormat depthFormat, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout)
+    {
+        return new DX12GraphicPipeline(name, Device, GeneralRootSignature, shader, RTFormats, depthFormat, rasterizerDesc, depthStencilDesc, primitiveTopologyType, inputLayout);
     }
 
     Pipeline* DX12Renderer::CreateComputePipeline(const WString& name, ComputeShader* shader)
@@ -926,7 +987,7 @@ namespace Waldem
         textureDesc.Height = height;
         textureDesc.DepthOrArraySize = 1;
         textureDesc.MipLevels = 1;
-        textureDesc.Format = DXGI_FORMAT(format);
+        textureDesc.Format = (DXGI_FORMAT)format;
         textureDesc.SampleDesc.Count = 1;
         textureDesc.SampleDesc.Quality = 0;
         textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
@@ -1020,7 +1081,7 @@ namespace Waldem
 
         D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
         srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-        srvDesc.Format = DXGI_FORMAT(format);
+        srvDesc.Format = (DXGI_FORMAT)format;
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
         srvDesc.Texture2D.MipLevels = 1;
         srvDesc.Texture2D.MostDetailedMip = 0;
@@ -1136,7 +1197,7 @@ namespace Waldem
 
         D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
         srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-        srvDesc.Format = DXGI_FORMAT(format);
+        srvDesc.Format = (DXGI_FORMAT)format;
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
         srvDesc.Texture2D.MipLevels = 1;
         srvDesc.Texture2D.MostDetailedMip = 0;
@@ -1145,7 +1206,7 @@ namespace Waldem
 
         ResourceMap[(GraphicResource*)renderTarget] = Resource;
 
-        renderTarget->SetCurrentState((ResourceStates)D3D12_RESOURCE_STATE_RENDER_TARGET);
+        renderTarget->SetCurrentState((ResourceStates)D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
 
         if(FAILED(hr))
         {
