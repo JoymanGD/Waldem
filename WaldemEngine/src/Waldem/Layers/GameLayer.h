@@ -158,14 +158,12 @@ namespace Waldem
 
 		void OpenScene(GameScene* scene, SceneData* sceneData)
 		{
-			Renderer::Begin();
 			scene->Initialize(&InputManager, CurrentECSManager, CurrentResourceManager);
 			
 			for (ISystem* system : DrawSystems)
 			{
 				system->Initialize(&InputManager, CurrentResourceManager, &ContentManager);
 			}
-			Renderer::End();
 			
 			for (ISystem* system : UpdateSystems)
 			{

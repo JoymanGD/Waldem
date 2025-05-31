@@ -34,6 +34,7 @@ namespace Waldem
             LinePipeline = Renderer::CreateGraphicPipeline("LinePipeline",
                                                             LinePixelShader,
                                                             { TextureFormat::R8G8B8A8_UNORM },
+                                                            TextureFormat::D32_FLOAT,
                                                             DEFAULT_RASTERIZER_DESC,
                                                             depthStencilDesc,
                                                             WD_PRIMITIVE_TOPOLOGY_TYPE_LINE,

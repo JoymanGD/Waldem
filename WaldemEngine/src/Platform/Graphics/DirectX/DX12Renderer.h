@@ -11,6 +11,14 @@ namespace Waldem
 {
 #define BINDLESS_MAX_DESCRIPTORS 10000
 #define RTV_MAX_DESCRIPTORS 128
+
+    struct RenderPassState
+    {
+        WArray<RenderTarget*> RenderTargets;
+        RenderTarget* DepthStencil = nullptr;
+        bool RenderTargetsDirty = false;
+        bool DepthStencilDirty = false;
+    };
     
     class DX12Renderer : public IRenderer
     {
@@ -37,9 +45,11 @@ namespace Waldem
         RayTracingShader* LoadRayTracingShader(const Path& shaderName) override;
         void SetPipeline(Pipeline* pipeline) override;
         void PushConstants(void* data, size_t size) override;
-        void SetRenderTargets(WArray<RenderTarget*> renderTargets, RenderTarget* depthStencil = nullptr) override;
+        void BindRenderTargets(WArray<RenderTarget*> renderTargets = {}) override;
+        void BindDepthStencil(RenderTarget* depthStencil = nullptr) override;
+        void SetViewport(SViewport& viewport) override;
         void ResourceBarrier(GraphicResource* resource, ResourceStates before, ResourceStates after) override;
-        Pipeline* CreateGraphicPipeline(const WString& name, PixelShader* shader, WArray<TextureFormat> RTFormats, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout) override;
+        Pipeline* CreateGraphicPipeline(const WString& name, PixelShader* shader, WArray<TextureFormat> RTFormats, TextureFormat depthFormat, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout) override;
         Pipeline* CreateComputePipeline(const WString& name, ComputeShader* shader) override;
         Pipeline* CreateRayTracingPipeline(const WString& name, RayTracingShader* shader) override;
         Texture2D* CreateTexture(WString name, int width, int height, TextureFormat format, uint8_t* data = nullptr) override;
@@ -67,6 +77,7 @@ namespace Waldem
         void CreateGeneralRootSignature();
         RenderTarget* CreateRenderTarget(WString name, int width, int height, TextureFormat format, ID3D12DescriptorHeap* externalHeap, uint slot);
         RenderTarget* CreateRenderTarget(WString name, int width, int height, TextureFormat format, ID3D12Resource* resource);
+        void SetRenderTargets();
 
         CWindow* CurrentWindow = nullptr;
 
@@ -80,6 +91,9 @@ namespace Waldem
         ID3D12DescriptorHeap* RTVHeap = nullptr;
         ID3D12DescriptorHeap* DSVHeap = nullptr;
         DescriptorAllocator RenderTargetAllocator = DescriptorAllocator(128); //0..128
+
+        RenderPassState CurrentRenderPassState;
+        RenderPassState DefaultRenderPassState;
 
         std::pair<DX12CommandList*, bool> WorldCommandList;
         

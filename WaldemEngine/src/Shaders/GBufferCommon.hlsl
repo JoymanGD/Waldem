@@ -1,7 +1,5 @@
 struct Buffers
 {
-    uint WorldTransforms;
-    uint MaterialAttributes;
 };
 
 struct SceneData
@@ -14,7 +12,8 @@ struct SceneData
 
 cbuffer RootConstants : register(b0)
 {
-    uint BuffersBufferId;
+    uint WorldTransforms;
+    uint MaterialAttributes;
     uint SceneDataBufferId;
 };
 

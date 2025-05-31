@@ -39,6 +39,7 @@ namespace Waldem
             QuadDrawPipeline = Renderer::CreateGraphicPipeline("QuadDrawPipeline",
                                                             QuadDrawPixelShader,
                                                             { TextureFormat::R8G8B8A8_UNORM },
+                                                            TextureFormat::UNKNOWN,
                                                             DEFAULT_RASTERIZER_DESC,
                                                             DEFAULT_DEPTH_STENCIL_DESC,
                                                             WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
@@ -60,6 +61,9 @@ namespace Waldem
                 return;
             
             //Quad drawing pass
+            auto viewport = Renderer::GetEditorViewport();
+            Renderer::BindRenderTargets(viewport->FrameBuffer->GetCurrentRenderTarget());
+            Renderer::BindDepthStencil(nullptr);
             Renderer::SetPipeline(QuadDrawPipeline);
             Renderer::PushConstants(&RootConstants, sizeof(ScreenQuadRootConstants));
             Renderer::Draw(&FullscreenQuad);

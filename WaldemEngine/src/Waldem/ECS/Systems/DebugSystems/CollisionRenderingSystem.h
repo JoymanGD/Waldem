@@ -46,6 +46,7 @@ namespace Waldem
             AABBRenderingPipeline = Renderer::CreateGraphicPipeline("LinePipeline",
                                                             LinePixelShader,
                                                             { TextureFormat::R8G8B8A8_UNORM },
+                                                            TextureFormat::D32_FLOAT,
                                                             DEFAULT_RASTERIZER_DESC,
                                                             DEFAULT_DEPTH_STENCIL_DESC,
                                                             WD_PRIMITIVE_TOPOLOGY_TYPE_LINE,
@@ -60,6 +61,7 @@ namespace Waldem
             MeshCollidersRenderingPipeline = Renderer::CreateGraphicPipeline("MeshCollidersRenderingPipeline",
                                                             MeshPixelShader,
                                                             { TextureFormat::R8G8B8A8_UNORM },
+                                                            TextureFormat::D32_FLOAT,
                                                             rasterizerDesc,
                                                             DEFAULT_DEPTH_STENCIL_DESC,
                                                             WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
@@ -76,7 +78,8 @@ namespace Waldem
                 break;
             }
 
-            Renderer::SetRenderTargets({}, DepthRT);
+            Renderer::BindRenderTargets({});
+            Renderer::BindDepthStencil(DepthRT);
             Renderer::ResourceBarrier(DepthRT, ALL_SHADER_RESOURCE, DEPTH_WRITE);
             
             WArray<Line> lines;
@@ -99,7 +102,7 @@ namespace Waldem
             Renderer::PushConstants(&viewProj, sizeof(Matrix4));
             Renderer::Draw(&LMesh);
             
-            Renderer::SetRenderTargets({});
+            Renderer::BindRenderTargets({});
             Renderer::ResourceBarrier(DepthRT, DEPTH_WRITE, ALL_SHADER_RESOURCE);
         }
     };
