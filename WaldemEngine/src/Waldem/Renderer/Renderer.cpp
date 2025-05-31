@@ -209,9 +209,9 @@ namespace Waldem
         return Instance->PlatformRenderer->CreateBuffer(name, type, data, size, stride);
     }
 
-    void Renderer::UploadBuffer(Buffer* buffer, void* data, uint32_t size)
+    void Renderer::UploadBuffer(Buffer* buffer, void* data, uint32_t size, uint offset)
     {
-        Instance->PlatformRenderer->UploadBuffer(buffer, data, size);
+        Instance->PlatformRenderer->UploadBuffer(buffer, data, size, offset);
     }
 
     void Renderer::DownloadBuffer(Buffer* buffer, void* data)

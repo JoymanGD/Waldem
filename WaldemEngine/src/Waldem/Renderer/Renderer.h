@@ -63,7 +63,7 @@ namespace Waldem
         virtual void CopyResource(GraphicResource* dstResource, GraphicResource* srcResource) = 0;
         virtual Buffer* CreateBuffer(WString name, BufferType type, void* data, uint32_t size, uint32_t stride) = 0;
         virtual void ResourceBarrier(GraphicResource* resource, ResourceStates before, ResourceStates after) = 0;
-        virtual void UploadBuffer(Buffer* buffer, void* data, uint32_t size) = 0;
+        virtual void UploadBuffer(Buffer* buffer, void* data, uint32_t size, uint offset = 0) = 0;
         virtual void DownloadBuffer(Buffer* buffer, void* data) = 0;
         virtual void ClearRenderTarget(RenderTarget* rt) = 0;
         virtual void ClearDepthStencil(RenderTarget* ds) = 0;
@@ -119,7 +119,7 @@ namespace Waldem
         static void CopyResource(GraphicResource* dstResource, GraphicResource* srcResource);
         static Buffer* CreateBuffer(WString name, BufferType type, void* data, uint32_t size, uint32_t stride);
         static void ResourceBarrier(GraphicResource* resource, ResourceStates before, ResourceStates after);
-        static void UploadBuffer(Buffer* buffer, void* data, uint32_t size);
+        static void UploadBuffer(Buffer* buffer, void* data, uint32_t size, uint offset = 0);
         static void DownloadBuffer(Buffer* buffer, void* data);
         static void ClearRenderTarget(RenderTarget* rt);
         static void ClearDepthStencil(RenderTarget* ds);

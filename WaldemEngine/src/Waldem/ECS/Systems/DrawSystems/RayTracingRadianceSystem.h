@@ -8,6 +8,7 @@
 #include "Waldem/Renderer/Shader.h"
 #include "Waldem/ECS/Components/Camera.h"
 #include "Waldem/ECS/Components/Light.h"
+#include "Waldem/Renderer/ResizableBuffer.h"
 
 namespace Waldem
 {
@@ -41,8 +42,8 @@ namespace Waldem
         AccelerationStructure* TLAS = nullptr;
         RayTracingSceneData RTSceneData;
         WArray<RayTracingInstance> Instances;
-        Buffer* LightsBuffer = nullptr;
-        Buffer* LightTransformsBuffer = nullptr;
+        ResizableBuffer LightsBuffer;
+        ResizableBuffer LightTransformsBuffer;
         Buffer* SceneDataBuffer = nullptr;
         RayTracingRootConstants RootConstants;
         
@@ -84,8 +85,10 @@ namespace Waldem
             }
             
             TLAS = Renderer::CreateTLAS("RayTracingTLAS", Instances);
-            LightsBuffer = Renderer::CreateBuffer("LightsBuffer", StorageBuffer, &LightDatas[0], LightDatas.GetSize(), sizeof(LightData));
-            LightTransformsBuffer = Renderer::CreateBuffer("LightTransformsBuffer", StorageBuffer, &LightTransforms[0], LightTransforms.GetSize(), sizeof(Matrix4));
+            // LightsBuffer = Renderer::CreateBuffer("LightsBuffer", StorageBuffer, &LightDatas[0], sizeof(LightData) * 20, sizeof(LightData));
+            // LightTransformsBuffer = Renderer::CreateBuffer("LightTransformsBuffer", StorageBuffer, &LightTransforms[0], sizeof(Matrix4) * 20, sizeof(Matrix4));
+            LightsBuffer = ResizableBuffer("LightsBuffer", StorageBuffer, sizeof(LightData), 40, LightDatas.GetSize(), LightDatas.GetData());
+            LightTransformsBuffer = ResizableBuffer("LightTransformsBuffer", StorageBuffer, sizeof(Matrix4), 40, LightTransforms.GetSize(), LightTransforms.GetData());
             SceneDataBuffer = Renderer::CreateBuffer("SceneDataBuffer", StorageBuffer, &RTSceneData, sizeof(RTSceneData), sizeof(RTSceneData));
 
             RootConstants.WorldPositionRT = worldPositionRT->GetIndex(SRV_UAV_CBV);
@@ -93,8 +96,8 @@ namespace Waldem
             RootConstants.ColorRT = albedoRT->GetIndex(SRV_UAV_CBV);
             RootConstants.ORMRT = ormRT->GetIndex(SRV_UAV_CBV);
             RootConstants.OutputColorRT = RadianceRT->GetIndex(SRV_UAV_CBV);
-            RootConstants.LightsBuffer = LightsBuffer->GetIndex(SRV_UAV_CBV);
-            RootConstants.LightTransformsBuffer = LightTransformsBuffer->GetIndex(SRV_UAV_CBV);
+            RootConstants.LightsBuffer = LightsBuffer.GetIndex(SRV_UAV_CBV);
+            RootConstants.LightTransformsBuffer = LightTransformsBuffer.GetIndex(SRV_UAV_CBV);
             RootConstants.SceneDataBuffer = SceneDataBuffer->GetIndex(SRV_UAV_CBV);
             RootConstants.TLAS = TLAS->GetIndex(SRV_UAV_CBV);
             

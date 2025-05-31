@@ -297,16 +297,16 @@ namespace Waldem
         CommandList->CopyResource(dst, src);
     }
 
-    void DX12CommandList::UpdateRes(ID3D12Resource* resource, ID3D12Resource* uploadResource, void* data, uint32_t size, D3D12_RESOURCE_STATES beforeState)
+    void DX12CommandList::UpdateRes(ID3D12Resource* resource, ID3D12Resource* uploadResource, void* data, uint32_t size, D3D12_RESOURCE_STATES beforeState, uint offset)
     {
         void* mappedData;
         uploadResource->Map(0, nullptr, &mappedData);
-        memcpy(mappedData, data, size);
+        memcpy(static_cast<uint8*>(mappedData) + offset, data, size);
         uploadResource->Unmap(0, nullptr);
 
         ResourceBarrier(resource, beforeState, D3D12_RESOURCE_STATE_COPY_DEST);
 
-        CommandList->CopyBufferRegion(resource, 0, uploadResource, 0, size);
+        CommandList->CopyBufferRegion(resource, offset, uploadResource, offset, size);
 
         ResourceBarrier(resource, D3D12_RESOURCE_STATE_COPY_DEST, beforeState);
     }
