@@ -97,7 +97,7 @@ namespace Waldem
             Renderer::PushConstants(&RootConstants, sizeof(DeferredRootConstants));
             Renderer::Compute(GroupCount);
             int hoveredEntityId = 0;
-            // Renderer::DownloadBuffer(HoveredMeshesBuffer, &hoveredEntityId);
+            Renderer::DownloadBuffer(HoveredMeshesBuffer, &hoveredEntityId);
             Editor::HoveredEntityID = hoveredEntityId - 1;
             Renderer::ResourceBarrier(TargetRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
         }

@@ -1684,7 +1684,7 @@ namespace Waldem
 
         Device->CreateShaderResourceView(Resource, &srvDesc, cpuHandle);
 
-        ComPtr<ID3D12Resource> readbackBuffer;
+        ID3D12Resource* readbackBuffer;
         auto heapDesc = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK);
 
         D3D12_RESOURCE_DESC readbackBufferDesc = {};
@@ -1710,7 +1710,7 @@ namespace Waldem
         readbackBuffer->SetName(std::wstring(readbackResourceName.Begin(), readbackResourceName.End()).c_str());
         
         auto readbackGraphicResource = new GraphicResource();
-        ResourceMap[readbackGraphicResource] = readbackBuffer.Get();
+        ResourceMap[readbackGraphicResource] = readbackBuffer;
         
         buffer->SetReadbackResource(readbackGraphicResource);
 
