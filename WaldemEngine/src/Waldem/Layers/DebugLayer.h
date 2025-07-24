@@ -15,13 +15,10 @@ namespace Waldem
         bool EnableDebug = false;
         
     public:
-        DebugLayer(CWindow* window, ECSManager* ecsManager, ResourceManager* resourceManager) : Layer("DebugLayer", window, ecsManager, resourceManager)
+        DebugLayer(CWindow* window, flecs::world* ecsManager, ResourceManager* resourceManager) : Layer("DebugLayer", window, resourceManager)
         {
             InputManager = {};
             
-            //do it after all entities set up
-            CurrentECSManager->Refresh();
-
 			Point2 debugRTResolution = Point2(512, 512);
             
             resourceManager->CreateRenderTarget("DebugRT_1", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
@@ -34,9 +31,9 @@ namespace Waldem
             resourceManager->CreateRenderTarget("DebugRT_8", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
             resourceManager->CreateRenderTarget("DebugRT_9", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
             
-            UpdateSystems.Add(new DebugSystem(CurrentECSManager));
+            UpdateSystems.Add(new DebugSystem());
             // UpdateSystems.Add((ISystem*)new LinesRenderingSystem(CurrentECSManager));
-            UpdateSystems.Add(new CollisionRenderingSystem(CurrentECSManager));
+            UpdateSystems.Add(new CollisionRenderingSystem());
 
             InputManager.SubscribeToKeyEvent(WD_KeyCode::F1, [&](bool isPressed)
             {
@@ -91,23 +88,5 @@ namespace Waldem
                 }
             }
         }
-
-        void OnDrawUI(float deltaTime) override
-        {
-        }
-
-        void OnUpdate(float deltaTime) override
-        {
-            if(EnableDebug)
-            {
-                for (ISystem* system : UpdateSystems)
-                {
-                    system->Update(deltaTime);
-                }
-            }
-        }
-
-    private:
-		WArray<ISystem*> UpdateSystems;
     };
 }

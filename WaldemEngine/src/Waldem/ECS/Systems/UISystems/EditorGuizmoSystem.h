@@ -22,7 +22,7 @@ namespace Waldem
         bool CanModifyManipulationSettings = false;
         
     public:
-        EditorGuizmoSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
+        EditorGuizmoSystem() {}
         
         void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
         {
@@ -66,42 +66,42 @@ namespace Waldem
 
             inputManager->SubscribeToMouseButtonEvent(WD_MOUSE_BUTTON_LEFT, [&](bool isPressed)
             {
-                if(isPressed)
+                if (isPressed)
                 {
-                    for (auto [entity, transform, selected] : Manager->EntitiesWith<Transform, Selected>())
+                    ECS::World.system<Transform, Selected>("ClearSelectionSystem").each([&](flecs::entity entity, Transform& transform, Selected)
                     {
-                        entity.Remove<Selected>();
-                    }
-                    
+                        entity.remove<Selected>();
+                    });
+
                     int meshId = 0;
-                    
-                    for (auto [entity, mesh, transform] : Manager->EntitiesWith<MeshComponent, Transform>())
+
+                    ECS::World.system<MeshComponent, Transform>("SelectHoveredEntitySystem").each([&](flecs::entity entity, MeshComponent& mesh, Transform& transform)
                     {
-                        if(meshId == Editor::HoveredEntityID)
+                        if (meshId == Editor::HoveredEntityID)
                         {
-                            entity.Add<Selected>();
-                            break;
+                            entity.add<Selected>();
                         }
                         meshId++;
-                    }
+                    });
                 }
             });
-        }
 
-        void Update(float deltaTime) override
-        {
-            auto editorViewport = Renderer::GetEditorViewport();
-            
-            for (auto [cameraEntity, camera, cameraTransform, mainCamera] : Manager->EntitiesWith<Camera, Transform, EditorCamera>())
+            ECS::World.query<Transform, Selected>().each([&](Transform& transform, Selected)
             {
-                for (auto [transformEntity, transform, selected] : Manager->EntitiesWith<Transform, Selected>())
+                if(auto editorCameraEntity = ECS::World.lookup("EditorCamera"))
                 {
-                    ImGuizmo::SetOrthographic(false);
-                    ImGuizmo::SetRect(editorViewport->Position.x, editorViewport->Position.y, editorViewport->Size.x, editorViewport->Size.y);
-                    ImGuizmo::Manipulate(value_ptr(camera.ViewMatrix), value_ptr(camera.ProjectionMatrix), CurrentOperation, CurrentMode, value_ptr(transform.Matrix));
-                    transform.DecompileMatrix();
+                    if(auto editorCamera = editorCameraEntity.get<Camera>())
+                    {
+                        auto editorViewport = Renderer::GetEditorViewport();
+                        
+                        ImGuizmo::SetOrthographic(false);
+                        ImGuizmo::SetRect(editorViewport->Position.x, editorViewport->Position.y, editorViewport->Size.x, editorViewport->Size.y);
+                        ImGuizmo::Manipulate(value_ptr(editorCamera->ViewMatrix), value_ptr(editorCamera->ProjectionMatrix), CurrentOperation, CurrentMode, value_ptr(transform.Matrix));
+                        transform.DecompileMatrix();
+                    }
                 }
-            }
+                
+            });
         }
     };
 }

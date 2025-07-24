@@ -16,7 +16,7 @@ namespace Waldem
         float Padding = 16.0f;
         
     public:
-        ContentBrowserWidget(ECSManager* eCSManager) : IWidgetSystem(eCSManager) {}
+        ContentBrowserWidget() {}
 
         WString GetName() override { return "Content"; }
 
@@ -239,7 +239,7 @@ namespace Waldem
             }
         }
 
-        void Update(float deltaTime) override
+        void OnDraw(float deltaTime) override
         {
             if (ImGui::Begin("Content", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus))
             {

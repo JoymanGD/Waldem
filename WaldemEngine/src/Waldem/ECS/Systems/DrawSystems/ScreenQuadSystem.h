@@ -22,7 +22,7 @@ namespace Waldem
         ScreenQuadRootConstants RootConstants;
         
     public:
-        ScreenQuadSystem(ECSManager* eCSManager) : DrawSystem(eCSManager) {}
+        ScreenQuadSystem() : DrawSystem() {}
         
         void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
         {
@@ -32,8 +32,6 @@ namespace Waldem
             };
             
             TargetRT = resourceManager->GetRenderTarget("TargetRT");
-            
-            RootConstants.TargetRT = TargetRT->GetIndex(SRV_UAV_CBV);
             
             QuadDrawPixelShader = Renderer::LoadPixelShader("QuadDraw");
             QuadDrawPipeline = Renderer::CreateGraphicPipeline("QuadDrawPipeline",
@@ -45,33 +43,16 @@ namespace Waldem
                                                             WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
                                                             inputElementDescs);
 
-            IsInitialized = true;
-        }
-
-        void Deinitialize() override
-        {
-            if(QuadDrawPixelShader) QuadDrawPixelShader->Destroy();
-            if(QuadDrawPipeline) QuadDrawPipeline->Destroy();
-            IsInitialized = false;
-        }
-
-        void Update(float deltaTime) override
-        {
-            if(!IsInitialized)
-                return;
-            
-            //Quad drawing pass
-            auto viewport = Renderer::GetEditorViewport();
-            Renderer::BindRenderTargets(viewport->FrameBuffer->GetCurrentRenderTarget());
-            Renderer::BindDepthStencil(nullptr);
-            Renderer::SetPipeline(QuadDrawPipeline);
-            Renderer::PushConstants(&RootConstants, sizeof(ScreenQuadRootConstants));
-            Renderer::Draw(&FullscreenQuad);
-        }
-
-        void OnResize(Vector2 size) override
-        {
-            
+            ECS::World.system<>("ScreenQuadSystem").kind(flecs::OnDraw).each([&]
+            {
+                RootConstants.TargetRT = TargetRT->GetIndex(SRV_UAV_CBV);
+                auto viewport = Renderer::GetEditorViewport();
+                Renderer::BindRenderTargets(viewport->FrameBuffer->GetCurrentRenderTarget());
+                Renderer::BindDepthStencil(nullptr);
+                Renderer::SetPipeline(QuadDrawPipeline);
+                Renderer::PushConstants(&RootConstants, sizeof(ScreenQuadRootConstants));
+                Renderer::Draw(&FullscreenQuad);
+            });
         }
     };
 }

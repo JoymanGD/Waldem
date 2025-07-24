@@ -7,7 +7,7 @@ namespace Waldem
     {
         
     public:
-        DrawSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
+        DrawSystem() {}
 
         virtual void OnResize(Vector2 size) {}
         

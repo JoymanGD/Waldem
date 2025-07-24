@@ -2,8 +2,6 @@
 
 #include "Waldem/Renderer/Model/Mesh.h"
 #include "Waldem/Utils/PhysicsUtils.h"
-#include "Waldem/ECS/Component.h"
-#include "Waldem/Serialization/Serializable.h"
 
 namespace Waldem
 {
@@ -16,55 +14,23 @@ namespace Waldem
         WD_COLLIDER_TYPE_MESH = 4
     };
 
-    struct BoxColliderData : ISerializable
+    struct BoxColliderData
     {
         Vector3 Size = { 1, 1, 1 };
-        
-        void Serialize(WDataBuffer& outData) override
-        { 
-            outData << Size;
-        }
-        
-        void Deserialize(WDataBuffer& inData) override
-        {
-            inData >> Size;
-        }
     };
 
-    struct SphereColliderData : ISerializable
+    struct SphereColliderData
     {
         float Radius = 1;
-        
-        void Serialize(WDataBuffer& outData) override
-        { 
-            outData << Radius;
-        }
-        
-        void Deserialize(WDataBuffer& inData) override
-        {
-            inData >> Radius;
-        }
     };
 
-    struct CapsuleColliderData : ISerializable
+    struct CapsuleColliderData
     {
         float Radius = 1;
         float Height = 1;
-        
-        void Serialize(WDataBuffer& outData) override
-        { 
-            outData << Radius;
-            outData << Height;
-        }
-        
-        void Deserialize(WDataBuffer& inData) override
-        {
-            inData >> Radius;
-            inData >> Height;
-        }
     };
 
-    struct MeshColliderData : ISerializable
+    struct MeshColliderData
     {
         WArray<Vector3> Vertices;
         WArray<uint> Indices;
@@ -82,21 +48,9 @@ namespace Waldem
             Vertices = vertices;
             Indices = indices;
         }
-        
-        void Serialize(WDataBuffer& outData) override
-        { 
-            Vertices.Serialize(outData);
-            Indices.Serialize(outData);
-        }
-        
-        void Deserialize(WDataBuffer& inData) override
-        {
-            Vertices.Deserialize(inData);
-            Indices.Deserialize(inData);
-        }
     };
     
-    struct WALDEM_API ColliderComponent : IComponent<ColliderComponent>
+    struct WALDEM_API ColliderComponent
     {
         ColliderType Type = WD_COLLIDER_TYPE_BOX;
         SphereColliderData SphereData;
@@ -208,68 +162,6 @@ namespace Waldem
             }
 
             return Matrix3(1.0f);
-        }
-
-        void Serialize(WDataBuffer& outData) override
-        {
-            outData << (uint)Type;
-
-            switch (Type)
-            {
-            case WD_COLLIDER_TYPE_NONE:
-                break;
-            case WD_COLLIDER_TYPE_SPHERE:
-                {
-                    SphereData.Serialize(outData);
-                    break;
-                }
-            case WD_COLLIDER_TYPE_BOX:
-                {
-                    BoxData.Serialize(outData);
-                    break;
-                }
-            case WD_COLLIDER_TYPE_CAPSULE:
-                {
-                    CapsuleData.Serialize(outData);
-                    break;
-                }
-            case WD_COLLIDER_TYPE_MESH:
-                {
-                    MeshData.Serialize(outData);
-                    break;
-                }
-            }
-        }
-        
-        void Deserialize(WDataBuffer& inData) override
-        {
-            inData >> Type;
-
-            switch (Type)
-            {
-            case WD_COLLIDER_TYPE_NONE:
-                break;
-            case WD_COLLIDER_TYPE_SPHERE:
-                {
-                    SphereData.Deserialize(inData);
-                    break;
-                }
-            case WD_COLLIDER_TYPE_BOX:
-                {
-                    BoxData.Deserialize(inData);
-                    break;
-                }
-            case WD_COLLIDER_TYPE_CAPSULE:
-                {
-                    CapsuleData.Deserialize(inData);
-                    break;
-                }
-            case WD_COLLIDER_TYPE_MESH:
-                {
-                    MeshData.Deserialize(inData);
-                    break;
-                }
-            }
         }
     };
 }

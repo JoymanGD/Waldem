@@ -1,4 +1,5 @@
 #pragma once
+#include "Waldem/Time.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/ECS/Components/RigidBody.h"
 #include "Waldem/ECS/Components/Transform.h"
@@ -10,19 +11,17 @@ namespace Waldem
     public:
         Vector3 Gravity = Vector3(0, -9.81f, 0);
         
-        PhysicsUpdateSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
+        PhysicsUpdateSystem() {}
         
         void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
         {
-        }
-
-        void Update(float deltaTime) override
-        {
-            for (auto [transformEntity, transform, rigidBody] : Manager->EntitiesWith<Transform, RigidBody>())
+            ECS::World.system<Transform, RigidBody>().kind(flecs::OnUpdate).each([&](Transform& transform, RigidBody& rigidBody)
             {
-                if(rigidBody.InvMass <= 0.0f) continue;
+                if(rigidBody.InvMass <= 0.0f) return;
                 
-                if(rigidBody.IsKinematic) continue;
+                if(rigidBody.IsKinematic) return;
+
+                auto deltaTime = Time::DeltaTime;
                 
                 transform.Translate(rigidBody.Velocity * deltaTime);
                 
@@ -35,7 +34,7 @@ namespace Waldem
                 }
                 
                 rigidBody.Reset();
-            }
+            });
         }
     };
 }

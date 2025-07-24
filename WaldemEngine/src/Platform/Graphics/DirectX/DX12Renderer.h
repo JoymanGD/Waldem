@@ -39,7 +39,7 @@ namespace Waldem
         void TraceRays(Pipeline* rayTracingPipeline, Point3 numRays) override;
         void Begin() override;
         void End() override;
-        void Present() override;
+        void Present() override; 
         PixelShader* LoadPixelShader(const Path& shaderName, WString entryPoint) override;
         ComputeShader* LoadComputeShader(const Path& shaderName, WString entryPoint) override;
         RayTracingShader* LoadRayTracingShader(const Path& shaderName) override;
@@ -49,27 +49,32 @@ namespace Waldem
         void BindDepthStencil(RenderTarget* depthStencil = nullptr) override;
         void SetViewport(SViewport& viewport) override;
         void ResourceBarrier(GraphicResource* resource, ResourceStates before, ResourceStates after) override;
+        ResourceStates ResourceBarrier(GraphicResource* resource, ResourceStates after) override;
         Pipeline* CreateGraphicPipeline(const WString& name, PixelShader* shader, WArray<TextureFormat> RTFormats, TextureFormat depthFormat, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout) override;
         Pipeline* CreateComputePipeline(const WString& name, ComputeShader* shader) override;
         Pipeline* CreateRayTracingPipeline(const WString& name, RayTracingShader* shader) override;
         Texture2D* CreateTexture(WString name, int width, int height, TextureFormat format, uint8_t* data = nullptr) override;
         RenderTarget* CreateRenderTarget(WString name, int width, int height, TextureFormat format) override;
-        Buffer* CreateBuffer(WString name, BufferType type, void* data, uint32_t size, uint32_t stride) override;
+        void InitializeRenderTarget(WString name, int width, int height, TextureFormat format, RenderTarget*& renderTarget) override;
+        Buffer* CreateBuffer(WString name, BufferType type, uint32_t size, uint32_t stride, void* data, size_t dataSize) override;
+        void InitializeBuffer(WString name, BufferType type, uint32_t size, uint32_t stride, Buffer*& buffer, void* data, size_t dataSize) override;
         AccelerationStructure* CreateBLAS(WString name, WArray<RayTracingGeometry>& geometries) override;
-        AccelerationStructure* CreateTLAS(WString name, WArray<RayTracingInstance>& instances) override;
+        AccelerationStructure* CreateTLAS(WString name, Buffer* instanceBuffer, uint numInstances) override;
+        void InitializeTLAS(WString name, Buffer* instanceBuffer, uint numInstances, AccelerationStructure*& tlas) override;
         void UpdateBLAS(AccelerationStructure* BLAS, WArray<RayTracingGeometry>& geometries) override;
-        void UpdateTLAS(AccelerationStructure* TLAS, WArray<RayTracingInstance>& instances) override;
+        void UpdateTLAS(AccelerationStructure* TLAS, Buffer* instanceBuffer, uint numInstances) override;
         SViewport* GetEditorViewport() override { return &EditorViewport; }
         SViewport* GetGameViewport() override { return &GameViewport; }
         SViewport* GetMainViewport() override { return &MainViewport; }
         void CopyResource(GraphicResource* dstResource, GraphicResource* srcResource) override;
+        void CopyBufferRegion(GraphicResource* dstResource, size_t dstOffset, GraphicResource* srcResource, size_t srcOffset, size_t size) override;
         void UploadBuffer(Buffer* buffer, void* data, uint32_t size, uint offset = 0) override;
-        void DownloadBuffer(Buffer* buffer, void* data) override;
+        void DownloadBuffer(Buffer* buffer, void* data, size_t size) override;
         void ClearRenderTarget(RenderTarget* rt) override;
         void ClearDepthStencil(RenderTarget* ds) override;
         void BeginUI() override;
         void EndUI() override;
-        void Destroy(GraphicResource* resource) override;
+        void Destroy(GraphicResource* resource) override; 
         void* GetPlatformResource(GraphicResource* resource) override;
 
     private:
@@ -108,6 +113,8 @@ namespace Waldem
         SViewport GameViewport = {};
         bool ResizeTriggered = false;
         Point2 NewSize = {};
+
+        WArray<ID3D12Resource*> ResourcesToDestroy;
 
         //ImGui
         ID3D12DescriptorHeap* ImGuiHeap = nullptr;

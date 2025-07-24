@@ -25,27 +25,7 @@ namespace Waldem
         NearPlane = nearClip;
         FarPlane = farClip;
         ProjectionMatrix = glm::perspective(fov * glm::pi<float>() / 180.0f, aspectRatio, nearClip, farClip);
-    }
 
-    void Camera::Serialize(WDataBuffer& outData)
-    {
-        outData << ProjectionMatrix;
-        outData << ViewMatrix;
-        outData << MovementSpeed;
-        outData << RotationSpeed;
-        outData << SpeedModificator;
-        SpeedParams.Serialize(outData);
-        Frustrum.Serialize(outData);
-    }
-
-    void Camera::Deserialize(WDataBuffer& inData)
-    {
-        inData >> ProjectionMatrix;
-        inData >> ViewMatrix;
-        inData >> MovementSpeed;
-        inData >> RotationSpeed;
-        inData >> SpeedModificator;
-        SpeedParams.Deserialize(inData);
-        Frustrum.Deserialize(inData);
+        ViewProjectionMatrix = ProjectionMatrix * ViewMatrix;
     }
 }

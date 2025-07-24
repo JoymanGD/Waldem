@@ -101,14 +101,14 @@ namespace Waldem
         //Draw mesh
         if(mesh->VertexBuffer)
         {
-            D3D12_VERTEX_BUFFER_VIEW vertexBufferView { mesh->VertexBuffer->GetGPUAddress(), mesh->VertexBuffer->GetSize(), mesh->VertexBuffer->GetStride() };
+            D3D12_VERTEX_BUFFER_VIEW vertexBufferView { mesh->VertexBuffer->GetGPUAddress(), mesh->VertexBuffer->GetCapacity(), mesh->VertexBuffer->GetStride() };
             
             CommandList->IASetVertexBuffers(0, 1, &vertexBufferView);
         }
 
         if(mesh->IndexBuffer)
         {
-            D3D12_INDEX_BUFFER_VIEW indexBufferView { mesh->IndexBuffer->GetGPUAddress(), mesh->IndexBuffer->GetSize(), DXGI_FORMAT_R32_UINT };
+            D3D12_INDEX_BUFFER_VIEW indexBufferView { mesh->IndexBuffer->GetGPUAddress(), mesh->IndexBuffer->GetCapacity(), DXGI_FORMAT_R32_UINT };
             
             CommandList->IASetIndexBuffer(&indexBufferView);
             CommandList->DrawIndexedInstanced(mesh->IndexBuffer->GetCount(), 1, 0, 0, 0);
@@ -217,14 +217,14 @@ namespace Waldem
     void DX12CommandList::SetVertexBuffers(Buffer* vertexBuffer, uint32 numBuffers, uint32 startIndex)
     {
         //Draw mesh
-        D3D12_VERTEX_BUFFER_VIEW vertexBufferView { vertexBuffer->GetGPUAddress(), (uint)vertexBuffer->GetSize(), vertexBuffer->GetStride() };
+        D3D12_VERTEX_BUFFER_VIEW vertexBufferView { vertexBuffer->GetGPUAddress(), (uint)vertexBuffer->GetCapacity(), vertexBuffer->GetStride() };
             
         CommandList->IASetVertexBuffers(startIndex, numBuffers, &vertexBufferView);
     }
 
     void DX12CommandList::SetIndexBuffer(Buffer* indexBuffer)
     {
-        D3D12_INDEX_BUFFER_VIEW indexBufferView { indexBuffer->GetGPUAddress(), (uint)indexBuffer->GetSize(), DXGI_FORMAT_R32_UINT };
+        D3D12_INDEX_BUFFER_VIEW indexBufferView { indexBuffer->GetGPUAddress(), (uint)indexBuffer->GetCapacity(), DXGI_FORMAT_R32_UINT };
             
         CommandList->IASetIndexBuffer(&indexBufferView);
     }
@@ -295,6 +295,11 @@ namespace Waldem
     void DX12CommandList::CopyResource(ID3D12Resource* dst, ID3D12Resource* src)
     {
         CommandList->CopyResource(dst, src);
+    }
+
+    void DX12CommandList::CopyBufferRegion(ID3D12Resource* dst, size_t destOffset, ID3D12Resource* src, size_t srcOffset, size_t size)
+    {
+        CommandList->CopyBufferRegion(dst, destOffset, src, srcOffset, size);
     }
 
     void DX12CommandList::UpdateRes(ID3D12Resource* resource, ID3D12Resource* uploadResource, void* data, uint32_t size, D3D12_RESOURCE_STATES beforeState, uint offset)

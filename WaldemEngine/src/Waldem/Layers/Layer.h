@@ -3,7 +3,6 @@
 #include "Waldem/Core.h"
 #include "Waldem/Window.h"
 #include "Waldem/Events/Event.h"
-#include "Waldem/ECS/ECSManager.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/ECS/Systems/DrawSystems/DrawSystem.h"
 #include "Waldem/Resources/ResourceManager.h"
@@ -14,16 +13,12 @@ namespace Waldem
     class WALDEM_API Layer
     {
     public:
-        Layer(const WString& name = "Layer", CWindow* window = nullptr, ECSManager* ecsManager = nullptr, ResourceManager* resourceManager = nullptr) : DebugName(name), MainWindow(window), CurrentECSManager(ecsManager), CurrentResourceManager(resourceManager) {}
+        Layer(const WString& name = "Layer", CWindow* window = nullptr, ResourceManager* resourceManager = nullptr) : DebugName(name), MainWindow(window), CurrentResourceManager(resourceManager) {}
         virtual ~Layer() = default;
         virtual void Begin() {}
         virtual void End() {}
         virtual void OnAttach() {}
         virtual void OnDetach() {}
-        virtual void OnUpdate(float deltaTime) {}
-        virtual void OnDraw(float deltaTime) {}
-        virtual void OnFixedUpdate(float deltaTime) {}
-        virtual void OnDrawUI(float deltaTime) {}
         virtual void OnEvent(Event& event) {}
         
         virtual void Initialize()
@@ -83,7 +78,6 @@ namespace Waldem
     protected:
         WString DebugName;
         CWindow* MainWindow;
-        ECSManager* CurrentECSManager;
         ResourceManager* CurrentResourceManager;
         InputManager InputManager;
         CContentManager ContentManager;

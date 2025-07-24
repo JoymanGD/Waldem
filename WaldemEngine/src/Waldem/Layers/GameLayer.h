@@ -23,23 +23,23 @@ namespace Waldem
 	class WALDEM_API GameLayer : public Layer
 	{
 	public:
-		GameLayer(CWindow* window, ECSManager* ecsManager, ResourceManager* resourceManager) : Layer("GameLayer", window, ecsManager, resourceManager)
+		GameLayer(CWindow* window, ResourceManager* resourceManager) : Layer("GameLayer", window, resourceManager)
 		{
 			InputManager = {};
 
 			// DrawSystems.Add(new OceanSimulationSystem(ecsManager));
-			DrawSystems.Add(new GBufferSystem(ecsManager));
-			DrawSystems.Add(new RayTracingRadianceSystem(ecsManager));
-			DrawSystems.Add(new DeferredRenderingSystem(ecsManager));
-			// DrawSystems.Add(new PostProcessSystem(ecsManager));
-			DrawSystems.Add(new ScreenQuadSystem(ecsManager));
+			DrawSystems.Add(new GBufferSystem());
+			DrawSystems.Add(new RayTracingRadianceSystem());
+			DrawSystems.Add(new DeferredRenderingSystem());
+			// DrawSystems.Add(new PostProcessSystem());
+			DrawSystems.Add(new ScreenQuadSystem());
 			
-			UpdateSystems.Add(new SpatialAudioSystem(ecsManager));
-			// PhysicsSystems.Add(new PhysicsIntegrationSystem(ecsManager));
-			// PhysicsSystems.Add(new PhysicsUpdateSystem(ecsManager));
-			// PhysicsSystems.Add(new CollisionSystem(ecsManager));
+			UpdateSystems.Add(new SpatialAudioSystem());
+			// PhysicsSystems.Add(new PhysicsIntegrationSystem());
+			// PhysicsSystems.Add(new PhysicsUpdateSystem());
+			// PhysicsSystems.Add(new CollisionSystem());
 
-			ScriptSystem = new ScriptExecutionSystem(ecsManager);
+			ScriptSystem = new ScriptExecutionSystem();
 		}
 
 		void Initialize() override
@@ -96,42 +96,6 @@ namespace Waldem
 			Initialized = false;
 		}
 
-		void OnUpdate(float deltaTime) override
-		{
-			for (ISystem* system : UpdateSystems)
-			{
-				system->Update(deltaTime);
-			}
-			
-			// CurrentScene->Update(deltaTime);
-
-			ScriptSystem->Update(deltaTime);
-		}
-
-		void OnFixedUpdate(float fixedDeltaTime) override
-		{
-			for (ISystem* system : PhysicsSystems)
-			{
-				system->Update(fixedDeltaTime);
-			}
-
-			// CurrentScene->FixedUpdate(fixedDeltaTime);
-
-			ScriptSystem->FixedUpdate(fixedDeltaTime);
-		}
-
-		void OnDraw(float deltaTime) override
-		{
-			for (ISystem* system : DrawSystems)
-			{
-				system->Update(deltaTime);
-			}
-
-			// CurrentScene->Draw(deltaTime);
-
-			ScriptSystem->Draw(deltaTime);
-		}
-
 		void OnEvent(Event& event) override
 		{
 			auto eventType = event.GetEventType();
@@ -151,14 +115,9 @@ namespace Waldem
 			}
 		}
 
-		void OnDrawUI(float deltaTime) override
-		{
-			// CurrentScene->DrawUI(deltaTime);
-		}
-
 		void OpenScene(GameScene* scene, SceneData* sceneData)
 		{
-			scene->Initialize(&InputManager, CurrentECSManager, CurrentResourceManager);
+			scene->Initialize(&InputManager, CurrentResourceManager);
 			
 			for (ISystem* system : DrawSystems)
 			{

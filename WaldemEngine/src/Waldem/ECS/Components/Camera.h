@@ -1,6 +1,5 @@
 #pragma once
 #include "Waldem/ECS/Components/Transform.h"
-#include "Waldem/ECS/Component.h"
 #include "Waldem/Types/WArray.h"
 
 namespace Waldem
@@ -118,26 +117,24 @@ namespace Waldem
         }
     };
 
-    struct WALDEM_API Camera : IComponent<Camera>
+    struct WALDEM_API Camera
     {
         Camera() = default;
         
         Camera(float fov, float aspectRatio, float nearClip, float farClip, float movementSpeed, float rotationSpeed);
 
         void UpdateProjectionMatrix(float fov, float aspectRatio, float nearClip, float farClip);
-        void SetViewMatrix(Transform* transform) { ViewMatrix = transform->Inverse(); }
-        void SetViewMatrix(Matrix4 matrix) { ViewMatrix = matrix; }
-        WArray<FrustumPlane> ExtractFrustumPlanes() { return Frustrum.GetPlanes(ProjectionMatrix * ViewMatrix); }
+        void SetViewMatrix(Transform* transform) { ViewMatrix = transform->Inverse(); ViewProjectionMatrix = ProjectionMatrix * ViewMatrix; }
+        void SetViewMatrix(Matrix4 matrix) { ViewMatrix = matrix; ViewProjectionMatrix = ProjectionMatrix * ViewMatrix; }
+        WArray<FrustumPlane> ExtractFrustumPlanes() { return Frustrum.GetPlanes(ViewProjectionMatrix); }
         
-        void Serialize(WDataBuffer& outData) override;
-        void Deserialize(WDataBuffer& inData) override;
-
         float FieldOfView = 60.f;
         float AspectRatio = 1.f;
         float NearPlane = 0.001f;
         float FarPlane = 1000.0f;
-        glm::mat4 ProjectionMatrix;
-        glm::mat4 ViewMatrix;
+        Matrix4 ProjectionMatrix;
+        Matrix4 ViewMatrix;
+        Matrix4 ViewProjectionMatrix;
         float MovementSpeed = 1.0f;
         float RotationSpeed = 1.0f;
         float SpeedModificator = 1.0f;

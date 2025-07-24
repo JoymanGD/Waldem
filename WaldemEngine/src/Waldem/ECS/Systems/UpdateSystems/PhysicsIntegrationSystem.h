@@ -10,19 +10,17 @@ namespace Waldem
     public:
         Vector3 Gravity = Vector3(0, -9.81f, 0);
         
-        PhysicsIntegrationSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
+        PhysicsIntegrationSystem() {}
         
         void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
         {
-        }
-
-        void Update(float deltaTime) override
-        {
-            for (auto [entity, transform, rigidBody] : Manager->EntitiesWith<Transform, RigidBody>())
+            ECS::World.system<Transform, RigidBody>().kind(flecs::OnUpdate).each([&](Transform& transform, RigidBody& rigidBody)
             {
-                if(rigidBody.InvMass <= 0.0f) continue;
+                if(rigidBody.InvMass <= 0.0f) return;
                 
-                if(rigidBody.IsKinematic) continue;
+                if(rigidBody.IsKinematic) return;
+
+                auto deltaTime = Time::DeltaTime;
                 
                 rigidBody.Velocity += Gravity * deltaTime;
                 rigidBody.Velocity *= 1.0f - rigidBody.LinearDamping * deltaTime;
@@ -30,7 +28,7 @@ namespace Waldem
                 Matrix3 transformedInertiaTensor = Matrix3(transform.Matrix) * rigidBody.InvInertiaTensor * transpose(Matrix3(transform.Matrix));
                 rigidBody.AngularVelocity += transformedInertiaTensor * rigidBody.Torque * deltaTime;
                 rigidBody.AngularVelocity *= 1.0f - rigidBody.AngularDamping * deltaTime;
-            }
+            });
         }
     };
 }

@@ -12,7 +12,7 @@ namespace Waldem
     public:
         LineMesh()
         {
-            VertexBuffer = Renderer::CreateBuffer("QuadVertexBuffer", BufferType::VertexBuffer, nullptr, BufferSize, sizeof(LineVertex));
+            VertexBuffer = Renderer::CreateBuffer("QuadVertexBuffer", BufferType::VertexBuffer, BufferSize, sizeof(LineVertex));
         }
     };
 }

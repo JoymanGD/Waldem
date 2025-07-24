@@ -1,4 +1,6 @@
 #pragma once
+#include <FlecsUtils.h>
+
 #include "Waldem/ECS/Components/ColliderComponent.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/ECS/Components/EditorCamera.h"
@@ -16,9 +18,11 @@ namespace Waldem
         PixelShader* LinePixelShader = nullptr;
 
         LineMesh LMesh = {};
+        WArray<Line> Lines;
+        Matrix4 ViewProjection;
         
     public:
-        LinesRenderingSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
+        LinesRenderingSystem() {}
 
         void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
         {
@@ -39,30 +43,30 @@ namespace Waldem
                                                             depthStencilDesc,
                                                             WD_PRIMITIVE_TOPOLOGY_TYPE_LINE,
                                                             inputElementDescs);
-        }
-
-        void Update(float deltaTime) override
-        {
-            Matrix4 viewProj;
             
-            for (auto [entity, camera, mainCamera, cameraTransform] : Manager->EntitiesWith<Camera, EditorCamera, Transform>())
-            {
-                viewProj = camera.ProjectionMatrix * camera.ViewMatrix;
-                break;
-            }
-            
-            WArray<Line> lines;
-
-            for (auto [transformEntity, transform, collider, meshComponent] : Manager->EntitiesWith<Transform, ColliderComponent, MeshComponent>())
+            ECS::World.observer<Transform, MeshComponent, ColliderComponent>().event(flecs::OnSet).each([&](Transform& transform, MeshComponent& meshComponent, ColliderComponent& collider)
             {
                 Vector4 color = collider.IsColliding ? Vector4(1.0f, 0.0f, 0.0f, 1.0f) : Vector4(0.0f, 1.0f, 0.0f, 1.0f);
-                lines.AddRange(meshComponent.Mesh->BBox.GetTransformed(transform).GetLines(color));
-            }
+                Lines.AddRange(meshComponent.Mesh->BBox.GetTransformed(transform).GetLines(color));
+            });
 
-            Renderer::UploadBuffer(LMesh.VertexBuffer, lines.GetData(), sizeof(Line) * lines.Num());
-            Renderer::SetPipeline(LinePipeline);
-            Renderer::PushConstants(&viewProj, sizeof(Matrix4));
-            Renderer::Draw(&LMesh);
+            ECS::World.system("LineRenderingSystem").kind(flecs::OnDraw).run([&](flecs::iter& it)
+            {
+                if(IsInitialized)
+                {
+                    if(auto editorCamera = ECS::World.lookup("EditorCamera"))
+                    {
+                        ViewProjection = editorCamera.get<Camera>()->ViewProjectionMatrix;
+                    }
+                    
+                    Renderer::UploadBuffer(LMesh.VertexBuffer, Lines.GetData(), sizeof(Line) * Lines.Num());
+                    Renderer::SetPipeline(LinePipeline);
+                    Renderer::PushConstants(&ViewProjection, sizeof(Matrix4));
+                    Renderer::Draw(&LMesh);
+                }
+            });
+                    
+            IsInitialized = true;
         }
     };
 }

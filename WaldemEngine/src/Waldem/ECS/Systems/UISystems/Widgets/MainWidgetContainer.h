@@ -1,12 +1,12 @@
 #pragma once
-#include "Waldem/ECS/Systems/UISystems/Widgets/IWidgetContainerSystem.h"
+#include "WidgetContainerSystem.h"
 
 namespace Waldem
 {
     class WALDEM_API MainWidgetContainer : public IWidgetContainerSystem
     {
     public:
-        MainWidgetContainer(ECSManager* eCSManager, WArray<IWidgetSystem*> children) : IWidgetContainerSystem(eCSManager, children) {} 
+        MainWidgetContainer(WArray<IWidgetSystem*> children) : IWidgetContainerSystem(children) {} 
 
         WString GetName() override { return "MainWidgetContainer"; } 
     };

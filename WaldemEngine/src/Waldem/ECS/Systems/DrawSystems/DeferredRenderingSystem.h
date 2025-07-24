@@ -1,15 +1,12 @@
 #pragma once
-#include "Platform/OS/Windows/WindowsWindow.h"
+#include <FlecsUtils.h>
+
 #include "Waldem/ECS/Systems/DrawSystems/DrawSystem.h"
 #include "Waldem/ECS/Systems/System.h"
-#include "Waldem/ECS/Components/EditorCamera.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
 #include "Waldem/Editor/Editor.h"
-#include "Waldem/ECS/Components/Light.h"
 #include "Waldem/Renderer/Shader.h"
 #include "Waldem/Renderer/Model/Quad.h"
-#include "Waldem/ECS/Components/Transform.h"
-#include "Waldem/ECS/Components/Camera.h"
 
 namespace Waldem
 {
@@ -38,7 +35,7 @@ namespace Waldem
         Buffer* HoveredMeshesBuffer = nullptr;
         
     public:
-        DeferredRenderingSystem(ECSManager* eCSManager) : DrawSystem(eCSManager)
+        DeferredRenderingSystem() : DrawSystem()
         {
             Vector4 dummyColor = Vector4(1.f, 1.f, 1.f, 1.f);
             uint8_t* image_data = (uint8_t*)&dummyColor;
@@ -48,62 +45,43 @@ namespace Waldem
         
         void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
         {
-            if(Manager->EntitiesWith<MeshComponent, Transform>().Count() <= 0)
-                return;
-            
             TargetRT = resourceManager->GetRenderTarget("TargetRT");
             RadianceRT = resourceManager->GetRenderTarget("RadianceRT");
-            
             AlbedoRT = resourceManager->GetRenderTarget("ColorRT");
             MeshIDRT = resourceManager->GetRenderTarget("MeshIDRT");
             
-            Vector2 resolution = Vector2(TargetRT->GetWidth(), TargetRT->GetHeight());
-
             //Deferred rendering pass
-            RootConstants.AlbedoRT = resourceManager->GetRenderTarget("ColorRT")->GetIndex(SRV_UAV_CBV);
-            RootConstants.MeshIDRT = resourceManager->GetRenderTarget("MeshIDRT")->GetIndex(SRV_UAV_CBV);
-            RootConstants.RadianceRT = resourceManager->GetRenderTarget("RadianceRT")->GetIndex(SRV_UAV_CBV);
-            RootConstants.TargetRT = resourceManager->GetRenderTarget("TargetRT")->GetIndex(SRV_UAV_CBV);
-            HoveredMeshesBuffer = Renderer::CreateBuffer("HoveredMeshes", StorageBuffer, nullptr, sizeof(int), sizeof(int));
+            HoveredMeshesBuffer = Renderer::CreateBuffer("HoveredMeshes", StorageBuffer, sizeof(int), sizeof(int));
             RootConstants.HoveredMeshes = HoveredMeshesBuffer->GetIndex(SRV_UAV_CBV);
 
             DeferredRenderingComputeShader = Renderer::LoadComputeShader("DeferredRendering");
             DeferredRenderingPipeline = Renderer::CreateComputePipeline("DeferredLightingPipeline", DeferredRenderingComputeShader);
-            Point3 numThreads = Renderer::GetNumThreadsPerGroup(DeferredRenderingComputeShader);
-            GroupCount = Point3((resolution.x + numThreads.x - 1) / numThreads.x, (resolution.y + numThreads.y - 1) / numThreads.y, 1);
 
-            IsInitialized = true;
-        }
-
-        void Deinitialize() override
-        {
-            if(DeferredRenderingComputeShader) DeferredRenderingComputeShader->Destroy();
-            if(DeferredRenderingPipeline) DeferredRenderingPipeline->Destroy();
-            IsInitialized = false;
-        }
-
-        void Update(float deltaTime) override
-        {
-            if(!IsInitialized)
-                return;
-
-            Renderer::ResourceBarrier(TargetRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
-            Renderer::ClearRenderTarget(TargetRT);
-            Renderer::ResourceBarrier(TargetRT, RENDER_TARGET, UNORDERED_ACCESS);
-            Renderer::SetPipeline(DeferredRenderingPipeline);
-            auto mousePos = Input::GetMousePos();
-            Point2 relativeMousePos = Renderer::GetEditorViewport()->TransformMousePosition(mousePos);
-            RootConstants.MousePos = relativeMousePos;
-            Renderer::PushConstants(&RootConstants, sizeof(DeferredRootConstants));
-            Renderer::Compute(GroupCount);
-            int hoveredEntityId = 0;
-            Renderer::DownloadBuffer(HoveredMeshesBuffer, &hoveredEntityId);
-            Editor::HoveredEntityID = hoveredEntityId - 1;
-            Renderer::ResourceBarrier(TargetRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
-        }
-
-        void OnResize(Vector2 size) override
-        {
+            ECS::World.system<>("DeferredRenderingSystem").kind(flecs::OnDraw).each([&]
+            {
+                RootConstants.AlbedoRT = AlbedoRT->GetIndex(SRV_UAV_CBV);
+                RootConstants.MeshIDRT = MeshIDRT->GetIndex(SRV_UAV_CBV);
+                RootConstants.RadianceRT = RadianceRT->GetIndex(SRV_UAV_CBV);
+                RootConstants.TargetRT = TargetRT->GetIndex(SRV_UAV_CBV);
+                Renderer::ResourceBarrier(TargetRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
+                Renderer::ClearRenderTarget(TargetRT);
+                Renderer::ResourceBarrier(TargetRT, RENDER_TARGET, UNORDERED_ACCESS);
+                Renderer::SetPipeline(DeferredRenderingPipeline);
+                auto mousePos = Input::GetMousePos();
+                Point2 relativeMousePos = Renderer::GetEditorViewport()->TransformMousePosition(mousePos);
+                RootConstants.MousePos = relativeMousePos;
+                Renderer::PushConstants(&RootConstants, sizeof(DeferredRootConstants));
+                
+                Vector2 resolution = Vector2(TargetRT->GetWidth(), TargetRT->GetHeight());
+                Point3 numThreads = Renderer::GetNumThreadsPerGroup(DeferredRenderingComputeShader);
+                GroupCount = Point3((resolution.x + numThreads.x - 1) / numThreads.x, (resolution.y + numThreads.y - 1) / numThreads.y, 1);
+                
+                Renderer::Compute(GroupCount);
+                int hoveredEntityId = 0;
+                Renderer::DownloadBuffer(HoveredMeshesBuffer, &hoveredEntityId, sizeof(int));
+                Editor::HoveredEntityID = hoveredEntityId - 1;
+                Renderer::ResourceBarrier(TargetRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
+            });
         }
     };
 }
