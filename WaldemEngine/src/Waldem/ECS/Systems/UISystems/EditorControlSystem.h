@@ -1,6 +1,7 @@
 #pragma once
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/Engine.h"
+#include "Waldem/Time.h"
 #include "Waldem/Input/Input.h"
 #include "Waldem/Input/KeyCodes.h"
 #include "Waldem/Input/MouseButtonCodes.h"
@@ -17,6 +18,7 @@ namespace Waldem
         Vector2 LastMousePos = { 0, 0 };
         bool IsUnderControl = false;
         Vector3 DeltaPos = { 0, 0, 0 };
+        float DeltaScroll = 0;
 
         //Light control
         Vector3 LightTargetPosition = { 0, -1, 0 };
@@ -24,12 +26,28 @@ namespace Waldem
         bool IsRotatingLight = false;
         
     public:
-        EditorControlSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
+        EditorControlSystem() {}
 
         void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
         {
             InitializeCameraControl(inputManager);
             InitializeLightControl(inputManager);
+            
+            UpdateCameraControl();
+            UpdateLightControl();
+            UpdateLastMousePosition();
+
+            ECS::World.system<Camera, EditorComponent>("CameraSpeedControlSystem").kind(flecs::OnUpdate).each([&](flecs::entity entity, Camera& camera, EditorComponent)
+            {
+                if(DeltaScroll != 0.f)
+                {
+                    camera.SpeedModificator += DeltaScroll * camera.SpeedParams.ModificationStep;
+                    camera.SpeedModificator = std::clamp(camera.SpeedModificator, camera.SpeedParams.MinSpeedModificator, camera.SpeedParams.MaxSpeedModificator);
+                    entity.modified<Camera>();
+                    
+                    DeltaScroll = 0;
+                }
+            });
         }        
 
         void InitializeCameraControl(InputManager* inputManager)
@@ -74,18 +92,14 @@ namespace Waldem
             {
                 MousePos = mousePos;
             });
-
-            for (auto [entity, transform, camera, mainCamera] : Manager->EntitiesWith<Transform, Camera, EditorCamera>())
+            
+            inputManager->SubscribeToMouseScrollEvent([&](Vector2 scroll)
             {
-                inputManager->SubscribeToMouseScrollEvent([&](Vector2 scroll)
+                if(IsUnderControl)
                 {
-                    if(IsUnderControl)
-                    {
-                        camera.SpeedModificator += scroll.y * camera.SpeedParams.ModificationStep;
-                        camera.SpeedModificator = std::clamp(camera.SpeedModificator, camera.SpeedParams.MinSpeedModificator, camera.SpeedParams.MaxSpeedModificator);
-                    }
-                });
-            }
+                    DeltaScroll = scroll.y;
+                }
+            });
         }
 
         void InitializeLightControl(InputManager* inputManager)
@@ -96,64 +110,74 @@ namespace Waldem
             });
         }
 
-        void Update(float deltaTime) override
+        void UpdateLastMousePosition()
         {
-            UpdateCameraControl(deltaTime);
-            UpdateLightControl(deltaTime);
-                
-            LastMousePos.x = MousePos.x;
-            LastMousePos.y = MousePos.y;
-        }
-
-        void UpdateLightControl(float deltaTime)
-        {
-            for (auto [entity, light, transform] : Manager->EntitiesWith<Light, Transform>())
+            ECS::World.system<>("UpdateLastMousePositionSystem").kind(flecs::OnUpdate).each([&]
             {
-                if(light.Data.Type == LightType::Directional)
+                LastMousePos.x = MousePos.x;
+                LastMousePos.y = MousePos.y;
+            });
+        }
+        
+        void UpdateLightControl()
+        {
+            ECS::World.system<Light, Transform>("UpdateLightControlSystem").kind(flecs::OnUpdate).each([&](flecs::entity entity, Light& light, Transform& transform)
+            {
+                if (IsRotatingLight)
                 {
-                    Vector3 cameraUp, cameraRight;
-                    for (auto [cameraEntity, camera, cameraTransform] : Manager->EntitiesWith<Camera, Transform>())
+                    if(light.Data.Type == LightType::Directional)
                     {
-                        cameraUp = cameraTransform.GetUpVector();
-                        cameraRight = cameraTransform.GetRightVector();
-                    }
-                    
-                    if (IsRotatingLight)
-                    {
+                        Vector3 cameraUp, cameraRight;
+
+                        if(auto editorCamera = ECS::World.lookup("EditorCamera"))
+                        {
+                            auto cameraTransform = editorCamera.get<Transform>();
+                            cameraUp = cameraTransform->GetUpVector();
+                            cameraRight = cameraTransform->GetRightVector();
+                        }
+                        
                         cameraRight.y = 0;
                         cameraUp.y = 0;
                     
-                        float deltaX = (MousePos.x - LastMousePos.x) * deltaTime;
-                        float deltaY = (MousePos.y - LastMousePos.y) * deltaTime;
+                        float deltaX = (MousePos.x - LastMousePos.x) * Time::DeltaTime;
+                        float deltaY = (MousePos.y - LastMousePos.y) * Time::DeltaTime;
 
-                        Matrix4 rotationMatrix = rotate(Matrix4(1.0f), deltaX, cameraUp) * rotate(Matrix4(1.0f), deltaY, cameraRight);
-                        LightTargetDirection = normalize(Vector3(rotationMatrix * Vector4(LightTargetDirection, 0.0f)));
+                        if(deltaX != 0 || deltaY != 0)
+                        {
+                            Matrix4 rotationMatrix = rotate(Matrix4(1.0f), deltaX, cameraUp) * rotate(Matrix4(1.0f), deltaY, cameraRight);
+                            LightTargetDirection = normalize(Vector3(rotationMatrix * Vector4(LightTargetDirection, 0.0f)));
 
-                        transform.LookAt(transform.Position + LightTargetDirection);
+                            transform.LookAt(transform.Position + LightTargetDirection);
+
+                            entity.modified<Transform>();
+                        }
+
                     }
                 }
-            }
+            });
         }
         
-        void UpdateCameraControl(float deltaTime)
+        void UpdateCameraControl()
         {
-            for (auto [entity, transform, camera, mainCamera] : Manager->EntitiesWith<Transform, Camera, EditorCamera>())
+            ECS::World.system<Camera, Transform>("UpdateCameraControlSystem").kind(flecs::OnUpdate).each([&](flecs::entity entity, Camera& camera, Transform& transform)
             {
                 if (IsUnderControl)
                 {
-                    float deltaX = (MousePos.x - LastMousePos.x) * deltaTime;
-                    float deltaY = (MousePos.y - LastMousePos.y) * deltaTime;
+                    float deltaX = (MousePos.x - LastMousePos.x) * Time::DeltaTime;
+                    float deltaY = (MousePos.y - LastMousePos.y) * Time::DeltaTime;
 
                     transform.Rotate(deltaX * camera.RotationSpeed, deltaY * camera.RotationSpeed, 0);
 
                     if(DeltaPos != Vector3(0, 0, 0))
                     {
-                        transform.Move(normalize(DeltaPos) * deltaTime * camera.MovementSpeed * camera.SpeedModificator);
+                        transform.Move(normalize(DeltaPos) * Time::DeltaTime * camera.MovementSpeed * camera.SpeedModificator);
                     }
+                    
+                    entity.modified<Camera>();
                 }
                 
                 camera.SetViewMatrix(&transform);
-            }
+            });
         }
     };
 }

@@ -13,6 +13,7 @@ namespace Waldem
     using Point3 = glm::ivec3;
     using Point4 = glm::ivec4;
     using Matrix3 = glm::mat3;
+    using Matrix3x4 = glm::mat3x4;
     using Matrix4 = glm::mat4;
     using Quaternion = glm::quat;
 }

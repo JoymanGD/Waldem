@@ -8,28 +8,29 @@ namespace Waldem
 {
     class WALDEM_API HierarchyWidget : public IWidgetSystem
     {
-    private:
         std::string RenameString = "";
         bool DeleteSelectedEntity = false;
         ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
+        WArray<size_t> SelectedEntityIds = {};
+        flecs::query<NameComponent> NameQuery;
 
-        void SelectEntity(ecs::Entity& entity)
+        void SelectEntity(flecs::entity& entity)
         {
-            DeselectEntity();
+            DeselectAllEntity();
 
-            entity.Add<Selected>();
+            entity.add<Selected>();
         }
 
-        void DeselectEntity()
+        void DeselectAllEntity()
         {
-            for (auto [selectedEntity, selected] : Manager->EntitiesWith<Selected>())
+            ECS::World.query<Selected>().each([&](flecs::entity selectedEntity, Selected)
             {
-                selectedEntity.Remove<Selected>();
-            }
+                selectedEntity.remove<Selected>();
+            });
         }
         
     public:
-        HierarchyWidget(ECSManager* eCSManager) : IWidgetSystem(eCSManager) {}
+        HierarchyWidget() {}
 
         WString GetName() override { return "Hierarchy"; }
         
@@ -42,42 +43,42 @@ namespace Waldem
                     DeleteSelectedEntity = true;
                 }
             });
+
+            ECS::World.observer<Selected>().event(flecs::OnAdd).each([&](flecs::entity entity, Selected)
+            {
+                SelectedEntityIds.Add(entity.id());
+            });
+
+            ECS::World.observer<Selected>().event(flecs::OnRemove).each([&](flecs::entity entity, Selected)
+            {
+                SelectedEntityIds.Remove(entity.id());
+            });
+
+            NameQuery = ECS::World.query_builder<NameComponent>()
+                .without<EditorCamera>()
+                .build();
         }
 
-        void Update(float deltaTime) override
+        void OnDraw(float deltaTime) override
         {
-            int SelectedEntityId = -1;
-            
-            for (auto [selectedEntity, selected] : Manager->EntitiesWith<Selected>())
-            {
-                SelectedEntityId = selectedEntity.GetId();
-                break;
-            }
-
             if (ImGui::Begin("Entities", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus))
             {
                 ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("+").x - ImGui::GetStyle().FramePadding.x * 2);
 
                 if (ImGui::Button("+"))
                 {
-                    auto entity = Manager->CreateEntity("NewEntity");
-                    Manager->Refresh();
+                    auto entity = ECS::World.entity("NewEntity");
                     
-                    SelectEntity(entity->NativeEntity);
+                    SelectEntity(entity);
                 }
 
                 ImGui::Separator();
                 
-                auto entities = Manager->Entities();
-                // Iterate through entities and create selectable list
-                for (auto [entity, nameComponent] : Manager->EntitiesWith<NameComponent>())
+                NameQuery.each([&](flecs::entity entity, NameComponent& nameComponent)
                 {
-                    if(entity.Has<EditorCamera>()) //Hide editor camera, we dont need to see it in the hierarchy
-                        continue;
+                    auto index = entity.id();
                     
-                    int index = entity.GetId();
-                    
-                    bool isSelected = SelectedEntityId == index;
+                    bool isSelected = SelectedEntityIds.Contains(index);
                     RenameString = nameComponent.Name;
 
                     std::string id = "##Entity_" + std::to_string(index);
@@ -98,12 +99,11 @@ namespace Waldem
 
                         if(DeleteSelectedEntity)
                         {
-                            entity.Destroy();
-                            DeselectEntity();
-                            Manager->Refresh();
+                            entity.destruct();
+                            DeselectAllEntity();
                         }
                     }
-                }
+                });
             }
             ImGui::End();
                         

@@ -9,6 +9,7 @@
 #include "Waldem/ECS/Systems/UISystems/EditorGuizmoSystem.h"
 #include "Waldem/ECS/Systems/UpdateSystems/FreeLookCameraSystem.h"
 #include "Waldem/ECS/Components/Camera.h"
+#include "Waldem/ECS/Components/EditorComponent.h"
 #include "Waldem/ECS/Systems/UISystems/EditorUISystem.h"
 #include "Waldem/ECS/Systems/DrawSystems/DeferredRenderingSystem.h"
 #include "Waldem/ECS/Systems/DrawSystems/GBufferSystem.h"
@@ -23,6 +24,8 @@
 #include "Waldem/Renderer/Renderer.h"
 #include "Waldem/SceneManagement/GameScene.h"
 #include "Waldem/Utils/FileUtils.h"
+#include "Waldem/ECS/ECS.h"
+#include "Waldem/ECS/Systems/DrawSystems/PostProcessSystem.h"
 
 namespace Waldem
 {
@@ -38,7 +41,7 @@ namespace Waldem
         Vector2 NewEditorViewportSize = {};
         
     public:
-        EditorLayer(CWindow* window, ECSManager* ecsManager, ResourceManager* resourceManager) : Layer("EditorLayer", window, ecsManager, resourceManager)
+        EditorLayer(CWindow* window, ResourceManager* resourceManager) : Layer("EditorLayer", window, resourceManager)
         {
             InputManager = {};
             
@@ -52,28 +55,26 @@ namespace Waldem
             resourceManager->CreateRenderTarget("DepthRT", size.x, size.y, TextureFormat::D32_FLOAT);
             resourceManager->CreateRenderTarget("RadianceRT", size.x, size.y, TextureFormat::R32G32B32A32_FLOAT);
             
-            auto cameraEntity = CurrentECSManager->CreateEntity("Camera");
+            auto cameraEntity = ECS::World.entity("EditorCamera");
             float aspectRatio = size.x / size.y;
-            cameraEntity->Add<Transform>(Vector3(0, 0, 0));
-            cameraEntity->Add<Camera>(60.0f, aspectRatio, 0.001f, 1000.0f, 30.0f, 30.0f);
-            cameraEntity->Add<EditorCamera>();
-            cameraEntity->Add<AudioListener>();
+            cameraEntity.set<Transform>({Vector3(0, 0, 0)});
+            cameraEntity.set<Camera>({60.0f, aspectRatio, 0.001f, 1000.0f, 30.0f, 30.0f});
+            cameraEntity.add<EditorComponent>();
+            cameraEntity.add<AudioListener>();
             
             //do it after all entities set up
-            CurrentECSManager->Refresh();
-
-            UISystems.Add(new EditorUISystem(CurrentECSManager, BIND_ACTION(OnOpenScene), BIND_ACTION(OnSaveScene), BIND_ACTION(OnSaveSceneAs)));
-            UISystems.Add(new EditorGuizmoSystem(CurrentECSManager));
+            UISystems.Add(new EditorUISystem(BIND_ACTION(OnOpenScene), BIND_ACTION(OnSaveScene), BIND_ACTION(OnSaveSceneAs)));
+            UISystems.Add(new EditorGuizmoSystem());
             
-            UpdateSystems.Add(new EditorControlSystem(CurrentECSManager));
-            UpdateSystems.Add(new SpatialAudioSystem(ecsManager));
+            UpdateSystems.Add(new EditorControlSystem());
+            UpdateSystems.Add(new SpatialAudioSystem());
 
-            // DrawSystems.Add(new OceanSimulationSystem(ecsManager));
-            DrawSystems.Add(new GBufferSystem(ecsManager));
-            DrawSystems.Add(new RayTracingRadianceSystem(ecsManager));
-            DrawSystems.Add(new DeferredRenderingSystem(ecsManager));
-            // DrawSystems.Add(new PostProcessSystem(ecsManager));
-            DrawSystems.Add(new ScreenQuadSystem(ecsManager));
+            // DrawSystems.Add(new OceanSimulationSystem());
+            DrawSystems.Add(new GBufferSystem());
+            DrawSystems.Add(new RayTracingRadianceSystem());
+            DrawSystems.Add(new DeferredRenderingSystem());
+            DrawSystems.Add(new PostProcessSystem());
+            DrawSystems.Add(new ScreenQuadSystem());
 
             Window = window;
 
@@ -82,22 +83,32 @@ namespace Waldem
                 EditorViewportResizeTriggered = true;
                 NewEditorViewportSize = size;
             });
-        }
-        
-        void Begin() override
-        {
-        }
-        
-        void End() override
-        {
-        }
-        
-        void OnAttach() override
-        {
-        }
-        
-        void OnDetach() override
-        {
+
+            ECS::World.system("ImportScene").kind(flecs::OnUpdate).run([&](flecs::iter& it)
+            {
+                if(ImportSceneThisFrame)
+                {
+                    ImportScene(CurrentScenePath);
+                    ImportSceneThisFrame = false;
+                }
+            });
+
+            ECS::World.system("EditorViewportResize").kind(flecs::OnUpdate).run([&](flecs::iter& it)
+            {
+                if(EditorViewportResizeTriggered)
+                {
+                    OnResize(NewEditorViewportSize);
+                    EditorViewportResizeTriggered = false;
+                }
+            });
+
+            ECS::World.system<>("UISystems").kind(flecs::OnGUI).each([&]
+            {
+                for (auto system : UISystems)
+                {
+                    system->Update(ECS::World.delta_time());
+                }
+            });
         }
 
         void OnResize(Vector2 size)
@@ -116,14 +127,14 @@ namespace Waldem
                 system->OnResize(size);
 
                 //TODO: this is a temporary solution, replace with only OnResize call
-                system->Deinitialize();
-                system->Initialize(&InputManager, CurrentResourceManager, &ContentManager);
+                // system->Deinitialize();
+                // system->Initialize(&InputManager, CurrentResourceManager, &ContentManager);
             }
-            
-            for (auto [entity, camera] : CurrentECSManager->EntitiesWith<Camera>())
+
+            ECS::World.query<Camera>().each([size](Camera& camera)
             {
                 camera.UpdateProjectionMatrix(camera.FieldOfView, size.x/size.y, camera.NearPlane, camera.FarPlane); 
-            }
+            });
         }
         
         void OnEvent(Event& event) override
@@ -174,42 +185,6 @@ namespace Waldem
             }
         }
 
-        void OnUpdate(float deltaTime) override
-        {
-            if(ImportSceneThisFrame)
-            {
-                ImportScene(CurrentScenePath);
-                ImportSceneThisFrame = false;
-            }
-            
-            if(EditorViewportResizeTriggered)
-            {
-                OnResize(NewEditorViewportSize);
-                EditorViewportResizeTriggered = false;
-            }
-
-            for (ISystem* system : UpdateSystems)
-            {
-                system->Update(deltaTime);
-            }
-        }
-
-        void OnDraw(float deltaTime) override
-        {
-            for (ISystem* system : DrawSystems)
-            {
-                system->Update(deltaTime);
-            }
-        }
-
-        void OnDrawUI(float deltaTime) override
-        {
-            for (ISystem* system : UISystems)
-            {
-                system->Update(deltaTime);
-            }
-        }
-
         void CloseScene(GameScene* scene)
         {                    
             if(scene)
@@ -219,62 +194,41 @@ namespace Waldem
             }
         }
 
-        void LoadScene(WDataBuffer& dataBuffer)
+        void LoadScene(Path& path)
         {
             //create new scene
             CurrentScene = new GameScene();
-            CurrentScene->Initialize(&InputManager, CurrentECSManager, CurrentResourceManager);
+            CurrentScene->Initialize(&InputManager, CurrentResourceManager);
 
             //deserialize input data into the scene
-            CurrentScene->Deserialize(dataBuffer);
+            CurrentScene->Deserialize(path);
         }
 
         void OpenScene(GameScene* scene)
         {
-            Deinitialize();
+            // Deinitialize();
             
             CloseScene(CurrentScene);
             
             CurrentScene = scene;
-            CurrentScene->Initialize(&InputManager, CurrentECSManager, CurrentResourceManager);
+            CurrentScene->Initialize(&InputManager, CurrentResourceManager);
 
-            Initialize();
+            // Initialize();
         }
 
-        void ImportScene(Path path)
+        void ImportScene(Path& path)
         {
-            std::ifstream inFile(path.c_str(), std::ios::binary | std::ios::ate);
-            if (inFile.is_open())
-            {
-                std::streamsize size = inFile.tellg();
-                inFile.seekg(0, std::ios::beg);
-
-                unsigned char* buffer = new unsigned char[size];
-                if (inFile.read((char*)buffer, size))
-                {
-                    Deinitialize();
-                    
-                    CloseScene(CurrentScene);
-
-                    WDataBuffer inData = WDataBuffer(buffer, size);
-
-                    LoadScene(inData);
-
-                    Initialize();
-                }
-                delete[] buffer;
-                inFile.close();
-            }
-        }
-
-        void ExportScene(Path path)
-        {
-            WDataBuffer outData;
-            CurrentScene->Serialize(outData);
+            // Deinitialize();
             
-            std::ofstream outFile(path.c_str(), std::ios::binary);
-            outFile.write(static_cast<const char*>(outData.GetData()), outData.GetSize());
-            outFile.close();
+            CloseScene(CurrentScene);
+
+            LoadScene(path);
+            // Initialize();
+        }
+
+        void ExportScene(Path& path)
+        {
+            CurrentScene->Serialize(path);
         }
 
         void OnOpenScene()

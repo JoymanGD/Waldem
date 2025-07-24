@@ -159,20 +159,4 @@ namespace Waldem
         rotationMatrix[2] /= scale.z;
         Rotation = quat_cast(rotationMatrix);
     }
-
-    void Transform::Serialize(WDataBuffer& outData)
-    {
-        outData << Position;
-        outData << Rotation;
-        outData << LocalScale;
-        outData << Matrix;
-    }
-
-    void Transform::Deserialize(WDataBuffer& inData)
-    {
-        inData >> Position;
-        inData >> Rotation;
-        inData >> LocalScale;
-        inData >> Matrix;
-    }
 }

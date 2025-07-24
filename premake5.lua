@@ -24,6 +24,7 @@ IncludeDir["Assimp"] = "Vendor/assimp/include"
 IncludeDir["stb"] = "Vendor/stb/include"
 IncludeDir["dxc"] = "Vendor/dxc/inc"
 IncludeDir["mono"] = "Vendor/mono/include"
+IncludeDir["flecs"] = "Vendor/flecs/include"
 
 filter { "files:**.hlsl" }
    flags { "ExcludeFromBuild", 'NoPCH' }
@@ -61,7 +62,9 @@ project "Vendor"
         "%{prj.name}/ImGuizmo/**.cpp",
         "%{prj.name}/glm/glm/**.hpp",
         "%{prj.name}/glm/glm/**.inl",
-        "%{prj.name}/spdlog/include/**.h"
+        "%{prj.name}/spdlog/include/**.h",
+        "%{prj.name}/flecs/distr/flecs.c",
+        "%{prj.name}/flecs/distr/flecs.h",
     }
     
     includedirs
@@ -76,6 +79,7 @@ project "Vendor"
         "%{IncludeDir.ECS}",
         "%{IncludeDir.dxc}",
         "%{IncludeDir.mono}",
+        "%{IncludeDir.flecs}",
     }
     
     libdirs
@@ -93,7 +97,7 @@ project "Vendor"
         "dxcompiler.lib",
         "assimp-vc142-mt.lib",
         "d3d12", "dxgi", "d3dcompiler",
-        "mono-2.0-sgen.lib"
+        "mono-2.0-sgen.lib",
     }
 
     filter { "files:**.cpp" }
@@ -141,7 +145,9 @@ project "WaldemEngine"
         "%{prj.name}/src/**.h",
         "%{prj.name}/src/**.cpp",
         "%{prj.name}/src/**.glsl",
-        "%{prj.name}/src/**.hlsl"
+        "%{prj.name}/src/**.hlsl",
+        "Vendor/flecs/distr/flecs.c",
+        "Vendor/flecs/distr/flecs.h",
     }
     
     includedirs
@@ -157,12 +163,16 @@ project "WaldemEngine"
         "%{IncludeDir.ECS}",
         "%{IncludeDir.dxc}",
         "%{IncludeDir.mono}",
+        "%{IncludeDir.flecs}",
     }
 
     links
     {
         "Vendor"
     }
+
+    filter { "files:**flecs.**" }
+        flags { "NoPCH" }
 
     filter "system:windows"
         systemversion "latest"

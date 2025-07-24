@@ -9,6 +9,9 @@
 #include "Waldem/Renderer/Model/Quad.h"
 #include "Waldem/ECS/Components/Transform.h"
 #include "Waldem/ECS/Components/Camera.h"
+#include "Waldem/Renderer/ResizableBuffer.h"
+
+#define MAX_INDIRECT_COMMANDS 500
 
 namespace Waldem
 {
@@ -39,17 +42,18 @@ namespace Waldem
         RenderTarget* ORMRT = nullptr;
         RenderTarget* DepthRT = nullptr;
         RenderTarget* MeshIDRT = nullptr;
-        Buffer* IndirectBuffer = nullptr;
-        Buffer* VertexBuffer = nullptr;
-        Buffer* IndexBuffer = nullptr;
-        Buffer* WorldTransformsBuffer = nullptr;
-        Buffer* MaterialAttributesBuffer = nullptr;
+        ResizableBuffer IndirectBuffer;
+        ResizableBuffer VertexBuffer;
+        ResizableBuffer IndexBuffer;
+        ResizableBuffer WorldTransformsBuffer;
+        ResizableBuffer MaterialAttributesBuffer;
         Buffer* SceneDataBuffer = nullptr;
-        WArray<IndirectCommand> IndirectDrawIndexedArgsArray;
         GBufferRootConstants RootConstants;
+        bool CameraIsDirty = true;
+        GBufferSceneData SceneData;
         
     public:
-        GBufferSystem(ECSManager* eCSManager) : DrawSystem(eCSManager)
+        GBufferSystem()
         {
             Vector4 dummyColor = Vector4(1.f, 1.f, 1.f, 1.f);
             uint8_t* image_data = (uint8_t*)&dummyColor;
@@ -59,74 +63,12 @@ namespace Waldem
         
         void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
         {
-            if(Manager->EntitiesWith<MeshComponent, Transform>().Count() <= 0)
-                return;
-            
-            //GBuffer pass
-            WArray<MaterialShaderAttribute> materialAttributes;
-            
-            WArray<Matrix4> worldTransforms;
-
-            uint startIndexLocation = 0;
-            int baseVertexLocation = 0;
-
-            uint32_t meshID = 0;
-            
-            WArray<Vertex> vertices;
-            WArray<uint> indices;
-            
-            for (auto [entity, meshComponent, transform] : Manager->EntitiesWith<MeshComponent, Transform>())
-            {
-                worldTransforms.Add(transform.Matrix);
-                vertices.AddRange(meshComponent.Mesh->VertexData);
-                indices.AddRange(meshComponent.Mesh->IndexData);
-                
-                uint indexCountPerInstance = (uint)meshComponent.Mesh->IndexData.Num();
-
-                IndirectCommand command;
-                command.DrawId = meshID;
-                command.DrawIndexed = {
-                    indexCountPerInstance,
-                    1,
-                    startIndexLocation,
-                    baseVertexLocation,
-                    0
-                };
-                
-                IndirectDrawIndexedArgsArray.Add(command);
-
-                startIndexLocation += indexCountPerInstance;
-                baseVertexLocation += (int)meshComponent.Mesh->VertexData.Num();
-                meshID++;
-                
-                if(!meshComponent.Mesh->CurrentMaterial->HasDiffuseTexture())
-                {
-                    materialAttributes.Add(MaterialShaderAttribute()); //by default all texture indices = -1, so we can just add empty MaterialAttribute
-                    continue;
-                }
-
-                int diffuseId = -1, normalId = -1, ormId = -1, clearCoat = -1;
-                
-                diffuseId = meshComponent.Mesh->CurrentMaterial->GetDiffuseTexture()->GetIndex(SRV_UAV_CBV);
-                
-                if(meshComponent.Mesh->CurrentMaterial->HasNormalTexture())
-                    normalId = meshComponent.Mesh->CurrentMaterial->GetNormalTexture()->GetIndex(SRV_UAV_CBV);
-                if(meshComponent.Mesh->CurrentMaterial->HasORMTexture())
-                    ormId = meshComponent.Mesh->CurrentMaterial->GetORMTexture()->GetIndex(SRV_UAV_CBV);
-
-                materialAttributes.Add(MaterialShaderAttribute{ diffuseId, normalId, ormId, clearCoat, meshComponent.Mesh->CurrentMaterial->Albedo, meshComponent.Mesh->CurrentMaterial->Metallic, meshComponent.Mesh->CurrentMaterial->Roughness });
-            }
-
-            IndirectBuffer = ResourceManager::CreateBuffer("IndirectDrawBuffer", BufferType::IndirectBuffer, IndirectDrawIndexedArgsArray.GetData(), IndirectDrawIndexedArgsArray.GetSize(), sizeof(IndirectCommand));
-            VertexBuffer = ResourceManager::CreateBuffer("VertexBuffer", BufferType::VertexBuffer, vertices.GetData(), vertices.GetSize(), sizeof(Vertex));
-            IndexBuffer = ResourceManager::CreateBuffer("IndexBuffer", BufferType::IndexBuffer, indices.GetData(), indices.GetSize(), sizeof(uint));
-            WorldTransformsBuffer = ResourceManager::CreateBuffer("WorldTransformsBuffer", StorageBuffer, worldTransforms.GetData(), worldTransforms.GetSize(), sizeof(Matrix4));
-            MaterialAttributesBuffer = ResourceManager::CreateBuffer("MaterialAttributesBuffer", StorageBuffer, materialAttributes.GetData(), materialAttributes.GetSize(), sizeof(MaterialShaderAttribute));
-            SceneDataBuffer = ResourceManager::CreateBuffer("SceneDataBuffer", StorageBuffer, nullptr, sizeof(GBufferSceneData), sizeof(GBufferSceneData));
-
-            RootConstants.WorldTransforms = WorldTransformsBuffer->GetIndex(SRV_UAV_CBV);
-            RootConstants.MaterialAttributes = MaterialAttributesBuffer->GetIndex(SRV_UAV_CBV);
-            RootConstants.SceneDataBuffer = SceneDataBuffer->GetIndex(SRV_UAV_CBV);
+            IndirectBuffer = ResizableBuffer("IndirectDrawBuffer", BufferType::IndirectBuffer, sizeof(IndirectCommand), MAX_INDIRECT_COMMANDS);
+            VertexBuffer = ResizableBuffer("VertexBuffer", BufferType::VertexBuffer, sizeof(Vertex));
+            IndexBuffer = ResizableBuffer("IndexBuffer", BufferType::IndexBuffer, sizeof(uint));
+            WorldTransformsBuffer = ResizableBuffer("WorldTransformsBuffer", BufferType::StorageBuffer, sizeof(Matrix4), MAX_INDIRECT_COMMANDS);
+            MaterialAttributesBuffer = ResizableBuffer("MaterialAttributesBuffer", BufferType::StorageBuffer, sizeof(MaterialShaderAttribute), MAX_INDIRECT_COMMANDS);
+            SceneDataBuffer = ResourceManager::CreateBuffer("SceneDataBuffer", BufferType::StorageBuffer, sizeof(GBufferSceneData), sizeof(GBufferSceneData));
             
             WorldPositionRT = resourceManager->GetRenderTarget("WorldPositionRT");
             NormalRT = resourceManager->GetRenderTarget("NormalRT");
@@ -144,75 +86,104 @@ namespace Waldem
                                                             DEFAULT_DEPTH_STENCIL_DESC,
                                                             WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
                                                             DEFAULT_INPUT_LAYOUT_DESC);
+            
+            ECS::World.observer<MeshComponent, Transform>().event(flecs::OnSet).each([&](MeshComponent& meshComponent, Transform& transform)
+            {
+                IndirectCommand command;
+                command.DrawId = WorldTransformsBuffer.Num();
+                command.DrawIndexed = {
+                    (uint)meshComponent.Mesh->IndexData.Num(),
+                    1,
+                    IndexBuffer.Num(),
+                    (int)VertexBuffer.Num(),
+                    0
+                };
+                
+                VertexBuffer.AddData(meshComponent.Mesh->VertexData.GetData(), meshComponent.Mesh->VertexData.GetSize());
+                IndexBuffer.AddData(meshComponent.Mesh->IndexData.GetData(), meshComponent.Mesh->IndexData.GetSize());
+                WorldTransformsBuffer.AddData(&transform.Matrix, sizeof(Matrix4));
+
+                IndirectBuffer.AddData(&command, sizeof(IndirectCommand));
+                
+                auto materialAttribute = MaterialShaderAttribute();
+
+                materialAttribute.Albedo = meshComponent.Mesh->CurrentMaterial->Albedo;
+                materialAttribute.Metallic = meshComponent.Mesh->CurrentMaterial->Metallic;
+                materialAttribute.Roughness = meshComponent.Mesh->CurrentMaterial->Roughness;
+                
+                if(meshComponent.Mesh->CurrentMaterial->HasDiffuseTexture())
+                {
+                    materialAttribute.DiffuseTextureID = meshComponent.Mesh->CurrentMaterial->GetDiffuseTexture()->GetIndex(SRV_UAV_CBV);
+                    
+                    if(meshComponent.Mesh->CurrentMaterial->HasNormalTexture())
+                        materialAttribute.NormalTextureID = meshComponent.Mesh->CurrentMaterial->GetNormalTexture()->GetIndex(SRV_UAV_CBV);
+                    if(meshComponent.Mesh->CurrentMaterial->HasORMTexture())
+                        materialAttribute.ORMTextureID = meshComponent.Mesh->CurrentMaterial->GetORMTexture()->GetIndex(SRV_UAV_CBV);
+                }
+
+                MaterialAttributesBuffer.AddData(&materialAttribute, sizeof(MaterialShaderAttribute));
+            });
+
+            ECS::World.observer<Camera, Transform>().event(flecs::OnSet).each([&](Camera& camera, Transform& transform)
+            {
+                SceneData.ViewMatrix = camera.ViewMatrix;
+                SceneData.ProjectionMatrix = camera.ProjectionMatrix;
+                SceneData.WorldMatrix = transform.Matrix;
+                SceneData.InverseProjectionMatrix = glm::inverse(camera.ProjectionMatrix);
+                
+                CameraIsDirty = true;
+            });
+            
+            ECS::World.system("GBufferSystem").kind(flecs::OnDraw).run([&](flecs::iter& it)
+            {
+                if(IsInitialized)
+                {
+                    if(CameraIsDirty)
+                    {
+                        Renderer::UploadBuffer(SceneDataBuffer, &SceneData, sizeof(GBufferSceneData));
+                        CameraIsDirty = false;
+                    }
+
+                    RootConstants.WorldTransforms = WorldTransformsBuffer.GetIndex(SRV_UAV_CBV);
+                    RootConstants.MaterialAttributes = MaterialAttributesBuffer.GetIndex(SRV_UAV_CBV);
+                    RootConstants.SceneDataBuffer = SceneDataBuffer->GetIndex(SRV_UAV_CBV);
+
+                    Renderer::ResourceBarrier(WorldPositionRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
+                    Renderer::ResourceBarrier(NormalRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
+                    Renderer::ResourceBarrier(ColorRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
+                    Renderer::ResourceBarrier(ORMRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
+                    Renderer::ResourceBarrier(MeshIDRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
+                    Renderer::ResourceBarrier(DepthRT, ALL_SHADER_RESOURCE, DEPTH_WRITE);
+                    
+                    Renderer::ClearRenderTarget(WorldPositionRT);
+                    Renderer::ClearRenderTarget(NormalRT);
+                    Renderer::ClearRenderTarget(ColorRT);
+                    Renderer::ClearRenderTarget(ORMRT);
+                    Renderer::ClearRenderTarget(MeshIDRT);
+                    Renderer::ClearDepthStencil(DepthRT);
+
+                    Renderer::SetPipeline(GBufferPipeline);
+                    Renderer::PushConstants(&RootConstants, sizeof(GBufferRootConstants));
+                    Renderer::BindRenderTargets({ WorldPositionRT, NormalRT, ColorRT, ORMRT, MeshIDRT });
+                    Renderer::BindDepthStencil(DepthRT);
+                    Renderer::SetVertexBuffers(VertexBuffer, 1);
+                    Renderer::SetIndexBuffer(IndexBuffer);
+                    Renderer::DrawIndirect(IndirectBuffer.Num(), IndirectBuffer);
+                    
+                    Renderer::ResourceBarrier(WorldPositionRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
+                    Renderer::ResourceBarrier(NormalRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
+                    Renderer::ResourceBarrier(ColorRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
+                    Renderer::ResourceBarrier(ORMRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
+                    Renderer::ResourceBarrier(MeshIDRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
+                    Renderer::ResourceBarrier(DepthRT, DEPTH_WRITE, ALL_SHADER_RESOURCE);
+                }
+            });
 
             IsInitialized = true;
         }
 
-        void Deinitialize() override
-        {
-            if(GBufferPixelShader) GBufferPixelShader->Destroy();
-            if(GBufferPipeline) GBufferPipeline->Destroy();
-            if(IndirectBuffer) Renderer::Destroy(IndirectBuffer);
-            if(VertexBuffer) Renderer::Destroy(VertexBuffer);
-            if(IndexBuffer) Renderer::Destroy(IndexBuffer);
-
-            IndirectDrawIndexedArgsArray.Clear();
-            
-            IsInitialized = false;
-        }
-
         void Update(float deltaTime) override
         {
-            if(!IsInitialized)
-                return;
-            
-            Renderer::ResourceBarrier(WorldPositionRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
-            Renderer::ResourceBarrier(NormalRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
-            Renderer::ResourceBarrier(ColorRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
-            Renderer::ResourceBarrier(ORMRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
-            Renderer::ResourceBarrier(MeshIDRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
-            Renderer::ResourceBarrier(DepthRT, ALL_SHADER_RESOURCE, DEPTH_WRITE);
-            
-            Renderer::ClearRenderTarget(WorldPositionRT);
-            Renderer::ClearRenderTarget(NormalRT);
-            Renderer::ClearRenderTarget(ColorRT);
-            Renderer::ClearRenderTarget(ORMRT);
-            Renderer::ClearRenderTarget(MeshIDRT);
-            Renderer::ClearDepthStencil(DepthRT);
-            
-            //GBuffer pass
-            Matrix4 matrices[4];
-            for (auto [entity, camera, mainCamera, cameraTransform] : Manager->EntitiesWith<Camera, EditorCamera, Transform>())
-            {
-                matrices[0] = camera.ViewMatrix;
-                matrices[1] = camera.ProjectionMatrix;
-                matrices[2] = cameraTransform.Matrix;
-                matrices[3] = inverse(camera.ProjectionMatrix);
-                Renderer::UploadBuffer(SceneDataBuffer, matrices, sizeof(matrices)); 
-
-                break;
-            }
-            WArray<Matrix4> worldTransforms;
-            for (auto [entity, mesh, transform] : Manager->EntitiesWith<MeshComponent, Transform>())
-            {
-                worldTransforms.Add(transform.Matrix);
-            }
-
-            Renderer::UploadBuffer(WorldTransformsBuffer, worldTransforms.GetData(), worldTransforms.GetSize());
-            Renderer::SetPipeline(GBufferPipeline);
-            Renderer::PushConstants(&RootConstants, sizeof(GBufferRootConstants));
-            Renderer::BindRenderTargets({ WorldPositionRT, NormalRT, ColorRT, ORMRT, MeshIDRT });
-            // Renderer::BindDepthStencil(DepthRT);
-            Renderer::SetVertexBuffers(VertexBuffer, 1);
-            Renderer::SetIndexBuffer(IndexBuffer);
-            Renderer::DrawIndirect(IndirectDrawIndexedArgsArray.Num(), IndirectBuffer);
-            
-            Renderer::ResourceBarrier(WorldPositionRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
-            Renderer::ResourceBarrier(NormalRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
-            Renderer::ResourceBarrier(ColorRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
-            Renderer::ResourceBarrier(ORMRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
-            Renderer::ResourceBarrier(MeshIDRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
-            Renderer::ResourceBarrier(DepthRT, DEPTH_WRITE, ALL_SHADER_RESOURCE);
         }
 
         void OnResize(Vector2 size) override

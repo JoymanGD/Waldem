@@ -1,5 +1,4 @@
 #pragma once
-#include "Waldem/ECS/Component.h"
 
 namespace Waldem
 {
@@ -25,7 +24,7 @@ namespace Waldem
         int AreaTwoSided = false;
     };
     
-    struct Light : IComponent<Light>
+    struct Light
     {
         Light() = default;
         
@@ -56,34 +55,6 @@ namespace Waldem
             Data.InnerCone = 1.0f;
             Data.OuterCone = outerCone;
             Data.Softness = softness;
-        }
-
-        void Serialize(WDataBuffer& outData) override
-        {
-            outData << (int)Data.Type;
-            outData << Data.Color;
-            outData << Data.Intensity;
-            outData << Data.Radius;
-            outData << Data.InnerCone;
-            outData << Data.OuterCone;
-            outData << Data.Softness;
-            outData << Data.AreaWidth;
-            outData << Data.AreaHeight;
-            outData << Data.AreaTwoSided;
-        }
-        
-        void Deserialize(WDataBuffer& inData) override
-        {
-            inData >> (int&)Data.Type;
-            inData >> Data.Color;
-            inData >> Data.Intensity;
-            inData >> Data.Radius;
-            inData >> Data.InnerCone;
-            inData >> Data.OuterCone;
-            inData >> Data.Softness;
-            inData >> Data.AreaWidth;
-            inData >> Data.AreaHeight;
-            inData >> Data.AreaTwoSided;
         }
 
         LightData Data = {};

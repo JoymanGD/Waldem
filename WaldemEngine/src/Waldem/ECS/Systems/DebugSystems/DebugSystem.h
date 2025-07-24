@@ -6,6 +6,7 @@
 #include "Waldem/Audio/Audio.h"
 #include "Waldem/ECS/Components/Light.h"
 #include "Waldem/ECS/Components/Camera.h"
+#include "Waldem/ECS/Components/EditorComponent.h"
 #include "Waldem/ECS/Components/Transform.h"
 
 namespace Waldem
@@ -42,36 +43,40 @@ namespace Waldem
         DebugSystemConstantBuffer ConstantBufferData;
         
     public:
-        DebugSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
+        DebugSystem() {}
 
         void CacheFrustrumCorners()
         {
-            for (auto [entity, camera, mainCamera, cameraTransform] : Manager->EntitiesWith<Camera, EditorCamera, Transform>())
-            {
-                Vector3 ndcCorners[8] =
-                {
-                    {-1.0f, -1.0f, 0}, //near-top-left
-                    {1.0f, -1.0f, 0}, //near-top-right
-                    {-1.0f, 1.0f, 0}, //near-bottom-left
-                    {1.0f, 1.0f, 0}, //near-bottom-right
-                    {-1.0f, -1.0f, 1.0f}, //far-top-left
-                    {1.0f, -1.0f, 1.0f}, //far-top-right
-                    {-1.0f, 1.0f, 1.0f}, //far-bottom-left
-                    {1.0f, 1.0f, 1.0f}  //far-bottom-right
-                };
+            auto editorCamera = ECS::World.lookup("EditorCamera");
 
-                // Transform NDC corners to world space
-                CachedViewProjMatrix = camera.ProjectionMatrix * camera.ViewMatrix;
-                auto invViewProjMatrix = inverse(CachedViewProjMatrix);
-                
-                for (int i = 0; i < 8; ++i)
+            if(editorCamera)
+            {
+                if (const Camera* camera = editorCamera.get<Camera>())
                 {
-                    Vector4 corner(ndcCorners[i].x, ndcCorners[i].y, ndcCorners[i].z, 1.0f);
-                    Vector4 worldPos = invViewProjMatrix * corner; // Use your matrix transform function
-                    worldPos /= worldPos.w; // Perform perspective divide
-                    frustumCorners[i] = Vector3(worldPos.x, worldPos.y, worldPos.z);
+                    Vector3 ndcCorners[8] =
+                    {
+                        {-1.0f, -1.0f, 0}, //near-top-left
+                        {1.0f, -1.0f, 0}, //near-top-right
+                        {-1.0f, 1.0f, 0}, //near-bottom-left
+                        {1.0f, 1.0f, 0}, //near-bottom-right
+                        {-1.0f, -1.0f, 1.0f}, //far-top-left
+                        {1.0f, -1.0f, 1.0f}, //far-top-right
+                        {-1.0f, 1.0f, 1.0f}, //far-bottom-left
+                        {1.0f, 1.0f, 1.0f}  //far-bottom-right
+                    };
+
+                    // Transform NDC corners to world space
+                    CachedViewProjMatrix = camera->ProjectionMatrix * camera->ViewMatrix;
+                    auto invViewProjMatrix = inverse(CachedViewProjMatrix);
+                    
+                    for (int i = 0; i < 8; ++i)
+                    {
+                        Vector4 corner(ndcCorners[i].x, ndcCorners[i].y, ndcCorners[i].z, 1.0f);
+                        Vector4 worldPos = invViewProjMatrix * corner; // Use your matrix transform function
+                        worldPos /= worldPos.w; // Perform perspective divide
+                        frustumCorners[i] = Vector3(worldPos.x, worldPos.y, worldPos.z);
+                    }
                 }
-                break;
             }
         }
 

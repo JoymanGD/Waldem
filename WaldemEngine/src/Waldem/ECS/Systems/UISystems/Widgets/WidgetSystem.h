@@ -7,7 +7,8 @@ namespace Waldem
     class WALDEM_API IWidgetSystem : public ISystem
     {
     public:
-        IWidgetSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
+        IWidgetSystem() {}
         virtual WString GetName() = 0;
+        virtual void OnDraw(float deltaTime) = 0;
     };
 }

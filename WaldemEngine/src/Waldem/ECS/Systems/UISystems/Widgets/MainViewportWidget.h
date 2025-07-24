@@ -1,5 +1,5 @@
 #pragma once
-#include "Waldem/ECS/Systems/UISystems/Widgets/IWidgetContainerSystem.h"
+#include "WidgetContainerSystem.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/Editor/Editor.h"
 #include "Waldem/Renderer/Renderer.h"
@@ -13,7 +13,7 @@ namespace Waldem
         ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
         
     public:
-        MainViewportWidget(ECSManager* eCSManager) : IWidgetSystem(eCSManager) {}
+        MainViewportWidget() {}
 
         WString GetName() override { return "Viewport"; }
 
@@ -21,7 +21,7 @@ namespace Waldem
         {
         }
 
-        void Update(float deltaTime) override
+        void OnDraw(float deltaTime) override
         {
             if (ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus))
             {

@@ -1,17 +1,16 @@
 #include "wdpch.h"
 #include "GameScene.h"
 
+#include "Waldem/ECS/ECS.h"
+#include "Waldem/ECS/Components/EditorComponent.h"
+#include "Waldem/ECS/Components/NameComponent.h"
+
 Waldem::GameScene::~GameScene()
 {
-    for (auto entity : Entities)
-    {
-        entity->Destroy();
-    }
 }
 
-void Waldem::GameScene::Initialize(InputManager* inputManager, ECSManager* ecsManager, ResourceManager* resourceManager)
+void Waldem::GameScene::Initialize(InputManager* inputManager, ResourceManager* resourceManager)
 {
-    EcsManager = ecsManager;
 }
 
 void Waldem::GameScene::Draw(float deltaTime)
@@ -46,19 +45,34 @@ void Waldem::GameScene::DrawUI(float deltaTime)
     }
 }
 
-void Waldem::GameScene::Serialize(WDataBuffer& outData)
+void Waldem::GameScene::Serialize(Path& outPath)
 {
-    Entities.Serialize(outData);
-}
+    flecs::query<NameComponent> q = ECS::World.query_builder<NameComponent>().without<EditorComponent>().cached().build();
+    flecs::string json = q.to_json();
 
-void Waldem::GameScene::Deserialize(WDataBuffer& inData)
-{
-    Entities.Deserialize(inData);
-
-    for (auto& entity : Entities)
+    //TODO: use some custom name
+    if(!outPath.has_filename())
     {
-        EcsManager->RegisterEntity(entity);
+        outPath /= "Scene.json";
     }
 
-    EcsManager->Refresh();
+    std::ofstream outFile(outPath.c_str());
+    if (outFile.is_open())
+    {
+        outFile << json.c_str();
+        outFile.close();
+    }
+}
+
+void Waldem::GameScene::Deserialize(Path& inPath)
+{
+    std::ifstream inFile(inPath.c_str());
+    if (inFile.is_open())
+    {
+        std::stringstream buffer;
+        buffer << inFile.rdbuf();
+        inFile.close();
+
+        ECS::World.from_json(buffer.str().c_str(), nullptr);
+    }
 }

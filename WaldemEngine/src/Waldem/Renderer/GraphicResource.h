@@ -44,9 +44,9 @@ namespace Waldem
 
         ResourceStates GetCurrentState() const { return CurrentState; }
         
-        GraphicResource* GetUploadResource() { return UploadResource; }
+        virtual GraphicResource* GetUploadResource() { return UploadResource; }
         
-        GraphicResource* GetReadbackResource() { return ReadbackResource; }
+        virtual GraphicResource* GetReadbackResource() { return ReadbackResource; }
 
         void SetGPUAddress(uint64 address) { GPUAddress = address; }
         

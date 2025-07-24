@@ -12,15 +12,13 @@
 #include "Waldem/ECS/Components/Light.h"
 #include "Waldem/ECS/Components/Transform.h"
 #include "Waldem/Renderer/Model/Mesh.h"
-#include "Waldem/ECS/Entity.h"
-#include "Waldem/ECS/ECSManager.h"
 
 namespace Waldem
 {
     class RenderingTestScene : public GameScene
     {
     public:
-        void Initialize(InputManager* inputManager, ECSManager* ecsManager, ResourceManager* resourceManager) override
+        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
         {
 			CModelImporter importer;
 
@@ -30,22 +28,22 @@ namespace Waldem
 			int index = 0;
 			for (CMesh* mesh : sponzaModel->GetMeshes())
 			{
-				auto entity = ecsManager->CreateEntity("Sponza1_" + std::to_string(index++));
-				entity->Add<MeshComponent>(mesh);
-				entity->Add<Transform>(mesh->ObjectMatrix);
-				Entities.Add(std::move(entity));
+				auto sponza1Name = "Sponza1_" + std::to_string(index++);
+				auto entity = ECS::World.entity(sponza1Name.c_str());
+				entity.set<MeshComponent>(MeshComponent(mesh));
+				entity.set<Transform>(Transform(mesh->ObjectMatrix));
 			}
 			
 			//secondSponza
 			index = 0;
 			for (CMesh* mesh : sponzaModel->GetMeshes())
 			{
-				auto entity = ecsManager->CreateEntity("Sponza2_" + std::to_string(index++));
-				entity->Add<MeshComponent>(mesh);
+				auto sponza2Name = "Sponza2_" + std::to_string(index++);
+				auto entity = ECS::World.entity(sponza2Name.c_str());
+				entity.set<MeshComponent>(MeshComponent(mesh));
 				Transform transform = mesh->ObjectMatrix;
 				transform.Translate({50, 0, 0});
-				entity->Add<Transform>(transform);
-				Entities.Add(entity);
+				entity.set<Transform>(transform);
 			}
 
 			//water plane
@@ -54,45 +52,39 @@ namespace Waldem
 			// for (CMesh* mesh : waterPlaneModel->GetMeshes())
 			// {
 			// 	mesh->SetMaterial(new Material(waterTexture, nullptr, nullptr));
-			// 	auto waterPlaneEntity = ecsManager->CreateEntity("WaterPlane");
-			// 	waterPlaneEntity->Add<MeshComponent>(mesh);
+			// 	auto waterPlaneEntity = ECS::World.entity("WaterPlane");
+			// 	waterPlaneEntity.add<MeshComponent>(mesh);
 			// 	Transform transform = mesh->ObjectMatrix;
 			// 	transform.Translate({0,20,0});
-			// 	waterPlaneEntity->Add<Transform>(transform);
-			// 	waterPlaneEntity->Add<Ocean>();
+			// 	waterPlaneEntity.add<Transform>(transform);
+			// 	waterPlaneEntity.add<Ocean>();
 			// 	Entities.Add(waterPlaneEntity);
 			// }
 
         	//dir light
-			auto dirLightEntity = ecsManager->CreateEntity("DirLight");
-			auto& lightTransform = dirLightEntity->Add<Transform>(Vector3(0, 0, 0));
-			lightTransform.SetEuler(90, 0, 0);
-        	dirLightEntity->Add<Light>(Vector3(1, 1, 1), 55.0f);
-			Entities.Add(dirLightEntity);
+			auto dirLightEntity = ECS::World.entity("DirLight");
+        	auto lightTransform = Transform();
+        	lightTransform.SetEuler(90, 0, 0);
+			dirLightEntity.set<Transform>(lightTransform);
+        	dirLightEntity.set<Light>(Light(Vector3(1, 1, 1), 55.0f));
 
         	//point light 1
-        	auto pointLight1Entity = ecsManager->CreateEntity("PointLight1");
-        	pointLight1Entity->Add<Transform>(Vector3(2, 1, 2));
-        	pointLight1Entity->Add<Light>(Vector3(1, .3f, 1), 10.0f, 2.0f);
-			Entities.Add(pointLight1Entity);
+        	auto pointLight1Entity = ECS::World.entity("PointLight1");
+        	pointLight1Entity.set<Transform>(Transform(Vector3(2, 1, 2)));
+        	pointLight1Entity.set<Light>(Light(Vector3(1, .3f, 1), 10.0f, 2.0f));
 
         	//point light 2
-        	auto pointLight2Entity = ecsManager->CreateEntity("PointLight2");
-        	pointLight2Entity->Add<Transform>(Vector3(-2, 1, -2));
-        	pointLight2Entity->Add<Light>(Vector3(1, 1, .3f), 10.0f, 2.0f);
-			Entities.Add(pointLight2Entity);
+        	auto pointLight2Entity = ECS::World.entity("PointLight2");
+        	pointLight2Entity.set<Transform>(Transform(Vector3(-2, 1, -2)));
+        	pointLight2Entity.set<Light>(Light(Vector3(1, 1, .3f), 10.0f, 2.0f));
 
         	//spot light 1
-        	auto spotLight1Entity = ecsManager->CreateEntity("SpotLight1");
-        	spotLight1Entity->Add<Transform>(Vector3(-2, 1, -2));
-        	spotLight1Entity->Add<Light>(Vector3(1, 1, .3f), 10.0f, 5.0f, 21, 0.001);
-			Entities.Add(spotLight1Entity);
+        	auto spotLight1Entity = ECS::World.entity("SpotLight1");
+        	spotLight1Entity.set<Transform>(Transform(Vector3(-2, 1, -2)));
+        	spotLight1Entity.set<Light>(Light(Vector3(1, 1, .3f), 10.0f, 5.0f, 21, 0.001));
 
-        	// auto postProcessEntity = ecsManager->CreateEntity("PostProcess");
-        	// postProcessEntity->Add<BloomPostProcess>();
-
-			//do it after all entities set up
-			ecsManager->Refresh();
+        	// auto postProcessEntity = ECS::World.entity("PostProcess");
+        	// postProcessEntity.add<BloomPostProcess>();
         }
     };
 }

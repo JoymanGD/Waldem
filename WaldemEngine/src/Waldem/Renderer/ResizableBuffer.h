@@ -8,30 +8,52 @@ namespace Waldem
     {
     public:
         uint Stride = 0;
+        uint Capacity = 0;
         uint Size = 0;
-        uint ThresholdNum = 0;
 
         ResizableBuffer() = default;
-        
-        ResizableBuffer(const WString& name, BufferType type, uint stride, uint thresholdNum, uint size = 0, void* data = nullptr) : Stride(stride), Size(size), ThresholdNum(thresholdNum)
+
+        ResizableBuffer(const WString& name, BufferType type, uint stride, uint capacity = 51) : Stride(stride), Capacity(stride*capacity)
         {
-            InternalBuffer = Renderer::CreateBuffer(name, type, data, stride*thresholdNum, stride);
+            InternalBuffer = Renderer::CreateBuffer(name, type, Capacity, Stride);
         }
+
+        Buffer* GetBuffer() { return InternalBuffer; }
+
+        operator Buffer*() const { return InternalBuffer; }
+        operator Buffer*() { return InternalBuffer; }
 
         void AddData(void* data, uint size)
         {
+            Count += size / Stride;
+            
             uint newSize = Size + size;
             
-            if (newSize > ThresholdNum * Stride)
+            if (newSize > Capacity)
             {
                 // Resize the buffer
-                Buffer* newBuffer = Renderer::CreateBuffer(InternalBuffer->GetName(), InternalBuffer->GetType(), nullptr, newSize, Stride);
-                Renderer::CopyResource(newBuffer, InternalBuffer);
-                Renderer::Destroy(InternalBuffer);
-                delete InternalBuffer;
-                InternalBuffer = newBuffer;
+                Capacity += newSize * 2;
+                
+                // void* previousData = nullptr;
+                //
+                // if(Size > 0)
+                // {
+                //     previousData = malloc(Size);
+                //     Renderer::DownloadBuffer(InternalBuffer, previousData, Size);
+                // }
+                //
+                // Renderer::InitializeBuffer(InternalBuffer->GetName(), InternalBuffer->GetType(), Capacity, Stride, InternalBuffer, previousData, Size);
 
-                ThresholdNum += ThresholdNum;
+                auto oldBuffer = InternalBuffer;
+                InternalBuffer = Renderer::CreateBuffer(InternalBuffer->GetName(), InternalBuffer->GetType(), Capacity, Stride);
+
+                if(Size > 0)
+                {
+                    Renderer::CopyBufferRegion(InternalBuffer, 0, oldBuffer, 0, Size);
+                }
+
+                Renderer::Destroy(oldBuffer);
+                delete oldBuffer;
             }
             
             Renderer::UploadBuffer(InternalBuffer, data, size, Size);
@@ -39,12 +61,22 @@ namespace Waldem
             Size = newSize;
         }
 
-        operator Buffer*() const { return InternalBuffer; }
-        
+        void UpdateData(void* data, uint size, uint offset = 0)
+        {
+            if (offset + size > Size)
+            {
+                WD_CORE_ERROR("UpdateData: Offset + Size exceeds buffer size.");
+            }
+            
+            Renderer::UploadBuffer(InternalBuffer, data, size, offset);
+        }
+
         uint64 GetGPUAddress() const { return InternalBuffer->GetGPUAddress(); }
         uint GetIndex(ResourceHeapType heapType) { return InternalBuffer->GetIndex(heapType); }
+        uint Num() { return Count; }
         
     private:
         Buffer* InternalBuffer = nullptr;
+        int Count = 0;
     };
 }

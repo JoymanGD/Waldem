@@ -108,7 +108,7 @@
 //         WArray<Buffer*> VertexBuffers;
 //         
 //     public:
-//         OceanSimulationSystem(ECSManager* eCSManager) : DrawSystem(eCSManager) {}
+//         OceanSimulationSystem() : DrawSystem() {}
 //         
 //         unsigned int bitfieldReverse(unsigned int index , int numBits)
 //         {

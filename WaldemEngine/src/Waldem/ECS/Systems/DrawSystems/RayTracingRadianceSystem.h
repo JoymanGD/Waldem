@@ -8,6 +8,7 @@
 #include "Waldem/Renderer/Shader.h"
 #include "Waldem/ECS/Components/Camera.h"
 #include "Waldem/ECS/Components/Light.h"
+#include "Waldem/Renderer/ResizableAccelerationStructure.h"
 #include "Waldem/Renderer/ResizableBuffer.h"
 
 namespace Waldem
@@ -35,153 +36,87 @@ namespace Waldem
     class WALDEM_API RayTracingRadianceSystem : public DrawSystem
     {
         RenderTarget* RadianceRT = nullptr;
+        RenderTarget* WorldPositionRT = nullptr;
+        RenderTarget* NormalRT = nullptr;
+        RenderTarget* AlbedoRT = nullptr;
+        RenderTarget* ORMRT = nullptr;
         Pipeline* RTPipeline = nullptr;
         RayTracingShader* RTShader = nullptr;
         WArray<AccelerationStructure*> BLAS;
         WMap<CMesh*, AccelerationStructure*> BLASToUpdate;
-        AccelerationStructure* TLAS = nullptr;
         RayTracingSceneData RTSceneData;
-        WArray<RayTracingInstance> Instances;
         ResizableBuffer LightsBuffer;
         ResizableBuffer LightTransformsBuffer;
         Buffer* SceneDataBuffer = nullptr;
+        ResizableAccelerationStructure TLAS;
         RayTracingRootConstants RootConstants;
+        WArray<LightData> LightDatas;
+        WArray<Matrix4> LightTransforms;
         
     public:
-        RayTracingRadianceSystem(ECSManager* eCSManager) : DrawSystem(eCSManager) {}
-        
+        RayTracingRadianceSystem() : DrawSystem() {}
+
         void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
         {
-            if(Manager->EntitiesWith<MeshComponent, Transform>().Count() <= 0)
-                return;
-            
-            RadianceRT = resourceManager->GetRenderTarget("RadianceRT");
-            auto worldPositionRT = resourceManager->GetRenderTarget("WorldPositionRT");
-            auto normalRT = resourceManager->GetRenderTarget("NormalRT");
-            auto albedoRT = resourceManager->GetRenderTarget("ColorRT");
-            auto ormRT = resourceManager->GetRenderTarget("ORMRT");
-            
-            WArray<LightData> LightDatas;
-            WArray<Matrix4> LightTransforms;
-            for (auto [entity, light, transform] : Manager->EntitiesWith<Light, Transform>())
-            {
-                LightDatas.Add(light.Data);
-                LightTransforms.Add(transform);
-            }
-            
-            for (auto [transformEntity, transform, meshComponent] : Manager->EntitiesWith<Transform, MeshComponent>())
-            {
-                WArray geometries { RayTracingGeometry(meshComponent.Mesh->VertexBuffer, meshComponent.Mesh->IndexBuffer) };
-                
-                AccelerationStructure* blas = Renderer::CreateBLAS(meshComponent.Mesh->Name, geometries);
-                BLAS.Add(blas);
-
-                Instances.Add(RayTracingInstance(blas, transform));
-
-                if(transformEntity.Has<Ocean>())
-                {
-                    BLASToUpdate.Add(meshComponent.Mesh, blas);
-                }
-            }
-            
-            TLAS = Renderer::CreateTLAS("RayTracingTLAS", Instances);
-            // LightsBuffer = Renderer::CreateBuffer("LightsBuffer", StorageBuffer, &LightDatas[0], sizeof(LightData) * 20, sizeof(LightData));
-            // LightTransformsBuffer = Renderer::CreateBuffer("LightTransformsBuffer", StorageBuffer, &LightTransforms[0], sizeof(Matrix4) * 20, sizeof(Matrix4));
-            LightsBuffer = ResizableBuffer("LightsBuffer", StorageBuffer, sizeof(LightData), 40, LightDatas.GetSize(), LightDatas.GetData());
-            LightTransformsBuffer = ResizableBuffer("LightTransformsBuffer", StorageBuffer, sizeof(Matrix4), 40, LightTransforms.GetSize(), LightTransforms.GetData());
-            SceneDataBuffer = Renderer::CreateBuffer("SceneDataBuffer", StorageBuffer, &RTSceneData, sizeof(RTSceneData), sizeof(RTSceneData));
-
-            RootConstants.WorldPositionRT = worldPositionRT->GetIndex(SRV_UAV_CBV);
-            RootConstants.NormalRT = normalRT->GetIndex(SRV_UAV_CBV);
-            RootConstants.ColorRT = albedoRT->GetIndex(SRV_UAV_CBV);
-            RootConstants.ORMRT = ormRT->GetIndex(SRV_UAV_CBV);
-            RootConstants.OutputColorRT = RadianceRT->GetIndex(SRV_UAV_CBV);
-            RootConstants.LightsBuffer = LightsBuffer.GetIndex(SRV_UAV_CBV);
-            RootConstants.LightTransformsBuffer = LightTransformsBuffer.GetIndex(SRV_UAV_CBV);
-            RootConstants.SceneDataBuffer = SceneDataBuffer->GetIndex(SRV_UAV_CBV);
-            RootConstants.TLAS = TLAS->GetIndex(SRV_UAV_CBV);
-            
             RTShader = Renderer::LoadRayTracingShader("RayTracing/Radiance");
-            RTPipeline = Renderer::CreateRayTracingPipeline("PostProcessPipeline", RTShader);
-
-            IsInitialized = true;
-        }
-
-        void Deinitialize() override
-        {
-            if(RTShader) RTShader->Destroy();
-            if(RTPipeline) RTPipeline->Destroy();
-            if(TLAS) Renderer::Destroy(TLAS);
-
-            for (auto blas : BLAS)
+            RTPipeline = Renderer::CreateRayTracingPipeline("RayTracingPipeline", RTShader);
+                    
+            RadianceRT = resourceManager->GetRenderTarget("RadianceRT");
+            WorldPositionRT = resourceManager->GetRenderTarget("WorldPositionRT");
+            NormalRT = resourceManager->GetRenderTarget("NormalRT");
+            AlbedoRT = resourceManager->GetRenderTarget("ColorRT");
+            ORMRT = resourceManager->GetRenderTarget("ORMRT");
+                    
+            LightsBuffer = ResizableBuffer("LightsBuffer", StorageBuffer, sizeof(LightData), 40);
+            LightTransformsBuffer = ResizableBuffer("LightTransformsBuffer", StorageBuffer, sizeof(Matrix4), 40);
+            SceneDataBuffer = Renderer::CreateBuffer("SceneDataBuffer", StorageBuffer, sizeof(RayTracingSceneData), sizeof(RayTracingSceneData), &RTSceneData);
+            TLAS = ResizableAccelerationStructure("RayTracingTLAS", 50);
+            
+            ECS::World.observer<MeshComponent, Transform>().event(flecs::OnSet).each([&](MeshComponent& meshComponent, Transform& transform)
             {
-                if(blas) Renderer::Destroy(blas);
-            }
-
-            BLAS.Clear();
-            Instances.Clear();
-            BLASToUpdate.Clear();
+                TLAS.AddData(meshComponent, transform);
+            });
             
-            IsInitialized = false;
-        }
-
-        void Update(float deltaTime) override
-        {
-            if(!IsInitialized)
-                return;
-            
-            //lights update
-            WArray<LightData> LightDatas;
-            WArray<Matrix4> LightTransforms;
-            for (auto [entity, light, transform] : Manager->EntitiesWith<Light, Transform>())
+            ECS::World.observer<Light, Transform>().event(flecs::OnSet).each([&](Light& light, Transform& transform)
             {
-                LightDatas.Add(light.Data);
-                LightTransforms.Add(transform);
-            }
-            if(!LightDatas.IsEmpty())
-                Renderer::UploadBuffer(LightsBuffer, LightDatas.GetData(), LightDatas.GetSize());
-            if(!LightTransforms.IsEmpty())
-                Renderer::UploadBuffer(LightTransformsBuffer, LightTransforms.GetData(), LightTransforms.GetSize());
+                LightsBuffer.AddData(&light.Data, sizeof(LightData));
+                LightTransformsBuffer.AddData(&transform.Matrix, sizeof(Matrix4));
+                
+                RTSceneData.NumLights = LightsBuffer.Num();
+            });
             
-            //constant buffer update
-            for (auto [entity, camera, mainCamera, cameraTransform] : Manager->EntitiesWith<Camera, EditorCamera, Transform>())
+            ECS::World.observer<Camera>().event(flecs::OnSet).each([&](Camera& camera)
             {
                 RTSceneData.InvViewMatrix = inverse(camera.ViewMatrix);
                 RTSceneData.InvProjectionMatrix = inverse(camera.ProjectionMatrix);
+            });
 
-                break;
-            }
-
-            int i = 0;
-            for (auto [entity, meshComponent, transform] : Manager->EntitiesWith<MeshComponent, Transform>())
+            ECS::World.system<>("RayTracingSystem").kind(flecs::OnDraw).each([&]
             {
-                Instances[i].Transform = transform;
-                i++;
-            }
+                if(IsInitialized)
+                {
+                    RootConstants.WorldPositionRT = WorldPositionRT->GetIndex(SRV_UAV_CBV);
+                    RootConstants.NormalRT = NormalRT->GetIndex(SRV_UAV_CBV);
+                    RootConstants.ColorRT = AlbedoRT->GetIndex(SRV_UAV_CBV);
+                    RootConstants.ORMRT = ORMRT->GetIndex(SRV_UAV_CBV);
+                    RootConstants.OutputColorRT = RadianceRT->GetIndex(SRV_UAV_CBV);
+                    RootConstants.LightsBuffer = LightsBuffer.GetIndex(SRV_UAV_CBV);
+                    RootConstants.LightTransformsBuffer = LightTransformsBuffer.GetIndex(SRV_UAV_CBV);
+                    RootConstants.SceneDataBuffer = SceneDataBuffer->GetIndex(SRV_UAV_CBV);
+                    RootConstants.TLAS = TLAS.GetIndex(SRV_UAV_CBV);
+                    
+                    Renderer::UploadBuffer(SceneDataBuffer, &RTSceneData, sizeof(RTSceneData));
 
-            for (auto blas : BLASToUpdate)
-            {
-                WArray geometries { RayTracingGeometry(blas.key->VertexBuffer, blas.key->IndexBuffer) };
-                Renderer::UpdateBLAS(blas.value, geometries);
-            }
-
-            Renderer::UpdateTLAS(TLAS, Instances);
-            
-            RTSceneData.NumLights = LightDatas.Num();
-            
-            Renderer::UploadBuffer(SceneDataBuffer, &RTSceneData, sizeof(RTSceneData));
-
-            //dispatching
-            Renderer::ResourceBarrier(RadianceRT, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
-            Renderer::SetPipeline(RTPipeline);
-            Renderer::PushConstants(&RootConstants, sizeof(RayTracingRootConstants));
-            Renderer::TraceRays(RTPipeline, Point3(RadianceRT->GetWidth(), RadianceRT->GetHeight(), 1));
-            Renderer::ResourceBarrier(RadianceRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
-        }
-
-        void OnResize(Vector2 size) override
-        {
-            
+                    //dispatching
+                    Renderer::ResourceBarrier(RadianceRT, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
+                    Renderer::SetPipeline(RTPipeline);
+                    Renderer::PushConstants(&RootConstants, sizeof(RayTracingRootConstants));
+                    Renderer::TraceRays(RTPipeline, Point3(RadianceRT->GetWidth(), RadianceRT->GetHeight(), 1));
+                    Renderer::ResourceBarrier(RadianceRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
+                }
+            });
+                    
+            IsInitialized = true;
         }
     };
 }

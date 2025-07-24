@@ -1,10 +1,27 @@
 #pragma once
-#include "Waldem/ECS/Component.h"
+
+#include "ComponentBase.h"
+#include "ColliderComponent.h"
 
 namespace Waldem
 {
-    struct WALDEM_API RigidBody : IComponent<RigidBody>
+    struct WALDEM_API RigidBody
     {
+        COMPONENT(RigidBody)
+            FIELD(bool, IsKinematic)
+            FIELD(bool, Gravity)
+            FIELD(Vector3, Velocity)
+            FIELD(Vector3, AngularVelocity)
+            FIELD(float, Mass)
+            FIELD(float, LinearDamping)
+            FIELD(float, AngularDamping)
+            FIELD(Vector3, Force)
+            FIELD(Vector3, Torque)
+            FIELD(float, Bounciness)
+            FIELD(float, Friction)
+            FIELD(float, MaxAngularSpeed)
+        END_COMPONENT()
+        
         bool IsKinematic = false;
         bool Gravity = true;
         Vector3 Velocity = Vector3(0);
@@ -51,44 +68,6 @@ namespace Waldem
         void Reset()
         {
             Force = Torque = Vector3(0);
-        }
-
-        void Serialize(WDataBuffer& outData) override
-        {
-            outData << IsKinematic;
-            outData << Gravity;
-            outData << Velocity;
-            outData << AngularVelocity;
-            outData << Mass;
-            outData << InvMass;
-            outData << LinearDamping;
-            outData << AngularDamping;
-            outData << InertiaTensor;
-            outData << InvInertiaTensor;
-            outData << Force;
-            outData << Torque;
-            outData << Bounciness;
-            outData << Friction;
-            outData << MaxAngularSpeed;
-        }
-        
-        void Deserialize(WDataBuffer& inData) override
-        {
-            inData >> IsKinematic;
-            inData >> Gravity;
-            inData >> Velocity;
-            inData >> AngularVelocity;
-            inData >> Mass;
-            inData >> InvMass;
-            inData >> LinearDamping;
-            inData >> AngularDamping;
-            inData >> InertiaTensor;
-            inData >> InvInertiaTensor;
-            inData >> Force;
-            inData >> Torque;
-            inData >> Bounciness;
-            inData >> Friction;
-            inData >> MaxAngularSpeed;
         }
     };
 }
