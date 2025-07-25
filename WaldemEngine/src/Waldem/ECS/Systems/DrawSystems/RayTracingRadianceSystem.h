@@ -7,6 +7,7 @@
 #include "Waldem/Renderer/GraphicResource.h"
 #include "Waldem/Renderer/Shader.h"
 #include "Waldem/ECS/Components/Camera.h"
+#include "Waldem/ECS/Components/InitializedComponent.h"
 #include "Waldem/ECS/Components/Light.h"
 #include "Waldem/Renderer/ResizableAccelerationStructure.h"
 #include "Waldem/Renderer/ResizableBuffer.h"
@@ -17,7 +18,7 @@ namespace Waldem
     {
         Matrix4 InvViewMatrix;
         Matrix4 InvProjectionMatrix;
-        int NumLights;
+        int NumLights = 0;
     };
 
     struct RayTracingRootConstants
@@ -79,10 +80,23 @@ namespace Waldem
             
             ECS::World.observer<Light, Transform>().event(flecs::OnSet).each([&](Light& light, Transform& transform)
             {
-                LightsBuffer.AddData(&light.Data, sizeof(LightData));
-                LightTransformsBuffer.AddData(&transform.Matrix, sizeof(Matrix4));
-                
-                RTSceneData.NumLights = LightsBuffer.Num();
+                if(light.LightId == -1)
+                {
+                    light.LightId = RTSceneData.NumLights;
+                    LightsBuffer.AddData(&light.Data, sizeof(LightData));
+                    LightTransformsBuffer.AddData(&transform.Matrix, sizeof(Matrix4));
+                    
+                    RTSceneData.NumLights = LightsBuffer.Num();
+                }
+            });
+            
+            ECS::World.observer<Light, Transform>().event(flecs::OnSet).each([&](Light& light, Transform& transform)
+            {
+                if(light.LightId >= 0)
+                {
+                    LightsBuffer.UpdateData(&light.Data, sizeof(LightData), sizeof(LightData) * light.LightId);
+                    LightTransformsBuffer.UpdateData(&transform.Matrix, sizeof(Matrix4), sizeof(Matrix4) * light.LightId);
+                }
             });
             
             ECS::World.observer<Camera>().event(flecs::OnSet).each([&](Camera& camera)
