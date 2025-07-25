@@ -58,5 +58,7 @@ namespace Waldem
         }
 
         LightData Data = {};
+
+        int LightId = -1; 
     };
 }
