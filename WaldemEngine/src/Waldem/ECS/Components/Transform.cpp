@@ -54,6 +54,8 @@ namespace Waldem
         auto yaw = glm::yaw(rotation);
         auto roll = glm::roll(rotation);
         Rotation += degrees(Vector3(pitch, yaw, roll));
+
+        ClampRotation();
         
         Update();
     }
@@ -71,6 +73,8 @@ namespace Waldem
         Vector3 pitchYawRoll = Vector3(pitch, yaw, roll);
 
         Rotation += degrees(pitchYawRoll);
+
+        ClampRotation();
 
         Update();
     }
@@ -100,7 +104,13 @@ namespace Waldem
     void Transform::SetRotation(Vector3 pitchYawRoll)
     {
         Rotation = pitchYawRoll;
-        RotationQuat = Quaternion(radians(Rotation));
+
+        ClampRotation();
+        
+        Quaternion verticalRotation = angleAxis(glm::radians(pitchYawRoll.x), Vector3(1, 0, 0));
+        Quaternion horizontalRotation = angleAxis(glm::radians(pitchYawRoll.y), Vector3(0, 1, 0));
+        Quaternion rollRotation = angleAxis(glm::radians(pitchYawRoll.z), Vector3(0, 0, 1));
+        RotationQuat = verticalRotation * horizontalRotation * rollRotation;
         
         Update();
     }
@@ -113,6 +123,8 @@ namespace Waldem
         auto yaw = glm::yaw(RotationQuat);
         auto roll = glm::roll(RotationQuat);
         Rotation = degrees(Vector3(pitch, yaw, roll));
+
+        ClampRotation();
 
         Update();
     }
@@ -171,5 +183,20 @@ namespace Waldem
         rotationMatrix[2] /= scale.z;
 
         SetRotation(quat_cast(rotationMatrix));
+    }
+    
+    void Transform::ClampRotation()
+    {
+        Rotation.x = fmod(Rotation.x + 180.0f, 360.0f);
+        if (Rotation.x < 0.0f) Rotation.x += 360.0f;
+        Rotation.x -= 180.0f;
+
+        Rotation.y = fmod(Rotation.y + 180.0f, 360.0f);
+        if (Rotation.y < 0.0f) Rotation.y += 360.0f;
+        Rotation.y -= 180.0f;
+
+        Rotation.z = fmod(Rotation.z + 180.0f, 360.0f);
+        if (Rotation.z < 0.0f) Rotation.z += 360.0f;
+        Rotation.z -= 180.0f;
     }
 }
