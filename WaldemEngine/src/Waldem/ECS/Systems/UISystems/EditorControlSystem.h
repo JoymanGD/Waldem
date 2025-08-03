@@ -32,6 +32,7 @@ namespace Waldem
         {
             InitializeCameraControl(inputManager);
             InitializeLightControl(inputManager);
+            InitializeCameras();
             
             UpdateCameraControl();
             UpdateLightControl();
@@ -97,6 +98,16 @@ namespace Waldem
                 IsRotatingLight = isPressed;
             });
         }
+        
+        void InitializeCameras()
+        {
+            ECS::World.query<Camera, Transform>("InitializeCamerasSystem").each([&](flecs::entity entity, Camera& camera, Transform& transform)
+            {
+                camera.SetViewMatrix(&transform);
+
+                entity.modified<Transform>();
+            });
+        }
 
         void UpdateLastMousePosition()
         {
@@ -109,7 +120,7 @@ namespace Waldem
         
         void UpdateLightControl()
         {
-            ECS::World.system<Light, Transform>("UpdateLightControlSystem").kind(flecs::OnUpdate).each([&](flecs::entity entity, Light& light, Transform& transform)
+            ECS::World.system<Light, Transform, EditorComponent>("UpdateLightControlSystem").kind(flecs::OnUpdate).each([&](flecs::entity entity, Light& light, Transform& transform, EditorComponent)
             {
                 if (IsRotatingLight)
                 {
@@ -147,7 +158,7 @@ namespace Waldem
         
         void UpdateCameraControl()
         {
-            ECS::World.system<Camera, Transform>("UpdateCameraControlSystem").kind(flecs::OnUpdate).each([&](flecs::entity entity, Camera& camera, Transform& transform)
+            ECS::World.system<Camera, Transform, EditorComponent>("UpdateCameraControlSystem").kind(flecs::OnUpdate).each([&](flecs::entity entity, Camera& camera, Transform& transform, EditorComponent)
             {
                 if (IsUnderControl)
                 {
@@ -160,11 +171,11 @@ namespace Waldem
                     {
                         transform.Move(normalize(DeltaPos) * Time::DeltaTime * camera.MovementSpeed * camera.SpeedModificator);
                     }
+                
+                    camera.SetViewMatrix(&transform);
                     
                     entity.modified<Camera>();
                 }
-                
-                camera.SetViewMatrix(&transform);
             });
 
             ECS::World.system<Camera, EditorComponent>("UpdateCameraSpeedControlSystem").kind(flecs::OnUpdate).each([&](flecs::entity entity, Camera& camera, EditorComponent)

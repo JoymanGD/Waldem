@@ -59,7 +59,7 @@ namespace Waldem
             
             auto cameraEntity = ECS::CreateEntity("EditorCamera", true, false);
             float aspectRatio = size.x / size.y;
-            cameraEntity.set<Transform>({Vector3(0, 0, 0)});
+            cameraEntity.set<Transform>({Vector3(0, 0, -10.f)});
             cameraEntity.set<Camera>({60.0f, aspectRatio, 0.001f, 1000.0f, 30.0f, 30.0f});
             cameraEntity.add<EditorComponent>();
             cameraEntity.add<AudioListener>();

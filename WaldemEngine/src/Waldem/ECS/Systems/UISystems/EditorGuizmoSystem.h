@@ -111,7 +111,6 @@ namespace Waldem
                             decompose(transformMatrix, transform.LocalScale, rotationQuat, transform.Position, skew, perspective);
 
                             transform.Rotate(rotationQuat);
-
                         }
                         
                         transform.Update();

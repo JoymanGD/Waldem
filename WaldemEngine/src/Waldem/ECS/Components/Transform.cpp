@@ -54,8 +54,6 @@ namespace Waldem
         auto yaw = glm::yaw(rotation);
         auto roll = glm::roll(rotation);
         Rotation += degrees(Vector3(pitch, yaw, roll));
-
-        ClampRotation();
         
         Update();
     }
@@ -73,8 +71,6 @@ namespace Waldem
         Vector3 pitchYawRoll = Vector3(pitch, yaw, roll);
 
         Rotation += degrees(pitchYawRoll);
-
-        ClampRotation();
 
         Update();
     }
@@ -104,8 +100,6 @@ namespace Waldem
     void Transform::SetRotation(Vector3 pitchYawRoll)
     {
         Rotation = pitchYawRoll;
-
-        ClampRotation();
         
         Quaternion verticalRotation = angleAxis(glm::radians(pitchYawRoll.x), Vector3(1, 0, 0));
         Quaternion horizontalRotation = angleAxis(glm::radians(pitchYawRoll.y), Vector3(0, 1, 0));
@@ -123,8 +117,6 @@ namespace Waldem
         auto yaw = glm::yaw(RotationQuat);
         auto roll = glm::roll(RotationQuat);
         Rotation = degrees(Vector3(pitch, yaw, roll));
-
-        ClampRotation();
 
         Update();
     }
@@ -165,6 +157,8 @@ namespace Waldem
     {
         //TODO: Optimize this
         Matrix = Matrix4(translate(Matrix4(1.0f), Position) * mat4_cast(RotationQuat) * scale(Matrix4(1.0f), LocalScale));
+
+        ClampRotation();
     }
 
     void Transform::DecompileMatrix()
