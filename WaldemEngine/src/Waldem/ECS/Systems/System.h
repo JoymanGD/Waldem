@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Waldem/ContentManagement/ContentManager.h"
+#include "Waldem/AssetsManagement/ContentManager.h"
 #include "Waldem/Resources/ResourceManager.h"
 #include "Waldem/SceneManagement/Scene.h"
 

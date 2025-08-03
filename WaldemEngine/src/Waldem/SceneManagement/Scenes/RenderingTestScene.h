@@ -1,13 +1,12 @@
 #pragma once
 
 #include "Waldem/Audio/Audio.h"
-#include "Waldem/ContentManagement/ModelImporter.h"
+#include "Waldem/AssetsManagement/ModelImporter.h"
 #include "Waldem/ECS/Components/AudioSource.h"
 #include "Waldem/SceneManagement/Scene.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/Input/InputManager.h"
 #include "Waldem/Resources/ResourceManager.h"
-#include "Waldem/ContentManagement/ModelImporter.h"
 #include "Waldem/ECS/ECS.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
 #include "Waldem/ECS/Components/Light.h"
@@ -31,7 +30,7 @@ namespace Waldem
 			{
 				auto sponza1Name = "Sponza1_" + std::to_string(index++);
 				auto entity = ECS::CreateEntity(sponza1Name.c_str());
-				entity.set<MeshComponent>(MeshComponent(mesh));
+				// entity.set<MeshComponent>(MeshComponent(mesh));
 				auto transform = Transform(mesh->ObjectMatrix);
 				entity.set<Transform>(transform);
 			}
@@ -42,7 +41,7 @@ namespace Waldem
 			{
 				auto sponza2Name = "Sponza2_" + std::to_string(index++);
 				auto entity = ECS::CreateEntity(sponza2Name.c_str());
-				entity.set<MeshComponent>(MeshComponent(mesh));
+				// entity.set<MeshComponent>(MeshComponent(mesh));
 				Transform transform = mesh->ObjectMatrix;
 				transform.Translate({50, 0, 0});
 				entity.set<Transform>(transform);

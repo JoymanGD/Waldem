@@ -5,7 +5,7 @@
 #include <fstream>
 #include <filesystem>
 #include "imgui.h"
-#include "Waldem/ContentManagement/ContentManager.h"
+#include "Waldem/AssetsManagement/ContentManager.h"
 #include "Waldem/ECS/Components/AudioListener.h"
 #include "Waldem/ECS/Systems/UISystems/EditorControlSystem.h"
 #include "Waldem/ECS/Systems/UISystems/EditorGuizmoSystem.h"

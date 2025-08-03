@@ -2,6 +2,7 @@
 
 #include "Waldem/ECS/Components/Selected.h"
 #include "Waldem/ECS/ECS.h"
+#include "Waldem/Extensions/ImGUIExtension.h"
 
 namespace Waldem
 {
@@ -195,7 +196,18 @@ namespace Waldem
 							case EcsOpU8: break;
 							case EcsOpU16: break;
 							case EcsOpU32: break;
-							case EcsOpU64: break;
+							case EcsOpU64:
+							{
+								if(strcmp(op->name, "Reference") == 0)
+								{
+									ImGui::TableSetColumnIndex(1);
+									auto valPtr = (uint8*)ptr + op->offset;
+									uint64 value = *(bool*)valPtr;
+									ImGui::InputInt("##hide", (int*)&value);
+								}
+									
+								break;
+							}
 							case EcsOpI8: break;
 							case EcsOpI16: break;
 							case EcsOpI32: break;
@@ -220,18 +232,44 @@ namespace Waldem
 								ImGui::PopID();
 								break;
 							}
-							case EcsOpUPtr: break;
+							case EcsOpUPtr:
+							{
+								break;
+							}
 							case EcsOpIPtr: break;
 							case EcsOpEntity:
 							{
 								ImGui::Text("TODO: Entity %s", op->name);
+								break;
 							}
 							case EcsOpId: break;
 							case EcsOpString:
 							{
+								if(strcmp(op->name, "Reference") == 0)
+								{
+									ImGui::TableSetColumnIndex(1);
+									if(ImGui::SocketSlot("##mesh_slot", false))
+									{
+										
+									}
+									// auto valPtr = (uint8*)ptr + op->offset;
+									// char* value = (char*)valPtr;
+									// ImGui::InputText("##hide", value, op->size);
+								}
 								break;
 							}
-							case EcsOpOpaque: break;
+							case EcsOpOpaque:
+							{
+								if(strcmp(op->name, "Reference") == 0)
+								{
+									ImGui::TableSetColumnIndex(1);
+									if(ImGui::SocketSlot("##mesh_slot", false))
+									{
+										
+									}
+								}
+								break;
+							}
 							default:
 							{
 								break;

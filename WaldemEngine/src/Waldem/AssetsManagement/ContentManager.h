@@ -13,6 +13,10 @@ namespace Waldem
     public:
         bool ImportAsset(const Path& path);
         bool ImportAssetTo(const Path& inPath, Path& outPath);
+        template <class T>
+        Asset* LoadAsset(const Path& inPath);
+        template<typename T>
+        bool LoadAsset(const Path& inPath, T& outAsset);
 
         bool Broadcast(Event& event);
         void SubscribeToFileDroppedEvent(FileDroppedEventHandler handler);

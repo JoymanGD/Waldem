@@ -47,7 +47,7 @@ namespace Waldem
             ECS::World.observer<Transform, MeshComponent, ColliderComponent>().event(flecs::OnSet).each([&](Transform& transform, MeshComponent& meshComponent, ColliderComponent& collider)
             {
                 Vector4 color = collider.IsColliding ? Vector4(1.0f, 0.0f, 0.0f, 1.0f) : Vector4(0.0f, 1.0f, 0.0f, 1.0f);
-                Lines.AddRange(meshComponent.Mesh->BBox.GetTransformed(transform).GetLines(color));
+                Lines.AddRange(((CMesh*)meshComponent.Mesh.Asset)->BBox.GetTransformed(transform).GetLines(color));
             });
 
             ECS::World.system("LineRenderingSystem").kind(flecs::OnDraw).run([&](flecs::iter& it)

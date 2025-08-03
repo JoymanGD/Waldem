@@ -1,4 +1,5 @@
 #pragma once
+#include "Waldem/Editor/AssetReference.h"
 #include "Waldem/Renderer/Model/Mesh.h"
 #include "Waldem/Resources/ResourceManager.h"
 
@@ -6,10 +7,14 @@ namespace Waldem
 {
     struct WALDEM_API MeshComponent
     {
-        CMesh* Mesh = nullptr;
+        COMPONENT(MeshComponent)
+            FIELD(AssetReference, Mesh)
+        END_COMPONENT()
+
+        AssetReference Mesh;
+        // CMesh* Mesh = nullptr;
         uint DrawId = 0;
 
-        MeshComponent() = default;
-        MeshComponent(CMesh* mesh) : Mesh(mesh) {}
+        // MeshComponent(CMesh* mesh) : Mesh(mesh) {}
     };
 }

@@ -38,8 +38,6 @@ namespace Waldem
         float Friction = 0.f;
         float MaxAngularSpeed = 10.f;
 
-        RigidBody() = default;
-        
         RigidBody(bool isKinematic, bool gravity, float mass, ColliderComponent* collider) : IsKinematic(isKinematic), Gravity(gravity), Mass(mass)
         {
             UpdateRigidBody(collider);

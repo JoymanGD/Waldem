@@ -70,6 +70,90 @@ namespace Waldem
         return false;
     }
 
+    template<typename T>
+    Asset* CContentManager::LoadAsset(const Path& inPath)
+    {
+        Asset* asset = nullptr;
+
+        if(exists(inPath))
+        {
+            std::ifstream inFile(inPath.c_str(), std::ios::binary | std::ios::ate);
+            if (inFile.is_open())
+            {
+                std::streamsize size = inFile.tellg();
+                inFile.seekg(0, std::ios::beg); 
+
+                unsigned char* buffer = new unsigned char[size];
+                if (inFile.read((char*)buffer, size))
+                {
+                    WDataBuffer inData = WDataBuffer(buffer, size);
+                    
+                    asset = new T();
+                    inData >> asset->Type;
+                    inData >> asset->Hash;
+                    asset->Deserialize(inData);
+                }
+                else
+                {
+                    WD_CORE_ERROR("Failed to read stream: {0}", inPath.string());
+                }
+                
+                delete[] buffer;
+                inFile.close();
+            }
+            else
+            {
+                WD_CORE_ERROR("Failed to open stream: {0}", inPath.string());
+            }
+        }
+        else
+        {
+            WD_CORE_ERROR("Failed to load asset: {0}", inPath.string());
+        }
+
+        return (T*)asset;
+    }
+
+    template<typename T>
+    bool CContentManager::LoadAsset(const Path& inPath, T& outAsset)
+    {
+        if(exists(inPath))
+        {
+            std::ifstream inFile(inPath.c_str(), std::ios::binary | std::ios::ate);
+            if (inFile.is_open())
+            {
+                std::streamsize size = inFile.tellg();
+                inFile.seekg(0, std::ios::beg); 
+
+                unsigned char* buffer = new unsigned char[size];
+                if (inFile.read((char*)buffer, size))
+                {
+                    WDataBuffer inData = WDataBuffer(buffer, size);
+                    
+                    inData >> outAsset.Type;
+                    inData >> outAsset.Hash;
+                    outAsset.Deserialize(inData);
+                
+                    delete[] buffer;
+                    inFile.close();
+
+                    return true;
+                }
+                
+                delete[] buffer;
+                inFile.close();
+                
+                return false;
+            }
+        }
+        else
+        {
+            WD_CORE_ERROR("Failed to load asset: {0}", inPath.string());
+        }
+
+        return false;
+    }
+
     bool CContentManager::Broadcast(Event& event)
     {
         bool handled = false;

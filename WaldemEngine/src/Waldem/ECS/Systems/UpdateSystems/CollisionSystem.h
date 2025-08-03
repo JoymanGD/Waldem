@@ -523,10 +523,10 @@ namespace Waldem
             {
                 if (collider.Type == WD_COLLIDER_TYPE_MESH)
                 {
-                    UpdateMeshVertices(*meshComponent.Mesh, collider, transform);
+                    UpdateMeshVertices(*(CMesh*)meshComponent.Mesh.Asset, collider, transform);
                 }
 
-                AABB transformedBox = meshComponent.Mesh->BBox.GetTransformed(transform);
+                AABB transformedBox = ((CMesh*)meshComponent.Mesh.Asset)->BBox.GetTransformed(transform);
                 collider.IsColliding = false;
 
                 FrameData.BoundingBoxes.Add(transformedBox);

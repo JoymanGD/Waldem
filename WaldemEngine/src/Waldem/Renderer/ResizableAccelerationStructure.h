@@ -23,9 +23,9 @@ namespace Waldem
         {
             if(meshComponent.DrawId < Num())
             {
-                WArray geometries { RayTracingGeometry(meshComponent.Mesh->VertexBuffer, meshComponent.Mesh->IndexBuffer) };
+                WArray geometries { RayTracingGeometry(((CMesh*)meshComponent.Mesh.Asset)->VertexBuffer, ((CMesh*)meshComponent.Mesh.Asset)->IndexBuffer) };
 
-                AccelerationStructure* blas = Renderer::CreateBLAS(meshComponent.Mesh->Name, geometries);
+                AccelerationStructure* blas = Renderer::CreateBLAS(((CMesh*)meshComponent.Mesh.Asset)->Name, geometries);
 
                 auto previousBlas = BLAS[meshComponent.DrawId];
                 BLAS[meshComponent.DrawId] = blas;
@@ -46,9 +46,9 @@ namespace Waldem
             }
             else
             {
-                WArray geometries { RayTracingGeometry(meshComponent.Mesh->VertexBuffer, meshComponent.Mesh->IndexBuffer) };
+                WArray geometries { RayTracingGeometry(((CMesh*)meshComponent.Mesh.Asset)->VertexBuffer, ((CMesh*)meshComponent.Mesh.Asset)->IndexBuffer) };
 
-                AccelerationStructure* blas = Renderer::CreateBLAS(meshComponent.Mesh->Name, geometries);
+                AccelerationStructure* blas = Renderer::CreateBLAS(((CMesh*)meshComponent.Mesh.Asset)->Name, geometries);
                 
                 BLAS.Add(blas);
                 RayTracingInstance instance;
@@ -86,7 +86,7 @@ namespace Waldem
 
         void UpdateGeometry(int meshId, MeshComponent& meshComponent)
         {
-            WArray geometries { RayTracingGeometry(meshComponent.Mesh->VertexBuffer, meshComponent.Mesh->IndexBuffer) };
+            WArray geometries { RayTracingGeometry(((CMesh*)meshComponent.Mesh.Asset)->VertexBuffer, ((CMesh*)meshComponent.Mesh.Asset)->IndexBuffer) };
             
             Renderer::UpdateBLAS(BLAS[meshId], geometries);
             Renderer::UpdateTLAS(TLAS, InstanceBuffer->GetBuffer(), Num());
