@@ -82,7 +82,7 @@ namespace Waldem
                     float deltaX = (MousePos.x - LastMousePos.x) * Time::DeltaTime;
                     float deltaY = (MousePos.y - LastMousePos.y) * Time::DeltaTime;
 
-                    transform.Rotate(deltaX * camera.RotationSpeed, deltaY * camera.RotationSpeed, 0);
+                    transform.Rotate(deltaY * camera.RotationSpeed, deltaX * camera.RotationSpeed, 0);
 
                     if (DeltaPos != Vector3(0, 0, 0))
                     {

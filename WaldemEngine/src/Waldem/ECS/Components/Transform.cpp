@@ -16,9 +16,8 @@ namespace Waldem
     Transform::Transform(Vector3 position, Quaternion rotation, Vector3 localScale)
     {
         Position = position;
-        RotationQuat = rotation;
         LocalScale = localScale;
-        Rotation = GetEuler();
+        SetRotation(rotation);
 
         Update();
     }
@@ -50,12 +49,16 @@ namespace Waldem
     void Transform::Rotate(Quaternion rotation)
     {
         RotationQuat = rotation * RotationQuat;
-        Rotation = GetEuler();
+        
+        auto pitch = glm::pitch(rotation);
+        auto yaw = glm::yaw(rotation);
+        auto roll = glm::roll(rotation);
+        Rotation += degrees(Vector3(pitch, yaw, roll));
         
         Update();
     }
 
-    void Transform::Rotate(float yaw, float pitch, float roll)
+    void Transform::Rotate(float pitch, float yaw, float roll)
     {
         Quaternion verticalRotation = angleAxis(glm::radians(pitch), Vector3(1, 0, 0));
         Quaternion horizontalRotation = angleAxis(glm::radians(yaw), Vector3(0, 1, 0));
@@ -64,8 +67,10 @@ namespace Waldem
         RotationQuat = RotationQuat * verticalRotation;
         RotationQuat = horizontalRotation * RotationQuat;
         RotationQuat = rollRotation * RotationQuat;
+        
+        Vector3 pitchYawRoll = Vector3(pitch, yaw, roll);
 
-        Rotation = GetEuler();
+        Rotation += degrees(pitchYawRoll);
 
         Update();
     }
@@ -87,21 +92,14 @@ namespace Waldem
         Translate(forward * delta.z + right * delta.x + up * delta.y);
     }
 
-    Vector3 Transform::GetEuler()
+    void Transform::SetRotation(float pitch, float yaw, float roll)
     {
-        return degrees(eulerAngles(RotationQuat));
+        SetRotation(Vector3(pitch, yaw, roll));
     }
 
-    void Transform::SetRotation(float eulerX, float eulerY, float eulerZ)
+    void Transform::SetRotation(Vector3 pitchYawRoll)
     {
-        Rotation = { eulerX, eulerY, eulerZ };
-
-        SetRotation(Rotation);
-    }
-
-    void Transform::SetRotation(Vector3 euler)
-    {
-        Rotation = euler;
+        Rotation = pitchYawRoll;
         RotationQuat = Quaternion(radians(Rotation));
         
         Update();
@@ -110,7 +108,11 @@ namespace Waldem
     void Transform::SetRotation(Quaternion newRotation)
     {
         RotationQuat = newRotation;
-        Rotation = GetEuler();
+        
+        auto pitch = glm::pitch(RotationQuat);
+        auto yaw = glm::yaw(RotationQuat);
+        auto roll = glm::roll(RotationQuat);
+        Rotation = degrees(Vector3(pitch, yaw, roll));
 
         Update();
     }
@@ -144,8 +146,7 @@ namespace Waldem
         rotationMatrix[1] /= scale.y;
         rotationMatrix[2] /= scale.z;
         Quaternion rotation = quat_cast(rotationMatrix);
-        RotationQuat = rotation;
-        Rotation = GetEuler();
+        SetRotation(rotation);
     }
 
     void Transform::Update()
@@ -168,7 +169,7 @@ namespace Waldem
         rotationMatrix[0] /= scale.x;
         rotationMatrix[1] /= scale.y;
         rotationMatrix[2] /= scale.z;
-        RotationQuat = quat_cast(rotationMatrix);
-        Rotation = GetEuler();
+
+        SetRotation(quat_cast(rotationMatrix));
     }
 }

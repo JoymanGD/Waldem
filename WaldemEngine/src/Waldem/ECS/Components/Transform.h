@@ -38,9 +38,8 @@ namespace Waldem
         void Rotate(float yaw, float pitch, float roll);
         void LookAt(Vector3 target);
         void Move(Vector3 delta);
-        Vector3 GetEuler();
-        void SetRotation(Vector3 euler);
-        void SetRotation(float eulerX, float eulerY, float eulerZ);
+        void SetRotation(Vector3 pitchYawRoll);
+        void SetRotation(float pitch, float yaw, float roll);
         void SetRotation(Quaternion newRotation);
         void SetScale(float x, float y, float z);
         void SetScale(Vector3 scale);
