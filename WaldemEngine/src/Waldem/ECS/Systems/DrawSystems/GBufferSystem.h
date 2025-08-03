@@ -133,7 +133,17 @@ namespace Waldem
                 WorldTransformsBuffer.UpdateData(&transform.Matrix, sizeof(Matrix4), meshComponent.DrawId);
             });
 
-            ECS::World.observer<Camera, Transform>().event(flecs::OnSet).each([&](Camera& camera, Transform& transform)
+            ECS::World.query<Camera, Transform, EditorComponent>("SceneDataInitializationSystem").each([&](Camera& camera, Transform& transform, EditorComponent)
+            {
+                SceneData.ViewMatrix = camera.ViewMatrix;
+                SceneData.ProjectionMatrix = camera.ProjectionMatrix;
+                SceneData.WorldMatrix = transform.Matrix;
+                SceneData.InverseProjectionMatrix = glm::inverse(camera.ProjectionMatrix);
+                
+                CameraIsDirty = true;
+            });
+
+            ECS::World.observer<Camera, Transform>("SceneDataUpdateSystem").event(flecs::OnSet).each([&](Camera& camera, Transform& transform)
             {
                 SceneData.ViewMatrix = camera.ViewMatrix;
                 SceneData.ProjectionMatrix = camera.ProjectionMatrix;
