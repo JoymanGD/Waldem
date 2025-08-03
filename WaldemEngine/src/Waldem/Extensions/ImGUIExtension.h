@@ -46,4 +46,39 @@ namespace ImGui
         PopID();
         return ret;
     }
+
+    inline bool SocketSlot(const char* id, bool filled = false, ImU32 color = IM_COL32(200, 200, 200, 255))
+    {
+        ImVec2 cursorPos = ImGui::GetCursorScreenPos();
+        ImVec2 slotCenter = ImVec2(cursorPos.x + 6, cursorPos.y + 6);
+        float radius = 6.0f;
+
+        ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+        // Optional: hover highlight
+        bool hovered = ImGui::IsItemHovered();
+
+        drawList->AddCircleFilled(slotCenter, radius, IM_COL32(40, 40, 40, 255));
+        if (filled) {
+            drawList->AddCircleFilled(slotCenter, radius * 0.6f, color);
+        } else {
+            drawList->AddCircle(slotCenter, radius, color, 16, 2.0f);
+        }
+
+        // Create an invisible button to handle interaction
+        ImGui::SetCursorScreenPos(ImVec2(cursorPos.x, cursorPos.y));
+        ImGui::InvisibleButton(id, ImVec2(radius * 2, radius * 2));
+
+        // Drag-drop support
+        bool changed = false;
+        if (ImGui::BeginDragDropTarget()) {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SOCKET_PAYLOAD")) {
+                // process payload
+                changed = true;
+            }
+            ImGui::EndDragDropTarget();
+        }
+
+        return changed;
+    }
 }

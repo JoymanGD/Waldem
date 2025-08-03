@@ -92,7 +92,7 @@ namespace Waldem
                 IndirectCommand command;
                 command.DrawId = WorldTransformsBuffer.Num();
                 command.DrawIndexed = {
-                    (uint)meshComponent.Mesh->IndexData.Num(),
+                    (uint)((CMesh*)meshComponent.Mesh.Asset)->IndexData.Num(),
                     1,
                     IndexBuffer.Num(),
                     (int)VertexBuffer.Num(),
@@ -103,26 +103,26 @@ namespace Waldem
 
                 Editor::AddEntityID(command.DrawId, entity.id());
                 
-                VertexBuffer.AddData(meshComponent.Mesh->VertexData.GetData(), meshComponent.Mesh->VertexData.GetSize());
-                IndexBuffer.AddData(meshComponent.Mesh->IndexData.GetData(), meshComponent.Mesh->IndexData.GetSize());
+                VertexBuffer.AddData(((CMesh*)meshComponent.Mesh.Asset)->VertexData.GetData(), ((CMesh*)meshComponent.Mesh.Asset)->VertexData.GetSize());
+                IndexBuffer.AddData(((CMesh*)meshComponent.Mesh.Asset)->IndexData.GetData(), ((CMesh*)meshComponent.Mesh.Asset)->IndexData.GetSize());
                 WorldTransformsBuffer.AddData(&transform.Matrix, sizeof(Matrix4));
 
                 IndirectBuffer.AddData(&command, sizeof(IndirectCommand));
                 
                 auto materialAttribute = MaterialShaderAttribute();
 
-                materialAttribute.Albedo = meshComponent.Mesh->CurrentMaterial->Albedo;
-                materialAttribute.Metallic = meshComponent.Mesh->CurrentMaterial->Metallic;
-                materialAttribute.Roughness = meshComponent.Mesh->CurrentMaterial->Roughness;
+                materialAttribute.Albedo = ((CMesh*)meshComponent.Mesh.Asset)->CurrentMaterial->Albedo;
+                materialAttribute.Metallic = ((CMesh*)meshComponent.Mesh.Asset)->CurrentMaterial->Metallic;
+                materialAttribute.Roughness = ((CMesh*)meshComponent.Mesh.Asset)->CurrentMaterial->Roughness;
                 
-                if(meshComponent.Mesh->CurrentMaterial->HasDiffuseTexture())
+                if(((CMesh*)meshComponent.Mesh.Asset)->CurrentMaterial->HasDiffuseTexture())
                 {
-                    materialAttribute.DiffuseTextureID = meshComponent.Mesh->CurrentMaterial->GetDiffuseTexture()->GetIndex(SRV_UAV_CBV);
+                    materialAttribute.DiffuseTextureID = ((CMesh*)meshComponent.Mesh.Asset)->CurrentMaterial->GetDiffuseTexture()->GetIndex(SRV_UAV_CBV);
                     
-                    if(meshComponent.Mesh->CurrentMaterial->HasNormalTexture())
-                        materialAttribute.NormalTextureID = meshComponent.Mesh->CurrentMaterial->GetNormalTexture()->GetIndex(SRV_UAV_CBV);
-                    if(meshComponent.Mesh->CurrentMaterial->HasORMTexture())
-                        materialAttribute.ORMTextureID = meshComponent.Mesh->CurrentMaterial->GetORMTexture()->GetIndex(SRV_UAV_CBV);
+                    if(((CMesh*)meshComponent.Mesh.Asset)->CurrentMaterial->HasNormalTexture())
+                        materialAttribute.NormalTextureID = ((CMesh*)meshComponent.Mesh.Asset)->CurrentMaterial->GetNormalTexture()->GetIndex(SRV_UAV_CBV);
+                    if(((CMesh*)meshComponent.Mesh.Asset)->CurrentMaterial->HasORMTexture())
+                        materialAttribute.ORMTextureID = ((CMesh*)meshComponent.Mesh.Asset)->CurrentMaterial->GetORMTexture()->GetIndex(SRV_UAV_CBV);
                 }
 
                 MaterialAttributesBuffer.AddData(&materialAttribute, sizeof(MaterialShaderAttribute));

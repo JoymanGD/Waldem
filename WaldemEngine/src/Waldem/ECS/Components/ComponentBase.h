@@ -6,6 +6,7 @@
 namespace Waldem
 {
     #define COMPONENT(TYPE) \
+        TYPE() = default; \
         static void RegisterComponent(flecs::world& world) { \
         auto component = world.component<TYPE>() \
         

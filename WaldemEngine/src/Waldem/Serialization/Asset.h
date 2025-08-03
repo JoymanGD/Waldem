@@ -21,7 +21,7 @@ namespace Waldem
     public:
         Asset(AssetType type = AssetType::Unknown) : Type(type) {}
         
-        AssetType Type = AssetType::Unknown;
         uint64 Hash = 0;
+        AssetType Type = AssetType::Unknown;
     };
 }

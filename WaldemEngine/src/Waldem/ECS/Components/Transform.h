@@ -20,7 +20,6 @@ namespace Waldem
         Matrix4 Matrix = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
         Quaternion RotationQuat = { 1, 0, 0, 0 };
 
-        Transform() = default;
         Transform(Vector3 position);
         Transform(Vector3 position, Quaternion rotation, Vector3 localScale);
         Transform(Matrix4 matrix);

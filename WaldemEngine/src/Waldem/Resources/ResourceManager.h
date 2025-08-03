@@ -1,5 +1,5 @@
 #pragma once
-#include "Waldem/ContentManagement/ImageImporter.h"
+#include "Waldem/AssetsManagement/ImageImporter.h"
 #include "Waldem/Renderer/Buffer.h"
 #include "Waldem/Renderer/RenderTarget.h"
 #include "Waldem/Serialization/Asset.h"
