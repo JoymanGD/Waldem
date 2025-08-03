@@ -3,11 +3,11 @@
 #include "backends/imgui_impl_dx12.h"
 #include "backends/imgui_impl_sdl2.h"
 #include "Waldem/ECS/Systems/System.h"
-#include "Widgets/HierarchyWidget.h"
-#include "Widgets/MainWidgetContainer.h"
-#include "Waldem/ECS/Systems/UISystems/Widgets/EntityDetailsWidgetContainer.h"
-#include "Widgets/ContentBrowserWidget.h"
-#include "Widgets/MainViewportWidget.h"
+#include "Editor/Widgets/HierarchyWidget.h"
+#include "Editor/Widgets/MainWidgetContainer.h"
+#include "Editor/Widgets/EntityDetailsWidgetContainer.h"
+#include "Editor/Widgets/ContentBrowserWidget.h"
+#include "Editor/Widgets/MainViewportWidget.h"
 
 namespace Waldem
 {

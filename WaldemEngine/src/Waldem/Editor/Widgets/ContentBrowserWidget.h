@@ -3,7 +3,7 @@
 
 namespace Waldem
 {
-    class WALDEM_API ContentBrowserWidget : public IWidgetSystem
+    class WALDEM_API ContentBrowserWidget : public IWidget
     {
     private:
         ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;

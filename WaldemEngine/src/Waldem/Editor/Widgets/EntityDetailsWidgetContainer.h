@@ -5,7 +5,7 @@
 
 namespace Waldem
 {
-    class WALDEM_API EntityDetailsWidgetContainer : public IWidgetSystem
+    class WALDEM_API EntityDetailsWidgetContainer : public IWidget
     {
     private:
         ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;

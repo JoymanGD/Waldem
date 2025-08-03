@@ -1,5 +1,5 @@
 #pragma once
-#include "WidgetContainerSystem.h"
+#include "WidgetContainer.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/Editor/Editor.h"
 #include "Waldem/Renderer/Renderer.h"
@@ -7,7 +7,7 @@
 
 namespace Waldem
 {
-    class WALDEM_API MainViewportWidget : public IWidgetSystem
+    class WALDEM_API MainViewportWidget : public IWidget
     {
     private:
         ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;

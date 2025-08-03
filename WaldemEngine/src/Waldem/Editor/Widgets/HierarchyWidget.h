@@ -1,6 +1,6 @@
 #pragma once
 #include "Waldem/ECS/Components/SceneEntity.h"
-#include "Waldem/ECS/Systems/UISystems/Widgets/WidgetSystem.h"
+#include "Widget.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/Extensions/ImGUIExtension.h"
 
@@ -16,7 +16,7 @@ namespace Waldem
         bool VisibleInHierarchy;
     };
     
-    class WALDEM_API HierarchyWidget : public IWidgetSystem
+    class WALDEM_API HierarchyWidget : public IWidget
     {
         std::string RenameString = "";
         bool DeleteSelectedEntity = false;
