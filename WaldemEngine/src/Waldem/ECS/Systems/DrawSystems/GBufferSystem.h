@@ -87,7 +87,7 @@ namespace Waldem
                                                             WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
                                                             DEFAULT_INPUT_LAYOUT_DESC);
             
-            ECS::World.observer<MeshComponent, Transform>().event(flecs::OnSet).each([&](MeshComponent& meshComponent, Transform& transform)
+            ECS::World.observer<MeshComponent, Transform>().event(flecs::OnSet).each([&](flecs::entity entity, MeshComponent& meshComponent, Transform& transform)
             {
                 IndirectCommand command;
                 command.DrawId = WorldTransformsBuffer.Num();
@@ -98,6 +98,10 @@ namespace Waldem
                     (int)VertexBuffer.Num(),
                     0
                 };
+
+                meshComponent.DrawId = command.DrawId;
+
+                Editor::AddEntityID(command.DrawId, entity.id());
                 
                 VertexBuffer.AddData(meshComponent.Mesh->VertexData.GetData(), meshComponent.Mesh->VertexData.GetSize());
                 IndexBuffer.AddData(meshComponent.Mesh->IndexData.GetData(), meshComponent.Mesh->IndexData.GetSize());
@@ -123,6 +127,11 @@ namespace Waldem
 
                 MaterialAttributesBuffer.AddData(&materialAttribute, sizeof(MaterialShaderAttribute));
             });
+            
+            ECS::World.observer<Transform, MeshComponent>().event(flecs::OnSet).each([&](flecs::entity entity, Transform& transform, MeshComponent& meshComponent)
+            {
+                WorldTransformsBuffer.UpdateData(&transform.Matrix, sizeof(Matrix4), meshComponent.DrawId);
+            });
 
             ECS::World.observer<Camera, Transform>().event(flecs::OnSet).each([&](Camera& camera, Transform& transform)
             {
@@ -136,50 +145,50 @@ namespace Waldem
             
             ECS::World.system("GBufferSystem").kind(flecs::OnDraw).run([&](flecs::iter& it)
             {
-                if(IsInitialized)
+                if(IndirectBuffer.Num() == 0)
                 {
-                    if(CameraIsDirty)
-                    {
-                        Renderer::UploadBuffer(SceneDataBuffer, &SceneData, sizeof(GBufferSceneData));
-                        CameraIsDirty = false;
-                    }
-
-                    RootConstants.WorldTransforms = WorldTransformsBuffer.GetIndex(SRV_UAV_CBV);
-                    RootConstants.MaterialAttributes = MaterialAttributesBuffer.GetIndex(SRV_UAV_CBV);
-                    RootConstants.SceneDataBuffer = SceneDataBuffer->GetIndex(SRV_UAV_CBV);
-
-                    Renderer::ResourceBarrier(WorldPositionRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
-                    Renderer::ResourceBarrier(NormalRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
-                    Renderer::ResourceBarrier(ColorRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
-                    Renderer::ResourceBarrier(ORMRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
-                    Renderer::ResourceBarrier(MeshIDRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
-                    Renderer::ResourceBarrier(DepthRT, ALL_SHADER_RESOURCE, DEPTH_WRITE);
-                    
-                    Renderer::ClearRenderTarget(WorldPositionRT);
-                    Renderer::ClearRenderTarget(NormalRT);
-                    Renderer::ClearRenderTarget(ColorRT);
-                    Renderer::ClearRenderTarget(ORMRT);
-                    Renderer::ClearRenderTarget(MeshIDRT);
-                    Renderer::ClearDepthStencil(DepthRT);
-
-                    Renderer::SetPipeline(GBufferPipeline);
-                    Renderer::PushConstants(&RootConstants, sizeof(GBufferRootConstants));
-                    Renderer::BindRenderTargets({ WorldPositionRT, NormalRT, ColorRT, ORMRT, MeshIDRT });
-                    Renderer::BindDepthStencil(DepthRT);
-                    Renderer::SetVertexBuffers(VertexBuffer, 1);
-                    Renderer::SetIndexBuffer(IndexBuffer);
-                    Renderer::DrawIndirect(IndirectBuffer.Num(), IndirectBuffer);
-                    
-                    Renderer::ResourceBarrier(WorldPositionRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
-                    Renderer::ResourceBarrier(NormalRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
-                    Renderer::ResourceBarrier(ColorRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
-                    Renderer::ResourceBarrier(ORMRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
-                    Renderer::ResourceBarrier(MeshIDRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
-                    Renderer::ResourceBarrier(DepthRT, DEPTH_WRITE, ALL_SHADER_RESOURCE);
+                    return;
                 }
-            });
+                
+                if(CameraIsDirty)
+                {
+                    Renderer::UploadBuffer(SceneDataBuffer, &SceneData, sizeof(GBufferSceneData));
+                    CameraIsDirty = false;
+                }
 
-            IsInitialized = true;
+                RootConstants.WorldTransforms = WorldTransformsBuffer.GetIndex(SRV_UAV_CBV);
+                RootConstants.MaterialAttributes = MaterialAttributesBuffer.GetIndex(SRV_UAV_CBV);
+                RootConstants.SceneDataBuffer = SceneDataBuffer->GetIndex(SRV_UAV_CBV);
+
+                Renderer::ResourceBarrier(WorldPositionRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
+                Renderer::ResourceBarrier(NormalRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
+                Renderer::ResourceBarrier(ColorRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
+                Renderer::ResourceBarrier(ORMRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
+                Renderer::ResourceBarrier(MeshIDRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
+                Renderer::ResourceBarrier(DepthRT, ALL_SHADER_RESOURCE, DEPTH_WRITE);
+                
+                Renderer::ClearRenderTarget(WorldPositionRT);
+                Renderer::ClearRenderTarget(NormalRT);
+                Renderer::ClearRenderTarget(ColorRT);
+                Renderer::ClearRenderTarget(ORMRT);
+                Renderer::ClearRenderTarget(MeshIDRT);
+                Renderer::ClearDepthStencil(DepthRT);
+
+                Renderer::SetPipeline(GBufferPipeline);
+                Renderer::PushConstants(&RootConstants, sizeof(GBufferRootConstants));
+                Renderer::BindRenderTargets({ WorldPositionRT, NormalRT, ColorRT, ORMRT, MeshIDRT });
+                Renderer::BindDepthStencil(DepthRT);
+                Renderer::SetVertexBuffers(VertexBuffer, 1);
+                Renderer::SetIndexBuffer(IndexBuffer);
+                Renderer::DrawIndirect(IndirectBuffer.Num(), IndirectBuffer);
+                
+                Renderer::ResourceBarrier(WorldPositionRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
+                Renderer::ResourceBarrier(NormalRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
+                Renderer::ResourceBarrier(ColorRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
+                Renderer::ResourceBarrier(ORMRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
+                Renderer::ResourceBarrier(MeshIDRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
+                Renderer::ResourceBarrier(DepthRT, DEPTH_WRITE, ALL_SHADER_RESOURCE);
+            });
         }
 
         void Update(float deltaTime) override

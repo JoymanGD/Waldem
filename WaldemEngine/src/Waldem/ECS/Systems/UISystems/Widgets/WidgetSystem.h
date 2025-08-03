@@ -9,6 +9,6 @@ namespace Waldem
     public:
         IWidgetSystem() {}
         virtual WString GetName() = 0;
-        virtual void OnDraw(float deltaTime) = 0;
+        virtual void OnDraw(float deltaTime) {}
     };
 }

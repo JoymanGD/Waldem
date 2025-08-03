@@ -36,18 +36,6 @@ namespace Waldem
             UpdateCameraControl();
             UpdateLightControl();
             UpdateLastMousePosition();
-
-            ECS::World.system<Camera, EditorComponent>("CameraSpeedControlSystem").kind(flecs::OnUpdate).each([&](flecs::entity entity, Camera& camera, EditorComponent)
-            {
-                if(DeltaScroll != 0.f)
-                {
-                    camera.SpeedModificator += DeltaScroll * camera.SpeedParams.ModificationStep;
-                    camera.SpeedModificator = std::clamp(camera.SpeedModificator, camera.SpeedParams.MinSpeedModificator, camera.SpeedParams.MaxSpeedModificator);
-                    entity.modified<Camera>();
-                    
-                    DeltaScroll = 0;
-                }
-            });
         }        
 
         void InitializeCameraControl(InputManager* inputManager)
@@ -177,6 +165,18 @@ namespace Waldem
                 }
                 
                 camera.SetViewMatrix(&transform);
+            });
+
+            ECS::World.system<Camera, EditorComponent>("UpdateCameraSpeedControlSystem").kind(flecs::OnUpdate).each([&](flecs::entity entity, Camera& camera, EditorComponent)
+            {
+                if(DeltaScroll != 0.f)
+                {
+                    camera.SpeedModificator += DeltaScroll * camera.SpeedParams.ModificationStep;
+                    camera.SpeedModificator = std::clamp(camera.SpeedModificator, camera.SpeedParams.MinSpeedModificator, camera.SpeedParams.MaxSpeedModificator);
+                    entity.modified<Camera>();
+                    
+                    DeltaScroll = 0;
+                }
             });
         }
     };
