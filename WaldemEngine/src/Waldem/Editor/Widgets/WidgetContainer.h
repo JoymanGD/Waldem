@@ -1,19 +1,19 @@
 #pragma once
-#include "WidgetSystem.h"
+#include "Widget.h"
 #include "Waldem/ECS/Systems/System.h"
 
 namespace Waldem
 {
-    class WALDEM_API IWidgetContainerSystem : public IWidgetSystem
+    class WALDEM_API IWidgetContainer : public IWidget
     {
     protected:
-        WArray<IWidgetSystem*> Children;
+        WArray<IWidget*> Children;
     public:
-        IWidgetContainerSystem() {}
-        IWidgetContainerSystem(WArray<IWidgetSystem*> children) : Children(children) {}
+        IWidgetContainer() {}
+        IWidgetContainer(WArray<IWidget*> children) : Children(children) {}
 
-        void AddChild(IWidgetSystem* child) { Children.Add(child); }
-        void RemoveChild(IWidgetSystem* child) { Children.Remove(child); }
+        void AddChild(IWidget* child) { Children.Add(child); }
+        void RemoveChild(IWidget* child) { Children.Remove(child); }
         
         void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
         {
