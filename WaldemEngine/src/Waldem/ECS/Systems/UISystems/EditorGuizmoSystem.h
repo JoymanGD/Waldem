@@ -3,6 +3,8 @@
 #include "ImGuizmo.h"
 #include "imgui_internal.h"
 #include "glm/gtc/type_ptr.hpp"
+#include "glm/gtx/euler_angles.hpp"
+#include "glm/gtx/matrix_decompose.hpp"
 #include "Waldem/Input/KeyCodes.h"
 #include "Waldem/Input/MouseButtonCodes.h"
 #include "Waldem/ECS/Components/EditorCamera.h"
@@ -97,9 +99,20 @@ namespace Waldem
                         
                         ImGuizmo::SetOrthographic(false);
                         ImGuizmo::SetRect(editorViewport->Position.x, editorViewport->Position.y, editorViewport->Size.x, editorViewport->Size.y);
-                        ImGuizmo::Manipulate(value_ptr(editorCamera->ViewMatrix), value_ptr(editorCamera->ProjectionMatrix), CurrentOperation, CurrentMode, value_ptr(transform.Matrix));
-                        transform.DecompileMatrix();
-                        entity.modified<Transform>();
+                        Matrix4 transformMatrix = translate(Matrix4(1.0f), transform.Position) * Matrix4(1.0f) * scale(Matrix4(1.0f), transform.LocalScale);
+                        ImGuizmo::Manipulate(value_ptr(editorCamera->ViewMatrix), value_ptr(editorCamera->ProjectionMatrix), CurrentOperation, CurrentMode, value_ptr(transformMatrix));
+
+                        Quaternion rotationQuat;
+                        Vector3 skew;
+                        Vector4 perspective;
+
+                        decompose(transformMatrix, transform.LocalScale, rotationQuat, transform.Position, skew, perspective);
+                        auto pitch = glm::pitch(rotationQuat);
+                        auto yaw = glm::yaw(rotationQuat);
+                        auto roll = glm::roll(rotationQuat);
+
+                        transform.Rotation += degrees(Vector3(pitch, yaw, roll));   
+                        // transform.Rotate(rotationQuat);
                     }
                 }
             });

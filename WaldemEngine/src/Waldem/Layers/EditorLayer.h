@@ -1,5 +1,7 @@
 #pragma once
 
+#define GLM_ENABLE_EXPERIMENTAL
+
 #include <fstream>
 #include <filesystem>
 #include "imgui.h"
