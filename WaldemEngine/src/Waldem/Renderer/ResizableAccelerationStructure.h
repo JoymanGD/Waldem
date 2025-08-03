@@ -1,5 +1,6 @@
 #pragma once
 #include "Renderer.h"
+#include "ResizableBuffer.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
 #include "Waldem/ECS/Components/Transform.h"
 
@@ -18,36 +19,62 @@ namespace Waldem
             TLAS = Renderer::CreateTLAS(name, InstanceBuffer->GetBuffer(), thresholdNum);
         }
 
-        void AddData(MeshComponent& meshComponent, Transform& transform)
+        void SetData(MeshComponent& meshComponent, Transform& transform)
         {
-            WArray geometries { RayTracingGeometry(meshComponent.Mesh->VertexBuffer, meshComponent.Mesh->IndexBuffer) };
-
-            AccelerationStructure* blas = Renderer::CreateBLAS(meshComponent.Mesh->Name, geometries);
-            
-            BLAS.Add(blas);
-            RayTracingInstance instance;
-            instance.InstanceID = Num();
-            instance.InstanceMask = 0xFF;
-            instance.InstanceContributionToHitGroupIndex = 0;
-            instance.Flags = 0;
-            instance.AccelerationStructure = blas->GetGPUAddress();
-            auto transposedMatrix = transpose(transform.Matrix);
-            memcpy(instance.Transform, &transposedMatrix, sizeof(instance.Transform));
-            
-            InstanceBuffer->AddData(&instance, sizeof(RayTracingInstance));
-
-            Instances.Add(instance);
-            
-            if (Num() <= ThresholdNum)
+            if(meshComponent.DrawId < Num())
             {
+                WArray geometries { RayTracingGeometry(meshComponent.Mesh->VertexBuffer, meshComponent.Mesh->IndexBuffer) };
+
+                AccelerationStructure* blas = Renderer::CreateBLAS(meshComponent.Mesh->Name, geometries);
+
+                auto previousBlas = BLAS[meshComponent.DrawId];
+                BLAS[meshComponent.DrawId] = blas;
+
+                Renderer::Destroy(previousBlas);
+                
+                auto& instance = Instances[meshComponent.DrawId];
+                instance.InstanceID = meshComponent.DrawId;
+                instance.InstanceMask = 0xFF;
+                instance.InstanceContributionToHitGroupIndex = 0;
+                instance.Flags = 0;
+                instance.AccelerationStructure = blas->GetGPUAddress();
+                auto transposedMatrix = transpose(transform.Matrix);
+                memcpy(instance.Transform, &transposedMatrix, sizeof(instance.Transform));
+                
+                InstanceBuffer->UpdateData(&instance, sizeof(RayTracingInstance), meshComponent.DrawId * sizeof(RayTracingInstance));
                 Renderer::UpdateTLAS(TLAS, InstanceBuffer->GetBuffer(), Num());
             }
             else
             {
-                ThresholdNum += ThresholdNum;
+                WArray geometries { RayTracingGeometry(meshComponent.Mesh->VertexBuffer, meshComponent.Mesh->IndexBuffer) };
 
-                Renderer::Destroy(TLAS);
-                Renderer::InitializeTLAS("RayTracingTLAS", InstanceBuffer->GetBuffer(), ThresholdNum, TLAS);
+                AccelerationStructure* blas = Renderer::CreateBLAS(meshComponent.Mesh->Name, geometries);
+                
+                BLAS.Add(blas);
+                RayTracingInstance instance;
+                instance.InstanceID = meshComponent.DrawId;
+                instance.InstanceMask = 0xFF;
+                instance.InstanceContributionToHitGroupIndex = 0;
+                instance.Flags = 0;
+                instance.AccelerationStructure = blas->GetGPUAddress();
+                auto transposedMatrix = transpose(transform.Matrix);
+                memcpy(instance.Transform, &transposedMatrix, sizeof(instance.Transform));
+                
+                InstanceBuffer->AddData(&instance, sizeof(RayTracingInstance));
+
+                Instances.Add(instance);
+                
+                if (Num() <= ThresholdNum)
+                {
+                    Renderer::UpdateTLAS(TLAS, InstanceBuffer->GetBuffer(), Num());
+                }
+                else
+                {
+                    ThresholdNum += ThresholdNum;
+
+                    Renderer::Destroy(TLAS);
+                    Renderer::InitializeTLAS("RayTracingTLAS", InstanceBuffer->GetBuffer(), ThresholdNum, TLAS);
+                }
             }
         }
 

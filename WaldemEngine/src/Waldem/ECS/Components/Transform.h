@@ -15,9 +15,10 @@ namespace Waldem
         END_COMPONENT()
         
         Vector3 Position = { 0, 0, 0 };
-        Quaternion Rotation = { 1, 0, 0, 0 };
+        Vector3 Rotation = { 0, 0, 0 }; 
         Vector3 LocalScale = { 1, 1, 1 };
         Matrix4 Matrix = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
+        Quaternion RotationQuat = { 1, 0, 0, 0 };
 
         Transform() = default;
         Transform(Vector3 position);
@@ -38,10 +39,11 @@ namespace Waldem
         void LookAt(Vector3 target);
         void Move(Vector3 delta);
         Vector3 GetEuler();
-        void SetEuler(Vector3 euler);
-        void SetEuler(float eulerX, float eulerY, float eulerZ);
+        void SetRotation(Vector3 euler);
+        void SetRotation(float eulerX, float eulerY, float eulerZ);
         void SetRotation(Quaternion newRotation);
-        void Scale(Vector3 scale);
+        void SetScale(float x, float y, float z);
+        void SetScale(Vector3 scale);
         void SetMatrix(Matrix4 matrix);
         Matrix4 Inverse() { return inverse(Matrix); }
         void Update();

@@ -1,18 +1,27 @@
 #pragma once
-#include "Waldem/ECS/Components/NameComponent.h"
+#include "Waldem/ECS/Components/SceneEntity.h"
 #include "Waldem/ECS/Systems/UISystems/Widgets/WidgetSystem.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/Extensions/ImGUIExtension.h"
 
 namespace Waldem
 {
+    struct WALDEM_API HierarchyEntry
+    {
+        WString Name;
+        uint64 EntityId;
+        uint64 ParentId;
+        bool Enabled;
+        bool Selected;
+        bool VisibleInHierarchy;
+    };
+    
     class WALDEM_API HierarchyWidget : public IWidgetSystem
     {
         std::string RenameString = "";
         bool DeleteSelectedEntity = false;
         ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
-        WArray<size_t> SelectedEntityIds = {};
-        flecs::query<NameComponent> NameQuery;
+        WMap<float, flecs::entity> HierarchyEntries;
 
         void SelectEntity(flecs::entity& entity)
         {
@@ -43,20 +52,11 @@ namespace Waldem
                     DeleteSelectedEntity = true;
                 }
             });
-
-            ECS::World.observer<Selected>().event(flecs::OnAdd).each([&](flecs::entity entity, Selected)
+            
+            ECS::World.observer<SceneEntity>("HierarchyWidgetSortSystem").event(flecs::OnAdd).each([&](flecs::entity entity, SceneEntity& sceneEntity)
             {
-                SelectedEntityIds.Add(entity.id());
+                HierarchyEntries[sceneEntity.HierarchySlot] = entity;
             });
-
-            ECS::World.observer<Selected>().event(flecs::OnRemove).each([&](flecs::entity entity, Selected)
-            {
-                SelectedEntityIds.Remove(entity.id());
-            });
-
-            NameQuery = ECS::World.query_builder<NameComponent>()
-                .without<EditorCamera>()
-                .build();
         }
 
         void OnDraw(float deltaTime) override
@@ -67,43 +67,55 @@ namespace Waldem
 
                 if (ImGui::Button("+"))
                 {
-                    auto entity = ECS::World.entity("NewEntity");
-                    
+                    auto entity = ECS::CreateEntity("NewEntity");
+                        
                     SelectEntity(entity);
                 }
 
                 ImGui::Separator();
                 
-                NameQuery.each([&](flecs::entity entity, NameComponent& nameComponent)
+                for (int i = 0; i < HierarchyEntries.Num(); ++i)
                 {
-                    auto index = entity.id();
-                    
-                    bool isSelected = SelectedEntityIds.Contains(index);
-                    RenameString = nameComponent.Name;
-
-                    std::string id = "##Entity_" + std::to_string(index);
-                    if (ImGui::SelectableInput(id, RenameString, isSelected, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll))
+                    auto& entity = HierarchyEntries[i].value;
+                    auto sceneEntityComponent = entity.get<SceneEntity>();
+                
+                    if(sceneEntityComponent->VisibleInHierarchy)
                     {
-                        if(RenameString.empty())
+                        auto originalName = std::string(entity.name());
+                        RenameString = originalName;
+
+                        bool isSelected = entity.has<Selected>();
+
+                        std::string id = "##Entity_" + std::to_string(i);
+                        if (ImGui::SelectableInput(id, RenameString, isSelected, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll))
                         {
-                            RenameString = "UnnamedEntity_" + std::to_string(index);
+                            if(RenameString.empty())
+                            {
+                                RenameString = "UnnamedEntity_" + std::to_string(i);
+                            }
+
+                            if(RenameString != originalName)
+                            {
+                                entity.set_name(RenameString.c_str());
+                            }
+
+                            if(!isSelected)
+                            {
+                                SelectEntity(entity);
+                            }
                         }
 
-                        nameComponent.Name = RenameString;
-                        SelectEntity(entity);
-                    }
-
-                    if (isSelected)
-                    {
-                        ImGui::SetItemDefaultFocus();
-
-                        if(DeleteSelectedEntity)
+                        if (isSelected)
                         {
-                            entity.destruct();
-                            DeselectAllEntity();
+                            ImGui::SetItemDefaultFocus();
+
+                            if(DeleteSelectedEntity)
+                            {
+                                entity.destruct();
+                            }
                         }
                     }
-                });
+                }
             }
             ImGui::End();
                         

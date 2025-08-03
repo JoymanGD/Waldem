@@ -75,7 +75,7 @@ namespace Waldem
             
             ECS::World.observer<MeshComponent, Transform>().event(flecs::OnSet).each([&](MeshComponent& meshComponent, Transform& transform)
             {
-                TLAS.AddData(meshComponent, transform);
+                TLAS.SetData(meshComponent, transform);
             });
             
             ECS::World.observer<Light, Transform>().event(flecs::OnSet).each([&](Light& light, Transform& transform)

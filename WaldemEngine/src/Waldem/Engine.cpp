@@ -62,7 +62,7 @@ namespace Waldem
 
 		InitializeLayers();
 		
-		OpenScene(new RenderingTestScene());
+		// OpenScene(new RenderingTestScene());
 	}
 
 	void Engine::InitializeLayers()

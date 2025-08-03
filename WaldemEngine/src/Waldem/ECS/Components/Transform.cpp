@@ -6,8 +6,9 @@ namespace Waldem
     Transform::Transform(Vector3 position)
     {
         Position = position;
-        Rotation = { 1, 0, 0, 0 };
+        Rotation = { 0, 0, 0 };
         LocalScale = Vector3(1.0f);
+        RotationQuat = { 1, 0, 0, 0 };
 
         Update();
     }
@@ -15,8 +16,9 @@ namespace Waldem
     Transform::Transform(Vector3 position, Quaternion rotation, Vector3 localScale)
     {
         Position = position;
-        Rotation = rotation;
+        RotationQuat = rotation;
         LocalScale = localScale;
+        Rotation = GetEuler();
 
         Update();
     }
@@ -47,7 +49,8 @@ namespace Waldem
 
     void Transform::Rotate(Quaternion rotation)
     {
-        Rotation = rotation * Rotation;
+        RotationQuat = rotation * RotationQuat;
+        Rotation = GetEuler();
         
         Update();
     }
@@ -58,9 +61,11 @@ namespace Waldem
         Quaternion horizontalRotation = angleAxis(glm::radians(yaw), Vector3(0, 1, 0));
         Quaternion rollRotation = angleAxis(glm::radians(roll), Vector3(0, 0, 1));
 
-        Rotation = Rotation * verticalRotation;
-        Rotation = horizontalRotation * Rotation;
-        Rotation = rollRotation * Rotation;
+        RotationQuat = RotationQuat * verticalRotation;
+        RotationQuat = horizontalRotation * RotationQuat;
+        RotationQuat = rollRotation * RotationQuat;
+
+        Rotation = GetEuler();
 
         Update();
     }
@@ -84,33 +89,38 @@ namespace Waldem
 
     Vector3 Transform::GetEuler()
     {
-        Vector3 euler = degrees(eulerAngles(Rotation));
-        return euler;
+        return degrees(eulerAngles(RotationQuat));
     }
 
-    void Transform::SetEuler(Vector3 euler)
+    void Transform::SetRotation(float eulerX, float eulerY, float eulerZ)
     {
-        euler = radians(euler);
-        Rotation = Quaternion(euler);
+        Rotation = { eulerX, eulerY, eulerZ };
+
+        SetRotation(Rotation);
+    }
+
+    void Transform::SetRotation(Vector3 euler)
+    {
+        Rotation = euler;
+        RotationQuat = Quaternion(radians(Rotation));
         
         Update();
     }
 
-    void Transform::SetEuler(float eulerX, float eulerY, float eulerZ)
-    {
-        Vector3 euler = { eulerX, eulerY, eulerZ };
-
-        SetEuler(euler);
-    }
-
     void Transform::SetRotation(Quaternion newRotation)
     {
-        Rotation = newRotation;
+        RotationQuat = newRotation;
+        Rotation = GetEuler();
 
         Update();
     }
 
-    void Transform::Scale(Vector3 localScale)
+    void Transform::SetScale(float x, float y, float z)
+    {
+        SetScale(Vector3(x, y, z));
+    }
+
+    void Transform::SetScale(Vector3 localScale)
     {
         LocalScale = localScale;
         
@@ -134,13 +144,14 @@ namespace Waldem
         rotationMatrix[1] /= scale.y;
         rotationMatrix[2] /= scale.z;
         Quaternion rotation = quat_cast(rotationMatrix);
-        Rotation = rotation;
+        RotationQuat = rotation;
+        Rotation = GetEuler();
     }
 
     void Transform::Update()
     {
         //TODO: Optimize this
-        Matrix = Matrix4(translate(Matrix4(1.0f), Position) * mat4_cast(Rotation) * scale(Matrix4(1.0f), LocalScale));
+        Matrix = Matrix4(translate(Matrix4(1.0f), Position) * mat4_cast(RotationQuat) * scale(Matrix4(1.0f), LocalScale));
     }
 
     void Transform::DecompileMatrix()
@@ -157,6 +168,7 @@ namespace Waldem
         rotationMatrix[0] /= scale.x;
         rotationMatrix[1] /= scale.y;
         rotationMatrix[2] /= scale.z;
-        Rotation = quat_cast(rotationMatrix);
+        RotationQuat = quat_cast(rotationMatrix);
+        Rotation = GetEuler();
     }
 }

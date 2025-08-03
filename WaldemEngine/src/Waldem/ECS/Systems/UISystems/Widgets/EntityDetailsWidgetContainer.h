@@ -31,7 +31,7 @@ namespace Waldem
                     }
                     else
                     {
-                        DrawComponent(entity);
+                        DrawComponents(entity);
                     }
 
                     if (ImGui::Button("Add component"))
@@ -41,36 +41,22 @@ namespace Waldem
 
                     if (ImGui::BeginPopup("AddComponentPopup"))
                     {
-                        static char searchBuffer[128] = "";
-                        ImGui::InputText("Search", searchBuffer, IM_ARRAYSIZE(searchBuffer));
+	                    static char searchBuffer[128] = "";
+						ImGui::InputText("Search", searchBuffer, IM_ARRAYSIZE(searchBuffer));
 
-                        // // Example list of components
-                        // static int selectedComponent = -1;
-                        //
-                        // auto& componentNames = ComponentRegistry::Get().ComponentNames;
-                        //
-                        // for (int i = 0; i < componentNames.Num(); i++)
-                        // {
-                        //     if (strstr(componentNames[i], searchBuffer) != nullptr) // Filter by search
-                        //     {
-                        //         if (ImGui::Selectable(componentNames[i], selectedComponent == i))
-                        //         {
-                        //             selectedComponent = i;
-                        //
-                        //             //TODO: Add the selected component to the entity wrapper
-                        //             IComponentBase* comp = ComponentRegistry::Get().CreateComponent(componentNames[i]);
-                        //             comp->RegisterToNativeEntity(entity);
-                        //         }
-                        //     }
-                        // }
-
-                        // if (ImGui::Button("Add Selected Component") && selectedComponent != -1)
-                        // {
-                        //     // Add the selected component to the entity
-                        //     // Example: Manager->AddComponent(entity, components[selectedComponent]);
-                        //     selectedComponent = -1; // Reset selection
-                        //     ImGui::CloseCurrentPopup();
-                        // }
+                        for (int i = 0; i < ECS::RegisteredComponents.Num(); i++)
+                        {
+                        	auto compName = ECS::RegisteredComponents[i].key;
+                            if (strstr(compName, searchBuffer) != nullptr) // Filter by search
+                            {
+                                if (ImGui::Selectable(compName, false))
+                                {
+									entity.add(ECS::RegisteredComponents[i].value);
+                                	
+									ImGui::CloseCurrentPopup();
+                                }
+                            }
+                        }
 
                         ImGui::EndPopup();
                     }
@@ -79,7 +65,7 @@ namespace Waldem
             ImGui::End();
         }
 
-        void DrawComponent(flecs::entity& entity)
+        void DrawComponents(flecs::entity& entity)
         {
             entity.each([&](flecs::id id)
             {
@@ -106,7 +92,7 @@ namespace Waldem
 
                 auto componentName = comp.name().c_str();
                 
-                if (ImGui::BeginChild(componentName, ImVec2(0, 0), ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY))
+                if (ImGui::BeginChild(componentName, ImVec2(0, 0), ImGuiChildFlags_AutoResizeY))
                 {
                     ImGui::Text(componentName);
 
@@ -117,35 +103,13 @@ namespace Waldem
 
 					int in_array = 0;
 
-					ImGui::BeginTable("##PropertiesTable", 2, ImGuiTableFlags_Resizable);
-					ImGui::TableSetupColumn("Property", ImGuiTableColumnFlags_WidthStretch, 60.0f);
-					ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch, 200.0f);
+					ImGui::BeginTable("##PropertiesTable", 2);
+					ImGui::TableSetupColumn("Property", ImGuiTableColumnFlags_WidthStretch);
+					ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
 
 					for (int i = 0; i < op_count; i++)
 					{
 						ecs_meta_type_op_t* op = &ops[i];
-
-						if (in_array <= 0)
-						{
-							// if (op->name)
-							// {
-							// 	ImGui::Text("%s", op->name);
-							// }
-
-							// int32 elem_count = op->count;
-							// if (elem_count > 1)
-							// {
-							// 	/* Serialize inline array */
-							// 	if (expr_ser_elements(world, op, op->op_count, base,
-							// 		elem_count, op->size, str, true))
-							// 	{
-							// 		return -1;
-							// 	}
-
-							// 	i += op->op_count - 1;
-							// 	continue;
-							// }
-						}
 
 						if (op->kind != EcsOpPop)
 						{
@@ -211,10 +175,15 @@ namespace Waldem
 							}
 							case EcsOpBool:
 							{
+								ImGui::TableSetColumnIndex(0);
+								ImGui::Text("%s", op->name);
 								auto valPtr = (uint8*)ptr + op->offset;
 								ImGui::PushID(ImGui::GetID((void*)valPtr));
 								bool value = *(bool*)valPtr;
-								if (ImGui::Checkbox(op->name, &value))
+								ImGui::TableSetColumnIndex(1);
+
+								WString name = WString("##") + op->name;
+								if (ImGui::Checkbox(name, &value))
 								{
 									*(bool*)valPtr = value;
 								}

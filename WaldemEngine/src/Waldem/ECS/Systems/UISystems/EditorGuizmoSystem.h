@@ -68,25 +68,26 @@ namespace Waldem
             {
                 if (isPressed)
                 {
-                    ECS::World.system<Transform, Selected>("ClearSelectionSystem").each([&](flecs::entity entity, Transform& transform, Selected)
+                    ECS::World.defer([&]
                     {
-                        entity.remove<Selected>();
-                    });
-
-                    int meshId = 0;
-
-                    ECS::World.system<MeshComponent, Transform>("SelectHoveredEntitySystem").each([&](flecs::entity entity, MeshComponent& mesh, Transform& transform)
-                    {
-                        if (meshId == Editor::HoveredEntityID)
+                        ECS::World.query<Transform, Selected>("ClearSelectionQuery").each([&](flecs::entity entity, Transform&, Selected)
                         {
-                            entity.add<Selected>();
-                        }
-                        meshId++;
+                            entity.remove<Selected>();
+                        });
                     });
+
+                    auto entityId = Editor::GetEntityID(Editor::HoveredEntityID);
+
+                    auto entity = ECS::World.entity(entityId);
+
+                    if(entity.is_valid() && entity.is_alive())
+                    {
+                        entity.add<Selected>();
+                    }
                 }
             });
 
-            ECS::World.query<Transform, Selected>().each([&](Transform& transform, Selected)
+            ECS::World.system<Transform, Selected>("EditorGizmoSystem").kind(flecs::OnGUI).each([&](flecs::entity entity, Transform& transform, Selected)
             {
                 if(auto editorCameraEntity = ECS::World.lookup("EditorCamera"))
                 {
@@ -98,9 +99,9 @@ namespace Waldem
                         ImGuizmo::SetRect(editorViewport->Position.x, editorViewport->Position.y, editorViewport->Size.x, editorViewport->Size.y);
                         ImGuizmo::Manipulate(value_ptr(editorCamera->ViewMatrix), value_ptr(editorCamera->ProjectionMatrix), CurrentOperation, CurrentMode, value_ptr(transform.Matrix));
                         transform.DecompileMatrix();
+                        entity.modified<Transform>();
                     }
                 }
-                
             });
         }
     };
