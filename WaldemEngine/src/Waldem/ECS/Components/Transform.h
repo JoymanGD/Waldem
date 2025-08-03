@@ -63,5 +63,8 @@ namespace Waldem
             
             return mat3x4;
         }
+        
+    private:
+        void ClampRotation();
     };
 }
