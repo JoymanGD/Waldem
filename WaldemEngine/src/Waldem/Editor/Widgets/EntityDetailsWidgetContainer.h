@@ -102,20 +102,15 @@ namespace Waldem
 					ecs_meta_type_op_t* ops = ecs_vec_first_t(v_ops, ecs_meta_type_op_t);
 					int op_count = ecs_vec_count(v_ops);
 
-					int in_array = 0;
+					ImGui::BeginTable("##PropertiesTable", 2, ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_SizingFixedFit);
+					ImGui::TableSetupColumn("Property");
+					ImGui::TableSetupColumn("Value");
 
-					ImGui::BeginTable("##PropertiesTable", 2);
-					ImGui::TableSetupColumn("Property", ImGuiTableColumnFlags_WidthStretch);
-					ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
+                	bool structDrawing = false;
 
 					for (int i = 0; i < op_count; i++)
 					{
 						ecs_meta_type_op_t* op = &ops[i];
-
-						if (op->kind != EcsOpPop)
-						{
-							ImGui::TableNextRow();
-						}
 
 						switch (op->kind)
 						{
@@ -123,15 +118,27 @@ namespace Waldem
 							{
 								if (op->name)
 								{
+									ImGui::TableNextRow();
 									ImGui::TableSetColumnIndex(0);
 									ImGui::Text("%s", op->name);
+									
+									if (op->op_count - 2 == 3 &&
+										ops[i + 1].kind == EcsOpF32 &&
+										ops[i + 2].kind == EcsOpF32 &&
+										ops[i + 3].kind == EcsOpF32)
+									{
+										ImGui::TableSetColumnIndex(1);
+										structDrawing = true;
+										WString name = WString("##") + op->name + WString::FromInt(op->member_index);
+										ImGui::SetNextItemWidth(200);
+										ImGui::DragFloat3(name, (float*)((uint8*)ptr + op->offset), 0.1f);
+									}
 								}
-								in_array--;
 								break;
 							}
 							case EcsOpPop:
 							{
-								in_array++;
+								structDrawing = false;
 								break;
 							}
 							case EcsOpArray:
@@ -176,6 +183,7 @@ namespace Waldem
 							}
 							case EcsOpBool:
 							{
+								ImGui::TableNextRow();
 								ImGui::TableSetColumnIndex(0);
 								ImGui::Text("%s", op->name);
 								auto valPtr = (uint8*)ptr + op->offset;
@@ -198,14 +206,7 @@ namespace Waldem
 							case EcsOpU32: break;
 							case EcsOpU64:
 							{
-								if(strcmp(op->name, "Reference") == 0)
-								{
-									ImGui::TableSetColumnIndex(1);
-									auto valPtr = (uint8*)ptr + op->offset;
-									uint64 value = *(bool*)valPtr;
-									ImGui::InputInt("##hide", (int*)&value);
-								}
-									
+								ImGui::TableNextRow();
 								break;
 							}
 							case EcsOpI8: break;
@@ -214,18 +215,26 @@ namespace Waldem
 							case EcsOpI64: break;
 							case EcsOpF32:
 							{
-								auto valPtr = (uint8*)ptr + op->offset;
-								ImGui::PushID(ImGui::GetID((void*)valPtr));
-								ImGui::TableSetColumnIndex(0);
-								ImGui::Text("%s", op->name);
-								ImGui::TableSetColumnIndex(1);
-								ImGui::DragScalarN("##", ImGuiDataType_Float, (float*)valPtr, op->count, 0.1f, NULL, NULL, "%.3f");
-								// ImGui::InputFloat(op->name, (float*)valPtr, 0.0f, 0.0f, "%.3f");
-								ImGui::PopID();
+								if(!structDrawing)
+								{
+									ImGui::TableNextRow();
+									auto valPtr = (uint8*)ptr + op->offset;
+									ImGui::PushID(ImGui::GetID((void*)valPtr));
+										
+									ImGui::TableSetColumnIndex(0);
+									ImGui::Text("%s", op->name);
+									
+									ImGui::TableSetColumnIndex(1);
+									ImGui::SetNextItemWidth(200.f);
+									ImGui::DragScalarN("##", ImGuiDataType_Float, (float*)valPtr, op->count, 0.1f, NULL, NULL, "%.3f");
+									// ImGui::InputFloat(op->name, (float*)valPtr, 0.0f, 0.0f, "%.3f");
+									ImGui::PopID();
+								}
 								break;
 							}
 							case EcsOpF64:
 							{
+								ImGui::TableNextRow();
 								auto valPtr = (uint8*)ptr + op->offset;
 								ImGui::PushID(ImGui::GetID((void*)valPtr));
 								ImGui::DragScalarN(op->name, ImGuiDataType_Double, (double*)valPtr, op->count, 0.1, NULL, NULL, "%.3f");
@@ -239,34 +248,22 @@ namespace Waldem
 							case EcsOpIPtr: break;
 							case EcsOpEntity:
 							{
+								ImGui::TableNextRow();
 								ImGui::Text("TODO: Entity %s", op->name);
 								break;
 							}
 							case EcsOpId: break;
 							case EcsOpString:
 							{
-								if(strcmp(op->name, "Reference") == 0)
-								{
-									ImGui::TableSetColumnIndex(1);
-									if(ImGui::SocketSlot("##mesh_slot", false))
-									{
-										
-									}
-									// auto valPtr = (uint8*)ptr + op->offset;
-									// char* value = (char*)valPtr;
-									// ImGui::InputText("##hide", value, op->size);
-								}
 								break;
 							}
 							case EcsOpOpaque:
 							{
 								if(strcmp(op->name, "Reference") == 0)
 								{
+									WString myTextureID;
 									ImGui::TableSetColumnIndex(1);
-									if(ImGui::SocketSlot("##mesh_slot", false))
-									{
-										
-									}
+									ImGui::AssetInputSlot(myTextureID, "ASSET_TEXTURE");
 								}
 								break;
 							}

@@ -47,38 +47,42 @@ namespace ImGui
         return ret;
     }
 
-    inline bool SocketSlot(const char* id, bool filled = false, ImU32 color = IM_COL32(200, 200, 200, 255))
+    inline void AssetInputSlot(Waldem::WString& assetID, const char* assetType, const char* label = nullptr)
     {
-        ImVec2 cursorPos = ImGui::GetCursorScreenPos();
-        ImVec2 slotCenter = ImVec2(cursorPos.x + 6, cursorPos.y + 6);
-        float radius = 6.0f;
+        if(label)
+        {
+            PushID(label);
 
-        ImDrawList* drawList = ImGui::GetWindowDrawList();
-
-        // Optional: hover highlight
-        bool hovered = ImGui::IsItemHovered();
-
-        drawList->AddCircleFilled(slotCenter, radius, IM_COL32(40, 40, 40, 255));
-        if (filled) {
-            drawList->AddCircleFilled(slotCenter, radius * 0.6f, color);
-        } else {
-            drawList->AddCircle(slotCenter, radius, color, 16, 2.0f);
+            Text("%s", label);
+            SameLine();
         }
 
-        // Create an invisible button to handle interaction
-        ImGui::SetCursorScreenPos(ImVec2(cursorPos.x, cursorPos.y));
-        ImGui::InvisibleButton(id, ImVec2(radius * 2, radius * 2));
+        Button(assetID.IsEmpty() ? "<None>" : assetID.C_Str(), ImVec2(200, 0));
 
-        // Drag-drop support
-        bool changed = false;
-        if (ImGui::BeginDragDropTarget()) {
-            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SOCKET_PAYLOAD")) {
-                // process payload
-                changed = true;
+        // Accept drag and drop payload
+        if (BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = AcceptDragDropPayload(assetType))
+            {
+                IM_ASSERT(payload->DataSize == sizeof(std::string*));
+                std::string* droppedAsset = *(std::string**)payload->Data;
+                if (droppedAsset)
+                    assetID = *droppedAsset;
             }
-            ImGui::EndDragDropTarget();
+            EndDragDropTarget();
         }
 
-        return changed;
+        // Optional: Right-click to clear
+        if (BeginPopupContextItem())
+        {
+            if (MenuItem("Clear"))
+                assetID.Clear();
+            EndPopup();
+        }
+
+        if(label)
+        {
+            PopID();
+        }
     }
 }
