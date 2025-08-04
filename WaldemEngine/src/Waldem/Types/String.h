@@ -148,6 +148,30 @@ namespace Waldem
 	        delete[] Data;
 	    }
 
+		// Clears the string data
+		FORCEINLINE void Clear()
+		{
+		    delete[] Data;
+		    Data = nullptr;
+		    StringHash = 0;
+		}
+
+		// Converts an integer to a WString
+		static WString FromInt(int value)
+		{
+		    char buffer[12];
+		    snprintf(buffer, sizeof(buffer), "%d", value);
+		    return WString(buffer);
+		}
+		
+		// Converts a float to a WString
+		static WString FromFloat(float value, const char* format = "%.6f")
+		{
+		    char buffer[32];
+		    snprintf(buffer, sizeof(buffer), format, value);
+		    return WString(buffer);
+		}
+
 		// Implicit conversion to C-string
 
 		// Compares this string with another (Case-insensitive by default)
