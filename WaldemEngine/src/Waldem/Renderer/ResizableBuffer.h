@@ -23,7 +23,7 @@ namespace Waldem
         operator Buffer*() const { return InternalBuffer; }
         operator Buffer*() { return InternalBuffer; }
 
-        void AddData(void* data, uint size)
+        size_t AddData(void* data, uint size)
         {
             Count += size / Stride;
             
@@ -57,8 +57,12 @@ namespace Waldem
             }
             
             Renderer::UploadBuffer(InternalBuffer, data, size, Size);
+
+            size_t offset = Size;
             
             Size = newSize;
+
+            return offset;
         }
 
         void UpdateData(void* data, uint size, uint offset = 0)

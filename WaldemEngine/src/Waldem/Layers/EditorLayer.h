@@ -28,6 +28,7 @@
 #include "Waldem/Utils/FileUtils.h"
 #include "Waldem/ECS/ECS.h"
 #include "Waldem/ECS/Systems/DrawSystems/PostProcessSystem.h"
+#include "Waldem/ECS/Systems/UpdateSystems/TransformUpdateSystem.h"
 
 namespace Waldem
 {
@@ -68,6 +69,7 @@ namespace Waldem
             UISystems.Add(new EditorUISystem(BIND_ACTION(OnOpenScene), BIND_ACTION(OnSaveScene), BIND_ACTION(OnSaveSceneAs)));
             UISystems.Add(new EditorGuizmoSystem());
             
+            UpdateSystems.Add(new TransformUpdateSystem());
             UpdateSystems.Add(new EditorControlSystem());
             UpdateSystems.Add(new SpatialAudioSystem());
 

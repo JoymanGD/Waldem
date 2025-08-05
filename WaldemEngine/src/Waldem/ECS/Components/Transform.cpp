@@ -101,22 +101,18 @@ namespace Waldem
     {
         Rotation = pitchYawRoll;
         
-        Quaternion verticalRotation = angleAxis(glm::radians(pitchYawRoll.x), Vector3(1, 0, 0));
-        Quaternion horizontalRotation = angleAxis(glm::radians(pitchYawRoll.y), Vector3(0, 1, 0));
-        Quaternion rollRotation = angleAxis(glm::radians(pitchYawRoll.z), Vector3(0, 0, 1));
-        RotationQuat = verticalRotation * horizontalRotation * rollRotation;
-        
-        Update();
+        ApplyPitchYawRoll();
     }
 
     void Transform::SetRotation(Quaternion newRotation)
     {
+        Quaternion deltaQuat = inverse(RotationQuat) * newRotation;
         RotationQuat = newRotation;
         
-        auto pitch = glm::pitch(RotationQuat);
-        auto yaw = glm::yaw(RotationQuat);
-        auto roll = glm::roll(RotationQuat);
-        Rotation = degrees(Vector3(pitch, yaw, roll));
+        auto pitch = glm::pitch(deltaQuat);
+        auto yaw = glm::yaw(deltaQuat);
+        auto roll = glm::roll(deltaQuat);
+        Rotation += degrees(Vector3(pitch, yaw, roll));
 
         Update();
     }
@@ -156,9 +152,17 @@ namespace Waldem
     void Transform::Update()
     {
         //TODO: Optimize this
-        Matrix = Matrix4(translate(Matrix4(1.0f), Position) * mat4_cast(RotationQuat) * scale(Matrix4(1.0f), LocalScale));
+        // ClampRotation();
 
-        ClampRotation();
+        Matrix = Matrix4(translate(Matrix4(1.0f), Position) * mat4_cast(RotationQuat) * scale(Matrix4(1.0f), LocalScale));
+    }
+
+    void Transform::ApplyPitchYawRoll()
+    {
+        auto deltaRotation = Rotation - LastRotation;
+        Quaternion deltaQuat = Quaternion(radians(deltaRotation));
+        // RotationQuat = Quaternion(radians(Rotation));
+        RotationQuat = deltaQuat * RotationQuat;
     }
 
     void Transform::DecompileMatrix()
@@ -176,7 +180,17 @@ namespace Waldem
         rotationMatrix[1] /= scale.y;
         rotationMatrix[2] /= scale.z;
 
-        SetRotation(quat_cast(rotationMatrix));
+        auto lastRotationQuat = RotationQuat;
+        RotationQuat = quat_cast(rotationMatrix);
+
+        auto deltaQuat = RotationQuat * inverse(lastRotationQuat);
+        
+        auto pitch = glm::pitch(deltaQuat);
+        auto yaw = glm::yaw(deltaQuat);
+        auto roll = glm::roll(deltaQuat);
+        Rotation += degrees(Vector3(pitch, yaw, roll));
+        // ClampRotation();
+        LastRotation = Rotation;
     }
     
     void Transform::ClampRotation()

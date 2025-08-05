@@ -73,29 +73,60 @@ namespace Waldem
             SceneDataBuffer = Renderer::CreateBuffer("SceneDataBuffer", StorageBuffer, sizeof(RayTracingSceneData), sizeof(RayTracingSceneData), &RTSceneData);
             TLAS = ResizableAccelerationStructure("RayTracingTLAS", 50);
             
-            ECS::World.observer<MeshComponent, Transform>().event(flecs::OnSet).each([&](MeshComponent& meshComponent, Transform& transform)
+            ECS::World.observer<MeshComponent, Transform>().event(flecs::OnAdd).each([&](MeshComponent& meshComponent, Transform& transform)
             {
-                TLAS.SetData(meshComponent, transform);
+                meshComponent.RTXInstanceId = TLAS.AddEmptyData();
             });
             
-            ECS::World.observer<Light, Transform>().event(flecs::OnSet).each([&](Light& light, Transform& transform)
+            ECS::World.observer<MeshComponent>().event(flecs::OnSet).each([&](flecs::entity entity, MeshComponent& meshComponent)
             {
-                if(light.LightId == -1)
+                if(!meshComponent.IsValid())
                 {
-                    light.LightId = RTSceneData.NumLights;
-                    LightsBuffer.AddData(&light.Data, sizeof(LightData));
-                    LightTransformsBuffer.AddData(&transform.Matrix, sizeof(Matrix4));
-                    
-                    RTSceneData.NumLights = LightsBuffer.Num();
+                    return;
+                }
+
+                auto transform = entity.get<Transform>();
+
+                if(transform)
+                {
+                    TLAS.SetData(meshComponent, *transform);
                 }
             });
             
-            ECS::World.observer<Light, Transform>().event(flecs::OnSet).each([&](Light& light, Transform& transform)
+            ECS::World.observer<Transform>().event(flecs::OnSet).each([&](flecs::entity entity, Transform& transform)
+            {
+                const MeshComponent* meshComponent = entity.get<MeshComponent>();
+                
+                if(meshComponent && meshComponent->IsValid())
+                {
+                    TLAS.UpdateTransform(meshComponent->RTXInstanceId, transform);
+                }
+            });
+            
+            ECS::World.observer<Light, Transform>().event(flecs::OnAdd).each([&](Light& light, Transform& transform)
+            {
+                light.LightId = RTSceneData.NumLights;
+                LightsBuffer.AddData(&light.Data, sizeof(LightData));
+                LightTransformsBuffer.AddData(&transform.Matrix, sizeof(Matrix4));
+                
+                RTSceneData.NumLights = LightsBuffer.Num();
+            });
+            
+            ECS::World.observer<Light>().event(flecs::OnSet).each([&](Light& light)
             {
                 if(light.LightId >= 0)
                 {
                     LightsBuffer.UpdateData(&light.Data, sizeof(LightData), sizeof(LightData) * light.LightId);
-                    LightTransformsBuffer.UpdateData(&transform.Matrix, sizeof(Matrix4), sizeof(Matrix4) * light.LightId);
+                }
+            });
+            
+            ECS::World.observer<Transform>().event(flecs::OnSet).each([&](flecs::entity entity, Transform& transform)
+            {
+                auto light = entity.get<Light>();
+
+                if(light && light->LightId >= 0)
+                {
+                    LightTransformsBuffer.UpdateData(&transform.Matrix, sizeof(Matrix4), sizeof(Matrix4) * light->LightId);
                 }
             });
             

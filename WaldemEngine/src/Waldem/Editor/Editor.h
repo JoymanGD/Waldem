@@ -20,11 +20,12 @@ namespace Waldem
 
         static uint64 GetEntityID(uint drawID)
         {
-            if (DrawIDToEntityID.Contains(drawID))
+            if (drawID != -1 && DrawIDToEntityID.Contains(drawID))
             {
                 return DrawIDToEntityID[drawID];
             }
-            return 0;
+            
+            return -1;
         }
 
     private:

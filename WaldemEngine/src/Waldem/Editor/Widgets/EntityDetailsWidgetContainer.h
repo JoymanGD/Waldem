@@ -10,11 +10,17 @@ namespace Waldem
     {
     private:
         ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
+    	CContentManager* ContentManager; //TODO: remove this dependency
         
     public:
         EntityDetailsWidgetContainer() {}
 
         WString GetName() override { return "Details"; }
+
+    	void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
+		{
+			ContentManager = contentManager;
+		}
 
         void OnDraw(float deltaTime) override
         {
@@ -131,7 +137,10 @@ namespace Waldem
 										structDrawing = true;
 										WString name = WString("##") + op->name + WString::FromInt(op->member_index);
 										ImGui::SetNextItemWidth(200);
-										ImGui::DragFloat3(name, (float*)((uint8*)ptr + op->offset), 0.1f);
+										if(ImGui::DragFloat3(name, (float*)((uint8*)ptr + op->offset), 0.1f))
+										{
+											entity.modified(id);
+										}
 									}
 								}
 								break;
@@ -195,6 +204,7 @@ namespace Waldem
 								if (ImGui::Checkbox(name, &value))
 								{
 									*(bool*)valPtr = value;
+									entity.modified(id);
 								}
 								ImGui::PopID();
 								break;
@@ -226,7 +236,10 @@ namespace Waldem
 									
 									ImGui::TableSetColumnIndex(1);
 									ImGui::SetNextItemWidth(200.f);
-									ImGui::DragScalarN("##", ImGuiDataType_Float, (float*)valPtr, op->count, 0.1f, NULL, NULL, "%.3f");
+									if(ImGui::DragScalarN("##", ImGuiDataType_Float, (float*)valPtr, op->count, 0.1f, NULL, NULL, "%.3f"))
+									{
+										entity.modified(id);
+									}
 									// ImGui::InputFloat(op->name, (float*)valPtr, 0.0f, 0.0f, "%.3f");
 									ImGui::PopID();
 								}
@@ -237,7 +250,10 @@ namespace Waldem
 								ImGui::TableNextRow();
 								auto valPtr = (uint8*)ptr + op->offset;
 								ImGui::PushID(ImGui::GetID((void*)valPtr));
-								ImGui::DragScalarN(op->name, ImGuiDataType_Double, (double*)valPtr, op->count, 0.1, NULL, NULL, "%.3f");
+								if(ImGui::DragScalarN(op->name, ImGuiDataType_Double, (double*)valPtr, op->count, 0.1, NULL, NULL, "%.3f"))
+								{
+									entity.modified(id);
+								}
 								ImGui::PopID();
 								break;
 							}
@@ -261,9 +277,15 @@ namespace Waldem
 							{
 								if(strcmp(op->name, "Reference") == 0)
 								{
+									void* fieldPtr = (uint8*)ptr + op->offset;
+									AssetReference* assetRef = (AssetReference*)fieldPtr;
 									WString myTextureID;
 									ImGui::TableSetColumnIndex(1);
-									ImGui::AssetInputSlot(myTextureID, "ASSET_TEXTURE");
+									ImGui::AssetInputSlot(assetRef->Reference, "CONTENT_BROWSER_ASSET", [this, entity, id, assetRef]
+									{
+										assetRef->LoadAsset(ContentManager);
+										entity.modified(id);
+									});
 								}
 								break;
 							}
