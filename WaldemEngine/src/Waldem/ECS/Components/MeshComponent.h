@@ -1,5 +1,5 @@
 #pragma once
-#include "Waldem/Editor/AssetReference.h"
+#include "Waldem/Editor/AssetReference/MeshReference.h"
 #include "Waldem/Renderer/Model/Mesh.h"
 #include "Waldem/Resources/ResourceManager.h"
 
@@ -11,10 +11,10 @@ namespace Waldem
             FIELD(AssetReference, Mesh)
         END_COMPONENT()
 
-        AssetReference Mesh;
-        // CMesh* Mesh = nullptr;
-        uint DrawId = 0;
+        MeshReference MeshRef;
+        uint DrawId = -1;
+        uint RTXInstanceId = -1;
 
-        // MeshComponent(CMesh* mesh) : Mesh(mesh) {}
+        bool IsValid() const { return MeshRef.IsValid(); }
     };
 }

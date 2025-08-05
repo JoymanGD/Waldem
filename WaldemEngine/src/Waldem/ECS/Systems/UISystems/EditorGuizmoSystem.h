@@ -99,21 +99,32 @@ namespace Waldem
 
                         ImGuizmo::SetOrthographic(false);
                         ImGuizmo::SetRect(editorViewport->Position.x, editorViewport->Position.y, editorViewport->Size.x, editorViewport->Size.y);
-                        Matrix4 transformMatrix = translate(Matrix4(1.0f), transform.Position) * Matrix4(1.0f) * scale(Matrix4(1.0f), transform.LocalScale);
-                        ImGuizmo::Manipulate(value_ptr(editorCamera->ViewMatrix), value_ptr(editorCamera->ProjectionMatrix), CurrentOperation, CurrentMode, value_ptr(transformMatrix));
+                        ImGuizmo::Manipulate(value_ptr(editorCamera->ViewMatrix), value_ptr(editorCamera->ProjectionMatrix), CurrentOperation, CurrentMode, value_ptr(transform.Matrix));
 
                         if(ImGuizmo::IsUsing())
                         {
-                            Quaternion rotationQuat;
-                            Vector3 skew;
-                            Vector4 perspective;
-
-                            decompose(transformMatrix, transform.LocalScale, rotationQuat, transform.Position, skew, perspective);
-
-                            transform.Rotate(rotationQuat);
+                            transform.DecompileMatrix();
+                            
+                            entity.modified<Transform>();
                         }
-                        
-                        transform.Update();
+                        else
+                        {
+                            if(transform.LastRotation != transform.Rotation)
+                            {
+                                transform.ApplyPitchYawRoll();
+                                transform.LastRotation = transform.Rotation;
+                                transform.Update();
+                                entity.modified<Transform>();
+                            }
+
+                            if(transform.LastPosition != transform.Position || transform.LastScale != transform.LocalScale)
+                            {
+                                transform.LastPosition = transform.Position;
+                                transform.LastScale = transform.LocalScale;
+                                transform.Update();
+                                entity.modified<Transform>();
+                            }
+                        }
                     }
                 }
             });

@@ -6,6 +6,12 @@
 
 namespace Waldem
 {
+    enum TransformSpace
+    {
+        Local = 0,
+        World = 1
+    };
+    
     struct WALDEM_API Transform
     {
         COMPONENT(Transform)
@@ -19,6 +25,10 @@ namespace Waldem
         Vector3 LocalScale = { 1, 1, 1 };
         Matrix4 Matrix = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
         Quaternion RotationQuat = { 1, 0, 0, 0 };
+        
+        Vector3 LastRotation = { 0, 0, 0 };
+        Vector3 LastPosition = { 0, 0, 0 };
+        Vector3 LastScale = { 0, 0, 0 };
 
         Transform(Vector3 position);
         Transform(Vector3 position, Quaternion rotation, Vector3 localScale);
@@ -45,6 +55,7 @@ namespace Waldem
         void SetMatrix(Matrix4 matrix);
         Matrix4 Inverse() { return inverse(Matrix); }
         void Update();
+        void ApplyPitchYawRoll();
         void DecompileMatrix();
 
         Matrix3x4 ToMatrix3x4() const

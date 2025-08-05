@@ -2,9 +2,16 @@
 
 namespace Waldem
 {
+    class CContentManager;
+
     struct AssetReference
     {
-        WString Reference = "Empty";
-        Asset* Asset = nullptr;
+        Path Reference = "Empty";
+
+        virtual void LoadAsset(CContentManager* contentManager) = 0;
+        virtual AssetType GetType() = 0;
+
+    protected:
+        AssetType Type = AssetType::Unknown;
     };
 }

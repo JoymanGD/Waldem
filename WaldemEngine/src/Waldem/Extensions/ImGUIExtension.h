@@ -47,39 +47,44 @@ namespace ImGui
         return ret;
     }
 
-    inline void AssetInputSlot(Waldem::WString& assetID, const char* assetType, const char* label = nullptr)
+    inline void AssetInputSlot(Waldem::Path& inPathToAsset, const char* assetType, std::function<void()> onDropCallback = nullptr, const char* label = nullptr)
     {
         if(label)
         {
             PushID(label);
-
+    
             Text("%s", label);
             SameLine();
         }
-
-        Button(assetID.IsEmpty() ? "<None>" : assetID.C_Str(), ImVec2(200, 0));
-
+    
+        Button(inPathToAsset.empty() ? "<None>" : inPathToAsset.string().c_str(), ImVec2(200, 0));
+    
         // Accept drag and drop payload
         if (BeginDragDropTarget())
         {
             if (const ImGuiPayload* payload = AcceptDragDropPayload(assetType))
             {
-                IM_ASSERT(payload->DataSize == sizeof(std::string*));
-                std::string* droppedAsset = *(std::string**)payload->Data;
-                if (droppedAsset)
-                    assetID = *droppedAsset;
+                const char* pathToAsset = static_cast<const char*>(payload->Data);
+                if (pathToAsset)
+                {
+                    inPathToAsset = Waldem::Path(pathToAsset);
+                    if (onDropCallback)
+                    {
+                        onDropCallback();
+                    }
+                }
             }
             EndDragDropTarget();
         }
-
+    
         // Optional: Right-click to clear
         if (BeginPopupContextItem())
         {
             if (MenuItem("Clear"))
-                assetID.Clear();
+                inPathToAsset.clear();
             EndPopup();
         }
-
+    
         if(label)
         {
             PopID();

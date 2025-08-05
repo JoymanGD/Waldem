@@ -3,6 +3,7 @@
 #include "ECS.h"
 
 #include "Components/AudioSource.h"
+#include "Components/Light.h"
 #include "Components/MeshComponent.h"
 #include "Components/RigidBody.h"
 #include "Components/Transform.h"
@@ -42,6 +43,7 @@ namespace Waldem
             RigidBody::RegisterComponent(World);
             AudioSource::RegisterComponent(World);
             MeshComponent::RegisterComponent(World);
+            Light::RegisterComponent(World);
         }
     }
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Waldem/ECS/Components/ComponentBase.h"
+
 namespace Waldem
 {
     enum class LightType
@@ -14,7 +16,6 @@ namespace Waldem
     {
         Vector3 Color = Vector3(1, 1, 1);
         float Intensity = 10;
-        LightType Type = LightType::Directional;
         float Radius = 10;
         float InnerCone = 1; 
         float OuterCone = 45;
@@ -22,11 +23,22 @@ namespace Waldem
         float AreaWidth = 1;
         float AreaHeight = 1;
         int AreaTwoSided = false;
+        LightType Type = LightType::Directional;
     };
     
     struct Light
     {
-        Light() = default;
+        COMPONENT(Light)
+            FIELD(Vector3, Color)
+            FIELD(float, Intensity)
+            FIELD(float, Radius)
+            FIELD(float, InnerCone)
+            FIELD(float, OuterCone)
+            FIELD(float, Softness)
+            FIELD(float, AreaWidth)
+            FIELD(float, AreaHeight)
+            FIELD(bool, AreaTwoSided)
+        END_COMPONENT()
         
         //Directional
         Light(Vector3 color, float intensity)

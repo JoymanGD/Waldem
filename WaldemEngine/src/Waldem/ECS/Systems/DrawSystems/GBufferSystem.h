@@ -33,6 +33,8 @@ namespace Waldem
     class WALDEM_API GBufferSystem : public DrawSystem
     {
         Texture2D* DummyTexture = nullptr;
+        Buffer* DummyVertexBuffer = nullptr;
+        Buffer* DummyIndexBuffer = nullptr;
         //GBuffer pass
         Pipeline* GBufferPipeline = nullptr;
         PixelShader* GBufferPixelShader = nullptr;
@@ -51,6 +53,8 @@ namespace Waldem
         GBufferRootConstants RootConstants;
         bool CameraIsDirty = true;
         GBufferSceneData SceneData;
+        WArray<IndirectCommand> IndirectCommands;
+        WArray<MaterialShaderAttribute> MaterialAttributes;
         
     public:
         GBufferSystem()
@@ -58,7 +62,17 @@ namespace Waldem
             Vector4 dummyColor = Vector4(1.f, 1.f, 1.f, 1.f);
             uint8_t* image_data = (uint8_t*)&dummyColor;
 
-            DummyTexture = Renderer::CreateTexture("DummyTexture", 1, 1, TextureFormat::R8G8B8A8_UNORM, image_data); 
+            DummyTexture = Renderer::CreateTexture("DummyTexture", 1, 1, TextureFormat::R8G8B8A8_UNORM, image_data);
+
+            WArray DummyVertexData
+            {
+                Vertex(Vector3(0, 0, 0), Vector3(0, 0, 1), Vector3(0, 0, 0), Vector3(0, 0, 1), Vector2(0, 0), 0),
+                Vertex(Vector3(0, 2, 0), Vector3(0, 0, 1), Vector3(0, 0, 0), Vector3(0, 0, 1), Vector2(0, 0), 0),
+                Vertex(Vector3(2, 2, 0), Vector3(0, 0, 1), Vector3(0, 0, 0), Vector3(0, 0, 1), Vector2(0, 0), 0),
+            };
+            WArray DummyIndexData { 0, 1, 2 };
+            DummyVertexBuffer = Renderer::CreateBuffer("DummyVertexBuffer", BufferType::VertexBuffer, sizeof(Vertex), sizeof(Vertex));
+            DummyIndexBuffer = Renderer::CreateBuffer("DummyIndexBuffer", BufferType::IndexBuffer, sizeof(uint), sizeof(uint));
         }
         
         void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
@@ -86,52 +100,6 @@ namespace Waldem
                                                             DEFAULT_DEPTH_STENCIL_DESC,
                                                             WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
                                                             DEFAULT_INPUT_LAYOUT_DESC);
-            
-            ECS::World.observer<MeshComponent, Transform>().event(flecs::OnSet).each([&](flecs::entity entity, MeshComponent& meshComponent, Transform& transform)
-            {
-                IndirectCommand command;
-                command.DrawId = WorldTransformsBuffer.Num();
-                command.DrawIndexed = {
-                    (uint)((CMesh*)meshComponent.Mesh.Asset)->IndexData.Num(),
-                    1,
-                    IndexBuffer.Num(),
-                    (int)VertexBuffer.Num(),
-                    0
-                };
-
-                meshComponent.DrawId = command.DrawId;
-
-                Editor::AddEntityID(command.DrawId, entity.id());
-                
-                VertexBuffer.AddData(((CMesh*)meshComponent.Mesh.Asset)->VertexData.GetData(), ((CMesh*)meshComponent.Mesh.Asset)->VertexData.GetSize());
-                IndexBuffer.AddData(((CMesh*)meshComponent.Mesh.Asset)->IndexData.GetData(), ((CMesh*)meshComponent.Mesh.Asset)->IndexData.GetSize());
-                WorldTransformsBuffer.AddData(&transform.Matrix, sizeof(Matrix4));
-
-                IndirectBuffer.AddData(&command, sizeof(IndirectCommand));
-                
-                auto materialAttribute = MaterialShaderAttribute();
-
-                materialAttribute.Albedo = ((CMesh*)meshComponent.Mesh.Asset)->CurrentMaterial->Albedo;
-                materialAttribute.Metallic = ((CMesh*)meshComponent.Mesh.Asset)->CurrentMaterial->Metallic;
-                materialAttribute.Roughness = ((CMesh*)meshComponent.Mesh.Asset)->CurrentMaterial->Roughness;
-                
-                if(((CMesh*)meshComponent.Mesh.Asset)->CurrentMaterial->HasDiffuseTexture())
-                {
-                    materialAttribute.DiffuseTextureID = ((CMesh*)meshComponent.Mesh.Asset)->CurrentMaterial->GetDiffuseTexture()->GetIndex(SRV_UAV_CBV);
-                    
-                    if(((CMesh*)meshComponent.Mesh.Asset)->CurrentMaterial->HasNormalTexture())
-                        materialAttribute.NormalTextureID = ((CMesh*)meshComponent.Mesh.Asset)->CurrentMaterial->GetNormalTexture()->GetIndex(SRV_UAV_CBV);
-                    if(((CMesh*)meshComponent.Mesh.Asset)->CurrentMaterial->HasORMTexture())
-                        materialAttribute.ORMTextureID = ((CMesh*)meshComponent.Mesh.Asset)->CurrentMaterial->GetORMTexture()->GetIndex(SRV_UAV_CBV);
-                }
-
-                MaterialAttributesBuffer.AddData(&materialAttribute, sizeof(MaterialShaderAttribute));
-            });
-            
-            ECS::World.observer<Transform, MeshComponent>().event(flecs::OnSet).each([&](flecs::entity entity, Transform& transform, MeshComponent& meshComponent)
-            {
-                WorldTransformsBuffer.UpdateData(&transform.Matrix, sizeof(Matrix4), meshComponent.DrawId);
-            });
 
             ECS::World.query<Camera, Transform, EditorComponent>("SceneDataInitializationSystem").each([&](Camera& camera, Transform& transform, EditorComponent)
             {
@@ -142,15 +110,87 @@ namespace Waldem
                 
                 CameraIsDirty = true;
             });
-
-            ECS::World.observer<Camera, Transform>("SceneDataUpdateSystem").event(flecs::OnSet).each([&](Camera& camera, Transform& transform)
+            
+            ECS::World.observer<MeshComponent>().event(flecs::OnAdd).each([&](flecs::entity entity, MeshComponent& meshComponent)
             {
-                SceneData.ViewMatrix = camera.ViewMatrix;
-                SceneData.ProjectionMatrix = camera.ProjectionMatrix;
-                SceneData.WorldMatrix = transform.Matrix;
-                SceneData.InverseProjectionMatrix = glm::inverse(camera.ProjectionMatrix);
+                IndirectCommand command;
+                command.DrawId = WorldTransformsBuffer.Num();
+                command.DrawIndexed = { 1, 1, 0, 0, 0 };
+                IndirectCommands.Add(command);
+
+                meshComponent.DrawId = command.DrawId;
+                IndirectBuffer.AddData(&command, sizeof(IndirectCommand));
+                auto identityMatrix = Matrix4(1.0f);
+                WorldTransformsBuffer.AddData(&identityMatrix, sizeof(Matrix4));
+
+                auto materialAttribute = MaterialShaderAttribute();
+                MaterialAttributes.Add(materialAttribute);
+                MaterialAttributesBuffer.AddData(&materialAttribute, sizeof(MaterialShaderAttribute));
+
+                Editor::AddEntityID(command.DrawId, entity.id());
+            });
+            
+            ECS::World.observer<MeshComponent>().event(flecs::OnSet).each([&](MeshComponent& meshComponent)
+            {
+                if(meshComponent.MeshRef.IsValid() && meshComponent.DrawId >= 0)
+                {
+                    auto& command = IndirectCommands[meshComponent.DrawId];
+                    command.DrawIndexed = {
+                        (uint)meshComponent.MeshRef.Mesh->IndexData.Num(),
+                        1,
+                        IndexBuffer.Num(),
+                        (int)VertexBuffer.Num(),
+                        0
+                    };
+
+                    IndirectBuffer.UpdateData(&command, sizeof(IndirectCommand), sizeof(IndirectCommand) * meshComponent.DrawId);
+
+                    VertexBuffer.AddData(meshComponent.MeshRef.Mesh->VertexData.GetData(), meshComponent.MeshRef.Mesh->VertexData.GetSize());
+                    IndexBuffer.AddData(meshComponent.MeshRef.Mesh->IndexData.GetData(), meshComponent.MeshRef.Mesh->IndexData.GetSize());
+
+                    auto& materialAttribute = MaterialAttributes[meshComponent.DrawId];
+
+                    materialAttribute.Albedo = meshComponent.MeshRef.Mesh->CurrentMaterial->Albedo;
+                    materialAttribute.Metallic = meshComponent.MeshRef.Mesh->CurrentMaterial->Metallic;
+                    materialAttribute.Roughness = meshComponent.MeshRef.Mesh->CurrentMaterial->Roughness;
+                    
+                    if(meshComponent.MeshRef.Mesh->CurrentMaterial->HasDiffuseTexture())
+                    {
+                        materialAttribute.DiffuseTextureID = meshComponent.MeshRef.Mesh->CurrentMaterial->GetDiffuseTexture()->GetIndex(SRV_UAV_CBV);
+                        
+                        if(meshComponent.MeshRef.Mesh->CurrentMaterial->HasNormalTexture())
+                            materialAttribute.NormalTextureID = meshComponent.MeshRef.Mesh->CurrentMaterial->GetNormalTexture()->GetIndex(SRV_UAV_CBV);
+                        if(meshComponent.MeshRef.Mesh->CurrentMaterial->HasORMTexture())
+                            materialAttribute.ORMTextureID = meshComponent.MeshRef.Mesh->CurrentMaterial->GetORMTexture()->GetIndex(SRV_UAV_CBV);
+                    }
+
+                    MaterialAttributesBuffer.UpdateData(&materialAttribute, sizeof(MaterialShaderAttribute), sizeof(MaterialShaderAttribute) * meshComponent.DrawId);
+                }
+            });
+            
+            ECS::World.observer<Transform>().event(flecs::OnSet).each([&](flecs::entity entity, Transform& transform)
+            {
+                auto meshComponent = entity.get<MeshComponent>();
                 
-                CameraIsDirty = true;
+                if(meshComponent && meshComponent->IsValid() && meshComponent->DrawId >= 0)
+                {
+                    WorldTransformsBuffer.UpdateData(&transform.Matrix, sizeof(Matrix4), meshComponent->DrawId);
+                }
+            });
+
+            ECS::World.observer<Camera>("SceneDataUpdateSystem").event(flecs::OnSet).each([&](flecs::entity entity, Camera& camera)
+            {
+                auto transform = entity.get<Transform>();
+
+                if(transform)
+                {
+                    SceneData.ViewMatrix = camera.ViewMatrix;
+                    SceneData.ProjectionMatrix = camera.ProjectionMatrix;
+                    SceneData.WorldMatrix = transform->Matrix;
+                    SceneData.InverseProjectionMatrix = glm::inverse(camera.ProjectionMatrix);
+                    
+                    CameraIsDirty = true;
+                }
             });
             
             ECS::World.system("GBufferSystem").kind(flecs::OnDraw).run([&](flecs::iter& it)
