@@ -77,6 +77,7 @@ namespace Waldem
         virtual void BeginUI() = 0;
         virtual void EndUI() = 0;
         virtual void Destroy(GraphicResource* resource) = 0;
+        virtual void DestroyImmediate(GraphicResource* resource) = 0;
         virtual void* GetPlatformResource(GraphicResource* resource) = 0;
     };
 
@@ -137,6 +138,7 @@ namespace Waldem
         static void BeginUI();
         static void EndUI();
         static void Destroy(GraphicResource* resource);
+        static void DestroyImmediate(GraphicResource* resource);
         static void* GetPlatformResource(GraphicResource* resource);
 
         static RendererAPI RAPI;

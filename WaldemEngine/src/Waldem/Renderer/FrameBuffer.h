@@ -71,12 +71,12 @@ namespace Waldem
         {
             for (int i = 0; i < Size; ++i)
             {
-                Renderer::Destroy(RenderTargets[i]);
+                Renderer::DestroyImmediate(RenderTargets[i]);
             }
 
             RenderTargets.Clear();
 
-            Renderer::Destroy(Depth);
+            Renderer::DestroyImmediate(Depth);
             Depth = nullptr;
 
             Size = 0;

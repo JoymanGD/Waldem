@@ -933,12 +933,79 @@ namespace Waldem
         {
             WD_CORE_ERROR("Unknown resource type");
         }
+    }
 
-        for (auto resource : ResourcesToDestroy)
+    void DX12Renderer::DestroyImmediate(GraphicResource* resource)
+    {
+        if(resource)
         {
-            resource->Release();
+            auto dx12Resource = ResourceMap[resource];
+            if(dx12Resource)
+            {
+                ResourceMap.Remove(resource);
+                dx12Resource->Release();
+            }
+            else
+            {
+                WD_CORE_ERROR("Resource not found in ResourceMap");
+            }
         }
-        ResourcesToDestroy.Clear();
+        else
+        {
+            WD_CORE_ERROR("Invalid resource");
+        }
+
+        auto uploadResource = resource->GetUploadResource();
+        if(uploadResource)
+        {
+            auto dx12UploadResource = ResourceMap[uploadResource];
+            if(dx12UploadResource)
+            {
+                ResourceMap.Remove(uploadResource);
+                dx12UploadResource->Release();
+            }
+            else
+            {
+                WD_CORE_ERROR("Upload resource not found in ResourceMap");
+            }
+        }
+        else
+        {
+            WD_CORE_ERROR("Resource doesnt have Upload resource");
+        }
+
+        auto readbackResource = resource->GetReadbackResource();
+        if(readbackResource)
+        {
+            auto dx12ReadbackResource = ResourceMap[readbackResource];
+            if(dx12ReadbackResource)
+            {
+                ResourceMap.Remove(readbackResource);
+                dx12ReadbackResource->Release();
+            }
+            else
+            {
+                WD_CORE_ERROR("Readback resource not found in ResourceMap");
+            }
+        }
+        else
+        {
+            WD_CORE_ERROR("Resource doesnt have Readback resource");
+        }
+
+        if(resource->GetType() == RTYPE_Texture || resource->GetType() == RTYPE_Buffer || resource->GetType() == RTYPE_AccelerationStructure)
+        {
+            GeneralAllocator.Free(resource->GetIndex(SRV_UAV_CBV));
+        }
+        else if(resource->GetType() == RTYPE_RenderTarget)
+        {
+            RenderTargetAllocator.Free(resource->GetIndex(RTV_DSV));
+            GeneralAllocator.Free(resource->GetIndex(SRV_UAV_CBV));
+        }
+        else
+        {
+            WD_CORE_ERROR("Unknown resource type");
+        }
     }
 
     void* DX12Renderer::GetPlatformResource(GraphicResource* resource)
@@ -957,6 +1024,12 @@ namespace Waldem
         }
 
         MainViewport.FrameBuffer->Advance();
+
+        for (auto resource : ResourcesToDestroy)
+        {
+            resource->Release();
+        }
+        ResourcesToDestroy.Clear();
     }
 
     PixelShader* DX12Renderer::LoadPixelShader(const Path& shaderName, WString entryPoint)
