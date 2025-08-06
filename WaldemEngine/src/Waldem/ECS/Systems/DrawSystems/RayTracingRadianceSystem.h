@@ -70,7 +70,7 @@ namespace Waldem
             LightsBuffer = ResizableBuffer("LightsBuffer", StorageBuffer, sizeof(LightData), 40);
             LightTransformsBuffer = ResizableBuffer("LightTransformsBuffer", StorageBuffer, sizeof(Matrix4), 40);
             SceneDataBuffer = Renderer::CreateBuffer("SceneDataBuffer", StorageBuffer, sizeof(RayTracingSceneData), sizeof(RayTracingSceneData), &RTSceneData);
-            TLAS = ResizableAccelerationStructure("RayTracingTLAS", 1);
+            TLAS = ResizableAccelerationStructure("RayTracingTLAS", 50);
             
             ECS::World.observer<MeshComponent, Transform>().event(flecs::OnAdd).each([&](MeshComponent& meshComponent, Transform& transform)
             {

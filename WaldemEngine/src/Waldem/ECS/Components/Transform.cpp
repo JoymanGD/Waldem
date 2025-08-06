@@ -106,13 +106,14 @@ namespace Waldem
 
     void Transform::SetRotation(Quaternion newRotation)
     {
-        Quaternion deltaQuat = inverse(RotationQuat) * newRotation;
+        Quaternion deltaQuat = RotationQuat * inverse(newRotation);
         RotationQuat = newRotation;
         
         auto pitch = glm::pitch(deltaQuat);
         auto yaw = glm::yaw(deltaQuat);
         auto roll = glm::roll(deltaQuat);
         Rotation += degrees(Vector3(pitch, yaw, roll));
+        LastRotation = Rotation;
 
         Update();
     }
