@@ -727,6 +727,8 @@ namespace Waldem
             throw std::runtime_error("Failed to retrieve thread group size.");
         }
 
+        shaderReflection->Release();
+
         return { threadGroupX, threadGroupY, threadGroupZ };
     }
 
