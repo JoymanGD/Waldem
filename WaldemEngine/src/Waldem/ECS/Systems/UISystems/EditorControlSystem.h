@@ -120,7 +120,7 @@ namespace Waldem
         
         void UpdateLightControl()
         {
-            ECS::World.system<Light, Transform, EditorComponent>("UpdateLightControlSystem").kind(flecs::OnUpdate).each([&](flecs::entity entity, Light& light, Transform& transform, EditorComponent)
+            ECS::World.system<Light, Transform>("UpdateLightControlSystem").kind(flecs::OnUpdate).each([&](flecs::entity entity, Light& light, Transform& transform)
             {
                 if (IsRotatingLight)
                 {
