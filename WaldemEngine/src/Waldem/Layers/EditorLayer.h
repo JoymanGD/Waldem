@@ -28,7 +28,6 @@
 #include "Waldem/Utils/FileUtils.h"
 #include "Waldem/ECS/ECS.h"
 #include "Waldem/ECS/Systems/DrawSystems/PostProcessSystem.h"
-#include "Waldem/ECS/Systems/UpdateSystems/TransformUpdateSystem.h"
 
 namespace Waldem
 {
@@ -69,7 +68,6 @@ namespace Waldem
             UISystems.Add(new EditorUISystem(BIND_ACTION(OnOpenScene), BIND_ACTION(OnSaveScene), BIND_ACTION(OnSaveSceneAs)));
             UISystems.Add(new EditorGuizmoSystem());
             
-            UpdateSystems.Add(new TransformUpdateSystem());
             UpdateSystems.Add(new EditorControlSystem());
             UpdateSystems.Add(new SpatialAudioSystem());
 
@@ -84,8 +82,7 @@ namespace Waldem
 
             Renderer::GetEditorViewport()->SubscribeOnResize([this](Vector2 size)
             {
-                EditorViewportResizeTriggered = true;
-                NewEditorViewportSize = size;
+                OnResize(size);
             });
 
             ECS::World.system("ImportScene").kind(flecs::OnUpdate).run([&](flecs::iter& it)
@@ -94,15 +91,6 @@ namespace Waldem
                 {
                     ImportScene(CurrentScenePath);
                     ImportSceneThisFrame = false;
-                }
-            });
-
-            ECS::World.system("EditorViewportResize").kind(flecs::OnUpdate).run([&](flecs::iter& it)
-            {
-                if(EditorViewportResizeTriggered)
-                {
-                    OnResize(NewEditorViewportSize);
-                    EditorViewportResizeTriggered = false;
                 }
             });
 
@@ -129,15 +117,12 @@ namespace Waldem
             for (DrawSystem* system : DrawSystems)
             {
                 system->OnResize(size);
-
-                //TODO: this is a temporary solution, replace with only OnResize call
-                // system->Deinitialize();
-                // system->Initialize(&InputManager, CurrentResourceManager, &ContentManager);
             }
 
-            ECS::World.query<Camera>().each([size](Camera& camera)
+            ECS::World.query<Camera, EditorComponent>().each([size](flecs::entity entity, Camera& camera, EditorComponent)
             {
-                camera.UpdateProjectionMatrix(camera.FieldOfView, size.x/size.y, camera.NearPlane, camera.FarPlane); 
+                camera.UpdateProjectionMatrix(camera.FieldOfView, size.x/size.y, camera.NearPlane, camera.FarPlane);
+                entity.modified<Camera>(); 
             });
         }
         

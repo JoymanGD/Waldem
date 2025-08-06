@@ -183,4 +183,5 @@ void MissShader(inout Payload payload)
 [shader("closesthit")]
 void ClosestHitShader(inout Payload payload, in Attributes attribs)
 {
+    payload.Missed = false;
 }

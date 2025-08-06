@@ -48,9 +48,6 @@ namespace Waldem
 		int FrameCount = 0;
 		const int MaxFrames = 100;
 
-		bool SwapchainResizeTriggered = false;
-		Point2 NewSwapchainSize = {};
-
 		//Layers
 		EditorLayer* Editor;
 		DebugLayer* Debug;

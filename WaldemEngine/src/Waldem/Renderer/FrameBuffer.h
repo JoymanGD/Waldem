@@ -53,7 +53,7 @@ namespace Waldem
         {
             RenderTargets.Add(renderTarget);
             
-            ++Size;
+            ++Size; 
         }
 
         void SetDepth(RenderTarget* depth)
