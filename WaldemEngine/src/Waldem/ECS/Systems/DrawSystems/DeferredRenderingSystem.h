@@ -57,12 +57,8 @@ namespace Waldem
             DeferredRenderingComputeShader = Renderer::LoadComputeShader("DeferredRendering");
             DeferredRenderingPipeline = Renderer::CreateComputePipeline("DeferredLightingPipeline", DeferredRenderingComputeShader);
 
-            ECS::World.system<>("DeferredRenderingSystem").kind(flecs::OnDraw).each([&]
+            ECS::World.system("DeferredRenderingSystem").kind(flecs::OnDraw).run([&](flecs::iter& it)
             {
-                RootConstants.AlbedoRT = AlbedoRT->GetIndex(SRV_UAV_CBV);
-                RootConstants.MeshIDRT = MeshIDRT->GetIndex(SRV_UAV_CBV);
-                RootConstants.RadianceRT = RadianceRT->GetIndex(SRV_UAV_CBV);
-                RootConstants.TargetRT = TargetRT->GetIndex(SRV_UAV_CBV);
                 Renderer::ResourceBarrier(TargetRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
                 Renderer::ClearRenderTarget(TargetRT);
                 Renderer::ResourceBarrier(TargetRT, RENDER_TARGET, UNORDERED_ACCESS);
@@ -82,6 +78,14 @@ namespace Waldem
                 Editor::HoveredEntityID = hoveredEntityId - 1;
                 Renderer::ResourceBarrier(TargetRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
             });
+        }
+
+        void OnResize(Vector2 size) override
+        {
+            RootConstants.AlbedoRT = AlbedoRT->GetIndex(SRV_UAV_CBV);
+            RootConstants.MeshIDRT = MeshIDRT->GetIndex(SRV_UAV_CBV);
+            RootConstants.RadianceRT = RadianceRT->GetIndex(SRV_UAV_CBV);
+            RootConstants.TargetRT = TargetRT->GetIndex(SRV_UAV_CBV);
         }
     };
 }
