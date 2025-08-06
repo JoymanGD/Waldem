@@ -12,7 +12,7 @@ namespace Waldem
         uint ThresholdNum = 0;
 
         ResizableAccelerationStructure() = default;
-        
+
         ResizableAccelerationStructure(const WString& name, uint thresholdNum) : ThresholdNum(thresholdNum)
         {
             InstanceBuffer = new ResizableBuffer(name + "_InstanceBuffer", StorageBuffer, sizeof(RayTracingInstance), thresholdNum);
@@ -20,15 +20,15 @@ namespace Waldem
 
             WArray DummyVertexData
             {
-                Vertex(Vector3(0, 0, 0), Vector3(0, 0, 1), Vector3(0, 0, 0), Vector3(0, 0, 1), Vector2(0, 0), 0),
-                Vertex(Vector3(0, 2, 0), Vector3(0, 0, 1), Vector3(0, 0, 0), Vector3(0, 0, 1), Vector2(0, 0), 0),
-                Vertex(Vector3(2, 2, 0), Vector3(0, 0, 1), Vector3(0, 0, 0), Vector3(0, 0, 1), Vector2(0, 0), 0),
+                Vertex(Vector3(0, 0, 0), Vector3(0, 0, 1), Vector3(1, 0, 0), Vector3(0, 1, 0), Vector2(0, 0), 0),
+                Vertex(Vector3(0, 2, 0), Vector3(0, 0, 1), Vector3(1, 0, 0), Vector3(0, 1, 0), Vector2(0, 1), 0),
+                Vertex(Vector3(2, 2, 0), Vector3(0, 0, 1), Vector3(1, 0, 0), Vector3(0, 1, 0), Vector2(1, 1), 0),
             };
             WArray DummyIndexData { 0, 1, 2 };
 
-            auto dummyVertexBuffer = Renderer::CreateBuffer("MeshVertexBuffer", BufferType::VertexBuffer, DummyVertexData.GetSize(), sizeof(Vertex), DummyVertexData.GetData());
-            auto dummyIndexBuffer = Renderer::CreateBuffer("MeshIndexBuffer", BufferType::IndexBuffer, DummyIndexData.GetSize(), sizeof(uint), DummyIndexData.GetData());
-            WArray dummyGeometry { RayTracingGeometry(dummyVertexBuffer, dummyIndexBuffer) };
+            DummyVertexBuffer = Renderer::CreateBuffer("DummyVertexBuffer", BufferType::VertexBuffer, DummyVertexData.GetSize(), sizeof(Vertex), DummyVertexData.GetData());
+            DummyIndexBuffer = Renderer::CreateBuffer("DummyIndexBuffer", BufferType::IndexBuffer, DummyIndexData.GetSize(), sizeof(uint), DummyIndexData.GetData());
+            WArray dummyGeometry { RayTracingGeometry(DummyVertexBuffer, DummyIndexBuffer) };
             DummyBLAS = Renderer::CreateBLAS("DummyBLAS", dummyGeometry);
         }
 
@@ -84,17 +84,19 @@ namespace Waldem
             memcpy(instance.Transform, &transposedMatrix, sizeof(instance.Transform));
             
             InstanceBuffer->UpdateData(&instance, sizeof(RayTracingInstance), meshComponent.RTXInstanceId * sizeof(RayTracingInstance));
+            Renderer::UpdateTLAS(TLAS, InstanceBuffer->GetBuffer(), Num());
         }
 
         void UpdateTransform(int meshId, Transform& transform)
         {
-            InstanceBuffer->UpdateData(&transform, sizeof(Matrix3x4), meshId * sizeof(RayTracingInstance));
+            auto transposedMatrix = transpose(transform.Matrix);
+            InstanceBuffer->UpdateData(&transposedMatrix, sizeof(Matrix3x4), meshId * sizeof(RayTracingInstance));
             Renderer::UpdateTLAS(TLAS, InstanceBuffer->GetBuffer(), Num());
         }
 
         void UpdateGeometry(MeshComponent& meshComponent)
         {
-            WArray geometries { RayTracingGeometry(((CMesh*)meshComponent.MeshRef.Mesh)->VertexBuffer, ((CMesh*)meshComponent.MeshRef.Mesh)->IndexBuffer) };
+            WArray geometries { RayTracingGeometry(meshComponent.MeshRef.Mesh->VertexBuffer, meshComponent.MeshRef.Mesh->IndexBuffer) };
             
             Renderer::UpdateBLAS(BLAS[meshComponent.DrawId], geometries);
             Renderer::UpdateTLAS(TLAS, InstanceBuffer->GetBuffer(), Num());
@@ -108,6 +110,8 @@ namespace Waldem
     private:
         AccelerationStructure* TLAS = nullptr;
         AccelerationStructure* DummyBLAS = nullptr;
+        Buffer* DummyVertexBuffer;
+        Buffer* DummyIndexBuffer;
         WArray<AccelerationStructure*> BLAS;
         ResizableBuffer* InstanceBuffer;
         WArray<RayTracingInstance> Instances;

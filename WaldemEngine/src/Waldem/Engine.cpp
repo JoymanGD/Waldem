@@ -172,15 +172,11 @@ namespace Waldem
 
 			Renderer::BeginUI();
 			ECS::World.run_pipeline(GUIPipeline, Time::DeltaTime);
-            Renderer::EndUI();
+			Renderer::EndUI();
 
 			Renderer::Present();
 
-			if(SwapchainResizeTriggered)
-			{
-				CurrentRenderer.GetMainViewport()->Resize(NewSwapchainSize);
-				SwapchainResizeTriggered = false;
-			}
+			CurrentRenderer.GetMainViewport()->ApplyPendingResize();
 
 			float FPS = CalculateAverageFPS(Time::DeltaTime);
 			Window->SetTitle(std::to_string(FPS).substr(0, 4));
@@ -197,9 +193,9 @@ namespace Waldem
 
 	bool Engine::OnWindowResize(WindowResizeEvent& e)
 	{
-		auto size = Vector2(e.GetWidth(), e.GetHeight());
-		SwapchainResizeTriggered = true;
-		NewSwapchainSize = size;
+		auto size = Point2(e.GetWidth(), e.GetHeight());
+		CurrentRenderer.GetMainViewport()->RequestResize(size);
+
 		return true;
 	}
 }

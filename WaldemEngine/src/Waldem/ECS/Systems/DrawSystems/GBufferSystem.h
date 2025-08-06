@@ -174,7 +174,7 @@ namespace Waldem
                 
                 if(meshComponent && meshComponent->IsValid() && meshComponent->DrawId >= 0)
                 {
-                    WorldTransformsBuffer.UpdateData(&transform.Matrix, sizeof(Matrix4), meshComponent->DrawId);
+                    WorldTransformsBuffer.UpdateData(&transform.Matrix, sizeof(Matrix4), meshComponent->DrawId * sizeof(Matrix4));
                 }
             });
 

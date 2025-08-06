@@ -26,6 +26,8 @@ namespace Waldem
         bool IsMouseOver = false;
     private:
         WArray<ResizeCallback> ResizeCallbacks;
+        bool PendingResize = false;
+        Vector2 PendingResizeTarget;
 
     public:
         SViewport() = default;
@@ -47,6 +49,21 @@ namespace Waldem
             DepthRange = depthRange;
         }
 
+        void RequestResize(Point2 size)
+        {
+            PendingResize = true;
+            PendingResizeTarget = size;
+        }
+
+        void ApplyPendingResize()
+        {
+            if (PendingResize)
+            {
+                Resize(PendingResizeTarget);
+                PendingResize = false;
+            }
+        }
+        
         void Resize(Point2 size)
         {
             Size = size;

@@ -51,7 +51,6 @@ namespace Waldem
         Buffer* SceneDataBuffer = nullptr;
         ResizableAccelerationStructure TLAS;
         RayTracingRootConstants RootConstants;
-        WArray<LightData> LightDatas;
         WArray<Matrix4> LightTransforms;
         
     public:

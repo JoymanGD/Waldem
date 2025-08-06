@@ -931,6 +931,12 @@ namespace Waldem
         {
             WD_CORE_ERROR("Unknown resource type");
         }
+
+        for (auto resource : ResourcesToDestroy)
+        {
+            resource->Release();
+        }
+        ResourcesToDestroy.Clear();
     }
 
     void* DX12Renderer::GetPlatformResource(GraphicResource* resource)
@@ -949,12 +955,6 @@ namespace Waldem
         }
 
         MainViewport.FrameBuffer->Advance();
-
-        for (auto resource : ResourcesToDestroy)
-        {
-            resource->Release();
-        }
-        ResourcesToDestroy.Clear();
     }
 
     PixelShader* DX12Renderer::LoadPixelShader(const Path& shaderName, WString entryPoint)
