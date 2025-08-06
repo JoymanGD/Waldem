@@ -66,7 +66,7 @@ void RayGenShader()
 
     Payload payload;
 
-    uint RayFlags = RAY_FLAG_FORCE_OPAQUE | RAY_FLAG_SKIP_CLOSEST_HIT_SHADER | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH;
+    uint RayFlags = 0;
             
     //shadow ray
     for (int i = 0; i < sceneData.NumLights; i++)

@@ -279,6 +279,11 @@ namespace Waldem
         Instance->PlatformRenderer->Destroy(resource);
     }
 
+    void Renderer::DestroyImmediate(GraphicResource* resource)
+    {
+        Instance->PlatformRenderer->DestroyImmediate(resource);
+    }
+
     void* Renderer::GetPlatformResource(GraphicResource* resource)
     {
         return Instance->PlatformRenderer->GetPlatformResource(resource);

@@ -70,7 +70,7 @@ namespace Waldem
             LightsBuffer = ResizableBuffer("LightsBuffer", StorageBuffer, sizeof(LightData), 40);
             LightTransformsBuffer = ResizableBuffer("LightTransformsBuffer", StorageBuffer, sizeof(Matrix4), 40);
             SceneDataBuffer = Renderer::CreateBuffer("SceneDataBuffer", StorageBuffer, sizeof(RayTracingSceneData), sizeof(RayTracingSceneData), &RTSceneData);
-            TLAS = ResizableAccelerationStructure("RayTracingTLAS", 50);
+            TLAS = ResizableAccelerationStructure("RayTracingTLAS", 1);
             
             ECS::World.observer<MeshComponent, Transform>().event(flecs::OnAdd).each([&](MeshComponent& meshComponent, Transform& transform)
             {
@@ -137,30 +137,29 @@ namespace Waldem
 
             ECS::World.system<>("RayTracingSystem").kind(flecs::OnDraw).each([&]
             {
-                if(IsInitialized)
-                {
-                    RootConstants.WorldPositionRT = WorldPositionRT->GetIndex(SRV_UAV_CBV);
-                    RootConstants.NormalRT = NormalRT->GetIndex(SRV_UAV_CBV);
-                    RootConstants.ColorRT = AlbedoRT->GetIndex(SRV_UAV_CBV);
-                    RootConstants.ORMRT = ORMRT->GetIndex(SRV_UAV_CBV);
-                    RootConstants.OutputColorRT = RadianceRT->GetIndex(SRV_UAV_CBV);
-                    RootConstants.LightsBuffer = LightsBuffer.GetIndex(SRV_UAV_CBV);
-                    RootConstants.LightTransformsBuffer = LightTransformsBuffer.GetIndex(SRV_UAV_CBV);
-                    RootConstants.SceneDataBuffer = SceneDataBuffer->GetIndex(SRV_UAV_CBV);
-                    RootConstants.TLAS = TLAS.GetIndex(SRV_UAV_CBV);
-                    
-                    Renderer::UploadBuffer(SceneDataBuffer, &RTSceneData, sizeof(RTSceneData));
+                RootConstants.LightsBuffer = LightsBuffer.GetIndex(SRV_UAV_CBV);
+                RootConstants.LightTransformsBuffer = LightTransformsBuffer.GetIndex(SRV_UAV_CBV);
+                RootConstants.SceneDataBuffer = SceneDataBuffer->GetIndex(SRV_UAV_CBV);
+                RootConstants.TLAS = TLAS.GetIndex(SRV_UAV_CBV);
+                
+                Renderer::UploadBuffer(SceneDataBuffer, &RTSceneData, sizeof(RTSceneData));
 
-                    //dispatching
-                    Renderer::ResourceBarrier(RadianceRT, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
-                    Renderer::SetPipeline(RTPipeline);
-                    Renderer::PushConstants(&RootConstants, sizeof(RayTracingRootConstants));
-                    Renderer::TraceRays(RTPipeline, Point3(RadianceRT->GetWidth(), RadianceRT->GetHeight(), 1));
-                    Renderer::ResourceBarrier(RadianceRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
-                }
+                //dispatching
+                Renderer::ResourceBarrier(RadianceRT, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
+                Renderer::SetPipeline(RTPipeline);
+                Renderer::PushConstants(&RootConstants, sizeof(RayTracingRootConstants));
+                Renderer::TraceRays(RTPipeline, Point3(RadianceRT->GetWidth(), RadianceRT->GetHeight(), 1));
+                Renderer::ResourceBarrier(RadianceRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
             });
-                    
-            IsInitialized = true;
+        }
+
+        void OnResize(Vector2 size) override
+        {
+            RootConstants.WorldPositionRT = WorldPositionRT->GetIndex(SRV_UAV_CBV);
+            RootConstants.NormalRT = NormalRT->GetIndex(SRV_UAV_CBV);
+            RootConstants.ColorRT = AlbedoRT->GetIndex(SRV_UAV_CBV);
+            RootConstants.ORMRT = ORMRT->GetIndex(SRV_UAV_CBV);
+            RootConstants.OutputColorRT = RadianceRT->GetIndex(SRV_UAV_CBV);
         }
     };
 }

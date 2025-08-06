@@ -75,6 +75,7 @@ namespace Waldem
         void BeginUI() override;
         void EndUI() override;
         void Destroy(GraphicResource* resource) override; 
+        void DestroyImmediate(GraphicResource* resource) override; 
         void* GetPlatformResource(GraphicResource* resource) override;
 
     private:
