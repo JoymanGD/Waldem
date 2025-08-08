@@ -47,13 +47,13 @@ void Waldem::GameScene::DrawUI(float deltaTime)
 
 void Waldem::GameScene::Serialize(Path& outPath)
 {
-    flecs::query<NameComponent> q = ECS::World.query_builder<NameComponent>().without<EditorComponent>().cached().build();
+    flecs::query<NameComponent> q = ECS::World.query_builder<SceneEntity>().without<EditorComponent>().cached().build();
     flecs::string json = q.to_json();
 
     //TODO: use some custom name
     if(!outPath.has_filename())
     {
-        outPath /= "Scene.json";
+        outPath /= "Scene.scene";
     }
 
     std::ofstream outFile(outPath.c_str());

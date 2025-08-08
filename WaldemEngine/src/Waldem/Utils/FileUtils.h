@@ -32,9 +32,9 @@ namespace Waldem
         {
             Path selectedPath = szFile;
 
-            if (selectedPath.extension() != L".ass")
+            if (selectedPath.extension() != L".scene")
             {
-                selectedPath += L".ass";
+                selectedPath += L".scene";
             }
 
             outPath = selectedPath;
