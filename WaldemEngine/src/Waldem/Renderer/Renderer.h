@@ -60,6 +60,7 @@ namespace Waldem
         virtual AccelerationStructure* CreateBLAS(WString name, WArray<RayTracingGeometry>& geometries) = 0;
         virtual AccelerationStructure* CreateTLAS(WString name, Buffer* instanceBuffer, uint numInstances) = 0;
         virtual void InitializeTLAS(WString name, Buffer* instanceBuffer, uint numInstances, AccelerationStructure*& tlas) = 0;
+        virtual void BuildTLAS(Buffer* instanceBuffer, uint numInstances, AccelerationStructure*& tlas) = 0;
         virtual void UpdateBLAS(AccelerationStructure* BLAS, WArray<RayTracingGeometry>& geometries) = 0;
         virtual void UpdateTLAS(AccelerationStructure* TLAS, Buffer* instanceBuffer, uint numInstances) = 0;
         virtual void CopyResource(GraphicResource* dstResource, GraphicResource* srcResource) = 0;
@@ -122,6 +123,7 @@ namespace Waldem
         static AccelerationStructure* CreateBLAS(WString name, WArray<RayTracingGeometry>& geometries);
         static AccelerationStructure* CreateTLAS(WString name, Buffer* instanceBuffer, uint numInstances);
         static void InitializeTLAS(WString name, Buffer* instanceBuffer, uint numInstances, AccelerationStructure*& tlas);
+        static void BuildTLAS(Buffer* instanceBuffer, uint numInstances, AccelerationStructure*& tlas);
         static void UpdateBLAS(AccelerationStructure* BLAS, WArray<RayTracingGeometry>& geometries);
         static void UpdateTLAS(AccelerationStructure* TLAS, Buffer* instanceBuffer, uint numInstances);
         static void CopyResource(GraphicResource* dstResource, GraphicResource* srcResource);

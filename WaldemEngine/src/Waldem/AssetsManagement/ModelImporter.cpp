@@ -10,6 +10,7 @@
 #include "assimp/scene.h"
 #include "..\Engine.h"
 #include "Waldem/Renderer/TextureType.h"
+#include "Waldem/Utils/StringUtils.h"
 
 namespace Waldem
 {
@@ -69,7 +70,26 @@ namespace Waldem
         // auto metal = CreateTexture(path, "MetalTexture", METALNESS, assimpModel, assimpMaterial);
         // auto roughness = CreateTexture(path, "RoughnessTexture", DIFFUSE_ROUGHNESS, assimpModel, assimpMaterial);
         auto metalRoughness = CreateTexture(path, "MetalRoughnessTexture", DIFFUSE_ROUGHNESS, assimpModel, assimpMaterial);
-        return new Material(diffuse, normal, metalRoughness);
+
+        Vector4 albedo = Vector4(1.0f);
+        if (aiGetMaterialColor(assimpMaterial, AI_MATKEY_BASE_COLOR, (aiColor4D*)&albedo) != AI_SUCCESS)
+        {
+            WD_CORE_INFO("No base color stored in material for mesh: {0}. Using default value.", path.string());
+        }
+
+        float roughness = 1.0f;
+        if(aiGetMaterialFloat(assimpMaterial, AI_MATKEY_ROUGHNESS_FACTOR, &roughness) != AI_SUCCESS)
+        {
+            WD_CORE_INFO("No roughness factor stored in material for mesh: {0}. Using default value.", path.string());
+        }
+
+        float metallic = 0.0f;
+        if(aiGetMaterialFloat(assimpMaterial, AI_MATKEY_METALLIC_FACTOR, &metallic) != AI_SUCCESS)
+        {
+            WD_CORE_INFO("No metallic factor stored in material for mesh: {0}. Using default value.", path.string());
+        }
+
+        return new Material(diffuse, normal, metalRoughness, albedo, roughness, metallic);
     }
 
     Material* CreateDummyMaterial(Texture2D* dummyTexture)
@@ -117,6 +137,15 @@ namespace Waldem
                     vertex.Tangent = Vector3(assimpMesh->mTangents[j].x, assimpMesh->mTangents[j].y, assimpMesh->mTangents[j].z);
                     vertex.Bitangent = Vector3(assimpMesh->mBitangents[j].x, assimpMesh->mBitangents[j].y, assimpMesh->mBitangents[j].z);
                     vertex.MeshId = i;
+                    
+                    if(assimpMesh->HasVertexColors(0))
+                    {
+                        vertex.Color = Vector4(assimpMesh->mColors[0][j].r, assimpMesh->mColors[0][j].g, assimpMesh->mColors[0][j].b, assimpMesh->mColors[0][j].a);
+                    }
+                    else
+                    {
+                        vertex.Color = Vector4(1.0f);
+                    }
 
                     if(assimpMesh->HasTextureCoords(0))
                     {
@@ -144,7 +173,9 @@ namespace Waldem
                 }
                 
                 AABB bBox { Vector3(assimpMesh->mAABB.mMin.x, assimpMesh->mAABB.mMin.y, assimpMesh->mAABB.mMin.z), Vector3(assimpMesh->mAABB.mMax.x, assimpMesh->mAABB.mMax.y, assimpMesh->mAABB.mMax.z)};
-                CMesh* mesh = new CMesh(vertexBufferData, indexBufferData, mat, bBox, assimpMesh->mName.C_Str(), modelMatrix);
+                WString dirtyName = WString(assimpMesh->mName.C_Str());
+                WString name = SanitizeString(dirtyName);
+                CMesh* mesh = new CMesh(vertexBufferData, indexBufferData, mat, bBox, name, modelMatrix);
                 result->AddMesh(mesh);
             }
         }

@@ -11,8 +11,7 @@ namespace Waldem
     class WALDEM_API CContentManager
     {
     public:
-        bool ImportAsset(const Path& path);
-        bool ImportAssetTo(const Path& inPath, Path& outPath);
+        bool ImportTo(const Path& from, Path& to);
         
         template <class T>
         T* LoadAsset(const Path& inPath)
@@ -33,8 +32,8 @@ namespace Waldem
                         WDataBuffer inData = WDataBuffer(buffer, size);
                     
                         asset = new T();
-                        // inData >> asset->Type;
-                        // inData >> asset->Hash;
+                        asset->Type = ExtensionToAssetType(inPath.extension().string());
+                        inData >> asset->Hash;
                         asset->Deserialize(inData);
                     }
                     else
@@ -69,6 +68,6 @@ namespace Waldem
         CAudioImporter AudioImporter;
         WArray<FileDroppedEventHandler> FileDroppedEventHandlers;
         
-        Asset* ImportAssetInternal(const Path& path);
+        WArray<Asset*> ImportInternal(const Path& path);
     };
 }

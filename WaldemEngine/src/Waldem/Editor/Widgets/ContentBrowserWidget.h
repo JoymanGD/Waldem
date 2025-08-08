@@ -28,7 +28,7 @@ namespace Waldem
                 
                 if(!target.empty())
                 {
-                    contentManager->ImportAssetTo(path, target);
+                    contentManager->ImportTo(path, target);
                     SelectedAssetListPath = target;
                 }
             });
@@ -144,10 +144,20 @@ namespace Waldem
 
             for (const auto& entry : std::filesystem::directory_iterator(CurrentPath))
             {
+                WString extension = entry.path().extension().string();
+
                 bool isFolder = entry.is_directory();
+                
+                if(!IsSupportedExtension(extension) && !isFolder)
+                {
+                    continue;
+                }
+                
                 const std::string itemName = entry.path().filename().string();
                 if (strlen(SearchBuffer) > 0 && itemName.find(SearchBuffer) == std::string::npos)
+                {
                     continue;
+                }
 
                 ImGui::BeginGroup();
 
@@ -193,10 +203,10 @@ namespace Waldem
                 }
                 
                 // Drag and drop
-                if (entry.path().extension() == ".ass" && ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+                if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
                 {
                     std::string fullPath = entry.path().string();
-                    ImGui::SetDragDropPayload("CONTENT_BROWSER_ASSET", fullPath.c_str(), fullPath.size() + 1);
+                    ImGui::SetDragDropPayload(ExtensionToAssetString(extension), fullPath.c_str(), fullPath.size() + 1);
                     ImGui::Text("%s", itemName.c_str());
                     ImGui::EndDragDropSource();
                 }
@@ -241,7 +251,7 @@ namespace Waldem
 
         void OnDraw(float deltaTime) override
         {
-            if (ImGui::Begin("Content", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoSavedSettings))
+            if (ImGui::Begin("Content", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus))
             {
                 HoveredDropTargetFolder.reset();
                 

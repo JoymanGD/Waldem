@@ -1470,7 +1470,7 @@ namespace Waldem
         asInputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
         asInputs.NumDescs = numInstances;
         asInputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE | D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_UPDATE;
-        asInputs.InstanceDescs = instanceBuffer->GetUploadResource()->GetGPUAddress();
+        asInputs.InstanceDescs = instanceBuffer->GetGPUAddress();
 
         D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO prebuildInfo = {};
         Device->GetRaytracingAccelerationStructurePrebuildInfo(&asInputs, &prebuildInfo);
@@ -1479,7 +1479,6 @@ namespace Waldem
         prebuildInfo.ResultDataMaxSizeInBytes = (prebuildInfo.ResultDataMaxSizeInBytes + 255) & ~255;
 
         //create scratch buffer
-        
         D3D12_HEAP_PROPERTIES heapProps = {};
         heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
         heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
@@ -1547,6 +1546,69 @@ namespace Waldem
         Device->CreateShaderResourceView(nullptr, &srvDesc, cpuHandle);
     }
 
+    void DX12Renderer::BuildTLAS(Buffer* instanceBuffer, uint numInstances, AccelerationStructure*& tlas)
+    {
+        auto cmdList = WorldCommandList.first;
+
+        D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS asInputs = {};
+        asInputs.Type         = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
+        asInputs.DescsLayout  = D3D12_ELEMENTS_LAYOUT_ARRAY;
+        asInputs.NumDescs     = numInstances;
+        asInputs.InstanceDescs= instanceBuffer->GetGPUAddress();
+        asInputs.Flags        = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE |
+                                D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_UPDATE;
+
+        D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO prebuildInfo = {};
+        Device->GetRaytracingAccelerationStructurePrebuildInfo(&asInputs, &prebuildInfo);
+
+        UINT64 requiredScratch = (prebuildInfo.ScratchDataSizeInBytes + 255) & ~255ull;
+
+        if (!tlas->GetScratchBuffer() || tlas->GetScratchBuffer()->GetCapacity() < requiredScratch)
+        {
+            if (tlas->GetScratchBuffer())
+            {
+                Destroy(tlas->GetScratchBuffer());
+            }
+
+            D3D12_HEAP_PROPERTIES heapProps = {};
+            heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
+
+            D3D12_RESOURCE_DESC resourceDesc = {};
+            resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+            resourceDesc.Width = requiredScratch;
+            resourceDesc.Height = 1;
+            resourceDesc.DepthOrArraySize = 1;
+            resourceDesc.MipLevels = 1;
+            resourceDesc.Format = DXGI_FORMAT_UNKNOWN;
+            resourceDesc.SampleDesc.Count = 1;
+            resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+            resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+
+            ID3D12Resource* scratchResource = nullptr;
+            HRESULT hr = Device->CreateCommittedResource(
+                &heapProps,
+                D3D12_HEAP_FLAG_NONE,
+                &resourceDesc,
+                D3D12_RESOURCE_STATE_COMMON,
+                nullptr,
+                IID_PPV_ARGS(&scratchResource)
+            );
+
+            Buffer* scratchBuffer = new Buffer("TLAS_Scratch", BufferType::StorageBuffer, requiredScratch, sizeof(uint32_t));
+            scratchBuffer->SetGPUAddress(scratchResource->GetGPUVirtualAddress());
+            tlas->SetScratchBuffer(scratchBuffer);
+        }
+
+        D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC asDesc = {};
+        asDesc.Inputs = asInputs;
+        asDesc.DestAccelerationStructureData = tlas->GetGPUAddress();
+        asDesc.ScratchAccelerationStructureData = tlas->GetScratchBuffer()->GetGPUAddress();
+
+        cmdList->BuildRaytracingAccelerationStructure(&asDesc);
+
+        cmdList->UAVBarrier(ResourceMap[(GraphicResource*)tlas]);
+    }
+
     void DX12Renderer::UpdateBLAS(AccelerationStructure* BLAS, WArray<RayTracingGeometry>& geometries)
     {
         auto cmdList = WorldCommandList.first;
@@ -1605,7 +1667,7 @@ namespace Waldem
         asInputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE |
                          D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_UPDATE |
                          D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PERFORM_UPDATE;  // Important for refit
-        asInputs.InstanceDescs = instanceBuffer->GetUploadResource()->GetGPUAddress();
+        asInputs.InstanceDescs = instanceBuffer->GetGPUAddress();
 
         // Describe the acceleration structure build for update
         D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC asDesc = {};

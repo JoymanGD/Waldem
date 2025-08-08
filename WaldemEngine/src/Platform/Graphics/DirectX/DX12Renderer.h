@@ -61,6 +61,7 @@ namespace Waldem
         AccelerationStructure* CreateBLAS(WString name, WArray<RayTracingGeometry>& geometries) override;
         AccelerationStructure* CreateTLAS(WString name, Buffer* instanceBuffer, uint numInstances) override;
         void InitializeTLAS(WString name, Buffer* instanceBuffer, uint numInstances, AccelerationStructure*& tlas) override;
+        void BuildTLAS(Buffer* instanceBuffer, uint numInstances, AccelerationStructure*& tlas) override;
         void UpdateBLAS(AccelerationStructure* BLAS, WArray<RayTracingGeometry>& geometries) override;
         void UpdateTLAS(AccelerationStructure* TLAS, Buffer* instanceBuffer, uint numInstances) override;
         SViewport* GetEditorViewport() override { return &EditorViewport; }

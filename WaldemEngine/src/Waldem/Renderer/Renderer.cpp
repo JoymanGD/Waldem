@@ -199,6 +199,11 @@ namespace Waldem
         Instance->PlatformRenderer->InitializeTLAS(name, instanceBuffer, numInstances, tlas);
     }
 
+    void Renderer::BuildTLAS(Buffer* instanceBuffer, uint numInstances, AccelerationStructure*& tlas)
+    {
+        Instance->PlatformRenderer->BuildTLAS(instanceBuffer, numInstances, tlas);
+    }
+
     void Renderer::UpdateBLAS(AccelerationStructure* BLAS, WArray<RayTracingGeometry>& geometries)
     {
         Instance->PlatformRenderer->UpdateBLAS(BLAS, geometries);

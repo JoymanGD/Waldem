@@ -2,6 +2,7 @@
 
 #include "Waldem/ECS/Components/Selected.h"
 #include "Waldem/ECS/ECS.h"
+#include "Waldem/Editor/AssetReference/AudioClipReference.h"
 #include "Waldem/Extensions/ImGUIExtension.h"
 
 namespace Waldem
@@ -24,7 +25,7 @@ namespace Waldem
 
         void OnDraw(float deltaTime) override
         {
-            if (ImGui::Begin("Details", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoSavedSettings))
+            if (ImGui::Begin("Details", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus))
             {
                 auto selectedEntities = ECS::World.query<Selected>();
 
@@ -281,11 +282,31 @@ namespace Waldem
 									AssetReference* assetRef = (AssetReference*)fieldPtr;
 									WString myTextureID;
 									ImGui::TableSetColumnIndex(1);
-									ImGui::AssetInputSlot(assetRef->Reference, "CONTENT_BROWSER_ASSET", [this, entity, id, assetRef]
+									auto assetType = assetRef->GetType();
+									WString assetTypeString = AssetTypeToString(assetRef->GetType());
+									ImGui::AssetInputSlot(assetRef->Reference, assetTypeString.C_Str(), [this, entity, id, assetRef]
 									{
 										assetRef->LoadAsset(ContentManager);
 										entity.modified(id);
 									});
+
+									//DEBUG, TODO: clean later
+									if(assetType == AssetType::Audio)
+									{
+										auto audioClipRef = (AudioClipReference*)assetRef;
+										
+										if(ImGui::Button("Play"))
+										{
+											Audio::Play(audioClipRef->Clip);
+										}
+
+										ImGui::SameLine();
+
+										if(ImGui::Button("Stop"))
+										{
+											Audio::Stop(audioClipRef->Clip);
+										}
+									}
 								}
 								break;
 							}

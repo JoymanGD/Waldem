@@ -32,7 +32,6 @@ namespace Waldem
 		VertexData.Serialize(outData);
 		IndexData.Serialize(outData);
 		CurrentMaterial->Serialize(outData);
-		Name.Serialize(outData);
 		outData << BBox;
 		outData << ObjectMatrix;
 	}
@@ -43,7 +42,6 @@ namespace Waldem
 		IndexData.Deserialize(inData);
 		CurrentMaterial = new Material();
 		CurrentMaterial->Deserialize(inData);
-		Name.Deserialize(inData);
 		inData >> BBox;
 		inData >> ObjectMatrix;
 		ExtractPositionsFromVertexData(VertexData, Positions);

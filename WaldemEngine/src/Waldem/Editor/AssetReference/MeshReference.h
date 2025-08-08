@@ -14,10 +14,7 @@ namespace Waldem
             Mesh = contentManager->LoadAsset<CMesh>(Reference);
         }
 
-        AssetType GetType() override
-        {
-            return AssetType::Mesh;
-        }
+        AssetType GetType() override { return AssetType::Mesh; }
 
         bool IsValid() const { return Mesh; }
     };

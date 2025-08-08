@@ -3,48 +3,40 @@
 
 namespace Waldem
 {
-    Asset* CContentManager::ImportAssetInternal(const Path& path)
+    WArray<Asset*> CContentManager::ImportInternal(const Path& path)
     {
-        std::string extension = path.extension().string();
+        auto extension = path.extension().string();
 
-        Asset* asset = nullptr;
+        WArray<Asset*> assets;
 
         if (extension == ".png" || extension == ".jpg")
         {
             auto texture = ImageImporter.Import(path);
-            asset = (Asset*)&texture->Desc;
+            assets.Add(&texture->Desc);
         }
         else if (extension == ".gltf" || extension == ".glb")
         {
-            asset = (Asset*)ModelImporter.Import(path);
+            auto model = ModelImporter.Import(path);
+
+            for (auto mesh : model->GetMeshes())
+            {
+                assets.Add(mesh);
+            }
         }
         else if (extension == ".wav")
         {
-            asset = (Asset*)AudioImporter.Import(path);
+            assets.Add(AudioImporter.Import(path));
         }
 
-        return asset;
-    }
-    
-    bool CContentManager::ImportAsset(const Path& path)
-    {
-        Asset* asset = ImportAssetInternal(path);
-
-        if(asset)
-        {
-            auto assetPath = GetPathForAsset(asset->Type);
-
-            return ImportAssetTo(path, assetPath);
-        }
-        
-        return false;
+        return assets;
     }
 
-    bool CContentManager::ImportAssetTo(const Path& inPath, Path& outPath)
+    bool CContentManager::ImportTo(const Path& from, Path& to)
     {
-        Asset* asset = ImportAssetInternal(inPath);
+        WArray<Asset*> assets = ImportInternal(from);
+        bool multipleAssets = assets.Num() > 1;
 
-        if(asset)
+        for (auto asset : assets)
         {
             WDataBuffer outData;
             asset->Serialize(outData);
@@ -52,22 +44,31 @@ namespace Waldem
             //add header
             uint64 hash = HashFromData(outData.GetData(), outData.GetSize());
             outData.Prepend(&hash, sizeof(uint64));
-            outData.Prepend(&asset->Type, sizeof(AssetType));
 
-            outPath /= inPath.filename();
-            outPath.replace_extension(".ass");
+            auto extension = AssetTypeToExtension(asset->Type);
+            Path toPath = to;
+            toPath /= asset->Name.ToString();
+            toPath.replace_extension(extension.ToString());
+
+            if(multipleAssets)
+            {
+                auto folder = from.stem();
+                toPath = toPath.parent_path() / folder / toPath.filename();
+                create_directories(toPath.parent_path());
+            }
             
-            std::ofstream outFile(outPath.c_str(), std::ios::binary);
+            std::ofstream outFile(toPath.c_str(), std::ios::binary);
             outFile.write(static_cast<const char*>(outData.GetData()), outData.GetSize());
             outFile.close();
 
-            if (outFile)
+            if (!outFile)
             {
-                return true;
+                WD_CORE_ERROR("Failed to import file from {0} to {1}", from.string(), toPath.string());
+                return false;
             }
         }
         
-        return false;
+        return true;
     }
 
     template<typename T>
@@ -85,8 +86,8 @@ namespace Waldem
                 if (inFile.read((char*)buffer, size))
                 {
                     WDataBuffer inData = WDataBuffer(buffer, size);
-                    
-                    inData >> outAsset.Type;
+
+                    outAsset.Type = ExtensionToAssetType(inPath.extension().string());
                     inData >> outAsset.Hash;
                     outAsset.Deserialize(inData);
                 

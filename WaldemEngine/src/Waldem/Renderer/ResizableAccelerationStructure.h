@@ -16,13 +16,13 @@ namespace Waldem
         ResizableAccelerationStructure(const WString& name, uint thresholdNum) : ThresholdNum(thresholdNum)
         {
             InstanceBuffer = new ResizableBuffer(name + "_InstanceBuffer", StorageBuffer, sizeof(RayTracingInstance), thresholdNum);
-            TLAS = Renderer::CreateTLAS(name, InstanceBuffer->GetBuffer(), thresholdNum);
+            TLAS = Renderer::CreateTLAS(name, InstanceBuffer->GetBuffer(), Num());
 
             WArray DummyVertexData
             {
-                Vertex(Vector3(0, 0, 0), Vector3(0, 0, 1), Vector3(1, 0, 0), Vector3(0, 1, 0), Vector2(0, 0), 0),
-                Vertex(Vector3(0, 2, 0), Vector3(0, 0, 1), Vector3(1, 0, 0), Vector3(0, 1, 0), Vector2(0, 1), 0),
-                Vertex(Vector3(2, 2, 0), Vector3(0, 0, 1), Vector3(1, 0, 0), Vector3(0, 1, 0), Vector2(1, 1), 0),
+                Vertex(Vector3(0, 0, 0), Vector4(1, 1, 1, 1), Vector3(0, 0, 1), Vector3(1, 0, 0), Vector3(0, 1, 0), Vector2(0, 0), 0),
+                Vertex(Vector3(0, 2, 0), Vector4(1, 1, 1, 1), Vector3(0, 0, 1), Vector3(1, 0, 0), Vector3(0, 1, 0), Vector2(0, 1), 0),
+                Vertex(Vector3(2, 2, 0), Vector4(1, 1, 1, 1), Vector3(0, 0, 1), Vector3(1, 0, 0), Vector3(0, 1, 0), Vector2(1, 1), 0),
             };
             WArray DummyIndexData { 0, 1, 2 };
 
@@ -40,7 +40,7 @@ namespace Waldem
             
             RayTracingInstance instance;
             instance.InstanceID = Num();
-            instance.InstanceMask = 0xFF;
+            instance.InstanceMask = 0;
             instance.InstanceContributionToHitGroupIndex = 0;
             instance.Flags = 0;
             instance.AccelerationStructure = DummyBLAS->GetGPUAddress();
@@ -51,17 +51,19 @@ namespace Waldem
 
             Instances.Add(instance);
                 
-            if (Num() <= ThresholdNum)
-            {
-                Renderer::UpdateTLAS(TLAS, InstanceBuffer->GetBuffer(), Num());
-            }
-            else
-            {
-                ThresholdNum += ThresholdNum;
+            // if (Num() <= ThresholdNum)
+            // {
+            //     Renderer::UpdateTLAS(TLAS, InstanceBuffer->GetBuffer(), Num());
+            // }
+            // else
+            // {
+                // ThresholdNum += ThresholdNum;
 
-                Renderer::Destroy(TLAS);
-                Renderer::InitializeTLAS("RayTracingTLAS", InstanceBuffer->GetBuffer(), ThresholdNum, TLAS);
-            }
+                // Renderer::Destroy(TLAS);
+                // Renderer::InitializeTLAS("RayTracingTLAS", InstanceBuffer->GetBuffer(), Num(), TLAS);
+            // }
+            
+            Renderer::BuildTLAS(InstanceBuffer->GetBuffer(), Num(), TLAS);
 
             return instance.InstanceID;
         }
@@ -81,7 +83,7 @@ namespace Waldem
             instance.Flags = 0;
             instance.AccelerationStructure = blas->GetGPUAddress();
             auto transposedMatrix = transpose(transform.Matrix);
-            memcpy(instance.Transform, &transposedMatrix, sizeof(instance.Transform));
+            memcpy(instance.Transform, &transposedMatrix, sizeof(Matrix3x4));
             
             InstanceBuffer->UpdateData(&instance, sizeof(RayTracingInstance), meshComponent.RTXInstanceId * sizeof(RayTracingInstance));
             Renderer::UpdateTLAS(TLAS, InstanceBuffer->GetBuffer(), Num());
@@ -98,7 +100,7 @@ namespace Waldem
         {
             WArray geometries { RayTracingGeometry(meshComponent.MeshRef.Mesh->VertexBuffer, meshComponent.MeshRef.Mesh->IndexBuffer) };
             
-            Renderer::UpdateBLAS(BLAS[meshComponent.DrawId], geometries);
+            Renderer::UpdateBLAS(BLAS[meshComponent.RTXInstanceId], geometries);
             Renderer::UpdateTLAS(TLAS, InstanceBuffer->GetBuffer(), Num());
         }
 

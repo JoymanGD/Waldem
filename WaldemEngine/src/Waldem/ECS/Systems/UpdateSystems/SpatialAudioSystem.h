@@ -27,7 +27,7 @@ namespace Waldem
                         return;
                     }
                     
-                    if(!source.Clip)
+                    if(!source.ClipRef.IsValid() || !source.ClipRef.Clip->CurrentChannel)
                     {
                         return;
                     }
@@ -50,11 +50,11 @@ namespace Waldem
                     
                     if (distance > maxDist)
                     {
-                        source.Clip->CurrentChannel->distanceVolume = 0.0f;
+                        source.ClipRef.Clip->CurrentChannel->distanceVolume = 0.0f;
                     }
                     else
                     {
-                        source.Clip->CurrentChannel->distanceVolume = 1.0f / (1.0f + rolloff * (distance - minDist));
+                        source.ClipRef.Clip->CurrentChannel->distanceVolume = 1.0f / (1.0f + rolloff * (distance - minDist));
                     }
 
                     //simple distance handling
@@ -80,7 +80,7 @@ namespace Waldem
                     float angle = atan2(x, z);
                     
                     float pan = glm::clamp(sin(angle), -1.0f, 1.0f);
-                    source.Clip->CurrentChannel->pan = pan * PAN_SIMPLIFICATION;
+                    source.ClipRef.Clip->CurrentChannel->pan = pan * PAN_SIMPLIFICATION;
                 });
             });
         }
@@ -89,9 +89,9 @@ namespace Waldem
         {
             ECS::World.query<AudioSource>().each([&](AudioSource& audioSource)
             {
-                if (audioSource.Clip && audioSource.Clip->CurrentChannel)
+                if (audioSource.ClipRef.IsValid() && audioSource.ClipRef.Clip->CurrentChannel)
                 {
-                    Audio::Stop(audioSource.Clip);
+                    Audio::Stop(audioSource.ClipRef.Clip);
                 }
             });
         }

@@ -2,6 +2,7 @@
 #include "Waldem/Audio/AudioClip.h"
 #include "Waldem/Audio/Audio.h"
 #include "ComponentBase.h"
+#include "Waldem/Editor/AssetReference/AudioClipReference.h"
 
 namespace Waldem
 {
@@ -13,6 +14,7 @@ namespace Waldem
             FIELD(bool, Loop)
             FIELD(bool, Spatial)
             FIELD(bool, PlayOnStart)
+            FIELD(AssetReference, Clip)
         END_COMPONENT()
         
         float Range = 5.0f;
@@ -20,15 +22,15 @@ namespace Waldem
         bool Loop = false;
         bool Spatial = true;
         bool PlayOnStart = false;
-        AudioClip* Clip = nullptr;
+        AudioClipReference ClipRef;
 
-        AudioSource(AudioClip* clip, float range, bool playOnStart, float volume = 1.0f, bool loop = false, bool spatial = true) : Clip(clip), Range(range), Volume(volume), Loop(loop), Spatial(spatial)
+        AudioSource(float range, bool playOnStart, float volume = 1.0f, bool loop = false, bool spatial = true) : Range(range), Volume(volume), Loop(loop), Spatial(spatial)
         {
             PlayOnStart = playOnStart;
             
             if(PlayOnStart)
             {
-                Audio::Play(Clip, volume, loop);
+                Audio::Play(ClipRef.Clip, volume, loop);
             }
         }
     };

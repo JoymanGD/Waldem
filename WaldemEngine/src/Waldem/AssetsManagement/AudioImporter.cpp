@@ -84,6 +84,7 @@ namespace Waldem
         
         clip->Stride = SDL_AUDIO_BITSIZE(format) / 8;
         clip->ChannelsNum = clipSpec.channels;
+        clip->Name = path.filename().string();
         
         return clip;
     }
