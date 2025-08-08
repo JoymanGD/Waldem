@@ -53,7 +53,7 @@ void Waldem::GameScene::Serialize(Path& outPath)
     //TODO: use some custom name
     if(!outPath.has_filename())
     {
-        outPath /= "Scene.scene";
+        outPath /= "Scene.scene"; 
     }
 
     std::ofstream outFile(outPath.c_str());
