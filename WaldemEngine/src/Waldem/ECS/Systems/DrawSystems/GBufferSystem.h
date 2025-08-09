@@ -120,8 +120,13 @@ namespace Waldem
 
                 meshComponent.DrawId = command.DrawId;
                 IndirectBuffer.AddData(&command, sizeof(IndirectCommand));
-                auto identityMatrix = Matrix4(1.0f);
-                WorldTransformsBuffer.AddData(&identityMatrix, sizeof(Matrix4));
+                
+                auto transform = entity.get<Transform>();
+                
+                if(transform)
+                {
+                    WorldTransformsBuffer.AddData((Matrix4*)&transform->Matrix, sizeof(Matrix4));
+                }
 
                 auto materialAttribute = MaterialShaderAttribute();
                 MaterialAttributes.Add(materialAttribute);
@@ -165,6 +170,16 @@ namespace Waldem
                     }
 
                     MaterialAttributesBuffer.UpdateData(&materialAttribute, sizeof(MaterialShaderAttribute), sizeof(MaterialShaderAttribute) * meshComponent.DrawId);
+                }
+            });
+            
+            ECS::World.observer<Transform>().event(flecs::OnAdd).each([&](flecs::entity entity, Transform& transform)
+            {
+                auto meshComponent = entity.get<MeshComponent>();
+                
+                if(meshComponent && meshComponent->IsValid())
+                {
+                    WorldTransformsBuffer.AddData(&transform.Matrix, sizeof(Matrix4));
                 }
             });
             

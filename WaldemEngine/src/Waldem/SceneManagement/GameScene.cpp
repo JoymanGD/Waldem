@@ -47,8 +47,7 @@ void Waldem::GameScene::DrawUI(float deltaTime)
 
 void Waldem::GameScene::Serialize(Path& outPath)
 {
-    flecs::query<NameComponent> q = ECS::World.query_builder<SceneEntity>().without<EditorComponent>().cached().build();
-    flecs::string json = q.to_json();
+    auto json = ECS::World.to_json();
 
     //TODO: use some custom name
     if(!outPath.has_filename())
@@ -66,13 +65,9 @@ void Waldem::GameScene::Serialize(Path& outPath)
 
 void Waldem::GameScene::Deserialize(Path& inPath)
 {
-    std::ifstream inFile(inPath.c_str());
-    if (inFile.is_open())
+    ECS::World.from_json_file(inPath.string().c_str(), nullptr);
+    ECS::World.system("Test").kind(flecs::OnUpdate).each([]
     {
-        std::stringstream buffer;
-        buffer << inFile.rdbuf();
-        inFile.close();
-
-        ECS::World.from_json(buffer.str().c_str(), nullptr);
-    }
+       WD_CORE_INFO("Test system executed"); 
+    });
 }
