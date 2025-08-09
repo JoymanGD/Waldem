@@ -85,15 +85,6 @@ namespace Waldem
                 OnResize(size);
             });
 
-            ECS::World.system("ImportScene").kind(flecs::OnUpdate).run([&](flecs::iter& it)
-            {
-                if(ImportSceneThisFrame)
-                {
-                    ImportScene(CurrentScenePath);
-                    ImportSceneThisFrame = false;
-                }
-            });
-
             ECS::World.system<>("UISystems").kind(flecs::OnGUI).each([&]
             {
                 for (auto system : UISystems)
@@ -203,6 +194,15 @@ namespace Waldem
             CurrentScene->Initialize(&InputManager, CurrentResourceManager);
 
             // Initialize();
+        }
+
+        void CheckImportSceneThisFrame()
+        {
+            if(ImportSceneThisFrame)
+            {
+                ImportScene(CurrentScenePath);
+                ImportSceneThisFrame = false;
+            }
         }
 
         void ImportScene(Path& path)

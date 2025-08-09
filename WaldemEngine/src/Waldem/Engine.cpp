@@ -146,6 +146,8 @@ namespace Waldem
 
 		while (IsRunning)
 		{
+			Editor->CheckImportSceneThisFrame();
+
 			Window->Begin();
 			
 			auto currentFrameTime = std::chrono::high_resolution_clock::now();

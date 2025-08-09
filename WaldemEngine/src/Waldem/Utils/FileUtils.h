@@ -24,7 +24,7 @@ namespace Waldem
         ofn.hwndOwner = CWindow::Instance->GetWindowsHandle();
         ofn.lpstrFile = szFile;
         ofn.nMaxFile = MAX_PATH;
-        ofn.lpstrFilter = L"Asset Files (*.ass)\0*.ass\0All Files (*.*)\0*.*\0";
+        ofn.lpstrFilter = L"Scene Files (*.scene)\0*.scene\0All Files (*.*)\0*.*\0";
         ofn.nFilterIndex = 1;
         ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
 
@@ -54,7 +54,7 @@ namespace Waldem
         ofn.hwndOwner = CWindow::Instance->GetWindowsHandle();
         ofn.lpstrFile = szFile;
         ofn.nMaxFile = MAX_PATH;
-        ofn.lpstrFilter = L"Asset Files (*.ass)\0*.ass\0All Files (*.*)\0*.*\0";
+        ofn.lpstrFilter = L"Scene Files (*.scene)\0*.scene\0All Files (*.*)\0*.*\0";
         ofn.nFilterIndex = 1;
         ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
