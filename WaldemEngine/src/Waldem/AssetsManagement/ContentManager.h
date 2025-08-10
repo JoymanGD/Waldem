@@ -17,10 +17,16 @@ namespace Waldem
         T* LoadAsset(const Path& inPath)
         {
             Asset* asset = nullptr;
+            Path finalPath = inPath;
 
-            if(exists(inPath))
+            if (finalPath.is_relative())
             {
-                std::ifstream inFile(inPath.c_str(), std::ios::binary | std::ios::ate);
+                finalPath = Path(CONTENT_PATH) / finalPath;
+            }
+
+            if(exists(finalPath))
+            {
+                std::ifstream inFile(finalPath.c_str(), std::ios::binary | std::ios::ate);
                 if (inFile.is_open())
                 {
                     std::streamsize size = inFile.tellg();
@@ -32,13 +38,13 @@ namespace Waldem
                         WDataBuffer inData = WDataBuffer(buffer, size);
                     
                         asset = new T();
-                        asset->Type = ExtensionToAssetType(inPath.extension().string());
+                        asset->Type = ExtensionToAssetType(finalPath.extension().string());
                         inData >> asset->Hash;
                         asset->Deserialize(inData);
                     }
                     else
                     {
-                        WD_CORE_ERROR("Failed to read stream: {0}", inPath.string());
+                        WD_CORE_ERROR("Failed to read stream: {0}", finalPath.string());
                     }
                 
                     delete[] buffer;
@@ -46,12 +52,12 @@ namespace Waldem
                 }
                 else
                 {
-                    WD_CORE_ERROR("Failed to open stream: {0}", inPath.string());
+                    WD_CORE_ERROR("Failed to open stream: {0}", finalPath.string());
                 }
             }
             else
             {
-                WD_CORE_ERROR("Failed to load asset: {0}", inPath.string());
+                WD_CORE_ERROR("Failed to load asset: {0}", finalPath.string());
             }
 
             return (T*)asset;
