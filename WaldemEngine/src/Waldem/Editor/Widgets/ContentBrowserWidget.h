@@ -205,7 +205,8 @@ namespace Waldem
                 // Drag and drop
                 if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
                 {
-                    std::string fullPath = entry.path().string();
+                    std::string fullPath = std::filesystem::relative(entry.path(), CONTENT_PATH).string();
+                    
                     ImGui::SetDragDropPayload(ExtensionToAssetString(extension), fullPath.c_str(), fullPath.size() + 1);
                     ImGui::Text("%s", itemName.c_str());
                     ImGui::EndDragDropSource();

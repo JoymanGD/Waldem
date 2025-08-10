@@ -68,6 +68,7 @@ namespace ImGui
                 if (pathToAsset)
                 {
                     inPathToAsset = Waldem::Path(pathToAsset);
+
                     if (onDropCallback)
                     {
                         onDropCallback();
