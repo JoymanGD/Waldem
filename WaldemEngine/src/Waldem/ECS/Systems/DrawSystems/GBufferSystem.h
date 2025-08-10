@@ -137,6 +137,11 @@ namespace Waldem
             
             ECS::World.observer<MeshComponent>().event(flecs::OnSet).each([&](MeshComponent& meshComponent)
             {
+                if(!meshComponent.MeshRef.Reference.empty())
+                {
+                    meshComponent.MeshRef.LoadAsset(contentManager);
+                }
+                
                 if(meshComponent.MeshRef.IsValid() && meshComponent.DrawId >= 0)
                 {
                     auto& command = IndirectCommands[meshComponent.DrawId];

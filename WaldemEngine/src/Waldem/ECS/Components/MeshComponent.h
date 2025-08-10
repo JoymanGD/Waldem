@@ -1,7 +1,6 @@
 #pragma once
 #include "Waldem/Editor/AssetReference/MeshReference.h"
 #include "Waldem/Renderer/Model/Mesh.h"
-#include "Waldem/Resources/ResourceManager.h"
 
 namespace Waldem
 {

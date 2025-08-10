@@ -13,7 +13,7 @@ namespace Waldem
     class WALDEM_API Layer
     {
     public:
-        Layer(const WString& name = "Layer", CWindow* window = nullptr, ResourceManager* resourceManager = nullptr) : DebugName(name), MainWindow(window), CurrentResourceManager(resourceManager) {}
+        Layer(const WString& name = "Layer", CWindow* window = nullptr, ResourceManager* resourceManager = nullptr) : DebugName(name), MainWindow(window), CurrentResourceManager(resourceManager) {} 
         virtual ~Layer() = default;
         virtual void Begin() {}
         virtual void End() {}

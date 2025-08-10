@@ -53,9 +53,14 @@ namespace Waldem
                 }
             });
             
-            ECS::World.observer<SceneEntity>("HierarchyWidgetSortSystem").event(flecs::OnAdd).each([&](flecs::entity entity, SceneEntity& sceneEntity)
+            ECS::World.observer<SceneEntity>("HierarchyWidgetSortSystemOnAdd").event(flecs::OnSet).each([&](flecs::entity entity, SceneEntity& sceneEntity)
             {
                 HierarchyEntries[sceneEntity.HierarchySlot] = entity;
+            });
+            
+            ECS::World.observer<SceneEntity>("HierarchyWidgetSortSystemOnRemove").event(flecs::OnRemove).each([&](flecs::entity entity, SceneEntity& sceneEntity)
+            {
+                HierarchyEntries.Remove(sceneEntity.HierarchySlot);
             });
         }
 
@@ -67,7 +72,7 @@ namespace Waldem
 
                 if (ImGui::Button("+"))
                 {
-                    auto entity = ECS::CreateEntity("NewEntity_" + std::to_string(ECS::SceneEntitiesCount));
+                    auto entity = ECS::CreateSceneEntity("NewEntity_" + std::to_string(ECS::GetEntitiesCount()));
                         
                     SelectEntity(entity);
                 }

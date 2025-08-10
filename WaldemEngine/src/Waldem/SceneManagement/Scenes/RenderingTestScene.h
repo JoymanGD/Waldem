@@ -29,7 +29,7 @@ namespace Waldem
 			for (CMesh* mesh : sponzaModel->GetMeshes())
 			{
 				auto sponza1Name = "Sponza1_" + std::to_string(index++);
-				auto entity = ECS::CreateEntity(sponza1Name.c_str());
+				auto entity = ECS::CreateSceneEntity(sponza1Name.c_str());
 				// entity.set<MeshComponent>(MeshComponent(mesh));
 				auto transform = Transform(mesh->ObjectMatrix);
 				entity.set<Transform>(transform);
@@ -40,7 +40,7 @@ namespace Waldem
 			for (CMesh* mesh : sponzaModel->GetMeshes())
 			{
 				auto sponza2Name = "Sponza2_" + std::to_string(index++);
-				auto entity = ECS::CreateEntity(sponza2Name.c_str());
+				auto entity = ECS::CreateSceneEntity(sponza2Name.c_str());
 				// entity.set<MeshComponent>(MeshComponent(mesh));
 				Transform transform = mesh->ObjectMatrix;
 				transform.Translate({50, 0, 0});
@@ -63,24 +63,24 @@ namespace Waldem
 			// }
 
         	//dir light
-			auto dirLightEntity = ECS::CreateEntity("DirLight");
+			auto dirLightEntity = ECS::CreateSceneEntity("DirLight");
         	auto lightTransform = Transform();
         	lightTransform.SetRotation(90, 0, 0);
 			dirLightEntity.set<Transform>(lightTransform);
         	dirLightEntity.set<Light>(Light(Vector3(1, 1, 1), 55.0f));
 
         	//point light 1
-        	auto pointLight1Entity = ECS::CreateEntity("PointLight1");
+        	auto pointLight1Entity = ECS::CreateSceneEntity("PointLight1");
         	pointLight1Entity.set<Transform>(Transform(Vector3(2, 1, 2)));
         	pointLight1Entity.set<Light>(Light(Vector3(1, .3f, 1), 10.0f, 2.0f));
 
         	//point light 2
-        	auto pointLight2Entity = ECS::CreateEntity("PointLight2");
+        	auto pointLight2Entity = ECS::CreateSceneEntity("PointLight2");
         	pointLight2Entity.set<Transform>(Transform(Vector3(-2, 1, -2)));
         	pointLight2Entity.set<Light>(Light(Vector3(1, 1, .3f), 10.0f, 2.0f));
 
         	//spot light 1
-        	auto spotLight1Entity = ECS::CreateEntity("SpotLight1");
+        	auto spotLight1Entity = ECS::CreateSceneEntity("SpotLight1");
         	spotLight1Entity.set<Transform>(Transform(Vector3(-2, 1, -2)));
         	spotLight1Entity.set<Light>(Light(Vector3(1, 1, .3f), 10.0f, 5.0f, 21, 0.001));
 

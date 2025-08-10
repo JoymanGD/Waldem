@@ -246,6 +246,7 @@ namespace Waldem
 	        uint len2 = other.Data ? strlen(other.Data) : 0;
 
 	        char* buffer = new char[len1 + len2 + 1];
+			buffer[0] = '\0';
 	        if (Data) strcpy(buffer, Data);
 	        if (other.Data) strcat(buffer, other.Data);
 

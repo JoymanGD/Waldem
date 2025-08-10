@@ -2,6 +2,8 @@
 
 #include "ECS.h"
 
+#include <ecs.h>
+
 #include "Components/AudioSource.h"
 #include "Components/Light.h"
 #include "Components/MeshComponent.h"
@@ -15,26 +17,42 @@ namespace Waldem
     {
         void RegisterTypes()
         {
+            World.component<SceneEntity>("SceneEntity")
+                .member<uint64>("ParentId")
+                .member<float>("HierarchySlot")
+                .member<bool>("VisibleInHierarchy");
+            
             World.component<Vector3>("Vector3")
                 .member<float>("x")
                 .member<float>("y")
                 .member<float>("z");
             
             World.component<WString>()
-                .opaque(flecs::String) // Opaque type that maps to string
-                    .serialize([](const flecs::serializer *s, const WString *data) {
-                        const char *str = data->C_Str();
-                        return s->value(flecs::String, &str); // Forward to serializer
-                    })
-                    .assign_string([](WString* data, const char *value) {
-                        *data = value; // Assign new value to std::string
-                    });
-
-            World.component<AssetReference>()
-                .member<WString>("Reference");
+                .opaque(flecs::String)
+                .serialize([](const flecs::serializer *s, const WString *data)
+                {
+                    const char *str = data->C_Str();
+                    return s->value(flecs::String, &str);
+                })
+                .assign_string([](WString* data, const char *value)
+                {
+                    *data = value;
+                });
             
-            // World.component<AssetReference>("AssetReference")
-            //     .member<flecs::uptr_t>("Reference");
+            World.component<AssetReference>()
+                .opaque(flecs::String)
+                .serialize([](const flecs::serializer *s, const AssetReference *data)
+                {
+                    WString refStr = data->Reference.string();
+                    const char* cstr = refStr.C_Str();
+                    s->member("Reference");
+                    s->value(flecs::String, &cstr);
+                    return 0;
+                })
+                .assign_string([](AssetReference* data, const char *value)
+                {
+                    data->Reference = Path(value);
+                });
         }
 
         void RegisterComponents()

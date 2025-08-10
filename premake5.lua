@@ -25,6 +25,7 @@ IncludeDir["stb"] = "Vendor/stb/include"
 IncludeDir["dxc"] = "Vendor/dxc/inc"
 IncludeDir["mono"] = "Vendor/mono/include"
 IncludeDir["flecs"] = "Vendor/flecs/include"
+IncludeDir["rapidjson"] = "Vendor/rapidjson/include"
 
 filter { "files:**.hlsl" }
    flags { "ExcludeFromBuild", 'NoPCH' }
@@ -80,6 +81,7 @@ project "Vendor"
         "%{IncludeDir.dxc}",
         "%{IncludeDir.mono}",
         "%{IncludeDir.flecs}",
+        "%{IncludeDir.rapidjson}",
     }
     
     libdirs
@@ -164,6 +166,7 @@ project "WaldemEngine"
         "%{IncludeDir.dxc}",
         "%{IncludeDir.mono}",
         "%{IncludeDir.flecs}",
+        "%{IncludeDir.rapidjson}",
     }
 
     links

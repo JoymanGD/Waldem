@@ -94,6 +94,11 @@ namespace Waldem
                     return;
                 }
 
+				if(component == ECS::World.id<SceneEntity>())
+				{
+					return;
+				}
+
                 void* ptr = entity.get_mut(id);
 
                 flecs::entity comp = id.entity();
@@ -161,22 +166,6 @@ namespace Waldem
 							}
 							case EcsOpEnum:
 							{
-								// auto valPtr = (uint8*)ptr + op->offset;
-								// ImGui::PushID(ImGui::GetID((void*)valPtr));
-								// ecs::entity enumEntity = ecs.lookup(op->name);
-								// if (enumEntity.is_valid())
-								// {
-								// 	int32 value = *(int32*)valPtr;
-								// 	if (ImGui::Combo(op->name, &value, enumEntity.enum_values().c_str()))
-								// 	{
-								// 		*(int32*)valPtr = value;
-								// 	}
-								// }
-								// else
-								// {
-								// 	ImGui::Text("Invalid enum type: %s", op->type.name().c_str());
-								// }
-								// ImGui::PopID();
 								break;
 							}
 							case EcsOpBitmask:
@@ -214,10 +203,48 @@ namespace Waldem
 							case EcsOpByte: break;
 							case EcsOpU8: break;
 							case EcsOpU16: break;
-							case EcsOpU32: break;
+							case EcsOpU32:
+							{
+								if(!structDrawing)
+								{
+									ImGui::TableNextRow();
+									auto valPtr = (uint8*)ptr + op->offset;
+									ImGui::PushID(ImGui::GetID(valPtr));
+
+									ImGui::TableSetColumnIndex(0);
+									ImGui::Text("%s", op->name);
+
+									ImGui::TableSetColumnIndex(1);
+									ImGui::SetNextItemWidth(200.f);
+									if (ImGui::DragScalarN("##", ImGuiDataType_U32, valPtr, op->count, 1, NULL, NULL, "%llu"))
+									{
+										entity.modified(id);
+									}
+
+									ImGui::PopID();
+								}
+								break;
+							}
 							case EcsOpU64:
 							{
-								ImGui::TableNextRow();
+								if(!structDrawing)
+								{
+									ImGui::TableNextRow();
+									auto valPtr = (uint8*)ptr + op->offset;
+									ImGui::PushID(ImGui::GetID(valPtr));
+
+									ImGui::TableSetColumnIndex(0);
+									ImGui::Text("%s", op->name);
+
+									ImGui::TableSetColumnIndex(1);
+									ImGui::SetNextItemWidth(200.f);
+									if (ImGui::DragScalarN("##", ImGuiDataType_U64, valPtr, op->count, 1, NULL, NULL, "%llu"))
+									{
+										entity.modified(id);
+									}
+
+									ImGui::PopID();
+								}
 								break;
 							}
 							case EcsOpI8: break;
@@ -248,14 +275,24 @@ namespace Waldem
 							}
 							case EcsOpF64:
 							{
-								ImGui::TableNextRow();
-								auto valPtr = (uint8*)ptr + op->offset;
-								ImGui::PushID(ImGui::GetID((void*)valPtr));
-								if(ImGui::DragScalarN(op->name, ImGuiDataType_Double, (double*)valPtr, op->count, 0.1, NULL, NULL, "%.3f"))
+								if(!structDrawing)
 								{
-									entity.modified(id);
+									ImGui::TableNextRow();
+									auto valPtr = (uint8*)ptr + op->offset;
+									ImGui::PushID(ImGui::GetID((void*)valPtr));
+									
+									ImGui::TableSetColumnIndex(0);
+									ImGui::Text("%s", op->name);
+								
+									ImGui::TableSetColumnIndex(1);
+									ImGui::SetNextItemWidth(200.f);
+									if(ImGui::DragScalarN("##", ImGuiDataType_Float, (float*)valPtr, op->count, 0.1f, NULL, NULL, "%.3f"))
+									{
+										entity.modified(id);
+									}
+									// ImGui::InputFloat(op->name, (float*)valPtr, 0.0f, 0.0f, "%.3f");
+									ImGui::PopID();
 								}
-								ImGui::PopID();
 								break;
 							}
 							case EcsOpUPtr:
@@ -276,8 +313,12 @@ namespace Waldem
 							}
 							case EcsOpOpaque:
 							{
-								if(strcmp(op->name, "Reference") == 0)
+								// if(strcmp(op->name, "Reference") == 0)
+								if(op->type == ECS::World.id<AssetReference>())
 								{
+									ImGui::TableNextRow();
+									ImGui::TableSetColumnIndex(0);
+									ImGui::Text("%s", op->name);
 									void* fieldPtr = (uint8*)ptr + op->offset;
 									AssetReference* assetRef = (AssetReference*)fieldPtr;
 									WString myTextureID;
@@ -286,7 +327,6 @@ namespace Waldem
 									WString assetTypeString = AssetTypeToString(assetRef->GetType());
 									ImGui::AssetInputSlot(assetRef->Reference, assetTypeString.C_Str(), [this, entity, id, assetRef]
 									{
-										assetRef->LoadAsset(ContentManager);
 										entity.modified(id);
 									});
 
