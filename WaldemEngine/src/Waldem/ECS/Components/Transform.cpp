@@ -152,9 +152,9 @@ namespace Waldem
 
     void Transform::Update()
     {
-        //TODO: Optimize this
         // ClampRotation();
 
+        //TODO: Optimize this
         Matrix = Matrix4(translate(Matrix4(1.0f), Position) * mat4_cast(RotationQuat) * scale(Matrix4(1.0f), LocalScale));
     }
 

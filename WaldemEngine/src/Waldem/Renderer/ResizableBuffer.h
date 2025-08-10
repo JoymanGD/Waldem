@@ -65,6 +65,16 @@ namespace Waldem
             return offset;
         }
 
+        void RemoveData(uint size, uint offset)
+        {
+            if (offset + size > Size)
+            {
+                WD_CORE_ERROR("RemoveData: Offset + Size exceeds buffer size.");
+            }
+            
+            Renderer::ClearBuffer(InternalBuffer, size, offset);
+        }
+
         void UpdateData(void* data, uint size, uint offset = 0)
         {
             if (offset + size > Size)

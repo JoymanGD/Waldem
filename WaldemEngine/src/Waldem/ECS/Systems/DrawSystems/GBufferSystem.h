@@ -178,6 +178,26 @@ namespace Waldem
                 }
             });
             
+            ECS::World.observer<MeshComponent>().event(flecs::OnRemove).each([&](flecs::entity entity, MeshComponent& meshComponent)
+            {
+                IndirectCommand& command = IndirectCommands[meshComponent.DrawId];
+                command.DrawId = -1;
+                command.DrawIndexed = { 0, 0, 0, 0, 0 };
+
+                IndirectBuffer.RemoveData(sizeof(IndirectCommand), meshComponent.DrawId * sizeof(IndirectCommand));
+                
+                auto transform = entity.get<Transform>();
+                
+                if(transform)
+                {
+                    WorldTransformsBuffer.RemoveData(sizeof(Matrix4), meshComponent.DrawId * sizeof(Matrix4));
+                }
+
+                MaterialAttributesBuffer.RemoveData(sizeof(MaterialShaderAttribute), meshComponent.DrawId * sizeof(MaterialShaderAttribute));
+
+                Editor::RemoveEntityID(meshComponent.DrawId);
+            });
+            
             ECS::World.observer<Transform>().event(flecs::OnAdd).each([&](flecs::entity entity, Transform& transform)
             {
                 auto meshComponent = entity.get<MeshComponent>();
