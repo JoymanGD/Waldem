@@ -11,7 +11,7 @@ namespace Waldem
         virtual ~GameScene();
         void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override;
         void Draw(float deltaTime) override;
-        void Update(float deltaTime) override;
+        void Update(float deltaTime) override; 
         void FixedUpdate(float fixedDeltaTime) override;
         void DrawUI(float deltaTime) override;
         

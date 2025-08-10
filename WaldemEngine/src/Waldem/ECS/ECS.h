@@ -10,14 +10,32 @@ namespace Waldem
     namespace ECS
     {
         inline flecs::world World;
-        inline uint64 SceneEntitiesCount = 0;
         inline WMap<WString, flecs::entity> RegisteredComponents;
+        
+        inline int GetEntitiesCount() { return World.query<SceneEntity>().count(); }
 
-        inline flecs::entity CreateEntity(const WString& name, bool enabled = true, bool visibleInHierarchy = true)
+        inline flecs::entity CreateEntity(const WString& name = "", bool enabled = true)
         {
+            flecs::entity entity = World.entity(name);
+
+            if(enabled)
+            {
+                entity.enable();
+            }
+            else
+            {
+                entity.disable();
+            }
+
+            return entity;
+        }
+
+        inline flecs::entity CreateSceneEntity(const WString& name = "", bool enabled = true, bool visibleInHierarchy = true)
+        {
+            auto count = GetEntitiesCount();
             flecs::entity entity = World.entity(name).set<SceneEntity>({
                 .ParentId = 0,
-                .HierarchySlot = (float)SceneEntitiesCount++,
+                .HierarchySlot = (float)count,
                 .VisibleInHierarchy = visibleInHierarchy,
             });
 

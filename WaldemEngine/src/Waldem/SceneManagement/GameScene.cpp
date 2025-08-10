@@ -2,8 +2,12 @@
 #include "GameScene.h"
 
 #include "Waldem/ECS/ECS.h"
-#include "Waldem/ECS/Components/EditorComponent.h"
-#include "Waldem/ECS/Components/NameComponent.h"
+#include "Waldem/ECS/Components/MeshComponent.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/document.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/istreamwrapper.h"
+#include "Waldem/ECS/Components/Selected.h"
 
 Waldem::GameScene::~GameScene()
 {
@@ -47,27 +51,76 @@ void Waldem::GameScene::DrawUI(float deltaTime)
 
 void Waldem::GameScene::Serialize(Path& outPath)
 {
-    auto json = ECS::World.to_json();
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer writer(buffer);
 
-    //TODO: use some custom name
-    if(!outPath.has_filename())
+    writer.StartArray();
+
+    auto query = ECS::World.query_builder<SceneEntity>().build();
+    query.each([&](flecs::entity entity, SceneEntity)
     {
-        outPath /= "Scene.scene"; 
-    }
+        std::string jsonStr = entity.to_json().c_str();
 
-    std::ofstream outFile(outPath.c_str());
+        rapidjson::Document tmpDoc;
+        tmpDoc.Parse(jsonStr.c_str());
+
+        if (!tmpDoc.HasParseError() && tmpDoc.IsObject())
+        {
+            tmpDoc.Accept(writer);
+        }
+    });
+
+    writer.EndArray();
+
+    if (!outPath.has_filename())
+        outPath /= "Scene.scene";
+
+    std::ofstream outFile(outPath.c_str(), std::ios::out | std::ios::trunc);
     if (outFile.is_open())
     {
-        outFile << json.c_str();
-        outFile.close();
+        outFile << buffer.GetString();
     }
 }
 
 void Waldem::GameScene::Deserialize(Path& inPath)
 {
-    ECS::World.from_json_file(inPath.string().c_str(), nullptr);
-    ECS::World.system("Test").kind(flecs::OnUpdate).each([]
+    // Remove existing scene entities
     {
-       WD_CORE_INFO("Test system executed"); 
-    });
+        WArray<flecs::entity> to_remove;
+        auto q = ECS::World.query_builder<SceneEntity>().build();
+        q.each([&](flecs::entity e, SceneEntity)
+        {
+            to_remove.Add(e);
+        });
+        for (auto& e : to_remove)
+            e.destruct();
+    }
+
+    // Open file
+    std::ifstream ifs(inPath.c_str());
+    if (!ifs.is_open())
+        return;
+
+    rapidjson::IStreamWrapper isw(ifs);
+    rapidjson::Document doc;
+    doc.ParseStream(isw);
+
+    if (doc.HasParseError() || !doc.IsArray())
+        return;
+
+    // Iterate over each entity object in the array
+    for (auto& entVal : doc.GetArray())
+    {
+        if (!entVal.IsObject())
+            continue;
+
+        // Convert entity JSON back into a string
+        rapidjson::StringBuffer buffer;
+        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+        entVal.Accept(writer);
+
+        // Create a new entity from JSON
+        auto entity = ECS::World.entity();
+        entity.from_json(buffer.GetString());
+    }
 }
