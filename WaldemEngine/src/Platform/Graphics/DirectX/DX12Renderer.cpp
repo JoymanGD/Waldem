@@ -1891,6 +1891,14 @@ namespace Waldem
         WorldCommandList.first->UpdateRes(resource, uploadResource, data, size, beforeState, offset);
     }
 
+    void DX12Renderer::ClearBuffer(Buffer* buffer, uint32_t size, uint offset)
+    {
+        ID3D12Resource* resource = ResourceMap[buffer];
+        ID3D12Resource* uploadResource = ResourceMap[buffer->GetUploadResource()];
+        D3D12_RESOURCE_STATES beforeState = (D3D12_RESOURCE_STATES)buffer->GetCurrentState();
+        WorldCommandList.first->ClearRes(resource, uploadResource, size, offset, beforeState);
+    }
+
     void DX12Renderer::DownloadBuffer(Buffer* buffer, void* data, size_t size)
     {
         if(data)

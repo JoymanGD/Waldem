@@ -122,5 +122,14 @@ void Waldem::GameScene::Deserialize(Path& inPath)
         // Create a new entity from JSON
         auto entity = ECS::World.entity();
         entity.from_json(buffer.GetString());
+
+        if (entity.has<Transform>())
+        {
+            auto transform = entity.get_mut<Transform>();
+            transform->ApplyPitchYawRoll();
+            transform->LastRotation = transform->Rotation;
+            transform->Update();
+            entity.modified<Transform>();
+        }
     }
 }

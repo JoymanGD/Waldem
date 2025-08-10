@@ -70,6 +70,7 @@ namespace Waldem
         virtual void ResourceBarrier(GraphicResource* resource, ResourceStates before, ResourceStates after) = 0;
         virtual ResourceStates ResourceBarrier(GraphicResource* resource, ResourceStates after) = 0;
         virtual void UploadBuffer(Buffer* buffer, void* data, uint32_t size, uint offset = 0) = 0;
+        virtual void ClearBuffer(Buffer* buffer, uint32_t size, uint offset = 0) = 0;
         virtual void DownloadBuffer(Buffer* buffer, void* data, size_t size) = 0;
         virtual void ClearRenderTarget(RenderTarget* rt) = 0;
         virtual void ClearDepthStencil(RenderTarget* ds) = 0;
@@ -133,6 +134,7 @@ namespace Waldem
         static void ResourceBarrier(GraphicResource* resource, ResourceStates before, ResourceStates after);
         static ResourceStates ResourceBarrier(GraphicResource* resource, ResourceStates after);
         static void UploadBuffer(Buffer* buffer, void* data, uint32_t size, uint offset = 0);
+        static void ClearBuffer(Buffer* buffer, uint32_t size, uint offset = 0);
         static void DownloadBuffer(Buffer* buffer, void* data, size_t size);
         static void ClearRenderTarget(RenderTarget* rt);
         static void ClearDepthStencil(RenderTarget* ds);

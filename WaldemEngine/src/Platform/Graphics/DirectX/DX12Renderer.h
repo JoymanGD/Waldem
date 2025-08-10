@@ -70,6 +70,7 @@ namespace Waldem
         void CopyResource(GraphicResource* dstResource, GraphicResource* srcResource) override;
         void CopyBufferRegion(GraphicResource* dstResource, size_t dstOffset, GraphicResource* srcResource, size_t srcOffset, size_t size) override;
         void UploadBuffer(Buffer* buffer, void* data, uint32_t size, uint offset = 0) override;
+        void ClearBuffer(Buffer* buffer, uint32_t size, uint offset = 0) override;
         void DownloadBuffer(Buffer* buffer, void* data, size_t size) override;
         void ClearRenderTarget(RenderTarget* rt) override;
         void ClearDepthStencil(RenderTarget* ds) override;

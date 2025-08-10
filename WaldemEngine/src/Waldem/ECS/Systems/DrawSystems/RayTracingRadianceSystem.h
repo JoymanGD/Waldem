@@ -99,6 +99,14 @@ namespace Waldem
                 if(meshComponent && meshComponent->IsValid())
                 {
                     TLAS.UpdateTransform(meshComponent->RTXInstanceId, transform);
+                    return;
+                }
+
+                auto light = entity.get<Light>();
+
+                if(light && light->LightId >= 0)
+                {
+                    LightTransformsBuffer.UpdateData(&transform.Matrix, sizeof(Matrix4), sizeof(Matrix4) * light->LightId);
                 }
             });
             
@@ -119,14 +127,27 @@ namespace Waldem
                 }
             });
             
-            ECS::World.observer<Transform>().event(flecs::OnSet).each([&](flecs::entity entity, Transform& transform)
+            ECS::World.observer<Light>().event(flecs::OnRemove).each([&](Light& light)
+            {
+                if(light.LightId >= 0)
+                {
+                    LightsBuffer.RemoveData(sizeof(LightData), sizeof(LightData) * light.LightId);
+                }
+            });
+            
+            ECS::World.observer<Transform>().event(flecs::OnRemove).each([&](flecs::entity entity, Transform& transform)
             {
                 auto light = entity.get<Light>();
 
                 if(light && light->LightId >= 0)
                 {
-                    LightTransformsBuffer.UpdateData(&transform.Matrix, sizeof(Matrix4), sizeof(Matrix4) * light->LightId);
+                    LightTransformsBuffer.RemoveData(sizeof(Matrix4), sizeof(Matrix4) * light->LightId);
                 }
+            });
+            
+            ECS::World.observer<MeshComponent>().event(flecs::OnRemove).each([&](flecs::entity entity, MeshComponent& meshComponent)
+            {
+                TLAS.RemoveData(meshComponent);
             });
             
             ECS::World.observer<Camera>().event(flecs::OnSet).each([&](Camera& camera)

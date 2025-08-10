@@ -88,6 +88,20 @@ namespace Waldem
             InstanceBuffer->UpdateData(&instance, sizeof(RayTracingInstance), meshComponent.RTXInstanceId * sizeof(RayTracingInstance));
             Renderer::UpdateTLAS(TLAS, InstanceBuffer->GetBuffer(), Num());
         }
+        
+        void RemoveData(MeshComponent& meshComponent)
+        {
+            auto& instance = Instances[meshComponent.RTXInstanceId];
+            instance.InstanceID = 0;
+            instance.InstanceMask = 0;
+            instance.InstanceContributionToHitGroupIndex = 0;
+            instance.Flags = 0;
+            instance.AccelerationStructure = -1;
+            
+            InstanceBuffer->RemoveData(sizeof(RayTracingInstance), meshComponent.RTXInstanceId * sizeof(RayTracingInstance));
+            
+            Renderer::BuildTLAS(InstanceBuffer->GetBuffer(), Num(), TLAS);
+        }
 
         void UpdateTransform(int meshId, Transform& transform)
         {
