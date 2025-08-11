@@ -166,6 +166,42 @@ namespace Waldem
 							}
 							case EcsOpEnum:
 							{
+								ImGui::TableNextRow();
+								ImGui::TableSetColumnIndex(0);
+								ImGui::Text("%s", op->name);
+
+								// Pointer to the actual enum field in the component struct
+								auto fieldPtr = reinterpret_cast<int*>((uint8_t*)ptr + op->offset);
+								int currentValue = *fieldPtr;
+
+								std::vector<const char*> names;
+								flecs::entity enumType(ECS::World, op->type);
+								if (enumType.has<EcsEnum>())
+								{
+									auto ecsEnum = enumType.get<EcsEnum>();
+									auto constants = ecsEnum->constants;
+									for (int j = 0; j < constants.bucket_count; ++j)
+									{
+										ecs_enum_constant_t* constant = (ecs_enum_constant_t*)ecs_map_get_deref_(&constants, j);
+										names.push_back(constant->name);
+									}
+								}
+
+								if (names.empty())
+								{
+									ImGui::TableSetColumnIndex(1);
+									ImGui::Text("<no enum values>");
+									break;
+								}
+
+								// Render combo
+								ImGui::TableSetColumnIndex(1);
+								ImGui::SetNextItemWidth(200.f);
+								if (ImGui::Combo(("##" + std::string(op->name)).c_str(), &currentValue, names.data(), (int)names.size()))
+								{
+									*fieldPtr = currentValue;
+									entity.modified(id);
+								}
 								break;
 							}
 							case EcsOpBitmask:
@@ -249,7 +285,28 @@ namespace Waldem
 							}
 							case EcsOpI8: break;
 							case EcsOpI16: break;
-							case EcsOpI32: break;
+							case EcsOpI32:
+							{
+								if(!structDrawing)
+								{
+									ImGui::TableNextRow();
+									auto valPtr = (uint8*)ptr + op->offset;
+									ImGui::PushID(ImGui::GetID(valPtr));
+
+									ImGui::TableSetColumnIndex(0);
+									ImGui::Text("%s", op->name);
+
+									ImGui::TableSetColumnIndex(1);
+									ImGui::SetNextItemWidth(200.f);
+									if (ImGui::DragScalarN("##", ImGuiDataType_S32, valPtr, op->count, 1, NULL, NULL, "%d"))
+									{
+										entity.modified(id);
+									}
+
+									ImGui::PopID();
+								}
+								break;
+							}
 							case EcsOpI64: break;
 							case EcsOpF32:
 							{

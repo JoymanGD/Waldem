@@ -142,5 +142,10 @@ namespace Waldem
         {
             return Data.Num();
         }
+
+        bool IsEmpty() const
+        {
+            return Num() == 0;
+        }
     };
 }

@@ -38,6 +38,7 @@ namespace Waldem
             FIELD(float, AreaWidth)
             FIELD(float, AreaHeight)
             FIELD(bool, AreaTwoSided)
+            FIELD(LightType, Type)
         END_COMPONENT()
         
         //Directional
