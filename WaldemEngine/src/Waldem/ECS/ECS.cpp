@@ -38,6 +38,12 @@ namespace Waldem
                 {
                     *data = value;
                 });
+
+            World.component<LightType>()
+                .constant("Directional", LightType::Directional)
+                .constant("Point", LightType::Point)
+                .constant("Spot", LightType::Spot)
+                .constant("Area", LightType::Area);
             
             World.component<AssetReference>()
                 .opaque(flecs::String)
