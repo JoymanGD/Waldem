@@ -13,7 +13,6 @@
 #include "Waldem/ECS/Components/Camera.h"
 #include "Waldem/ECS/Components/EditorComponent.h"
 #include "Waldem/ECS/Systems/UISystems/EditorUISystem.h"
-#include "Waldem/ECS/Systems/DrawSystems/DeferredRenderingSystem.h"
 #include "Waldem/ECS/Systems/DrawSystems/OceanSimulationSystem.h"
 #include "Waldem/ECS/Systems/DrawSystems/ScreenQuadSystem.h"
 #include "Waldem/ECS/Systems/UpdateSystems/SpatialAudioSystem.h"
@@ -72,7 +71,6 @@ namespace Waldem
 
             // DrawSystems.Add(new OceanSimulationSystem());
             DrawSystems.Add(new HybridRenderingSystem());
-            DrawSystems.Add(new DeferredRenderingSystem());
             DrawSystems.Add(new PostProcessSystem());
             DrawSystems.Add(new ScreenQuadSystem());
 

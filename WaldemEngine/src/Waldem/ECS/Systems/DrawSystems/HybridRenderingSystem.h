@@ -52,6 +52,16 @@ namespace Waldem
         uint TLAS;
     };
     
+    struct DeferredRootConstants
+    {
+        Point2 MousePos;
+        uint AlbedoRT;
+        uint MeshIDRT;
+        uint RadianceRT;
+        uint TargetRT;
+        uint HoveredMeshes;
+    };
+    
     class WALDEM_API HybridRenderingSystem : public DrawSystem
     {
         Texture2D* DummyTexture = nullptr;
@@ -91,6 +101,14 @@ namespace Waldem
         ResizableAccelerationStructure TLAS;
         RayTracingRootConstants RayTracingRootConstants;
         WArray<Matrix4> LightTransforms;
+
+        //Deferred
+        RenderTarget* TargetRT = nullptr;
+        Pipeline* DeferredRenderingPipeline = nullptr;
+        ComputeShader* DeferredRenderingComputeShader = nullptr;
+        Point3 GroupCount;
+        DeferredRootConstants DeferredRootConstants;
+        Buffer* HoveredMeshesBuffer = nullptr;
         
     public:
         HybridRenderingSystem()
@@ -113,6 +131,7 @@ namespace Waldem
         
         void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
         {
+            //GBuffer
             IndirectBuffer = ResizableBuffer("IndirectDrawBuffer", BufferType::IndirectBuffer, sizeof(IndirectCommand), MAX_INDIRECT_COMMANDS);
             VertexBuffer = ResizableBuffer("VertexBuffer", BufferType::VertexBuffer, sizeof(Vertex));
             IndexBuffer = ResizableBuffer("IndexBuffer", BufferType::IndexBuffer, sizeof(uint));
@@ -120,6 +139,7 @@ namespace Waldem
             MaterialAttributesBuffer = ResizableBuffer("MaterialAttributesBuffer", BufferType::StorageBuffer, sizeof(MaterialShaderAttribute), MAX_INDIRECT_COMMANDS);
             GBufferSceneDataBuffer = ResourceManager::CreateBuffer("SceneDataBuffer", BufferType::StorageBuffer, sizeof(GBufferSceneData), sizeof(GBufferSceneData));
             
+            TargetRT = resourceManager->GetRenderTarget("TargetRT");
             WorldPositionRT = resourceManager->GetRenderTarget("WorldPositionRT");
             NormalRT = resourceManager->GetRenderTarget("NormalRT");
             ColorRT = resourceManager->GetRenderTarget("ColorRT");
@@ -137,6 +157,7 @@ namespace Waldem
                                                             WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
                                                             DEFAULT_INPUT_LAYOUT_DESC);
 
+            //Raytracing
             RadianceRT = resourceManager->GetRenderTarget("RadianceRT");
             RTShader = Renderer::LoadRayTracingShader("RayTracing/Radiance");
             RTPipeline = Renderer::CreateRayTracingPipeline("RayTracingPipeline", RTShader);
@@ -144,6 +165,13 @@ namespace Waldem
             LightTransformsBuffer = ResizableBuffer("LightTransformsBuffer", StorageBuffer, sizeof(Matrix4), 40);
             RayTracingSceneDataBuffer = Renderer::CreateBuffer("SceneDataBuffer", StorageBuffer, sizeof(RayTracingSceneData), sizeof(RayTracingSceneData), &RayTracingSceneData);
             TLAS = ResizableAccelerationStructure("RayTracingTLAS", 50);
+            
+            //Deferred
+            HoveredMeshesBuffer = Renderer::CreateBuffer("HoveredMeshes", StorageBuffer, sizeof(int), sizeof(int));
+            DeferredRootConstants.HoveredMeshes = HoveredMeshesBuffer->GetIndex(SRV_UAV_CBV);
+
+            DeferredRenderingComputeShader = Renderer::LoadComputeShader("DeferredRendering");
+            DeferredRenderingPipeline = Renderer::CreateComputePipeline("DeferredLightingPipeline", DeferredRenderingComputeShader);
 
             ECS::World.query<Camera, Transform, EditorComponent>("SceneDataInitializationSystem").each([&](Camera& camera, Transform& transform, EditorComponent)
             {
@@ -397,6 +425,28 @@ namespace Waldem
                 Renderer::TraceRays(RTPipeline, Point3(RadianceRT->GetWidth(), RadianceRT->GetHeight(), 1));
                 Renderer::ResourceBarrier(RadianceRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
             });
+
+            ECS::World.system("DeferredRenderingSystem").kind(flecs::OnDraw).run([&](flecs::iter& it)
+            {
+                Renderer::ResourceBarrier(TargetRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
+                Renderer::ClearRenderTarget(TargetRT);
+                Renderer::ResourceBarrier(TargetRT, RENDER_TARGET, UNORDERED_ACCESS);
+                Renderer::SetPipeline(DeferredRenderingPipeline);
+                auto mousePos = Input::GetMousePos();
+                Point2 relativeMousePos = Renderer::GetEditorViewport()->TransformMousePosition(mousePos);
+                DeferredRootConstants.MousePos = relativeMousePos;
+                Renderer::PushConstants(&DeferredRootConstants, sizeof(DeferredRootConstants));
+                
+                Vector2 resolution = Vector2(TargetRT->GetWidth(), TargetRT->GetHeight());
+                Point3 numThreads = Renderer::GetNumThreadsPerGroup(DeferredRenderingComputeShader);
+                GroupCount = Point3((resolution.x + numThreads.x - 1) / numThreads.x, (resolution.y + numThreads.y - 1) / numThreads.y, 1);
+                
+                Renderer::Compute(GroupCount);
+                int hoveredEntityId = 0;
+                Renderer::DownloadBuffer(HoveredMeshesBuffer, &hoveredEntityId, sizeof(int));
+                Editor::HoveredEntityID = hoveredEntityId - 1;
+                Renderer::ResourceBarrier(TargetRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
+            });
         }
 
         void Update(float deltaTime) override
@@ -405,11 +455,19 @@ namespace Waldem
 
         void OnResize(Vector2 size) override
         {
+            auto colorRTIndex = ColorRT->GetIndex(SRV_UAV_CBV);
+            auto radianceRTIndex = RadianceRT->GetIndex(SRV_UAV_CBV);
+            
             RayTracingRootConstants.WorldPositionRT = WorldPositionRT->GetIndex(SRV_UAV_CBV);
             RayTracingRootConstants.NormalRT = NormalRT->GetIndex(SRV_UAV_CBV);
-            RayTracingRootConstants.ColorRT = ColorRT->GetIndex(SRV_UAV_CBV);
+            RayTracingRootConstants.ColorRT = colorRTIndex;
             RayTracingRootConstants.ORMRT = ORMRT->GetIndex(SRV_UAV_CBV);
-            RayTracingRootConstants.OutputColorRT = RadianceRT->GetIndex(SRV_UAV_CBV);
+            RayTracingRootConstants.OutputColorRT = radianceRTIndex;
+            
+            DeferredRootConstants.AlbedoRT = colorRTIndex;
+            DeferredRootConstants.MeshIDRT = MeshIDRT->GetIndex(SRV_UAV_CBV);
+            DeferredRootConstants.RadianceRT = radianceRTIndex;
+            DeferredRootConstants.TargetRT = TargetRT->GetIndex(SRV_UAV_CBV);
         }
     };
 }

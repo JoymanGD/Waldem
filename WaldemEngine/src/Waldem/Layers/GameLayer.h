@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Waldem/ECS/Systems/System.h"
-#include "Waldem/ECS/Systems/DrawSystems/DeferredRenderingSystem.h"
 #include "Waldem/ECS/Systems/DrawSystems/OceanSimulationSystem.h"
 #include "Waldem/ECS/Systems/DrawSystems/ScreenQuadSystem.h"
 #include "Waldem/ECS/Systems/UpdateSystems/CollisionSystem.h"
@@ -26,9 +25,7 @@ namespace Waldem
 			InputManager = {};
 
 			// DrawSystems.Add(new OceanSimulationSystem(ecsManager));
-			// DrawSystems.Add(new GBufferSystem());
-			// DrawSystems.Add(new RayTracingRadianceSystem());
-			DrawSystems.Add(new DeferredRenderingSystem());
+			// DrawSystems.Add(new HybridRenderingSystem());
 			// DrawSystems.Add(new PostProcessSystem());
 			DrawSystems.Add(new ScreenQuadSystem());
 			
