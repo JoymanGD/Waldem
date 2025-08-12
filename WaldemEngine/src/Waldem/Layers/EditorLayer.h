@@ -14,9 +14,7 @@
 #include "Waldem/ECS/Components/EditorComponent.h"
 #include "Waldem/ECS/Systems/UISystems/EditorUISystem.h"
 #include "Waldem/ECS/Systems/DrawSystems/DeferredRenderingSystem.h"
-#include "Waldem/ECS/Systems/DrawSystems/GBufferSystem.h"
 #include "Waldem/ECS/Systems/DrawSystems/OceanSimulationSystem.h"
-#include "Waldem/ECS/Systems/DrawSystems/RayTracingRadianceSystem.h"
 #include "Waldem/ECS/Systems/DrawSystems/ScreenQuadSystem.h"
 #include "Waldem/ECS/Systems/UpdateSystems/SpatialAudioSystem.h"
 #include "Waldem/Events/ApplicationEvent.h"
@@ -27,6 +25,7 @@
 #include "Waldem/SceneManagement/GameScene.h"
 #include "Waldem/Utils/FileUtils.h"
 #include "Waldem/ECS/ECS.h"
+#include "Waldem/ECS/Systems/DrawSystems/HybridRenderingSystem.h"
 #include "Waldem/ECS/Systems/DrawSystems/PostProcessSystem.h"
 
 namespace Waldem
@@ -72,8 +71,7 @@ namespace Waldem
             UpdateSystems.Add(new SpatialAudioSystem());
 
             // DrawSystems.Add(new OceanSimulationSystem());
-            DrawSystems.Add(new GBufferSystem());
-            DrawSystems.Add(new RayTracingRadianceSystem());
+            DrawSystems.Add(new HybridRenderingSystem());
             DrawSystems.Add(new DeferredRenderingSystem());
             DrawSystems.Add(new PostProcessSystem());
             DrawSystems.Add(new ScreenQuadSystem());

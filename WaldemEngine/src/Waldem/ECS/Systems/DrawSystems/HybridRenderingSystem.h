@@ -9,6 +9,8 @@
 #include "Waldem/Renderer/Model/Quad.h"
 #include "Waldem/ECS/Components/Transform.h"
 #include "Waldem/ECS/Components/Camera.h"
+#include "Waldem/ECS/Components/EditorComponent.h"
+#include "Waldem/Renderer/ResizableAccelerationStructure.h"
 #include "Waldem/Renderer/ResizableBuffer.h"
 
 #define MAX_INDIRECT_COMMANDS 500
@@ -30,7 +32,27 @@ namespace Waldem
         uint SceneDataBuffer;
     };
     
-    class WALDEM_API GBufferSystem : public DrawSystem
+    struct RayTracingSceneData
+    {
+        Matrix4 InvViewMatrix;
+        Matrix4 InvProjectionMatrix;
+        int NumLights = 0;
+    };
+
+    struct RayTracingRootConstants
+    {
+        uint WorldPositionRT;
+        uint NormalRT;
+        uint ColorRT;
+        uint ORMRT;
+        uint OutputColorRT;
+        uint LightsBuffer;
+        uint LightTransformsBuffer;
+        uint SceneDataBuffer; 
+        uint TLAS;
+    };
+    
+    class WALDEM_API HybridRenderingSystem : public DrawSystem
     {
         Texture2D* DummyTexture = nullptr;
         Buffer* DummyVertexBuffer = nullptr;
@@ -49,15 +71,29 @@ namespace Waldem
         ResizableBuffer IndexBuffer;
         ResizableBuffer WorldTransformsBuffer;
         ResizableBuffer MaterialAttributesBuffer;
-        Buffer* SceneDataBuffer = nullptr;
-        GBufferRootConstants RootConstants;
+        Buffer* GBufferSceneDataBuffer = nullptr;
+        GBufferRootConstants GBufferRootConstants;
         bool CameraIsDirty = true;
-        GBufferSceneData SceneData;
+        GBufferSceneData GBufferSceneData;
         WArray<IndirectCommand> IndirectCommands;
         WArray<MaterialShaderAttribute> MaterialAttributes;
+
+        //RayTracing
+        RenderTarget* RadianceRT = nullptr;
+        Pipeline* RTPipeline = nullptr;
+        RayTracingShader* RTShader = nullptr;
+        WArray<AccelerationStructure*> BLAS;
+        WMap<CMesh*, AccelerationStructure*> BLASToUpdate;
+        RayTracingSceneData RayTracingSceneData;
+        ResizableBuffer LightsBuffer;
+        ResizableBuffer LightTransformsBuffer;
+        Buffer* RayTracingSceneDataBuffer = nullptr;
+        ResizableAccelerationStructure TLAS;
+        RayTracingRootConstants RayTracingRootConstants;
+        WArray<Matrix4> LightTransforms;
         
     public:
-        GBufferSystem()
+        HybridRenderingSystem()
         {
             Vector4 dummyColor = Vector4(1.f, 1.f, 1.f, 1.f);
             uint8_t* image_data = (uint8_t*)&dummyColor;
@@ -82,7 +118,7 @@ namespace Waldem
             IndexBuffer = ResizableBuffer("IndexBuffer", BufferType::IndexBuffer, sizeof(uint));
             WorldTransformsBuffer = ResizableBuffer("WorldTransformsBuffer", BufferType::StorageBuffer, sizeof(Matrix4), MAX_INDIRECT_COMMANDS);
             MaterialAttributesBuffer = ResizableBuffer("MaterialAttributesBuffer", BufferType::StorageBuffer, sizeof(MaterialShaderAttribute), MAX_INDIRECT_COMMANDS);
-            SceneDataBuffer = ResourceManager::CreateBuffer("SceneDataBuffer", BufferType::StorageBuffer, sizeof(GBufferSceneData), sizeof(GBufferSceneData));
+            GBufferSceneDataBuffer = ResourceManager::CreateBuffer("SceneDataBuffer", BufferType::StorageBuffer, sizeof(GBufferSceneData), sizeof(GBufferSceneData));
             
             WorldPositionRT = resourceManager->GetRenderTarget("WorldPositionRT");
             NormalRT = resourceManager->GetRenderTarget("NormalRT");
@@ -101,12 +137,20 @@ namespace Waldem
                                                             WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
                                                             DEFAULT_INPUT_LAYOUT_DESC);
 
+            RadianceRT = resourceManager->GetRenderTarget("RadianceRT");
+            RTShader = Renderer::LoadRayTracingShader("RayTracing/Radiance");
+            RTPipeline = Renderer::CreateRayTracingPipeline("RayTracingPipeline", RTShader);
+            LightsBuffer = ResizableBuffer("LightsBuffer", StorageBuffer, sizeof(LightData), 40);
+            LightTransformsBuffer = ResizableBuffer("LightTransformsBuffer", StorageBuffer, sizeof(Matrix4), 40);
+            RayTracingSceneDataBuffer = Renderer::CreateBuffer("SceneDataBuffer", StorageBuffer, sizeof(RayTracingSceneData), sizeof(RayTracingSceneData), &RayTracingSceneData);
+            TLAS = ResizableAccelerationStructure("RayTracingTLAS", 50);
+
             ECS::World.query<Camera, Transform, EditorComponent>("SceneDataInitializationSystem").each([&](Camera& camera, Transform& transform, EditorComponent)
             {
-                SceneData.ViewMatrix = camera.ViewMatrix;
-                SceneData.ProjectionMatrix = camera.ProjectionMatrix;
-                SceneData.WorldMatrix = transform.Matrix;
-                SceneData.InverseProjectionMatrix = glm::inverse(camera.ProjectionMatrix);
+                GBufferSceneData.ViewMatrix = camera.ViewMatrix;
+                GBufferSceneData.ProjectionMatrix = camera.ProjectionMatrix;
+                GBufferSceneData.WorldMatrix = transform.Matrix;
+                GBufferSceneData.InverseProjectionMatrix = glm::inverse(camera.ProjectionMatrix);
                 
                 CameraIsDirty = true;
             });
@@ -133,9 +177,11 @@ namespace Waldem
                 MaterialAttributesBuffer.AddData(&materialAttribute, sizeof(MaterialShaderAttribute));
 
                 Editor::AddEntityID(command.DrawId, entity.id());
+                
+                meshComponent.RTXInstanceId = TLAS.AddEmptyData();
             });
             
-            ECS::World.observer<MeshComponent>().event(flecs::OnSet).each([&](MeshComponent& meshComponent)
+            ECS::World.observer<MeshComponent>().event(flecs::OnSet).each([&](flecs::entity entity, MeshComponent& meshComponent)
             {
                 if(!meshComponent.MeshRef.Reference.empty())
                 {
@@ -176,6 +222,13 @@ namespace Waldem
 
                     MaterialAttributesBuffer.UpdateData(&materialAttribute, sizeof(MaterialShaderAttribute), sizeof(MaterialShaderAttribute) * meshComponent.DrawId);
                 }
+
+                auto transform = entity.get<Transform>();
+
+                if(transform)
+                {
+                    TLAS.SetData(meshComponent, *transform);
+                }
             });
             
             ECS::World.observer<MeshComponent>().event(flecs::OnRemove).each([&](flecs::entity entity, MeshComponent& meshComponent)
@@ -196,6 +249,8 @@ namespace Waldem
                 MaterialAttributesBuffer.RemoveData(sizeof(MaterialShaderAttribute), meshComponent.DrawId * sizeof(MaterialShaderAttribute));
 
                 Editor::RemoveEntityID(meshComponent.DrawId);
+                
+                TLAS.RemoveData(meshComponent);
             });
             
             ECS::World.observer<Transform>().event(flecs::OnAdd).each([&](flecs::entity entity, Transform& transform)
@@ -215,6 +270,50 @@ namespace Waldem
                 if(meshComponent && meshComponent->IsValid() && meshComponent->DrawId >= 0)
                 {
                     WorldTransformsBuffer.UpdateData(&transform.Matrix, sizeof(Matrix4), meshComponent->DrawId * sizeof(Matrix4));
+                    
+                    TLAS.UpdateTransform(meshComponent->RTXInstanceId, transform);
+                }
+                
+                auto light = entity.get<Light>();
+
+                if(light && light->LightId >= 0)
+                {
+                    LightTransformsBuffer.UpdateData(&transform.Matrix, sizeof(Matrix4), sizeof(Matrix4) * light->LightId);
+                }
+            });
+            
+            ECS::World.observer<Transform>().event(flecs::OnRemove).each([&](flecs::entity entity, Transform& transform)
+            {
+                auto light = entity.get<Light>();
+
+                if(light && light->LightId >= 0)
+                {
+                    LightTransformsBuffer.RemoveData(sizeof(Matrix4), sizeof(Matrix4) * light->LightId);
+                }
+            });
+            
+            ECS::World.observer<Light, Transform>().event(flecs::OnAdd).each([&](Light& light, Transform& transform)
+            {
+                light.LightId = RayTracingSceneData.NumLights;
+                LightsBuffer.AddData(&light.Data, sizeof(LightData));
+                LightTransformsBuffer.AddData(&transform.Matrix, sizeof(Matrix4));
+                
+                RayTracingSceneData.NumLights = LightsBuffer.Num();
+            });
+            
+            ECS::World.observer<Light>().event(flecs::OnSet).each([&](Light& light)
+            {
+                if(light.LightId >= 0)
+                {
+                    LightsBuffer.UpdateData(&light.Data, sizeof(LightData), sizeof(LightData) * light.LightId);
+                }
+            });
+            
+            ECS::World.observer<Light>().event(flecs::OnRemove).each([&](Light& light)
+            {
+                if(light.LightId >= 0)
+                {
+                    LightsBuffer.RemoveData(sizeof(LightData), sizeof(LightData) * light.LightId);
                 }
             });
 
@@ -224,10 +323,12 @@ namespace Waldem
 
                 if(transform)
                 {
-                    SceneData.ViewMatrix = camera.ViewMatrix;
-                    SceneData.ProjectionMatrix = camera.ProjectionMatrix;
-                    SceneData.WorldMatrix = transform->Matrix;
-                    SceneData.InverseProjectionMatrix = glm::inverse(camera.ProjectionMatrix);
+                    GBufferSceneData.ViewMatrix = camera.ViewMatrix;
+                    GBufferSceneData.ProjectionMatrix = camera.ProjectionMatrix;
+                    GBufferSceneData.WorldMatrix = transform->Matrix;
+                    GBufferSceneData.InverseProjectionMatrix = inverse(camera.ProjectionMatrix);
+                    RayTracingSceneData.InvViewMatrix = inverse(camera.ViewMatrix);
+                    RayTracingSceneData.InvProjectionMatrix = inverse(camera.ProjectionMatrix);
                     
                     CameraIsDirty = true;
                 }
@@ -242,13 +343,13 @@ namespace Waldem
                 
                 if(CameraIsDirty)
                 {
-                    Renderer::UploadBuffer(SceneDataBuffer, &SceneData, sizeof(GBufferSceneData));
+                    Renderer::UploadBuffer(GBufferSceneDataBuffer, &GBufferSceneData, sizeof(GBufferSceneData));
                     CameraIsDirty = false;
                 }
 
-                RootConstants.WorldTransforms = WorldTransformsBuffer.GetIndex(SRV_UAV_CBV);
-                RootConstants.MaterialAttributes = MaterialAttributesBuffer.GetIndex(SRV_UAV_CBV);
-                RootConstants.SceneDataBuffer = SceneDataBuffer->GetIndex(SRV_UAV_CBV);
+                GBufferRootConstants.WorldTransforms = WorldTransformsBuffer.GetIndex(SRV_UAV_CBV);
+                GBufferRootConstants.MaterialAttributes = MaterialAttributesBuffer.GetIndex(SRV_UAV_CBV);
+                GBufferRootConstants.SceneDataBuffer = GBufferSceneDataBuffer->GetIndex(SRV_UAV_CBV);
 
                 Renderer::ResourceBarrier(WorldPositionRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
                 Renderer::ResourceBarrier(NormalRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
@@ -265,7 +366,7 @@ namespace Waldem
                 Renderer::ClearDepthStencil(DepthRT);
 
                 Renderer::SetPipeline(GBufferPipeline);
-                Renderer::PushConstants(&RootConstants, sizeof(GBufferRootConstants));
+                Renderer::PushConstants(&GBufferRootConstants, sizeof(GBufferRootConstants));
                 Renderer::BindRenderTargets({ WorldPositionRT, NormalRT, ColorRT, ORMRT, MeshIDRT });
                 Renderer::BindDepthStencil(DepthRT);
                 Renderer::SetVertexBuffers(VertexBuffer, 1);
@@ -279,6 +380,23 @@ namespace Waldem
                 Renderer::ResourceBarrier(MeshIDRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
                 Renderer::ResourceBarrier(DepthRT, DEPTH_WRITE, ALL_SHADER_RESOURCE);
             });
+
+            ECS::World.system<>("RayTracingSystem").kind(flecs::OnDraw).each([&]
+            {
+                RayTracingRootConstants.LightsBuffer = LightsBuffer.GetIndex(SRV_UAV_CBV);
+                RayTracingRootConstants.LightTransformsBuffer = LightTransformsBuffer.GetIndex(SRV_UAV_CBV);
+                RayTracingRootConstants.SceneDataBuffer = RayTracingSceneDataBuffer->GetIndex(SRV_UAV_CBV);
+                RayTracingRootConstants.TLAS = TLAS.GetIndex(SRV_UAV_CBV);
+                
+                Renderer::UploadBuffer(RayTracingSceneDataBuffer, &RayTracingSceneData, sizeof(RayTracingSceneData));
+
+                //dispatching
+                Renderer::ResourceBarrier(RadianceRT, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
+                Renderer::SetPipeline(RTPipeline);
+                Renderer::PushConstants(&RayTracingRootConstants, sizeof(RayTracingRootConstants));
+                Renderer::TraceRays(RTPipeline, Point3(RadianceRT->GetWidth(), RadianceRT->GetHeight(), 1));
+                Renderer::ResourceBarrier(RadianceRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
+            });
         }
 
         void Update(float deltaTime) override
@@ -287,6 +405,11 @@ namespace Waldem
 
         void OnResize(Vector2 size) override
         {
+            RayTracingRootConstants.WorldPositionRT = WorldPositionRT->GetIndex(SRV_UAV_CBV);
+            RayTracingRootConstants.NormalRT = NormalRT->GetIndex(SRV_UAV_CBV);
+            RayTracingRootConstants.ColorRT = ColorRT->GetIndex(SRV_UAV_CBV);
+            RayTracingRootConstants.ORMRT = ORMRT->GetIndex(SRV_UAV_CBV);
+            RayTracingRootConstants.OutputColorRT = RadianceRT->GetIndex(SRV_UAV_CBV);
         }
     };
 }
