@@ -15,5 +15,6 @@ namespace Waldem
         virtual void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) {}
         virtual void Deinitialize() {}
         virtual void Update(float deltaTime) {}
+        virtual void OnResize(Vector2 size) {}
     };
 }

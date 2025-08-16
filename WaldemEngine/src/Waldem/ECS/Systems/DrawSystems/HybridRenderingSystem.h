@@ -1,7 +1,6 @@
 #pragma once
 #include "Waldem/ECS/IdManager.h"
 #include "Waldem/ECS/Systems/System.h"
-#include "Waldem/ECS/Systems/DrawSystems/DrawSystem.h"
 #include "Waldem/ECS/Components/EditorCamera.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
 #include "Waldem/Editor/Editor.h"
@@ -63,7 +62,7 @@ namespace Waldem
         uint HoveredMeshes;
     };
     
-    class WALDEM_API HybridRenderingSystem : public DrawSystem
+    class WALDEM_API HybridRenderingSystem : public ISystem
     {
         Texture2D* DummyTexture = nullptr;
         Buffer* DummyVertexBuffer = nullptr;

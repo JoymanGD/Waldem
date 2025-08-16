@@ -2,7 +2,6 @@
 #include <FlecsUtils.h>
 
 #include "Waldem/ECS/ECS.h"
-#include "Waldem/ECS/Systems/DrawSystems/DrawSystem.h"
 #include "Waldem/ECS/Components/BloomPostProcess.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/Renderer/Renderer.h"
@@ -17,7 +16,7 @@ namespace Waldem
         uint BloomParamsBuffer;
     };
     
-    class WALDEM_API PostProcessSystem : public DrawSystem
+    class WALDEM_API PostProcessSystem : public ISystem
     {
         RenderTarget* TargetRT = nullptr;
         //Post process pass
@@ -30,7 +29,7 @@ namespace Waldem
         Vector2 TexelSize;
         
     public:
-        PostProcessSystem() : DrawSystem() {}
+        PostProcessSystem() {}
         
         void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
         {

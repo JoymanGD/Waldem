@@ -101,7 +101,7 @@ namespace Waldem
             CurrentResourceManager->ResizeRenderTarget("DepthRT", size.x, size.y);
             CurrentResourceManager->ResizeRenderTarget("RadianceRT", size.x, size.y);
             
-            for (DrawSystem* system : DrawSystems)
+            for (ISystem* system : DrawSystems)
             {
                 system->OnResize(size);
             }
