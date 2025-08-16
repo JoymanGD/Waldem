@@ -14,11 +14,30 @@
 
 namespace Waldem
 {
+    struct PhysicsFrameData
+    {
+        WArray<AABB> BoundingBoxes;
+        WArray<Transform*> Transforms;
+        WArray<ColliderComponent*> Colliders;
+        WArray<RigidBody*> RigidBodies;
+        WArray<WString> Names;
+
+        void Clear()
+        {
+            BoundingBoxes.Clear();
+            Transforms.Clear();
+            Colliders.Clear();
+            RigidBodies.Clear();
+            Names.Clear();
+        }
+    };
+    
     class WALDEM_API CollisionSystem : public ISystem
     {
         BVHNode* RootNode;
         int MaxIterations = 50;
         WArray<PersistentContact> ContactCache;
+        PhysicsFrameData FrameData;
         
         BVHNode* BuildBVH(WArray<AABB>& objects, WArray<WString>& names, int start, int end)
         {
@@ -496,25 +515,45 @@ namespace Waldem
         }
         
     public:
-        CollisionSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
+        CollisionSystem() {}
         
         void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
         {
-            WArray<AABB> boundingBoxes;
-            WArray<WString> names;
-
-            for (auto [transformEntity, transform, collider, meshComponent] : Manager->EntitiesWith<Transform, ColliderComponent, MeshComponent>())
+            ECS::World.system<Transform, ColliderComponent, RigidBody, const MeshComponent>().kind(flecs::OnUpdate).each([&](flecs::entity e, Transform& transform, ColliderComponent& collider, RigidBody& rigidBody, const MeshComponent& meshComponent)
             {
-                boundingBoxes.Add(meshComponent.Mesh->BBox.GetTransformed(transform));
-                names.Add(meshComponent.Mesh->Name);
-            }
+                if (collider.Type == WD_COLLIDER_TYPE_MESH)
+                {
+                    UpdateMeshVertices(*(CMesh*)meshComponent.MeshRef.Mesh, collider, transform);
+                }
 
-            if(boundingBoxes.IsEmpty())
+                AABB transformedBox = ((CMesh*)meshComponent.MeshRef.Mesh)->BBox.GetTransformed(transform);
+                collider.IsColliding = false;
+
+                FrameData.BoundingBoxes.Add(transformedBox);
+                FrameData.Colliders.Add(&collider);
+                FrameData.RigidBodies.Add(&rigidBody);
+                FrameData.Transforms.Add(&transform);
+
+                //TODO: cache indices returned by Add function to some object data stored in some ObjectDatas array
+            });
+
+            ECS::World.system<>().kind(flecs::OnUpdate).each([&](flecs::entity)
             {
-                return;
-            }
+                if (FrameData.BoundingBoxes.IsEmpty())
+                {
+                    return;
+                }
+
+                UpdateBVH(RootNode, FrameData.BoundingBoxes);
+
+                WArray<CollisionPair> collisions;
+                BroadPhaseCollision(RootNode, RootNode, collisions);
+                NarrowPhaseCollision(collisions, FrameData.Colliders, FrameData.RigidBodies, FrameData.Transforms);
+
+                FrameData.Clear(); // very important!
+            });
             
-            RootNode = BuildBVH(boundingBoxes, names, 0, boundingBoxes.Num());
+            RootNode = BuildBVH(FrameData.BoundingBoxes, FrameData.Names, 0, FrameData.BoundingBoxes.Num());
             
             IsInitialized = true;
         }
@@ -527,43 +566,6 @@ namespace Waldem
                 RootNode = nullptr;
             }
             IsInitialized = false;
-        }
-
-        void Update(float deltaTime) override
-        {
-            if(!IsInitialized)
-                return;
-            
-            WArray<AABB> boundingBoxes;
-            WArray<Transform*> transforms;
-            WArray<ColliderComponent*> colliders;
-            WArray<RigidBody*> rigidBodies;
-
-            for (auto [transformEntity, transform, collider, rigidBody, meshComponent] : Manager->EntitiesWith<Transform, ColliderComponent, RigidBody, MeshComponent>())
-            {
-                if(collider.Type == WD_COLLIDER_TYPE_MESH)
-                {
-                    UpdateMeshVertices(*meshComponent.Mesh, collider, transform);
-                }
-                
-                boundingBoxes.Add(meshComponent.Mesh->BBox.GetTransformed(transform));
-                collider.IsColliding = false;
-                colliders.Add(&collider);
-                rigidBodies.Add(&rigidBody);
-                transforms.Add(&transform);
-            }
-
-            if(boundingBoxes.IsEmpty())
-            {
-                return;
-            }
-
-            UpdateBVH(RootNode, boundingBoxes);
-            
-            WArray<CollisionPair> collisions;
-
-            BroadPhaseCollision(RootNode, RootNode, collisions);
-            NarrowPhaseCollision(collisions, colliders, rigidBodies, transforms);
         }
     };
 }

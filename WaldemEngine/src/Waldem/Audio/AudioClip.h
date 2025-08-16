@@ -4,7 +4,7 @@
 
 namespace Waldem
 {
-    class AudioClip : Asset
+    class WALDEM_API AudioClip : public Asset
     {
     public:
         uint8* Data = nullptr;

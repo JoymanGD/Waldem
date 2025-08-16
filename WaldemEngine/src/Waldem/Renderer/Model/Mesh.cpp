@@ -18,8 +18,8 @@ namespace Waldem
 		VertexData = vertexData;
 		IndexData = indexData;
 		ExtractPositionsFromVertexData(VertexData, Positions);
-		VertexBuffer = Renderer::CreateBuffer("MeshVertexBuffer", BufferType::VertexBuffer, VertexData.GetData(), VertexData.GetSize(), sizeof(Vertex));
-		IndexBuffer = Renderer::CreateBuffer("MeshIndexBuffer", BufferType::IndexBuffer, IndexData.GetData(), IndexData.GetSize(), sizeof(uint));
+		VertexBuffer = Renderer::CreateBuffer("MeshVertexBuffer", BufferType::VertexBuffer, VertexData.GetSize(), sizeof(Vertex), VertexData.GetData());
+		IndexBuffer = Renderer::CreateBuffer("MeshIndexBuffer", BufferType::IndexBuffer, IndexData.GetSize(), sizeof(uint), IndexData.GetData());
 		BBox = bBox;
 		Name = name;
 		CurrentMaterial = material;
@@ -32,7 +32,6 @@ namespace Waldem
 		VertexData.Serialize(outData);
 		IndexData.Serialize(outData);
 		CurrentMaterial->Serialize(outData);
-		Name.Serialize(outData);
 		outData << BBox;
 		outData << ObjectMatrix;
 	}
@@ -43,11 +42,10 @@ namespace Waldem
 		IndexData.Deserialize(inData);
 		CurrentMaterial = new Material();
 		CurrentMaterial->Deserialize(inData);
-		Name.Deserialize(inData);
 		inData >> BBox;
 		inData >> ObjectMatrix;
 		ExtractPositionsFromVertexData(VertexData, Positions);
-		VertexBuffer = Renderer::CreateBuffer("MeshVertexBuffer", BufferType::VertexBuffer, VertexData.GetData(), VertexData.GetSize(), sizeof(Vertex));
-		IndexBuffer = Renderer::CreateBuffer("MeshIndexBuffer", BufferType::IndexBuffer, IndexData.GetData(), IndexData.GetSize(), sizeof(uint));
+		VertexBuffer = Renderer::CreateBuffer("MeshVertexBuffer", BufferType::VertexBuffer, VertexData.GetSize(), sizeof(Vertex), VertexData.GetData());
+		IndexBuffer = Renderer::CreateBuffer("MeshIndexBuffer", BufferType::IndexBuffer, IndexData.GetSize(), sizeof(uint), IndexData.GetData());
 	}
 }

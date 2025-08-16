@@ -22,20 +22,17 @@ namespace ImGui
 
         if (temp_input_is_active || temp_input_start)
         {
-            // Ensure capacity (you can make this smarter)
-            size_t maxLen = 256;
-            if (str.capacity() < maxLen)
-                str.reserve(maxLen);
-            if (str.size() + 1 < maxLen)
-                str.resize(maxLen - 1); // make room for edits + null
+            constexpr size_t maxLen = 256;
+            char buf[maxLen];
+            std::strncpy(buf, str.c_str(), maxLen);
+            buf[maxLen - 1] = '\0'; // ensure null-terminated
 
-            char* buf = str.data();
             ImGuiInputTextFlags input_flags = flags | ImGuiInputTextFlags_EnterReturnsTrue;
-
             bool edited = TempInputText(g.LastItemData.Rect, id, "##Input", buf, static_cast<int>(maxLen), input_flags);
+    
             if (edited)
             {
-                str.resize(std::strlen(buf)); // trim unused part
+                str = std::string(buf);  // overwrite with trimmed content
                 ret = true;
             }
 
@@ -48,5 +45,50 @@ namespace ImGui
 
         PopID();
         return ret;
+    }
+
+    inline void AssetInputSlot(Waldem::Path& inPathToAsset, const char* assetType, std::function<void()> onDropCallback = nullptr, const char* label = nullptr)
+    {
+        if(label)
+        {
+            PushID(label);
+    
+            Text("%s", label);
+            SameLine();
+        }
+    
+        Button(inPathToAsset.empty() ? "<None>" : inPathToAsset.string().c_str(), ImVec2(200, 0));
+    
+        // Accept drag and drop payload
+        if (BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = AcceptDragDropPayload(assetType))
+            {
+                const char* pathToAsset = static_cast<const char*>(payload->Data);
+                if (pathToAsset)
+                {
+                    inPathToAsset = Waldem::Path(pathToAsset);
+
+                    if (onDropCallback)
+                    {
+                        onDropCallback();
+                    }
+                }
+            }
+            EndDragDropTarget();
+        }
+    
+        // Optional: Right-click to clear
+        if (BeginPopupContextItem())
+        {
+            if (MenuItem("Clear"))
+                inPathToAsset.clear();
+            EndPopup();
+        }
+    
+        if(label)
+        {
+            PopID();
+        }
     }
 }

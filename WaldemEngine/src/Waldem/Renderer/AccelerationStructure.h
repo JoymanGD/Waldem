@@ -1,6 +1,7 @@
 #pragma once
 #include "Buffer.h"
 #include "GraphicTypes.h"
+#include "Waldem/Types/MathTypes.h"
 
 namespace Waldem
 {
@@ -15,8 +16,6 @@ namespace Waldem
         Buffer* IndexBuffer = nullptr;
     };
     
-    class RayTracingInstance;
-    
     class AccelerationStructure : public GraphicResource
     {
     public:
@@ -30,17 +29,15 @@ namespace Waldem
         WString Name;
         AccelerationStructureType Type;
         Buffer* ScratchBuffer = nullptr;
-        Buffer* InstanceBuffer = nullptr;
     };
     
-    class RayTracingInstance
+    struct RayTracingInstance
     {
-    public:
-        RayTracingInstance() : BLAS(nullptr), Transform(Matrix4(1.0f)) {}
-        RayTracingInstance(AccelerationStructure* blas, Matrix4 transform) : BLAS(blas), Transform(transform) {}
-        virtual ~RayTracingInstance() {}
-
-        AccelerationStructure* BLAS;
-        Matrix4 Transform;
+        float Transform[ 3 ][ 4 ];
+        uint InstanceID	: 24;
+        uint InstanceMask : 8;
+        uint InstanceContributionToHitGroupIndex : 24;
+        uint Flags : 8;
+        uint64 AccelerationStructure;
     };
 }

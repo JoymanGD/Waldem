@@ -5,6 +5,7 @@
 struct PS_INPUT
 {
     float4 Position : SV_POSITION;
+    float4 Color : COLOR;
     float4 WorldPosition : POSITION;
     float3 Normal : NORMAL;
     float3 Tangent : TANGENT;
@@ -38,20 +39,21 @@ PS_OUTPUT main(PS_INPUT input)
     StructuredBuffer<MaterialAttribute> materialAttributes = ResourceDescriptorHeap[MaterialAttributes];
 
     MaterialAttribute matAttr = materialAttributes[MeshId];
-    float4 color, normal, orm;
+
+    float4 color = input.Color * matAttr.Albedo;
 
     if(matAttr.DiffuseTextureIndex != -1)
     {
         Texture2D<float4> ColorTexture = ResourceDescriptorHeap[NonUniformResourceIndex(matAttr.DiffuseTextureIndex)];
-        color = ColorTexture.Sample(myStaticSampler, input.UV);
+        float4 sampledColor = ColorTexture.Sample(myStaticSampler, input.UV);
         
-        if(color.a < 0.1f)
+        if(sampledColor.a < 0.1f)
             discard;
+        
+        color *= sampledColor;
     }
-    else
-    {
-        color = matAttr.Albedo;
-    }
+    
+    float4 normal = float4(0.0f, 1.0f, 0.0f, 1.0f);
 
     if(matAttr.NormalTextureIndex != -1)
     {
@@ -64,21 +66,14 @@ PS_OUTPUT main(PS_INPUT input)
         normal = float4(input.Normal, 0.0f);
     }
 
+    float4 orm = float4(0.0f, matAttr.Roughness, matAttr.Metallic, 0.0f);
+    
     if(matAttr.ORMTextureIndex != -1)
     {
         Texture2D<float4> ORMTexture = ResourceDescriptorHeap[NonUniformResourceIndex(matAttr.ORMTextureIndex)];
-        orm = ORMTexture.Sample(myStaticSampler, input.UV);
-    }
-    else
-    {
-        orm = float4(0.0f, matAttr.Roughness, matAttr.Metallic, 0.0f);
+        orm *= ORMTexture.Sample(myStaticSampler, input.UV);
     }
     
-    // output.ColorRT = float4(1,0,0,1);
-    // output.NormalRT = float4(1,1,0,1);
-    // output.WorldPositionRT = float4(0,0,1,1);
-    // output.ORM = float4(1,0,1,1);
-    // output.MeshIDRT = 69;
     output.ColorRT = color;
     output.NormalRT = normalize(mul(worldTransforms[MeshId], normal));
     output.WorldPositionRT = input.WorldPosition;

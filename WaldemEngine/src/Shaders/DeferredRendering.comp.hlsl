@@ -9,6 +9,7 @@ cbuffer RootConstants : register(b0)
     uint MeshIDRTID;
     uint RadianceRTID;
     uint TargetRTID;
+    uint SkyColorRTID;
     uint HoveredMeshesID;
 };
 
@@ -19,8 +20,19 @@ void main(uint2 tid : SV_DispatchThreadID)
     Texture2D albedoRT = ResourceDescriptorHeap[AlbedoRTID];
     Texture2D meshIDsRT = ResourceDescriptorHeap[MeshIDRTID];
     Texture2D radianceRT = ResourceDescriptorHeap[RadianceRTID];
+    Texture2D skyColorRT = ResourceDescriptorHeap[SkyColorRTID];
     RWTexture2D<float4> TargetRT = ResourceDescriptorHeap[TargetRTID];
+
+    int meshId = asint(meshIDsRT.Load(int3(tid, 0)).x);
     hoveredMeshes[0] = asint(meshIDsRT.Load(int3(MousePos, 0)).x);
+    
+    float4 skyColor = skyColorRT.Load(int3(tid,0));
+
+    if(meshId <= 0)
+    {
+        TargetRT[tid] = skyColor;
+        return;
+    }
     
     float4 albedo = albedoRT.Load(int3(tid, 0));
     float3 radiance = radianceRT.Load(uint3(tid, 0));

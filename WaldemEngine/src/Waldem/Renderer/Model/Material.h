@@ -24,6 +24,7 @@ namespace Waldem
     public:
         Material() = default;
         Material(Texture2D* diffuse, Texture2D* normal, Texture2D* metalRoughness) : Diffuse(diffuse), Normal(normal), MetalRoughness(metalRoughness) {}
+        Material(Texture2D* diffuse, Texture2D* normal, Texture2D* metalRoughness, Vector4 albedo, float roughness, float metallic) : Diffuse(diffuse), Normal(normal), MetalRoughness(metalRoughness), Albedo(albedo), Roughness(roughness), Metallic(metallic) {}
 
         Texture2D* GetDiffuseTexture() { return Diffuse; }
         Texture2D* GetNormalTexture() { return Normal; }

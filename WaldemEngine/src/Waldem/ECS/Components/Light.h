@@ -1,5 +1,6 @@
 #pragma once
-#include "Waldem/ECS/Component.h"
+
+#include "Waldem/ECS/Components/ComponentBase.h"
 
 namespace Waldem
 {
@@ -15,7 +16,6 @@ namespace Waldem
     {
         Vector3 Color = Vector3(1, 1, 1);
         float Intensity = 10;
-        LightType Type = LightType::Directional;
         float Radius = 10;
         float InnerCone = 1; 
         float OuterCone = 45;
@@ -23,11 +23,23 @@ namespace Waldem
         float AreaWidth = 1;
         float AreaHeight = 1;
         int AreaTwoSided = false;
+        LightType Type = LightType::Directional;
     };
     
-    struct Light : IComponent<Light>
+    struct Light
     {
-        Light() = default;
+        COMPONENT(Light)
+            FIELD(Vector3, Color)
+            FIELD(float, Intensity)
+            FIELD(float, Radius)
+            FIELD(float, InnerCone)
+            FIELD(float, OuterCone)
+            FIELD(float, Softness)
+            FIELD(float, AreaWidth)
+            FIELD(float, AreaHeight)
+            FIELD(bool, AreaTwoSided)
+            FIELD(LightType, Type)
+        END_COMPONENT()
         
         //Directional
         Light(Vector3 color, float intensity)
@@ -56,34 +68,6 @@ namespace Waldem
             Data.InnerCone = 1.0f;
             Data.OuterCone = outerCone;
             Data.Softness = softness;
-        }
-
-        void Serialize(WDataBuffer& outData) override
-        {
-            outData << (int)Data.Type;
-            outData << Data.Color;
-            outData << Data.Intensity;
-            outData << Data.Radius;
-            outData << Data.InnerCone;
-            outData << Data.OuterCone;
-            outData << Data.Softness;
-            outData << Data.AreaWidth;
-            outData << Data.AreaHeight;
-            outData << Data.AreaTwoSided;
-        }
-        
-        void Deserialize(WDataBuffer& inData) override
-        {
-            inData >> (int&)Data.Type;
-            inData >> Data.Color;
-            inData >> Data.Intensity;
-            inData >> Data.Radius;
-            inData >> Data.InnerCone;
-            inData >> Data.OuterCone;
-            inData >> Data.Softness;
-            inData >> Data.AreaWidth;
-            inData >> Data.AreaHeight;
-            inData >> Data.AreaTwoSided;
         }
 
         LightData Data = {};

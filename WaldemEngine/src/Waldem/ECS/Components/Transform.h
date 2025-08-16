@@ -1,25 +1,42 @@
 #pragma once
-#include "Waldem/ECS/Component.h"
+
+#include "ComponentBase.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp"
 
 namespace Waldem
 {
-    struct WALDEM_API Transform : IComponent<Transform>
+    enum TransformSpace
     {
+        Local = 0,
+        World = 1
+    };
+    
+    struct WALDEM_API Transform
+    {
+        COMPONENT(Transform)
+            FIELD(Vector3, Position)
+            FIELD(Vector3, Rotation)
+            FIELD(Vector3, LocalScale)
+        END_COMPONENT()
+        
         Vector3 Position = { 0, 0, 0 };
-        Quaternion Rotation = { 1, 0, 0, 0 };
+        Vector3 Rotation = { 0, 0, 0 }; 
         Vector3 LocalScale = { 1, 1, 1 };
         Matrix4 Matrix = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
+        Quaternion RotationQuat = { 1, 0, 0, 0 };
+        
+        Vector3 LastRotation = { 0, 0, 0 };
+        Vector3 LastPosition = { 0, 0, 0 };
+        Vector3 LastScale = { 0, 0, 0 };
 
-        Transform() = default;
         Transform(Vector3 position);
         Transform(Vector3 position, Quaternion rotation, Vector3 localScale);
         Transform(Matrix4 matrix);
         
-        Vector3 GetForwardVector() { return Vector3(Matrix * Vector4(0, 0, 1, 0)); }
-        Vector3 GetRightVector() { return Vector3(Matrix * Vector4(1, 0, 0, 0)); }
-        Vector3 GetUpVector() { return Vector3(Matrix * Vector4(0, 1, 0, 0)); }
+        Vector3 GetForwardVector() const { return Vector3(Matrix * Vector4(0, 0, 1, 0)); }
+        Vector3 GetRightVector() const { return Vector3(Matrix * Vector4(1, 0, 0, 0)); }
+        Vector3 GetUpVector() const { return Vector3(Matrix * Vector4(0, 1, 0, 0)); }
 
         operator Matrix4() const { return Matrix; }
         
@@ -30,16 +47,34 @@ namespace Waldem
         void Rotate(float yaw, float pitch, float roll);
         void LookAt(Vector3 target);
         void Move(Vector3 delta);
-        Vector3 GetEuler();
-        void SetEuler(Vector3 euler);
-        void SetEuler(float eulerX, float eulerY, float eulerZ);
+        void SetRotation(Vector3 pitchYawRoll);
+        void SetRotation(float pitch, float yaw, float roll);
         void SetRotation(Quaternion newRotation);
-        void Scale(Vector3 scale);
+        void SetScale(float x, float y, float z);
+        void SetScale(Vector3 scale);
         void SetMatrix(Matrix4 matrix);
         Matrix4 Inverse() { return inverse(Matrix); }
         void Update();
+        void ApplyPitchYawRoll();
         void DecompileMatrix();
-        void Serialize(WDataBuffer& outData) override;
-        void Deserialize(WDataBuffer& inData) override;
+
+        Matrix3x4 ToMatrix3x4() const
+        {
+            Matrix4 originalMat = transpose(Matrix);
+            Matrix3x4 mat3x4;
+            
+            for (int row = 0; row < 3; ++row)
+            {
+                for (int col = 0; col < 4; ++col)
+                {
+                    mat3x4[row][col] = originalMat[row][col];
+                }
+            }
+            
+            return mat3x4;
+        }
+        
+    private:
+        void ClampRotation();
     };
 }

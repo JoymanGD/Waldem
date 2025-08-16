@@ -3,7 +3,7 @@
 #include "Core.h"
 #include "PlatformInitializer.h"
 #include "Window.h"
-#include "ECS/ECSManager.h"
+#include "ECS/ECS.h"
 #include "Layers/DebugLayer.h"
 #include "Layers/EditorLayer.h"
 #include "Layers/GameLayer.h"
@@ -35,10 +35,10 @@ namespace Waldem
 	private:
 		bool OnWindowClose(WindowCloseEvent& e);
 		bool OnWindowResize(WindowResizeEvent& e);
+		float CalculateAverageFPS(float deltaTime);
 
 		CWindow* Window;
 		Renderer CurrentRenderer;
-        ECSManager CoreECSManager;
 		ResourceManager ResourceManager;
 		Audio AudioManager;
 		Mono MonoRuntime;
@@ -48,15 +48,17 @@ namespace Waldem
 		int FrameCount = 0;
 		const int MaxFrames = 100;
 
-		bool SwapchainResizeTriggered = false;
-		Point2 NewSwapchainSize = {};
-
 		//Layers
 		EditorLayer* Editor;
 		DebugLayer* Debug;
 		GameLayer* Game;
 
-		float CalculateAverageFPS(float deltaTime);
+		//ECS
+		ECS::Core ECS;
+		flecs::entity UpdatePipeline;
+		flecs::entity FixedUpdatePipeline;
+		flecs::entity DrawPipeline;
+		flecs::entity GUIPipeline;
 	};
 
 	//to be defined in CLIENT

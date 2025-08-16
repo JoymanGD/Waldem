@@ -6,7 +6,6 @@ struct Light
 {
     float3 Color;
     float Intensity;
-    uint Type;
     float Radius;
     float InnerCone;
     float OuterCone;
@@ -14,4 +13,5 @@ struct Light
     float AreaWidth;
     float AreaHeight;
     int AreaTwoSided;
+    uint Type;
 };

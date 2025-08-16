@@ -1,5 +1,6 @@
 #pragma once
 #include "Serializable.h"
+#include "Waldem/Types/String.h"
 
 namespace Waldem
 {
@@ -18,10 +19,17 @@ namespace Waldem
     
     class WALDEM_API Asset : public ISerializable
     {
-    public:
-        Asset(AssetType type = AssetType::Unknown) : Type(type) {}
+public:
+        Asset() {}
+        Asset(AssetType type) : Type(type) {}
+        Asset(WString name) : Name(name) {}
+        Asset(WString name, AssetType type) : Name(name), Type(type) {}
+
+        void Serialize(WDataBuffer& outData) override {}
+        void Deserialize(WDataBuffer& inData) override {}
         
-        AssetType Type = AssetType::Unknown;
+        WString Name = "UnknownAsset";
         uint64 Hash = 0;
+        AssetType Type = AssetType::Unknown;
     };
 }

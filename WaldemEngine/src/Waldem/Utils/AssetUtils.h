@@ -58,4 +58,75 @@ namespace Waldem
         
         return "";
     }
+
+    inline WString AssetTypeToString(AssetType type)
+    {
+        switch (type)
+        {
+        case AssetType::Texture:   return "Texture";
+        case AssetType::Mesh:      return "Mesh";
+        case AssetType::Model:     return "Model";
+        case AssetType::Material:  return "Material";
+        case AssetType::Animation: return "Animation";
+        case AssetType::Audio:     return "Audio";
+        case AssetType::Scene:     return "Scene";
+        case AssetType::Script:    return "Script";
+        case AssetType::Unknown:   return "Unknown";
+        default:                   return "Invalid";
+        }
+    }
+
+    inline WString AssetTypeToExtension(AssetType type)
+    {
+        switch (type)
+        {
+        case AssetType::Texture:   return ".img";
+        case AssetType::Mesh:      return ".mesh";
+        case AssetType::Material:  return ".mat";
+        case AssetType::Animation: return ".anim";
+        case AssetType::Audio:     return ".sound";
+        case AssetType::Scene:     return ".scene";
+        case AssetType::Script:    return ".script";
+        case AssetType::Unknown:   return "Unknown";
+        default:                   return "Invalid";
+        }
+    }
+
+    inline AssetType ExtensionToAssetType(WString extension)
+    {
+        if(extension == ".img") return AssetType::Texture;
+        if(extension == ".mesh") return AssetType::Mesh;
+        if(extension == ".mat") return AssetType::Material;
+        if(extension == ".anim") return AssetType::Animation;
+        if(extension == ".sound") return AssetType::Audio;
+        if(extension == ".scene") return AssetType::Scene;
+        if(extension == ".script") return AssetType::Script;
+        
+        return AssetType::Unknown;
+    }
+
+    inline WString ExtensionToAssetString(WString extension)
+    {
+        if (extension == ".mesh") return "Mesh";
+        if (extension == ".sound") return "Audio";
+        if (extension == ".img") return "Texture";
+        if (extension == ".anim") return "Animation";
+        if (extension == ".mat") return "Material";
+        if (extension == ".scene") return "Scene";
+        if (extension == ".script") return "Script";
+        
+        return "Invalid";
+    }
+
+    inline bool IsSupportedExtension(WString extension)
+    {
+        return 
+            extension == ".mesh" ||
+            extension == ".sound" ||
+            extension == ".img" ||
+            extension == ".anim" ||
+            extension == ".mat" ||
+            extension == ".scene" ||
+            extension == ".script";
+    }
 }

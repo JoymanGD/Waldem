@@ -1,4 +1,6 @@
 #pragma once
+#include <FlecsUtils.h>
+
 #include "Waldem/ECS/Components/ColliderComponent.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/ECS/Components/Camera.h"
@@ -20,18 +22,14 @@ namespace Waldem
     {
         RenderTarget* DepthRT = nullptr;
         
-        //AABB rendering
-        Pipeline* AABBRenderingPipeline = nullptr;
-        PixelShader* LinePixelShader = nullptr;
-        LineMesh LMesh = {};
-
         //Mesh colliders rendering
         SMeshColliderRenderingConstants MeshColliderRenderingConstants;
         Pipeline* MeshCollidersRenderingPipeline = nullptr;
         PixelShader* MeshPixelShader = nullptr;
+        Matrix4 ViewProjection;
         
     public:
-        CollisionRenderingSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
+        CollisionRenderingSystem() {}
 
         void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
         {
@@ -41,16 +39,6 @@ namespace Waldem
                 { "POSITION", 0, TextureFormat::R32G32B32A32_FLOAT, 0, 0, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
                 { "COLOR", 0, TextureFormat::R32G32B32A32_FLOAT, 0, 16, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
             };
-            
-            LinePixelShader = Renderer::LoadPixelShader("Line");
-            AABBRenderingPipeline = Renderer::CreateGraphicPipeline("LinePipeline",
-                                                            LinePixelShader,
-                                                            { TextureFormat::R8G8B8A8_UNORM },
-                                                            TextureFormat::D32_FLOAT,
-                                                            DEFAULT_RASTERIZER_DESC,
-                                                            DEFAULT_DEPTH_STENCIL_DESC,
-                                                            WD_PRIMITIVE_TOPOLOGY_TYPE_LINE,
-                                                            inputElementDescs);
             
             MeshPixelShader = Renderer::LoadPixelShader("SimpleMesh");
 
@@ -66,44 +54,34 @@ namespace Waldem
                                                             DEFAULT_DEPTH_STENCIL_DESC,
                                                             WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
                                                             DEFAULT_INPUT_LAYOUT_DESC);
-        }
 
-        void Update(float deltaTime) override
-        {
-            Matrix4 viewProj;
-            
-            for (auto [entity, camera, mainCamera, cameraTransform] : Manager->EntitiesWith<Camera, EditorCamera, Transform>())
+            ECS::World.system("CollisionRenderingSystem").kind(flecs::OnDraw).run([&](flecs::iter& it)
             {
-                viewProj = camera.ProjectionMatrix * camera.ViewMatrix;
-                break;
-            }
-
-            Renderer::BindRenderTargets({});
-            Renderer::BindDepthStencil(DepthRT);
-            Renderer::ResourceBarrier(DepthRT, ALL_SHADER_RESOURCE, DEPTH_WRITE);
-            
-            WArray<Line> lines;
-
-            for (auto [transformEntity, transform, collider, meshComponent] : Manager->EntitiesWith<Transform, ColliderComponent, MeshComponent>())
-            {
-                Vector4 color = collider.IsColliding ? Vector4(1.0f, 0.0f, 0.0f, 1.0f) : Vector4(0.0f, 1.0f, 0.0f, 1.0f);
+                if(IsInitialized)
+                {
+                    if(auto editorCamera = ECS::World.lookup("EditorCamera"))
+                    {
+                        ViewProjection = editorCamera.get<Camera>()->ViewProjectionMatrix;
+                    }
+                            
+                    Renderer::BindDepthStencil(DepthRT);
+                    Renderer::ResourceBarrier(DepthRT, ALL_SHADER_RESOURCE, DEPTH_WRITE);
+                    ECS::World.query<ColliderComponent, Transform>().each([&](ColliderComponent& collider, Transform& transform)
+                    {
+                        Vector4 color = collider.IsColliding ? Vector4(1.0f, 0.0f, 0.0f, 1.0f) : Vector4(0.0f, 1.0f, 0.0f, 1.0f);
+                        
+                        MeshColliderRenderingConstants.WorldViewProj = ViewProjection * transform.Matrix;
+                        MeshColliderRenderingConstants.Color = color;
+                        Renderer::SetPipeline(MeshCollidersRenderingPipeline);
+                        Renderer::PushConstants(&MeshColliderRenderingConstants, sizeof(SMeshColliderRenderingConstants));
+                        // Renderer::Draw(collider.MeshData.Mesh);
+                    });
+                }
                 
-                MeshColliderRenderingConstants.WorldViewProj = viewProj * transform.Matrix;
-                MeshColliderRenderingConstants.Color = color;
-                Renderer::SetPipeline(MeshCollidersRenderingPipeline);
-                Renderer::PushConstants(&MeshColliderRenderingConstants, sizeof(SMeshColliderRenderingConstants));
-                // Renderer::Draw(collider.MeshData.Mesh);
-                
-                lines.AddRange(meshComponent.Mesh->BBox.GetTransformed(transform).GetLines(color));
-            }
+                Renderer::ResourceBarrier(DepthRT, DEPTH_WRITE, ALL_SHADER_RESOURCE);
+            });
 
-            Renderer::UploadBuffer(LMesh.VertexBuffer, lines.GetData(), sizeof(Line) * lines.Num());
-            Renderer::SetPipeline(AABBRenderingPipeline);
-            Renderer::PushConstants(&viewProj, sizeof(Matrix4));
-            Renderer::Draw(&LMesh);
-            
-            Renderer::BindRenderTargets({});
-            Renderer::ResourceBarrier(DepthRT, DEPTH_WRITE, ALL_SHADER_RESOURCE);
+            IsInitialized = true;
         }
     };
 }

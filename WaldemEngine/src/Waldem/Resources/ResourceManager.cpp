@@ -34,15 +34,15 @@ namespace Waldem
             
             Renderer::Destroy(renderTarget);
             
-            renderTarget = Renderer::CreateRenderTarget(name, width, height, format);
+            Renderer::InitializeRenderTarget(name, width, height, format, renderTarget);
         }
 
         return renderTarget;
     }
 
-    Buffer* ResourceManager::CreateBuffer(WString name, BufferType type, void* data, uint32_t size, uint32_t stride)
+    Buffer* ResourceManager::CreateBuffer(WString name, BufferType type, uint32_t size, uint32_t stride, void* data)
     {
-        Buffer* buffer = Renderer::CreateBuffer(name, type, data, size, stride);
+        Buffer* buffer = Renderer::CreateBuffer(name, type, size, stride, data);
 
         if(Buffers.Contains(name))
         {
@@ -71,7 +71,7 @@ namespace Waldem
 
     Buffer* ResourceManager::CloneBuffer(Buffer* buffer)
     {
-        Buffer* destBuffer = CreateBuffer(buffer->GetName() + "_Clone", buffer->GetType(), nullptr, buffer->GetSize(), buffer->GetStride());
+        Buffer* destBuffer = CreateBuffer(buffer->GetName() + "_Clone", buffer->GetType(), buffer->GetCapacity(), buffer->GetStride());
 
         Renderer::ResourceBarrier(buffer, VERTEX_AND_CONSTANT_BUFFER | NON_PIXEL_SHADER_RESOURCE, COPY_SOURCE);
         Renderer::ResourceBarrier(destBuffer, VERTEX_AND_CONSTANT_BUFFER | NON_PIXEL_SHADER_RESOURCE, COPY_DEST);

@@ -1,11 +1,8 @@
 #pragma once
-#include "Waldem/ECS/Component.h"
 
 namespace Waldem
 {
-    struct WALDEM_API Selected : IComponent<Selected>
+    struct WALDEM_API Selected
     {
-        void Serialize(WDataBuffer& outData) override {}
-        void Deserialize(WDataBuffer& inData) override {}
     };
 }

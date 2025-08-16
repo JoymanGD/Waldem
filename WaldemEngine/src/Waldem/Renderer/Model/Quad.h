@@ -36,8 +36,8 @@ namespace Waldem
     public:
         Quad()
         {
-            VertexBuffer = Renderer::CreateBuffer("QuadVertexBuffer", BufferType::VertexBuffer, QuadVertices, sizeof(QuadVertices), sizeof(QuadVertex));
-            IndexBuffer = Renderer::CreateBuffer("QuadIndexBuffer", BufferType::IndexBuffer, QuadIndices, sizeof(QuadIndices), sizeof(uint32_t));
+            VertexBuffer = Renderer::CreateBuffer("QuadVertexBuffer", BufferType::VertexBuffer, sizeof(QuadVertices), sizeof(QuadVertex), QuadVertices);
+            IndexBuffer = Renderer::CreateBuffer("QuadIndexBuffer", BufferType::IndexBuffer, sizeof(QuadIndices), sizeof(uint32_t), QuadIndices);
             BBox = CalculateBoundingBox();
 
             CurrentMaterial = nullptr;

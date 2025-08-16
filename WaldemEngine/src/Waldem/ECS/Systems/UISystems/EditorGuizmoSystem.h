@@ -3,6 +3,9 @@
 #include "ImGuizmo.h"
 #include "imgui_internal.h"
 #include "glm/gtc/type_ptr.hpp"
+#include "glm/gtx/euler_angles.hpp"
+#include "glm/gtx/matrix_decompose.hpp"
+#include "Waldem/ECS/IdManager.h"
 #include "Waldem/Input/KeyCodes.h"
 #include "Waldem/Input/MouseButtonCodes.h"
 #include "Waldem/ECS/Components/EditorCamera.h"
@@ -22,7 +25,7 @@ namespace Waldem
         bool CanModifyManipulationSettings = false;
         
     public:
-        EditorGuizmoSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
+        EditorGuizmoSystem() {}
         
         void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
         {
@@ -66,42 +69,67 @@ namespace Waldem
 
             inputManager->SubscribeToMouseButtonEvent(WD_MOUSE_BUTTON_LEFT, [&](bool isPressed)
             {
-                if(isPressed)
+                if (isPressed)
                 {
-                    for (auto [entity, transform, selected] : Manager->EntitiesWith<Transform, Selected>())
+                    ECS::World.defer([&]
                     {
-                        entity.Remove<Selected>();
-                    }
-                    
-                    int meshId = 0;
-                    
-                    for (auto [entity, mesh, transform] : Manager->EntitiesWith<MeshComponent, Transform>())
-                    {
-                        if(meshId == Editor::HoveredEntityID)
+                        ECS::World.query<Transform, Selected>("ClearSelectionQuery").each([&](flecs::entity entity, Transform&, Selected)
                         {
-                            entity.Add<Selected>();
-                            break;
+                            entity.remove<Selected>();
+                        });
+                    });
+
+                    flecs::entity outEntity;
+
+                    if(IdManager::GetEntityById(Editor::HoveredEntityID, DrawId, outEntity))
+                    {
+                        if(outEntity.is_valid() && outEntity.is_alive())
+                        {
+                            outEntity.add<Selected>();
                         }
-                        meshId++;
                     }
                 }
             });
-        }
 
-        void Update(float deltaTime) override
-        {
-            auto editorViewport = Renderer::GetEditorViewport();
-            
-            for (auto [cameraEntity, camera, cameraTransform, mainCamera] : Manager->EntitiesWith<Camera, Transform, EditorCamera>())
+            ECS::World.system<Transform, Selected>("EditorGizmoSystem").kind(flecs::OnGUI).each([&](flecs::entity entity, Transform& transform, Selected)
             {
-                for (auto [transformEntity, transform, selected] : Manager->EntitiesWith<Transform, Selected>())
+                if(auto editorCameraEntity = ECS::World.lookup("EditorCamera"))
                 {
-                    ImGuizmo::SetOrthographic(false);
-                    ImGuizmo::SetRect(editorViewport->Position.x, editorViewport->Position.y, editorViewport->Size.x, editorViewport->Size.y);
-                    ImGuizmo::Manipulate(value_ptr(camera.ViewMatrix), value_ptr(camera.ProjectionMatrix), CurrentOperation, CurrentMode, value_ptr(transform.Matrix));
-                    transform.DecompileMatrix();
+                    if(auto editorCamera = editorCameraEntity.get<Camera>())
+                    {
+                        auto editorViewport = Renderer::GetEditorViewport();
+
+                        ImGuizmo::SetOrthographic(false);
+                        ImGuizmo::SetRect(editorViewport->Position.x, editorViewport->Position.y, editorViewport->Size.x, editorViewport->Size.y);
+                        ImGuizmo::Manipulate(value_ptr(editorCamera->ViewMatrix), value_ptr(editorCamera->ProjectionMatrix), CurrentOperation, CurrentMode, value_ptr(transform.Matrix));
+
+                        if(ImGuizmo::IsUsing())
+                        {
+                            transform.DecompileMatrix();
+                            
+                            entity.modified<Transform>();
+                        }
+                        else
+                        {
+                            if(transform.LastRotation != transform.Rotation)
+                            {
+                                transform.ApplyPitchYawRoll();
+                                transform.LastRotation = transform.Rotation;
+                                transform.Update();
+                                entity.modified<Transform>();
+                            }
+
+                            if(transform.LastPosition != transform.Position || transform.LastScale != transform.LocalScale)
+                            {
+                                transform.LastPosition = transform.Position;
+                                transform.LastScale = transform.LocalScale;
+                                transform.Update();
+                                entity.modified<Transform>();
+                            }
+                        }
+                    }
                 }
-            }
+            });
         }
     };
 }

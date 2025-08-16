@@ -119,10 +119,25 @@ namespace Waldem
                     return Data[i].value;
                 }
             }
+            
+            WD_CORE_ERROR("Key not found in WMap");
 
             // If key not found, insert default-constructed value
             Data.Add(WPair<T1, T2>(key, T2{}));
             return Data.Last().value;
+        }
+
+        const T2& operator[](const T1& key) const
+        {
+            for (size_t i = 0; i < Data.Num(); ++i)
+            {
+                if (Data[i].key == key)
+                {
+                    return Data[i].value;
+                }
+            }
+            
+            throw std::out_of_range("Key not found in const WMap");
         }
 
         WPair<T1, T2>& operator[](int index)
@@ -141,6 +156,11 @@ namespace Waldem
         uint Num() const
         {
             return Data.Num();
+        }
+
+        bool IsEmpty() const
+        {
+            return Num() == 0;
         }
     };
 }

@@ -12,12 +12,13 @@ namespace Waldem
     {
     public:
         TextureDesc() : Asset(AssetType::Texture) {}
-        TextureDesc(WString name, int width, int height, TextureFormat format, uint8* data = nullptr) : Name(name), Width(width), Height(height), Format(format), Data(std::move(data))
+        TextureDesc(WString name) : Asset(name, AssetType::Texture) {}
+        TextureDesc(WString name, int width, int height, TextureFormat format, uint8* data = nullptr) : Width(width), Height(height), Format(format), Data(std::move(data))
         {
             Type = AssetType::Texture;
+            Name = name;
         }
         
-        WString Name;
         int Width;
         int Height;
         TextureFormat Format;
@@ -26,7 +27,6 @@ namespace Waldem
         void Serialize(WDataBuffer& outData) override
         {
             int DataSize = CALCULATE_IMAGE_DATA_SIZE(Width, Height, Format);
-            Name.Serialize(outData);
             outData << Width;
             outData << Height;
             outData << Format;
@@ -37,8 +37,6 @@ namespace Waldem
         void Deserialize(WDataBuffer& inData) override
         {
             int DataSize;
-            
-            Name.Deserialize(inData);
             inData >> Width;
             inData >> Height;
             inData >> Format;

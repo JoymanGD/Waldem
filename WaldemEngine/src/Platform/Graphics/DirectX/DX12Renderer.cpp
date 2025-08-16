@@ -18,6 +18,7 @@
 #include "backends/imgui_impl_sdl2.h"
 #include "Waldem/Editor/Editor.h"
 #include "Waldem/Editor/UIStyles.h"
+#include "Waldem/Renderer/Model/Quad.h"
 
 struct ImGuiIO;
 
@@ -726,6 +727,8 @@ namespace Waldem
             throw std::runtime_error("Failed to retrieve thread group size.");
         }
 
+        shaderReflection->Release();
+
         return { threadGroupX, threadGroupY, threadGroupZ };
     }
 
@@ -861,24 +864,143 @@ namespace Waldem
 
     void DX12Renderer::Destroy(GraphicResource* resource)
     {
-        auto dx12Resource = ResourceMap[resource];
-
-        if(!dx12Resource)
+        if(resource)
         {
-            WD_CORE_ERROR("Resource not found in ResourceMap");
+            auto dx12Resource = ResourceMap[resource];
+            if(dx12Resource)
+            {
+                ResourceMap.Remove(resource);
+                ResourcesToDestroy.Add(dx12Resource);
+            }
+            else
+            {
+                WD_CORE_ERROR("Resource not found in ResourceMap");
+            }
+        }
+        else
+        {
+            WD_CORE_ERROR("Invalid resource");
         }
 
-        dx12Resource->Release();
-        
-        ResourceMap.Remove(resource);
+        auto uploadResource = resource->GetUploadResource();
+        if(uploadResource)
+        {
+            auto dx12UploadResource = ResourceMap[uploadResource];
+            if(dx12UploadResource)
+            {
+                ResourceMap.Remove(uploadResource);
+                ResourcesToDestroy.Add(dx12UploadResource);
+            }
+            else
+            {
+                WD_CORE_ERROR("Upload resource not found in ResourceMap");
+            }
+        }
+        else
+        {
+            WD_CORE_ERROR("Resource doesnt have Upload resource");
+        }
 
-        if(resource->GetType() == RTYPE_Texture)
+        auto readbackResource = resource->GetReadbackResource();
+        if(readbackResource)
+        {
+            auto dx12ReadbackResource = ResourceMap[readbackResource];
+            if(dx12ReadbackResource)
+            {
+                ResourceMap.Remove(readbackResource);
+                ResourcesToDestroy.Add(dx12ReadbackResource);
+            }
+            else
+            {
+                WD_CORE_ERROR("Readback resource not found in ResourceMap");
+            }
+        }
+        else
+        {
+            WD_CORE_ERROR("Resource doesnt have Readback resource");
+        }
+
+        if(resource->GetType() == RTYPE_Texture || resource->GetType() == RTYPE_Buffer || resource->GetType() == RTYPE_AccelerationStructure)
         {
             GeneralAllocator.Free(resource->GetIndex(SRV_UAV_CBV));
         }
         else if(resource->GetType() == RTYPE_RenderTarget)
         {
             RenderTargetAllocator.Free(resource->GetIndex(RTV_DSV));
+            GeneralAllocator.Free(resource->GetIndex(SRV_UAV_CBV));
+        }
+        else
+        {
+            WD_CORE_ERROR("Unknown resource type");
+        }
+    }
+
+    void DX12Renderer::DestroyImmediate(GraphicResource* resource)
+    {
+        if(resource)
+        {
+            auto dx12Resource = ResourceMap[resource];
+            if(dx12Resource)
+            {
+                ResourceMap.Remove(resource);
+                dx12Resource->Release();
+            }
+            else
+            {
+                WD_CORE_ERROR("Resource not found in ResourceMap");
+            }
+        }
+        else
+        {
+            WD_CORE_ERROR("Invalid resource");
+        }
+
+        auto uploadResource = resource->GetUploadResource();
+        if(uploadResource)
+        {
+            auto dx12UploadResource = ResourceMap[uploadResource];
+            if(dx12UploadResource)
+            {
+                ResourceMap.Remove(uploadResource);
+                dx12UploadResource->Release();
+            }
+            else
+            {
+                WD_CORE_ERROR("Upload resource not found in ResourceMap");
+            }
+        }
+        else
+        {
+            WD_CORE_ERROR("Resource doesnt have Upload resource");
+        }
+
+        auto readbackResource = resource->GetReadbackResource();
+        if(readbackResource)
+        {
+            auto dx12ReadbackResource = ResourceMap[readbackResource];
+            if(dx12ReadbackResource)
+            {
+                ResourceMap.Remove(readbackResource);
+                dx12ReadbackResource->Release();
+            }
+            else
+            {
+                WD_CORE_ERROR("Readback resource not found in ResourceMap");
+            }
+        }
+        else
+        {
+            WD_CORE_ERROR("Resource doesnt have Readback resource");
+        }
+
+        if(resource->GetType() == RTYPE_Texture || resource->GetType() == RTYPE_Buffer || resource->GetType() == RTYPE_AccelerationStructure)
+        {
+            GeneralAllocator.Free(resource->GetIndex(SRV_UAV_CBV));
+        }
+        else if(resource->GetType() == RTYPE_RenderTarget)
+        {
+            RenderTargetAllocator.Free(resource->GetIndex(RTV_DSV));
+            GeneralAllocator.Free(resource->GetIndex(SRV_UAV_CBV));
         }
         else
         {
@@ -902,6 +1024,12 @@ namespace Waldem
         }
 
         MainViewport.FrameBuffer->Advance();
+
+        for (auto resource : ResourcesToDestroy)
+        {
+            resource->Release();
+        }
+        ResourcesToDestroy.Clear();
     }
 
     PixelShader* DX12Renderer::LoadPixelShader(const Path& shaderName, WString entryPoint)
@@ -1095,6 +1223,13 @@ namespace Waldem
     {
         RenderTarget* renderTarget = new RenderTarget(name, width, height, format);
 
+        InitializeRenderTarget(name, width, height, format, renderTarget);
+
+        return renderTarget;
+    }
+
+    void DX12Renderer::InitializeRenderTarget(WString name, int width, int height, TextureFormat format, RenderTarget*& renderTarget)
+    {
         uint index = RenderTargetAllocator.Allocate();
         renderTarget->SetIndex(index, RTV_DSV);
         
@@ -1214,8 +1349,6 @@ namespace Waldem
         }
         
         Resource->SetName(std::wstring(name.Begin(), name.End()).c_str());
-
-        return renderTarget;
     }
 
     AccelerationStructure* DX12Renderer::CreateBLAS(WString name, WArray<RayTracingGeometry>& geometries)
@@ -1316,70 +1449,28 @@ namespace Waldem
         return blas;
     }
 
-    AccelerationStructure* DX12Renderer::CreateTLAS(WString name, WArray<RayTracingInstance>& instances)
+    AccelerationStructure* DX12Renderer::CreateTLAS(WString name, Buffer* instanceBuffer, uint numInstances)
+    {
+        AccelerationStructure* tlas = new AccelerationStructure(name, AccelerationStructureType::TopLevel);
+
+        InitializeTLAS(name, instanceBuffer, numInstances, tlas);
+
+        return tlas;
+    }
+
+    void DX12Renderer::InitializeTLAS(WString name, Buffer* instanceBuffer, uint numInstances, AccelerationStructure*& tlas)
     {
         auto cmdList = WorldCommandList.first;
-
-        AccelerationStructure* tlas = new AccelerationStructure(name, AccelerationStructureType::TopLevel);
+        
         uint index = GeneralAllocator.Allocate();
         tlas->SetIndex(index, SRV_UAV_CBV);
-        
-        WArray<D3D12_RAYTRACING_INSTANCE_DESC> dx12Instances;
 
-        for(int i = 0; i < instances.Num(); i++)
-        {
-            auto& instance = instances[i];
-            
-            D3D12_RAYTRACING_INSTANCE_DESC instanceDesc = {};
-            instanceDesc.InstanceID = static_cast<UINT>(i);
-            instanceDesc.InstanceMask = 0xFF;
-            instanceDesc.InstanceContributionToHitGroupIndex = 0;
-            instanceDesc.Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
-            Matrix4 transposedMatrix = transpose(instance.Transform);
-            memcpy(instanceDesc.Transform, &transposedMatrix, sizeof(instanceDesc.Transform));
-
-            instanceDesc.AccelerationStructure = instance.BLAS->GetGPUAddress();
-            
-            dx12Instances.Add(instanceDesc);
-        }
-        
         D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS asInputs = {};
         asInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
         asInputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
-        asInputs.NumDescs = static_cast<UINT>(dx12Instances.Num());
+        asInputs.NumDescs = numInstances;
         asInputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE | D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_UPDATE;
-
-        //create instance buffer
-        D3D12_HEAP_PROPERTIES heapProps = {};
-        heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
-        heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-        heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-
-        D3D12_RESOURCE_DESC resourceDesc = {};
-        resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-        resourceDesc.Alignment = 0;
-        resourceDesc.Width = sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * dx12Instances.Num();
-        resourceDesc.Height = 1;
-        resourceDesc.DepthOrArraySize = 1;
-        resourceDesc.MipLevels = 1;
-        resourceDesc.Format = DXGI_FORMAT_UNKNOWN;
-        resourceDesc.SampleDesc.Count = 1;
-        resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-        resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-        ID3D12Resource* UploadResource;
-        Device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&UploadResource));
-        
-        void* mappedData;
-        UploadResource->Map(0, nullptr, &mappedData);
-        memcpy(mappedData, dx12Instances.GetData(), sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * dx12Instances.Num());
-        UploadResource->Unmap(0, nullptr);
-
-        GraphicResource* instancesBuffer = new GraphicResource();
-        instancesBuffer->SetGPUAddress(UploadResource->GetGPUVirtualAddress());
-        tlas->SetUploadResource(instancesBuffer);
-        ResourceMap[instancesBuffer] = UploadResource;
-
-        asInputs.InstanceDescs = instancesBuffer->GetGPUAddress();
+        asInputs.InstanceDescs = instanceBuffer->GetGPUAddress();
 
         D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO prebuildInfo = {};
         Device->GetRaytracingAccelerationStructurePrebuildInfo(&asInputs, &prebuildInfo);
@@ -1388,10 +1479,12 @@ namespace Waldem
         prebuildInfo.ResultDataMaxSizeInBytes = (prebuildInfo.ResultDataMaxSizeInBytes + 255) & ~255;
 
         //create scratch buffer
+        D3D12_HEAP_PROPERTIES heapProps = {};
         heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
         heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
         heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
 
+        D3D12_RESOURCE_DESC resourceDesc = {};
         resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
         resourceDesc.Alignment = 0;
         resourceDesc.Width = prebuildInfo.ScratchDataSizeInBytes;
@@ -1402,11 +1495,11 @@ namespace Waldem
         resourceDesc.SampleDesc.Count = 1;
         resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
         resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-        ID3D12Resource* ScratchBuffer;
-        Device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&ScratchBuffer));
+        ID3D12Resource* ScratchResource;
+        Device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&ScratchResource));
 
-        Buffer* scratchBuffer = new Buffer();
-        scratchBuffer->SetGPUAddress(ScratchBuffer->GetGPUVirtualAddress());
+        Buffer* scratchBuffer = new Buffer(name + "_ScratchBuffer", BufferType::StorageBuffer, prebuildInfo.ScratchDataSizeInBytes, sizeof(int));
+        scratchBuffer->SetGPUAddress(ScratchResource->GetGPUVirtualAddress());
         tlas->SetScratchBuffer(scratchBuffer);
 
         //create resource
@@ -1433,7 +1526,7 @@ namespace Waldem
         
         D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC asDesc = {};
         asDesc.Inputs = asInputs;
-        asDesc.ScratchAccelerationStructureData = ScratchBuffer->GetGPUVirtualAddress();
+        asDesc.ScratchAccelerationStructureData = ScratchResource->GetGPUVirtualAddress();
         asDesc.DestAccelerationStructureData = Resource->GetGPUVirtualAddress();
 
         cmdList->BuildRaytracingAccelerationStructure(&asDesc);
@@ -1451,8 +1544,69 @@ namespace Waldem
         srvDesc.RaytracingAccelerationStructure.Location = asDesc.DestAccelerationStructureData;
 
         Device->CreateShaderResourceView(nullptr, &srvDesc, cpuHandle);
+    }
 
-        return tlas;
+    void DX12Renderer::BuildTLAS(Buffer* instanceBuffer, uint numInstances, AccelerationStructure*& tlas)
+    {
+        auto cmdList = WorldCommandList.first;
+
+        D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS asInputs = {};
+        asInputs.Type         = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
+        asInputs.DescsLayout  = D3D12_ELEMENTS_LAYOUT_ARRAY;
+        asInputs.NumDescs     = numInstances;
+        asInputs.InstanceDescs= instanceBuffer->GetGPUAddress();
+        asInputs.Flags        = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE |
+                                D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_UPDATE;
+
+        D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO prebuildInfo = {};
+        Device->GetRaytracingAccelerationStructurePrebuildInfo(&asInputs, &prebuildInfo);
+
+        UINT64 requiredScratch = (prebuildInfo.ScratchDataSizeInBytes + 255) & ~255ull;
+
+        if (!tlas->GetScratchBuffer() || tlas->GetScratchBuffer()->GetCapacity() < requiredScratch)
+        {
+            if (tlas->GetScratchBuffer())
+            {
+                Destroy(tlas->GetScratchBuffer());
+            }
+
+            D3D12_HEAP_PROPERTIES heapProps = {};
+            heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
+
+            D3D12_RESOURCE_DESC resourceDesc = {};
+            resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+            resourceDesc.Width = requiredScratch;
+            resourceDesc.Height = 1;
+            resourceDesc.DepthOrArraySize = 1;
+            resourceDesc.MipLevels = 1;
+            resourceDesc.Format = DXGI_FORMAT_UNKNOWN;
+            resourceDesc.SampleDesc.Count = 1;
+            resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+            resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+
+            ID3D12Resource* scratchResource = nullptr;
+            HRESULT hr = Device->CreateCommittedResource(
+                &heapProps,
+                D3D12_HEAP_FLAG_NONE,
+                &resourceDesc,
+                D3D12_RESOURCE_STATE_COMMON,
+                nullptr,
+                IID_PPV_ARGS(&scratchResource)
+            );
+
+            Buffer* scratchBuffer = new Buffer("TLAS_Scratch", BufferType::StorageBuffer, requiredScratch, sizeof(uint32_t));
+            scratchBuffer->SetGPUAddress(scratchResource->GetGPUVirtualAddress());
+            tlas->SetScratchBuffer(scratchBuffer);
+        }
+
+        D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC asDesc = {};
+        asDesc.Inputs = asInputs;
+        asDesc.DestAccelerationStructureData = tlas->GetGPUAddress();
+        asDesc.ScratchAccelerationStructureData = tlas->GetScratchBuffer()->GetGPUAddress();
+
+        cmdList->BuildRaytracingAccelerationStructure(&asDesc);
+
+        cmdList->UAVBarrier(ResourceMap[(GraphicResource*)tlas]);
     }
 
     void DX12Renderer::UpdateBLAS(AccelerationStructure* BLAS, WArray<RayTracingGeometry>& geometries)
@@ -1501,46 +1655,19 @@ namespace Waldem
         cmdList->UAVBarrier(ResourceMap[(GraphicResource*)BLAS]);
     }
 
-    void DX12Renderer::UpdateTLAS(AccelerationStructure* TLAS, WArray<RayTracingInstance>& instances)
+    void DX12Renderer::UpdateTLAS(AccelerationStructure* TLAS, Buffer* instanceBuffer, uint numInstances)
     {
         auto cmdList = WorldCommandList.first;
-        
-        // Update instance descriptors
-        WArray<D3D12_RAYTRACING_INSTANCE_DESC> dx12Instances;
-        for (int i = 0; i < instances.Num(); i++)
-        {
-            auto& instance = instances[i];
-
-            D3D12_RAYTRACING_INSTANCE_DESC instanceDesc = {};
-            instanceDesc.InstanceID = static_cast<UINT>(i);
-            instanceDesc.InstanceMask = 0xFF;
-            instanceDesc.InstanceContributionToHitGroupIndex = 0;
-            instanceDesc.Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
-            Matrix4 transposedMatrix = transpose(instance.Transform);
-            memcpy(instanceDesc.Transform, &transposedMatrix, sizeof(instanceDesc.Transform));
-
-            instanceDesc.AccelerationStructure = instance.BLAS->GetGPUAddress();
-
-            dx12Instances.Add(instanceDesc);
-        }
-
-        // Update the instance buffer with new transforms
-        auto InstanceBuffer = ResourceMap[TLAS->GetUploadResource()];
-        
-        void* mappedData;
-        InstanceBuffer->Map(0, nullptr, &mappedData);
-        memcpy(mappedData, dx12Instances.GetData(), sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * dx12Instances.Num());
-        InstanceBuffer->Unmap(0, nullptr);
 
         // Prepare the acceleration structure inputs for update
         D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS asInputs = {};
         asInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
         asInputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
-        asInputs.NumDescs = static_cast<UINT>(dx12Instances.Num());
+        asInputs.NumDescs = numInstances;
         asInputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE |
                          D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_UPDATE |
                          D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PERFORM_UPDATE;  // Important for refit
-        asInputs.InstanceDescs = TLAS->GetUploadResource()->GetGPUAddress();
+        asInputs.InstanceDescs = instanceBuffer->GetGPUAddress();
 
         // Describe the acceleration structure build for update
         D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC asDesc = {};
@@ -1556,11 +1683,18 @@ namespace Waldem
         cmdList->UAVBarrier(ResourceMap[(GraphicResource*)TLAS]);
     }
 
-    Buffer* DX12Renderer::CreateBuffer(WString name, BufferType type, void* data, uint32_t size, uint32_t stride)
+    Buffer* DX12Renderer::CreateBuffer(WString name, BufferType type, uint32_t size, uint32_t stride, void* data, size_t dataSize)
+    {
+        Buffer* buffer = new Buffer(name, type, size, stride);
+
+        InitializeBuffer(name, type, size, stride, buffer, data, dataSize);
+
+        return buffer;
+    }
+
+    void DX12Renderer::InitializeBuffer(WString name, BufferType type, uint32_t size, uint32_t stride, Buffer*& buffer, void* data, size_t dataSize)
     {
         auto cmdList = WorldCommandList.first;
-
-        Buffer* buffer = new Buffer(name, type, size, stride);
         
         D3D12_HEAP_PROPERTIES heapProps = {};
         heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
@@ -1626,18 +1760,20 @@ namespace Waldem
         }
         
         auto uploadGraphicResource = new GraphicResource();
+        uploadGraphicResource->SetGPUAddress(UploadResource->GetGPUVirtualAddress());
         ResourceMap[uploadGraphicResource] = UploadResource;
         
         buffer->SetUploadResource(uploadGraphicResource);
 
-        if(data)
+        if(data && dataSize == 0)
         {
-            D3D12_SUBRESOURCE_DATA subResourceData;
-            subResourceData.pData = data;
-            subResourceData.RowPitch = uploadBufferSize;
-            subResourceData.SlicePitch = uploadBufferSize;
+            dataSize = size;
+        }
 
-            cmdList->UpdateSubresoures(Resource, UploadResource, 1, &subResourceData);
+        if(dataSize > 0)
+        {
+            cmdList->UpdateRes(Resource, UploadResource, data, dataSize, D3D12_RESOURCE_STATE_COMMON, 0);
+            buffer->AddSize(dataSize);
         }
 
         D3D12_RESOURCE_STATES beforeState = D3D12_RESOURCE_STATE_COPY_DEST;
@@ -1678,7 +1814,7 @@ namespace Waldem
         srvDesc.Format = DXGI_FORMAT_UNKNOWN;
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
         srvDesc.Buffer.FirstElement = 0;
-        srvDesc.Buffer.NumElements = buffer->GetCount();
+        srvDesc.Buffer.NumElements = buffer->GetCapacity() / buffer->GetStride();
         srvDesc.Buffer.StructureByteStride = buffer->GetStride();
         srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 
@@ -1713,8 +1849,6 @@ namespace Waldem
         ResourceMap[readbackGraphicResource] = readbackBuffer;
         
         buffer->SetReadbackResource(readbackGraphicResource);
-
-        return buffer;
     }
 
     void DX12Renderer::CopyResource(GraphicResource* dstResource, GraphicResource* srcResource)
@@ -1730,6 +1864,25 @@ namespace Waldem
         WorldCommandList.first->CopyResource(dx12DstResource, dx12SrcResource);
     }
 
+    void DX12Renderer::CopyBufferRegion(GraphicResource* dstResource, size_t dstOffset, GraphicResource* srcResource, size_t srcOffset, size_t size)
+    {
+        auto lastStateDst = ResourceBarrier(dstResource, COPY_DEST);
+        auto lastStateSrc = ResourceBarrier(srcResource, COPY_SOURCE);
+        
+        ID3D12Resource* dx12DstResource = ResourceMap[dstResource];
+        ID3D12Resource* dx12SrcResource = ResourceMap[srcResource];
+
+        if(!dx12DstResource || !dx12SrcResource)
+        {
+            WD_CORE_ERROR("Resource not found in ResourceMap");
+        }
+
+        WorldCommandList.first->CopyBufferRegion(dx12DstResource, dstOffset, dx12SrcResource, srcOffset, size);
+        
+        ResourceBarrier(dstResource, lastStateDst);
+        ResourceBarrier(srcResource, lastStateSrc);
+    }
+
     void DX12Renderer::UploadBuffer(Buffer* buffer, void* data, uint32_t size, uint offset)
     {
         ID3D12Resource* resource = ResourceMap[buffer];
@@ -1738,7 +1891,15 @@ namespace Waldem
         WorldCommandList.first->UpdateRes(resource, uploadResource, data, size, beforeState, offset);
     }
 
-    void DX12Renderer::DownloadBuffer(Buffer* buffer, void* data)
+    void DX12Renderer::ClearBuffer(Buffer* buffer, uint32_t size, uint offset)
+    {
+        ID3D12Resource* resource = ResourceMap[buffer];
+        ID3D12Resource* uploadResource = ResourceMap[buffer->GetUploadResource()];
+        D3D12_RESOURCE_STATES beforeState = (D3D12_RESOURCE_STATES)buffer->GetCurrentState();
+        WorldCommandList.first->ClearRes(resource, uploadResource, size, offset, beforeState);
+    }
+
+    void DX12Renderer::DownloadBuffer(Buffer* buffer, void* data, size_t size)
     {
         if(data)
         {
@@ -1762,7 +1923,7 @@ namespace Waldem
                     {
                         DX12Helper::PrintHResultError(hr);
                     }
-                    memcpy(data, pMappedData, buffer->GetSize());
+                    memcpy(data, pMappedData, size);
                     resource->Unmap(0, nullptr);
                 }
                 else
@@ -1809,5 +1970,14 @@ namespace Waldem
         resource->SetCurrentState(after);
         
         WorldCommandList.first->ResourceBarrier(dx12Resource, (D3D12_RESOURCE_STATES)before, (D3D12_RESOURCE_STATES)after);
+    }
+
+    ResourceStates DX12Renderer::ResourceBarrier(GraphicResource* resource, ResourceStates after)
+    {
+        auto currentState = resource->GetCurrentState();
+
+        ResourceBarrier(resource, currentState, after);
+
+        return currentState;
     }
 }
