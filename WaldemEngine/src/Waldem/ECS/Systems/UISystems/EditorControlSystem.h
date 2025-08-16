@@ -21,8 +21,7 @@ namespace Waldem
         float DeltaScroll = 0;
 
         //Light control
-        Vector3 LightTargetPosition = { 0, -1, 0 };
-        Vector3 LightTargetDirection = { 0, -1, 0 };
+        Vector3 LightTargetDirection = { 0, 0, 1 };
         bool IsRotatingLight = false;
         
     public:
