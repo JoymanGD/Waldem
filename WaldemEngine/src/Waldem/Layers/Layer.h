@@ -4,7 +4,6 @@
 #include "Waldem/Window.h"
 #include "Waldem/Events/Event.h"
 #include "Waldem/ECS/Systems/System.h"
-#include "Waldem/ECS/Systems/DrawSystems/DrawSystem.h"
 #include "Waldem/Resources/ResourceManager.h"
 #include "Waldem/SceneManagement/Scene.h"
 
@@ -84,7 +83,7 @@ namespace Waldem
         
         WArray<ISystem*> UISystems;
         WArray<ISystem*> UpdateSystems;
-        WArray<DrawSystem*> DrawSystems;
+        WArray<ISystem*> DrawSystems;
 		WArray<ISystem*> PhysicsSystems;
     };
 }

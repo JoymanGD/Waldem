@@ -1,6 +1,5 @@
 #pragma once
 #include "Waldem/ECS/Systems/System.h"
-#include "Waldem/ECS/Systems/DrawSystems/DrawSystem.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
 #include "Waldem/ECS/Components/Light.h"
 #include "Waldem/Renderer/Shader.h"
@@ -13,7 +12,7 @@ namespace Waldem
         uint TargetRT;
     };
     
-    class WALDEM_API ScreenQuadSystem : public DrawSystem
+    class WALDEM_API ScreenQuadSystem : public ISystem
     {
         RenderTarget* TargetRT = nullptr;
         Pipeline* QuadDrawPipeline = nullptr;
@@ -22,7 +21,7 @@ namespace Waldem
         ScreenQuadRootConstants RootConstants;
         
     public:
-        ScreenQuadSystem() : DrawSystem() {}
+        ScreenQuadSystem() {}
         
         void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
         {
