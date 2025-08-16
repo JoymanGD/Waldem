@@ -22,15 +22,16 @@ namespace Waldem
         bool DeleteSelectedEntity = false;
         ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
         WMap<float, flecs::entity> HierarchyEntries;
+        Shortcut DuplicateShortcut = { { LCTRL, D } };
 
         void SelectEntity(flecs::entity& entity)
         {
-            DeselectAllEntity();
+            DeselectAllEntities();
 
             entity.add<Selected>();
         }
 
-        void DeselectAllEntity()
+        void DeselectAllEntities()
         {
             ECS::World.query<Selected>().each([&](flecs::entity selectedEntity, Selected)
             {
@@ -52,10 +53,29 @@ namespace Waldem
                     DeleteSelectedEntity = true;
                 }
             });
+
+            inputManager->SubscribeToShortcut(DuplicateShortcut, [&]
+            {
+                WArray<flecs::entity> selectedEntities;
+                ECS::World.query<Selected>().each([&](flecs::entity selectedEntity, Selected)
+                {
+                    selectedEntities.Add(selectedEntity);
+                });
+                
+                for (auto selectedEntity : selectedEntities)
+                {
+                    selectedEntity.remove<Selected>();
+                    auto cloneEntity = ECS::CloneSceneEntity(selectedEntity);
+                    cloneEntity.add<Selected>();
+                }
+            });
             
             ECS::World.observer<SceneEntity>("HierarchyWidgetSortSystemOnAdd").event(flecs::OnSet).each([&](flecs::entity entity, SceneEntity& sceneEntity)
             {
-                HierarchyEntries[sceneEntity.HierarchySlot] = entity;
+                if(!HierarchyEntries.Contains(sceneEntity.HierarchySlot))
+                {
+                    HierarchyEntries[sceneEntity.HierarchySlot] = entity;
+                }
             });
             
             ECS::World.observer<SceneEntity>("HierarchyWidgetSortSystemOnRemove").event(flecs::OnRemove).each([&](flecs::entity entity, SceneEntity& sceneEntity)
@@ -99,29 +119,9 @@ namespace Waldem
                                 RenameString = "UnnamedEntity_" + std::to_string(i);
                             }
 
-                            int sameNameCount = 0;
-
-                            for (auto& entryToCheck : HierarchyEntries)
-                            {
-                                auto& entityToCheck = entryToCheck.value;
-                                
-                                if(entityToCheck == entity)
-                                    continue;
-
-                                auto entityToCheckName = std::string(entityToCheck.name());
-                                if(RenameString == entityToCheckName)
-                                {
-                                    sameNameCount++;
-                                }
-                            }
-
-                            if(sameNameCount > 0)
-                            {
-                                RenameString += "_" + std::to_string(sameNameCount);
-                            }
-
                             if(RenameString != originalName)
                             {
+                                ECS::FormatName(RenameString);
                                 entity.set_name(RenameString.c_str());
                             }
 
@@ -137,6 +137,7 @@ namespace Waldem
 
                             if(DeleteSelectedEntity)
                             {
+                                ECS::HierarchySlots.Free(sceneEntityComponent->HierarchySlot);
                                 entity.destruct();
                             }
                         }
