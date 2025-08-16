@@ -14,7 +14,7 @@ namespace Waldem
             auto texture = ImageImporter.Import(path);
             assets.Add(&texture->Desc);
         }
-        else if (extension == ".gltf" || extension == ".glb")
+        else if (extension == ".gltf" || extension == ".glb" || extension == ".fbx")
         {
             auto model = ModelImporter.Import(path);
 
