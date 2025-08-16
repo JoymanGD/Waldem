@@ -6,10 +6,11 @@
 #include <SDL.h>
 #include <mono/jit/jit.h>
 #include <mono/metadata/assembly.h>
-
 #include "Time.h"
 #include "Audio/Audio.h"
 #include "SceneManagement/Scenes/RenderingTestScene.h"
+#include "FlecsUtils.h"
+#include "ECS/ECS.h"
 
 namespace Waldem
 {
@@ -29,19 +30,28 @@ namespace Waldem
 		MonoRuntime = Mono();
 		// MonoRuntime.Initialize();
 		
-		CoreECSManager = {};
 		ResourceManager = {};
 
 		WD_CORE_ASSERT(!Instance, "Application already exists!")
 		Instance = this;
+
+		ECS.Initialize();
 		
 		Window = CWindow::Create();
 		Window->SetEventCallback(BIND_EVENT_FN(Engine::OnEvent));
 
+		flecs::OnFixedUpdate = ECS::World.entity("OnFixedUpdate");
+		flecs::OnDraw = ECS::World.entity("OnDraw");
+		flecs::OnGUI = ECS::World.entity("OnGUI");
+
+		UpdatePipeline = ECS::World.pipeline().with(flecs::System).with(flecs::OnUpdate).build();
+		FixedUpdatePipeline = ECS::World.pipeline().with(flecs::System).with(flecs::OnFixedUpdate).build();
+		DrawPipeline = ECS::World.pipeline().with(flecs::System).with(flecs::OnDraw).build();
+		GUIPipeline = ECS::World.pipeline().with(flecs::System).with(flecs::OnGUI).build();
+
 		CurrentRenderer = {};
 		CurrentRenderer.Initialize(Window);
-
-		Editor = new EditorLayer(Window, &CoreECSManager, &ResourceManager);
+		Editor = new EditorLayer(Window, &ResourceManager);
 		PushOverlay(Editor);
 		
 		// Game = new GameLayer(Window, &CoreECSManager, &ResourceManager);
@@ -136,6 +146,8 @@ namespace Waldem
 
 		while (IsRunning)
 		{
+			Editor->CheckImportSceneThisFrame();
+
 			Window->Begin();
 			
 			auto currentFrameTime = std::chrono::high_resolution_clock::now();
@@ -149,52 +161,24 @@ namespace Waldem
 
 			while (accumulatedTime >= Time::FixedDeltaTime)
 			{
-				for (Layer* layer : LayerStack)
-				{
-					if(layer->Initialized)
-					{
-						layer->OnFixedUpdate(Time::FixedDeltaTime);
-					}
-				}
+				ECS::World.run_pipeline(FixedUpdatePipeline, Time::FixedDeltaTime);
 
 				accumulatedTime -= Time::FixedDeltaTime;
 			}
 
-			for (Layer* layer : LayerStack)
-			{
-				if(layer->Initialized)
-				{
-					layer->OnUpdate(Time::DeltaTime);
-				}
-			}
+			ECS::World.run_pipeline(UpdatePipeline, Time::DeltaTime);
 			
 			Renderer::Begin();
-			for (Layer* layer : LayerStack)
-			{
-				if(layer->Initialized)
-				{
-					layer->OnDraw(Time::DeltaTime);
-				}
-			}
+			ECS::World.run_pipeline(DrawPipeline, Time::DeltaTime);
 			Renderer::End();
 
 			Renderer::BeginUI();
-			for (Layer* layer : LayerStack)
-			{
-				if(layer->Initialized)
-				{
-					layer->OnDrawUI(Time::DeltaTime);
-				}
-			}
-            Renderer::EndUI();
-			
+			ECS::World.run_pipeline(GUIPipeline, Time::DeltaTime);
+			Renderer::EndUI();
+
 			Renderer::Present();
 
-			if(SwapchainResizeTriggered)
-			{
-				CurrentRenderer.GetMainViewport()->Resize(NewSwapchainSize);
-				SwapchainResizeTriggered = false;
-			}
+			CurrentRenderer.GetMainViewport()->ApplyPendingResize();
 
 			float FPS = CalculateAverageFPS(Time::DeltaTime);
 			Window->SetTitle(std::to_string(FPS).substr(0, 4));
@@ -206,14 +190,15 @@ namespace Waldem
 	bool Engine::OnWindowClose(WindowCloseEvent& e)
 	{
 		IsRunning = false;
+		ECS::World.release();
 		return true;
 	}
 
 	bool Engine::OnWindowResize(WindowResizeEvent& e)
 	{
-		auto size = Vector2(e.GetWidth(), e.GetHeight());
-		SwapchainResizeTriggered = true;
-		NewSwapchainSize = size;
+		auto size = Point2(e.GetWidth(), e.GetHeight());
+		CurrentRenderer.GetMainViewport()->RequestResize(size);
+
 		return true;
 	}
 }

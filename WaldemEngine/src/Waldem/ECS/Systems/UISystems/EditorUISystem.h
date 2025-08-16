@@ -3,17 +3,11 @@
 #include "backends/imgui_impl_dx12.h"
 #include "backends/imgui_impl_sdl2.h"
 #include "Waldem/ECS/Systems/System.h"
-#include "Widgets/HierarchyWidget.h"
-#include "Widgets/MainWidgetContainer.h"
-#include "Waldem/ECS/Systems/UISystems/Widgets/EntityDetailsWidgetContainer.h"
-#include "Waldem/ECS/Systems/UISystems/Widgets/ComponentWidgets/BloomComponentWidget.h"
-#include "Waldem/ECS/Systems/UISystems/Widgets/ComponentWidgets/ColliderComponentWidget.h"
-#include "Waldem/ECS/Systems/UISystems/Widgets/ComponentWidgets/LightComponentWidget.h"
-#include "Waldem/ECS/Systems/UISystems/Widgets/ComponentWidgets/NameWidget.h"
-#include "Waldem/ECS/Systems/UISystems/Widgets/ComponentWidgets/OceanComponentWidget.h"
-#include "Waldem/ECS/Systems/UISystems/Widgets/ComponentWidgets/TransformComponentWidget.h"
-#include "Widgets/ContentBrowserWidget.h"
-#include "Widgets/MainViewportWidget.h"
+#include "Editor/Widgets/HierarchyWidget.h"
+#include "Editor/Widgets/MainWidgetContainer.h"
+#include "Editor/Widgets/EntityDetailsWidgetContainer.h"
+#include "Editor/Widgets/ContentBrowserWidget.h"
+#include "Editor/Widgets/MainViewportWidget.h"
 
 namespace Waldem
 {
@@ -25,24 +19,14 @@ namespace Waldem
         Action OnSaveSceneAs;
         
     public:
-        EditorUISystem(ECSManager* eCSManager, const Action& onOpenScene, const Action& onSaveScene, const Action& onSaveSceneAs)
-            : ISystem(eCSManager), OnOpenScene(onOpenScene), OnSaveScene(onSaveScene), OnSaveSceneAs(onSaveSceneAs)
+        EditorUISystem(const Action& onOpenScene, const Action& onSaveScene, const Action& onSaveSceneAs) : OnOpenScene(onOpenScene), OnSaveScene(onSaveScene), OnSaveSceneAs(onSaveSceneAs)
         {
-           MainWidget = new MainWidgetContainer(eCSManager,
+           MainWidget = new MainWidgetContainer(
            {
-               new HierarchyWidget(eCSManager),
-               new MainViewportWidget(eCSManager),
-               new EntityDetailsWidgetContainer(eCSManager,
-               {
-                   //put all component widgets here
-                   new NameWidget(eCSManager),
-                   new TransformComponentWidget(eCSManager),
-                   new ColliderComponentWidget(eCSManager),
-                   new LightComponentWidget(eCSManager),
-                   new BloomComponentWidget(eCSManager),
-                   new OceanComponentWidget(eCSManager),
-               }),
-               new ContentBrowserWidget(eCSManager),
+               new HierarchyWidget(),
+               new MainViewportWidget(),
+               new EntityDetailsWidgetContainer(),
+               new ContentBrowserWidget(),
            });
         }
         
@@ -155,7 +139,7 @@ namespace Waldem
                 ImGui::EndMainMenuBar();
             }
 
-            MainWidget->Update(deltaTime);
+            MainWidget->OnDraw(deltaTime);
         }
     };
 }

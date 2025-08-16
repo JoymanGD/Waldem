@@ -164,6 +164,11 @@ namespace Waldem
         return renderTarget;
     }
 
+    void Renderer::InitializeRenderTarget(WString name, int width, int height, TextureFormat format, RenderTarget*& renderTarget)
+    {
+        Instance->PlatformRenderer->InitializeRenderTarget(name, width, height, format, renderTarget);
+    }
+
     SViewport* Renderer::GetEditorViewport()
     {
         return Instance->PlatformRenderer->GetEditorViewport();
@@ -184,9 +189,19 @@ namespace Waldem
         return Instance->PlatformRenderer->CreateBLAS(name, geometries);
     }
 
-    AccelerationStructure* Renderer::CreateTLAS(WString name, WArray<RayTracingInstance>& instances)
+    AccelerationStructure* Renderer::CreateTLAS(WString name, Buffer* instanceBuffer, uint numInstances)
     {
-        return Instance->PlatformRenderer->CreateTLAS(name, instances);
+        return Instance->PlatformRenderer->CreateTLAS(name, instanceBuffer, numInstances);
+    }
+
+    void Renderer::InitializeTLAS(WString name, Buffer* instanceBuffer, uint numInstances, AccelerationStructure*& tlas)
+    {
+        Instance->PlatformRenderer->InitializeTLAS(name, instanceBuffer, numInstances, tlas);
+    }
+
+    void Renderer::BuildTLAS(Buffer* instanceBuffer, uint numInstances, AccelerationStructure*& tlas)
+    {
+        Instance->PlatformRenderer->BuildTLAS(instanceBuffer, numInstances, tlas);
     }
 
     void Renderer::UpdateBLAS(AccelerationStructure* BLAS, WArray<RayTracingGeometry>& geometries)
@@ -194,9 +209,9 @@ namespace Waldem
         Instance->PlatformRenderer->UpdateBLAS(BLAS, geometries);
     }
 
-    void Renderer::UpdateTLAS(AccelerationStructure* TLAS, WArray<RayTracingInstance>& instances)
+    void Renderer::UpdateTLAS(AccelerationStructure* TLAS, Buffer* instanceBuffer, uint numInstances)
     {
-        Instance->PlatformRenderer->UpdateTLAS(TLAS, instances);
+        Instance->PlatformRenderer->UpdateTLAS(TLAS, instanceBuffer, numInstances);
     }
 
     void Renderer::CopyResource(GraphicResource* dstResource, GraphicResource* srcResource)
@@ -204,9 +219,19 @@ namespace Waldem
         Instance->PlatformRenderer->CopyResource(dstResource, srcResource);
     }
 
-    Buffer* Renderer::CreateBuffer(WString name, BufferType type, void* data, uint32_t size, uint32_t stride)
+    void Renderer::CopyBufferRegion(GraphicResource* dstResource, size_t dstOffset, GraphicResource* srcResource, size_t srcOffset, size_t size)
     {
-        return Instance->PlatformRenderer->CreateBuffer(name, type, data, size, stride);
+        Instance->PlatformRenderer->CopyBufferRegion(dstResource, dstOffset, srcResource, srcOffset, size);
+    }
+
+    Buffer* Renderer::CreateBuffer(WString name, BufferType type, uint32_t size, uint32_t stride, void* data, size_t dataSize)
+    {
+        return Instance->PlatformRenderer->CreateBuffer(name, type, size, stride, data, dataSize);
+    }
+
+    void Renderer::InitializeBuffer(WString name, BufferType type, uint32_t size, uint32_t stride, Buffer*& buffer, void* data, size_t dataSize)
+    {
+        Instance->PlatformRenderer->InitializeBuffer(name, type, size, stride, buffer, data, dataSize);
     }
 
     void Renderer::UploadBuffer(Buffer* buffer, void* data, uint32_t size, uint offset)
@@ -214,14 +239,24 @@ namespace Waldem
         Instance->PlatformRenderer->UploadBuffer(buffer, data, size, offset);
     }
 
-    void Renderer::DownloadBuffer(Buffer* buffer, void* data)
+    void Renderer::ClearBuffer(Buffer* buffer, uint32_t size, uint offset)
     {
-        Instance->PlatformRenderer->DownloadBuffer(buffer, data);
+        Instance->PlatformRenderer->ClearBuffer(buffer, size, offset);
+    }
+
+    void Renderer::DownloadBuffer(Buffer* buffer, void* data, size_t size)
+    {
+        Instance->PlatformRenderer->DownloadBuffer(buffer, data, size);
     }
 
     void Renderer::ResourceBarrier(GraphicResource* resource, ResourceStates before, ResourceStates after)
     {
         Instance->PlatformRenderer->ResourceBarrier(resource, before, after);
+    }
+
+    ResourceStates Renderer::ResourceBarrier(GraphicResource* resource, ResourceStates after)
+    {
+        return Instance->PlatformRenderer->ResourceBarrier(resource, after);
     }
 
     void Renderer::ClearRenderTarget(RenderTarget* rt)
@@ -252,6 +287,11 @@ namespace Waldem
     void Renderer::Destroy(GraphicResource* resource)
     {
         Instance->PlatformRenderer->Destroy(resource);
+    }
+
+    void Renderer::DestroyImmediate(GraphicResource* resource)
+    {
+        Instance->PlatformRenderer->DestroyImmediate(resource);
     }
 
     void* Renderer::GetPlatformResource(GraphicResource* resource)

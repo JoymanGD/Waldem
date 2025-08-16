@@ -1,6 +1,7 @@
 #include "../Shading.hlsl"
 #include "../Lighting.hlsl"
 #include "../Common.hlsl"
+#include "RayTracingCommon.hlsl"
 
 #define DIR_LIGHT_INTENSITY_RATIO 10.0f
 
@@ -64,9 +65,11 @@ void RayGenShader()
     float4 albedo = ColorRT.Load(uint3(dispatchIndex, 0));
     float4 orm = ORMRT.Load(uint3(dispatchIndex, 0));
 
+    float4 rayOrigin = worldPosition + normal * 0.001f;
+
     Payload payload;
 
-    uint RayFlags = RAY_FLAG_FORCE_OPAQUE | RAY_FLAG_SKIP_CLOSEST_HIT_SHADER | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH;
+    uint RayFlags = 0;
             
     //shadow ray
     for (int i = 0; i < sceneData.NumLights; i++)
@@ -91,10 +94,10 @@ void RayGenShader()
             float NdotL = saturate(dot(normal.xyz, lightDirection));
             
             RayDesc ray;
-            ray.Origin = worldPosition;
+            ray.Origin = rayOrigin;
             ray.Direction = lightDirection;
-            ray.TMin = 0.001;
-            ray.TMax = 1000.0;
+            ray.TMin = TMIN;
+            ray.TMax = TMAX;
 
             TraceRay(g_TLAS, RayFlags, 0xFF, 0, 1, 0, ray, payload);
 
@@ -119,9 +122,9 @@ void RayGenShader()
                 float NdotL = saturate(dot(normal.xyz, lightDirection));
                 
                 RayDesc ray;
-                ray.Origin = worldPosition;
+                ray.Origin = rayOrigin;
                 ray.Direction = lightDirection;
-                ray.TMin = 0.001;
+                ray.TMin = TMIN;
                 ray.TMax = min(distance, light.Radius);
 
                 TraceRay(g_TLAS, RayFlags, 0xFF, 0, 1, 0, ray, payload);
@@ -150,9 +153,9 @@ void RayGenShader()
                 float NdotL = saturate(dot(normal.xyz, lightDirection));
                 
                 RayDesc ray;
-                ray.Origin = worldPosition;
+                ray.Origin = rayOrigin;
                 ray.Direction = lightDirection;
-                ray.TMin = 0.001;
+                ray.TMin = TMIN;
                 ray.TMax = min(distance, light.Radius);
 
                 TraceRay(g_TLAS, RayFlags, 0xFF, 0, 1, 0, ray, payload);
@@ -183,4 +186,5 @@ void MissShader(inout Payload payload)
 [shader("closesthit")]
 void ClosestHitShader(inout Payload payload, in Attributes attribs)
 {
+    payload.Missed = false;
 }

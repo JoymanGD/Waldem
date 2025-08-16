@@ -1,19 +1,19 @@
 #pragma once
 
+#define GLM_ENABLE_EXPERIMENTAL
+
 #include <fstream>
 #include <filesystem>
 #include "imgui.h"
-#include "Waldem/ContentManagement/ContentManager.h"
+#include "Waldem/AssetsManagement/ContentManager.h"
 #include "Waldem/ECS/Components/AudioListener.h"
 #include "Waldem/ECS/Systems/UISystems/EditorControlSystem.h"
 #include "Waldem/ECS/Systems/UISystems/EditorGuizmoSystem.h"
 #include "Waldem/ECS/Systems/UpdateSystems/FreeLookCameraSystem.h"
 #include "Waldem/ECS/Components/Camera.h"
+#include "Waldem/ECS/Components/EditorComponent.h"
 #include "Waldem/ECS/Systems/UISystems/EditorUISystem.h"
-#include "Waldem/ECS/Systems/DrawSystems/DeferredRenderingSystem.h"
-#include "Waldem/ECS/Systems/DrawSystems/GBufferSystem.h"
 #include "Waldem/ECS/Systems/DrawSystems/OceanSimulationSystem.h"
-#include "Waldem/ECS/Systems/DrawSystems/RayTracingRadianceSystem.h"
 #include "Waldem/ECS/Systems/DrawSystems/ScreenQuadSystem.h"
 #include "Waldem/ECS/Systems/UpdateSystems/SpatialAudioSystem.h"
 #include "Waldem/Events/ApplicationEvent.h"
@@ -23,6 +23,10 @@
 #include "Waldem/Renderer/Renderer.h"
 #include "Waldem/SceneManagement/GameScene.h"
 #include "Waldem/Utils/FileUtils.h"
+#include "Waldem/ECS/ECS.h"
+#include "Waldem/ECS/Systems/DrawSystems/HybridRenderingSystem.h"
+#include "Waldem/ECS/Systems/DrawSystems/PostProcessSystem.h"
+#include "Waldem/ECS/Systems/DrawSystems/SkyRenderingSystem.h"
 
 namespace Waldem
 {
@@ -38,7 +42,7 @@ namespace Waldem
         Vector2 NewEditorViewportSize = {};
         
     public:
-        EditorLayer(CWindow* window, ECSManager* ecsManager, ResourceManager* resourceManager) : Layer("EditorLayer", window, ecsManager, resourceManager)
+        EditorLayer(CWindow* window, ResourceManager* resourceManager) : Layer("EditorLayer", window, resourceManager)
         {
             InputManager = {};
             
@@ -52,52 +56,39 @@ namespace Waldem
             resourceManager->CreateRenderTarget("DepthRT", size.x, size.y, TextureFormat::D32_FLOAT);
             resourceManager->CreateRenderTarget("RadianceRT", size.x, size.y, TextureFormat::R32G32B32A32_FLOAT);
             
-            auto cameraEntity = CurrentECSManager->CreateEntity("Camera");
+            auto cameraEntity = ECS::CreateEntity("EditorCamera");
             float aspectRatio = size.x / size.y;
-            cameraEntity->Add<Transform>(Vector3(0, 0, 0));
-            cameraEntity->Add<Camera>(60.0f, aspectRatio, 0.001f, 1000.0f, 30.0f, 30.0f);
-            cameraEntity->Add<EditorCamera>();
-            cameraEntity->Add<AudioListener>();
+            cameraEntity.set<Transform>({Vector3(0, 0, -10.f)});
+            cameraEntity.set<Camera>({60.0f, aspectRatio, 0.001f, 1000.0f, 30.0f, 30.0f});
+            cameraEntity.add<EditorComponent>();
+            cameraEntity.add<AudioListener>();
             
             //do it after all entities set up
-            CurrentECSManager->Refresh();
-
-            UISystems.Add(new EditorUISystem(CurrentECSManager, BIND_ACTION(OnOpenScene), BIND_ACTION(OnSaveScene), BIND_ACTION(OnSaveSceneAs)));
-            UISystems.Add(new EditorGuizmoSystem(CurrentECSManager));
+            UISystems.Add(new EditorUISystem(BIND_ACTION(OnOpenScene), BIND_ACTION(OnSaveScene), BIND_ACTION(OnSaveSceneAs)));
+            UISystems.Add(new EditorGuizmoSystem());
             
-            UpdateSystems.Add(new EditorControlSystem(CurrentECSManager));
-            UpdateSystems.Add(new SpatialAudioSystem(ecsManager));
+            UpdateSystems.Add(new EditorControlSystem());
+            UpdateSystems.Add(new SpatialAudioSystem());
 
-            // DrawSystems.Add(new OceanSimulationSystem(ecsManager));
-            DrawSystems.Add(new GBufferSystem(ecsManager));
-            DrawSystems.Add(new RayTracingRadianceSystem(ecsManager));
-            DrawSystems.Add(new DeferredRenderingSystem(ecsManager));
-            // DrawSystems.Add(new PostProcessSystem(ecsManager));
-            DrawSystems.Add(new ScreenQuadSystem(ecsManager));
+            // DrawSystems.Add(new OceanSimulationSystem());
+            DrawSystems.Add(new HybridRenderingSystem());
+            DrawSystems.Add(new PostProcessSystem());
+            DrawSystems.Add(new ScreenQuadSystem());
 
             Window = window;
 
             Renderer::GetEditorViewport()->SubscribeOnResize([this](Vector2 size)
             {
-                EditorViewportResizeTriggered = true;
-                NewEditorViewportSize = size;
+                OnResize(size);
             });
-        }
-        
-        void Begin() override
-        {
-        }
-        
-        void End() override
-        {
-        }
-        
-        void OnAttach() override
-        {
-        }
-        
-        void OnDetach() override
-        {
+
+            ECS::World.system<>("UISystems").kind(flecs::OnGUI).each([&]
+            {
+                for (auto system : UISystems)
+                {
+                    system->Update(ECS::World.delta_time());
+                }
+            });
         }
 
         void OnResize(Vector2 size)
@@ -111,19 +102,16 @@ namespace Waldem
             CurrentResourceManager->ResizeRenderTarget("DepthRT", size.x, size.y);
             CurrentResourceManager->ResizeRenderTarget("RadianceRT", size.x, size.y);
             
-            for (DrawSystem* system : DrawSystems)
+            for (ISystem* system : DrawSystems)
             {
                 system->OnResize(size);
+            }
 
-                //TODO: this is a temporary solution, replace with only OnResize call
-                system->Deinitialize();
-                system->Initialize(&InputManager, CurrentResourceManager, &ContentManager);
-            }
-            
-            for (auto [entity, camera] : CurrentECSManager->EntitiesWith<Camera>())
+            ECS::World.query<Camera, EditorComponent>().each([size](flecs::entity entity, Camera& camera, EditorComponent)
             {
-                camera.UpdateProjectionMatrix(camera.FieldOfView, size.x/size.y, camera.NearPlane, camera.FarPlane); 
-            }
+                camera.UpdateProjectionMatrix(camera.FieldOfView, size.x/size.y, camera.NearPlane, camera.FarPlane);
+                entity.modified<Camera>(); 
+            });
         }
         
         void OnEvent(Event& event) override
@@ -174,42 +162,6 @@ namespace Waldem
             }
         }
 
-        void OnUpdate(float deltaTime) override
-        {
-            if(ImportSceneThisFrame)
-            {
-                ImportScene(CurrentScenePath);
-                ImportSceneThisFrame = false;
-            }
-            
-            if(EditorViewportResizeTriggered)
-            {
-                OnResize(NewEditorViewportSize);
-                EditorViewportResizeTriggered = false;
-            }
-
-            for (ISystem* system : UpdateSystems)
-            {
-                system->Update(deltaTime);
-            }
-        }
-
-        void OnDraw(float deltaTime) override
-        {
-            for (ISystem* system : DrawSystems)
-            {
-                system->Update(deltaTime);
-            }
-        }
-
-        void OnDrawUI(float deltaTime) override
-        {
-            for (ISystem* system : UISystems)
-            {
-                system->Update(deltaTime);
-            }
-        }
-
         void CloseScene(GameScene* scene)
         {                    
             if(scene)
@@ -219,62 +171,50 @@ namespace Waldem
             }
         }
 
-        void LoadScene(WDataBuffer& dataBuffer)
+        void LoadScene(Path& path)
         {
             //create new scene
             CurrentScene = new GameScene();
-            CurrentScene->Initialize(&InputManager, CurrentECSManager, CurrentResourceManager);
+            CurrentScene->Initialize(&InputManager, CurrentResourceManager);
 
             //deserialize input data into the scene
-            CurrentScene->Deserialize(dataBuffer);
+            CurrentScene->Deserialize(path);
         }
 
         void OpenScene(GameScene* scene)
         {
-            Deinitialize();
+            // Deinitialize();
             
             CloseScene(CurrentScene);
             
             CurrentScene = scene;
-            CurrentScene->Initialize(&InputManager, CurrentECSManager, CurrentResourceManager);
+            CurrentScene->Initialize(&InputManager, CurrentResourceManager);
 
-            Initialize();
+            // Initialize();
         }
 
-        void ImportScene(Path path)
+        void CheckImportSceneThisFrame()
         {
-            std::ifstream inFile(path.c_str(), std::ios::binary | std::ios::ate);
-            if (inFile.is_open())
+            if(ImportSceneThisFrame)
             {
-                std::streamsize size = inFile.tellg();
-                inFile.seekg(0, std::ios::beg);
-
-                unsigned char* buffer = new unsigned char[size];
-                if (inFile.read((char*)buffer, size))
-                {
-                    Deinitialize();
-                    
-                    CloseScene(CurrentScene);
-
-                    WDataBuffer inData = WDataBuffer(buffer, size);
-
-                    LoadScene(inData);
-
-                    Initialize();
-                }
-                delete[] buffer;
-                inFile.close();
+                ImportScene(CurrentScenePath);
+                ImportSceneThisFrame = false;
             }
         }
 
-        void ExportScene(Path path)
+        void ImportScene(Path& path)
         {
-            WDataBuffer outData;
-            CurrentScene->Serialize(outData);
+            // Deinitialize();
             
-            std::ofstream outFile(path.c_str(), std::ios::binary);
-            outFile.write(static_cast<const char*>(outData.GetData()), outData.GetSize());
-            outFile.close();
+            CloseScene(CurrentScene);
+
+            LoadScene(path);
+            // Initialize();
+        }
+
+        void ExportScene(Path& path)
+        {
+            CurrentScene->Serialize(path);
         }
 
         void OnOpenScene()

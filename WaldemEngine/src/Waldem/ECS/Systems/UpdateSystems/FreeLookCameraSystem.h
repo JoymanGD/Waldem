@@ -17,7 +17,7 @@ namespace Waldem
         Vector3 DeltaPos = { 0, 0, 0 };
         
     public:
-        FreeLookCameraSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
+        FreeLookCameraSystem() {}
         
         void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
         {
@@ -62,41 +62,41 @@ namespace Waldem
                 MousePos = mousePos;
             });
 
-            for (auto [entity, transform, camera, mainCamera] : Manager->EntitiesWith<Transform, Camera, EditorCamera>())
+            inputManager->SubscribeToMouseScrollEvent([&](Vector2 scroll)
             {
-                inputManager->SubscribeToMouseScrollEvent([&](Vector2 scroll)
+                if(IsUnderControl)
                 {
-                    if(IsUnderControl)
+                    ECS::World.query<Camera, EditorCamera>("CameraSpeedControlSystem").each([&](flecs::entity entity, Camera& camera, EditorCamera)
                     {
                         camera.SpeedModificator += scroll.y * camera.SpeedParams.ModificationStep;
                         camera.SpeedModificator = std::clamp(camera.SpeedModificator, camera.SpeedParams.MinSpeedModificator, camera.SpeedParams.MaxSpeedModificator);
-                    }
-                });
-            }
-        }
-
-        void Update(float deltaTime) override
-        {
-            for (auto [entity, transform, camera, mainCamera] : Manager->EntitiesWith<Transform, Camera, EditorCamera>())
-            {               
+                        entity.modified<Camera>();
+                    });
+                }
+            });
+            
+            ECS::World.system<Transform, Camera, EditorCamera>("FreeLookCameraSystem").kind(flecs::OnUpdate).each([&](flecs::entity entity, Transform& transform, Camera& camera, EditorCamera)
+            {
                 if (IsUnderControl)
                 {
-                    float deltaX = (MousePos.x - LastMousePos.x) * deltaTime;
-                    float deltaY = (MousePos.y - LastMousePos.y) * deltaTime;
+                    float deltaX = (MousePos.x - LastMousePos.x) * Time::DeltaTime;
+                    float deltaY = (MousePos.y - LastMousePos.y) * Time::DeltaTime;
 
-                    transform.Rotate(deltaX * camera.RotationSpeed, deltaY * camera.RotationSpeed, 0);
+                    transform.Rotate(deltaY * camera.RotationSpeed, deltaX * camera.RotationSpeed, 0);
 
-                    if(DeltaPos != Vector3(0, 0, 0))
+                    if (DeltaPos != Vector3(0, 0, 0))
                     {
-                        transform.Move(normalize(DeltaPos) * deltaTime * camera.MovementSpeed * camera.SpeedModificator);
+                        transform.Move(normalize(DeltaPos) * Time::DeltaTime * camera.MovementSpeed * camera.SpeedModificator);
                     }
+
+                    entity.modified<Camera>();
                 }
-                
+
                 LastMousePos.x = MousePos.x;
                 LastMousePos.y = MousePos.y;
-                
+
                 camera.SetViewMatrix(&transform);
-            }
+            });
         }
     };
 }

@@ -108,7 +108,7 @@
 //         WArray<Buffer*> VertexBuffers;
 //         
 //     public:
-//         OceanSimulationSystem(ECSManager* eCSManager) : DrawSystem(eCSManager) {}
+//         OceanSimulationSystem() : DrawSystem() {}
 //         
 //         unsigned int bitfieldReverse(unsigned int index , int numBits)
 //         {
@@ -132,7 +132,7 @@
 //             {
 //                 GraphicResource oceanParametersCBResource = GraphicResource("OceanParameters", RTYPE_ConstantBuffer, &ocean, sizeof(Ocean), sizeof(Ocean), 0);
 //                 
-//                 VertexBuffers.Add(meshComponent.Mesh->VertexBuffer);
+//                 VertexBuffers.Add(meshComponent.Mesh.Asset->VertexBuffer);
 // 			    Point2 fftResolution = Point2(N, N);
 //                 Stages = glm::log2(fftResolution.x);
 //                 GaussianNoiseRenderTarget = resourceManager->CreateRenderTarget("GaussianNoise", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);

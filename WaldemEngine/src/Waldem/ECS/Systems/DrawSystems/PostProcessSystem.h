@@ -1,8 +1,9 @@
 #pragma once
-#include "Waldem/ECS/Systems/DrawSystems/DrawSystem.h"
+#include <FlecsUtils.h>
+
+#include "Waldem/ECS/ECS.h"
 #include "Waldem/ECS/Components/BloomPostProcess.h"
 #include "Waldem/ECS/Systems/System.h"
-#include "Waldem/ECS/Components/Light.h"
 #include "Waldem/Renderer/Renderer.h"
 #include "Waldem/Renderer/Shader.h"
 
@@ -15,7 +16,7 @@ namespace Waldem
         uint BloomParamsBuffer;
     };
     
-    class WALDEM_API PostProcessSystem : public DrawSystem
+    class WALDEM_API PostProcessSystem : public ISystem
     {
         RenderTarget* TargetRT = nullptr;
         //Post process pass
@@ -25,72 +26,65 @@ namespace Waldem
         Point3 GroupCount;
         PostProcessRootConstants RootConstants;
         Buffer* BloomParamsBuffer = nullptr;
+        Vector2 TexelSize;
         
     public:
-        PostProcessSystem(ECSManager* eCSManager) : DrawSystem(eCSManager) {}
+        PostProcessSystem() {}
         
         void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
         {
-            for (auto [entity, bloom] : Manager->EntitiesWith<BloomPostProcess>())
+            ECS::World.observer<BloomPostProcess>().event(flecs::OnAdd).each([&](flecs::entity entity, BloomPostProcess& bloom)
             {
-                TargetRT = resourceManager->GetRenderTarget("TargetRT");
-                
-                Vector2 resolution = Vector2(TargetRT->GetWidth(), TargetRT->GetHeight());
-                bloom.TexelSize = Vector2(1.f / resolution.x, 1.f / resolution.y);
-                
-                TargetRTBack = resourceManager->CreateRenderTarget("TargetRTBack", resolution.x, resolution.y, TextureFormat::R8G8B8A8_UNORM);
+                if(!IsInitialized)
+                {
+                    TargetRT = resourceManager->GetRenderTarget("TargetRT");
+                    
+                    Vector2 resolution = Vector2(TargetRT->GetWidth(), TargetRT->GetHeight());
+                    TexelSize = Vector2(1.f / resolution.x, 1.f / resolution.y);
+                    
+                    TargetRTBack = resourceManager->CreateRenderTarget("TargetRTBack", resolution.x, resolution.y, TextureFormat::R8G8B8A8_UNORM);
 
-                BloomParamsBuffer = Renderer::CreateBuffer("BloomParamsBuffer", StorageBuffer, &bloom, sizeof(BloomPostProcess), sizeof(BloomPostProcess));
+                    BloomParamsBuffer = Renderer::CreateBuffer("BloomParamsBuffer", StorageBuffer, sizeof(BloomPostProcess), sizeof(BloomPostProcess));
 
-                RootConstants.TargetRT = TargetRT->GetIndex();
-                RootConstants.TargetRTBack = TargetRTBack->GetIndex();
-                RootConstants.BloomParamsBuffer = BloomParamsBuffer->GetIndex();
-                
-                PostProcessComputeShader = Renderer::LoadComputeShader("PostProcess");
-                PostProcessPipeline = Renderer::CreateComputePipeline("PostProcessPipeline", PostProcessComputeShader);
-                
-                Point3 numThreads = Renderer::GetNumThreadsPerGroup(PostProcessComputeShader);
-                GroupCount = Point3((resolution.x + numThreads.x - 1) / numThreads.x, (resolution.y + numThreads.y - 1) / numThreads.y, 1);
-            }
-
-            IsInitialized = true;
-        }
-
-        void Deinitialize() override
-        {
-            if(PostProcessComputeShader) PostProcessComputeShader->Destroy();
-            if(PostProcessPipeline) PostProcessPipeline->Destroy();
-            if(TargetRTBack) Renderer::Destroy(TargetRTBack);
-            IsInitialized = false;
-        }
-
-        void Update(float deltaTime) override
-        {
-            if(!IsInitialized)
-                return;
+                    RootConstants.TargetRT = TargetRT->GetIndex(SRV_UAV_CBV);
+                    RootConstants.TargetRTBack = TargetRTBack->GetIndex(SRV_UAV_CBV);
+                    RootConstants.BloomParamsBuffer = BloomParamsBuffer->GetIndex(SRV_UAV_CBV);
+                    
+                    PostProcessComputeShader = Renderer::LoadComputeShader("PostProcess");
+                    PostProcessPipeline = Renderer::CreateComputePipeline("PostProcessPipeline", PostProcessComputeShader);
+                    
+                    Point3 numThreads = Renderer::GetNumThreadsPerGroup(PostProcessComputeShader);
+                    GroupCount = Point3((resolution.x + numThreads.x - 1) / numThreads.x, (resolution.y + numThreads.y - 1) / numThreads.y, 1);
+                    
+                    IsInitialized = true;
+                }
+                else
+                {
+                    WD_CORE_WARN("Entity with the bloom component already exists in the world. Deleting last added component.");
+                    entity.remove<BloomPostProcess>();
+                }
+            });
             
-            //Fill back buffer
-            Renderer::ResourceBarrier(TargetRT, ALL_SHADER_RESOURCE, COPY_SOURCE);
-            Renderer::ResourceBarrier(TargetRTBack, ALL_SHADER_RESOURCE, COPY_DEST);
-            Renderer::CopyResource(TargetRTBack, TargetRT);
-            Renderer::ResourceBarrier(TargetRT, COPY_SOURCE, UNORDERED_ACCESS);
-            Renderer::ResourceBarrier(TargetRTBack, COPY_DEST, ALL_SHADER_RESOURCE);
-
-            for (auto [entity, bloom] : Manager->EntitiesWith<BloomPostProcess>())
+            ECS::World.system<BloomPostProcess>("PostProcessBloomSystem").kind(flecs::OnDraw).each([&](BloomPostProcess& bloom)
             {
-                Renderer::UploadBuffer(BloomParamsBuffer, &bloom, sizeof(BloomPostProcess));
-            }
-            
-            //Post process pass
-            Renderer::SetPipeline(PostProcessPipeline);
-            Renderer::PushConstants(&RootConstants, sizeof(PostProcessRootConstants));
-            Renderer::Compute(GroupCount);
-            Renderer::ResourceBarrier(TargetRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
-        }
+                if(IsInitialized)
+                {
+                    //Fill back buffer
+                    Renderer::ResourceBarrier(TargetRT, ALL_SHADER_RESOURCE, COPY_SOURCE);
+                    Renderer::ResourceBarrier(TargetRTBack, ALL_SHADER_RESOURCE, COPY_DEST);
+                    Renderer::CopyResource(TargetRTBack, TargetRT);
+                    Renderer::ResourceBarrier(TargetRT, COPY_SOURCE, UNORDERED_ACCESS);
+                    Renderer::ResourceBarrier(TargetRTBack, COPY_DEST, ALL_SHADER_RESOURCE);
 
-        void OnResize(Vector2 size) override
-        {
-            
+                    Renderer::UploadBuffer(BloomParamsBuffer, &bloom, sizeof(BloomPostProcess));
+                    
+                    //Post process pass
+                    Renderer::SetPipeline(PostProcessPipeline);
+                    Renderer::PushConstants(&RootConstants, sizeof(PostProcessRootConstants));
+                    Renderer::Compute(GroupCount);
+                    Renderer::ResourceBarrier(TargetRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
+                }
+            });
         }
     };
 }

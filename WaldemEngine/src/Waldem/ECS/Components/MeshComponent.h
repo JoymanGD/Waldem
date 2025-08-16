@@ -1,24 +1,17 @@
 #pragma once
+#include "Waldem/Editor/AssetReference/MeshReference.h"
 #include "Waldem/Renderer/Model/Mesh.h"
-#include "Waldem/Resources/ResourceManager.h"
-#include "Waldem/ECS/Component.h"
 
 namespace Waldem
 {
-    struct WALDEM_API MeshComponent : IComponent<MeshComponent>
+    struct WALDEM_API MeshComponent
     {
-        CMesh* Mesh = nullptr;
-        
-        MeshComponent() = default;
-        MeshComponent(CMesh* mesh) : Mesh(mesh) {}
-        
-        void Serialize(WDataBuffer& outData) override
-        {
-            ResourceManager::SerializeAsset(outData, Mesh);
-        }
-        void Deserialize(WDataBuffer& inData) override
-        {
-            ResourceManager::DeserializeAsset(inData, Mesh);
-        }
+        COMPONENT(MeshComponent)
+            FIELD(AssetReference, Mesh)
+        END_COMPONENT()
+
+        MeshReference MeshRef;
+
+        bool IsValid() const { return MeshRef.IsValid(); }
     };
 }

@@ -10,38 +10,26 @@ namespace Waldem
     class WALDEM_API SpatialAudioSystem : public ISystem
     {
     private:
-        float PAN_SIMPLIFICATION = 0.8f;        
+        float PAN_SIMPLIFICATION = 0.8f;
     public:
-        SpatialAudioSystem(ECSManager* eCSManager) : ISystem(eCSManager) {}
+        SpatialAudioSystem() {}
         
         void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
         {
-        }
-
-        void Deinitialize() override
-        {
-            for (auto [sourceEntity, audioSource] : Manager->EntitiesWith<AudioSource>())
+            ECS::World.system<AudioListener, Transform>().kind(flecs::OnUpdate).each([&](AudioListener, Transform& listenerTransform)
             {
-                Audio::Stop(audioSource.Clip);
-            }
-        }
-
-        void Update(float deltaTime) override
-        {
-            Audio::LockAudioThread();
-            
-            for (auto [listenerEntity, audioListener, listenerTransform] : Manager->EntitiesWith<AudioListener, Transform>())
-            {
-                for (auto [sourceEntity, audioSource, sourceTransform] : Manager->EntitiesWith<AudioSource, Transform>())
+                auto audioSourcesQuery = ECS::World.query<AudioSource, Transform>();
+                
+                audioSourcesQuery.each([&](AudioSource& source, Transform& sourceTransform)
                 {
-                    if(!audioSource.Spatial)
+                    if(!source.Spatial)
                     {
-                        continue;
+                        return;
                     }
                     
-                    if(!audioSource.Clip)
+                    if(!source.ClipRef.IsValid() || !source.ClipRef.Clip->CurrentChannel)
                     {
-                        continue;
+                        return;
                     }
 
                     Vector3 listenerPos = listenerTransform.Position;
@@ -55,18 +43,18 @@ namespace Waldem
                     float distance = sqrtf(dx*dx + dy*dy + dz*dz);
                     
                     float minDist = 1.0f;
-                    float maxDist = audioSource.Range;
+                    float maxDist = source.Range;
                     float rolloff = 1.0f;
                     
                     if (distance < minDist) distance = minDist;
                     
                     if (distance > maxDist)
                     {
-                        audioSource.Clip->CurrentChannel->distanceVolume = 0.0f;
+                        source.ClipRef.Clip->CurrentChannel->distanceVolume = 0.0f;
                     }
                     else
                     {
-                        audioSource.Clip->CurrentChannel->distanceVolume = 1.0f / (1.0f + rolloff * (distance - minDist));
+                        source.ClipRef.Clip->CurrentChannel->distanceVolume = 1.0f / (1.0f + rolloff * (distance - minDist));
                     }
 
                     //simple distance handling
@@ -92,11 +80,20 @@ namespace Waldem
                     float angle = atan2(x, z);
                     
                     float pan = glm::clamp(sin(angle), -1.0f, 1.0f);
-                    audioSource.Clip->CurrentChannel->pan = pan * PAN_SIMPLIFICATION;
-                }
-            }
+                    source.ClipRef.Clip->CurrentChannel->pan = pan * PAN_SIMPLIFICATION;
+                });
+            });
+        }
 
-            Audio::UnlockAudioThread();
+        void Deinitialize() override
+        {
+            ECS::World.query<AudioSource>().each([&](AudioSource& audioSource)
+            {
+                if (audioSource.ClipRef.IsValid() && audioSource.ClipRef.Clip->CurrentChannel)
+                {
+                    Audio::Stop(audioSource.ClipRef.Clip);
+                }
+            });
         }
     };
 }

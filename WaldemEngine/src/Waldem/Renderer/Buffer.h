@@ -16,11 +16,12 @@ namespace Waldem
     {
     public:
         Buffer() { SetType(RTYPE_Buffer); }
-        Buffer(WString name, BufferType type, size_t size, uint32_t stride) : Name(name), Type(type), Size(size), Stride(stride), Count(size/stride) { SetType(RTYPE_Buffer); }
+        Buffer(WString name, BufferType type, size_t capacity, uint32_t stride) : Name(name), Type(type), Capacity(capacity), Stride(stride) { SetType(RTYPE_Buffer); }
         virtual ~Buffer() {}
 
-        virtual uint32_t GetCount() const { return Count; }
-        size_t GetSize() { return Size; }
+        void AddSize(size_t size) { Size += size; }
+        size_t GetCapacity() { return Capacity; }
+        uint32_t GetCount() { return Size / Stride; }
         uint32_t GetStride() { return Stride; }
         BufferType GetType() { return Type; }
         WString GetName() { return Name; }
@@ -28,8 +29,8 @@ namespace Waldem
     protected:
         WString Name;
         BufferType Type;
-        size_t Size;
-        uint32_t Stride;
-        uint32_t Count;
+        size_t Capacity = 0;
+        size_t Size = 0;
+        uint32_t Stride = 0;
     };
 }
