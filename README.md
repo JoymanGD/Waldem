@@ -38,7 +38,7 @@ Physics:
 * Physics system [WIP]
 
 Import:
-* GLTF
+* GLTF/FBX
 * Image
 * Wav
 
