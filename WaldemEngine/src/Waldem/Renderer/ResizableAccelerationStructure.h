@@ -68,16 +68,16 @@ namespace Waldem
             return instance.InstanceID;
         }
         
-        void SetData(MeshComponent& meshComponent, const Transform& transform)
+        void SetData(int id, MeshComponent& meshComponent, const Transform& transform)
         {
             WArray geometries { RayTracingGeometry(meshComponent.MeshRef.Mesh->VertexBuffer, meshComponent.MeshRef.Mesh->IndexBuffer) };
 
             AccelerationStructure* blas = Renderer::CreateBLAS(meshComponent.MeshRef.Mesh->Name, geometries);
             
-            BLAS[meshComponent.RTXInstanceId] = blas;
+            BLAS[id] = blas;
             
-            auto& instance = Instances[meshComponent.RTXInstanceId];
-            instance.InstanceID = meshComponent.RTXInstanceId;
+            auto& instance = Instances[id];
+            instance.InstanceID = id;
             instance.InstanceMask = 0xFF;
             instance.InstanceContributionToHitGroupIndex = 0;
             instance.Flags = 0;
@@ -85,36 +85,36 @@ namespace Waldem
             auto transposedMatrix = transpose(transform.Matrix);
             memcpy(instance.Transform, &transposedMatrix, sizeof(Matrix3x4));
             
-            InstanceBuffer->UpdateData(&instance, sizeof(RayTracingInstance), meshComponent.RTXInstanceId * sizeof(RayTracingInstance));
+            InstanceBuffer->UpdateData(&instance, sizeof(RayTracingInstance), id * sizeof(RayTracingInstance));
             Renderer::UpdateTLAS(TLAS, InstanceBuffer->GetBuffer(), Num());
         }
         
-        void RemoveData(MeshComponent& meshComponent)
+        void RemoveData(int id)
         {
-            auto& instance = Instances[meshComponent.RTXInstanceId];
+            auto& instance = Instances[id];
             instance.InstanceID = 0;
             instance.InstanceMask = 0;
             instance.InstanceContributionToHitGroupIndex = 0;
             instance.Flags = 0;
             instance.AccelerationStructure = -1;
             
-            InstanceBuffer->RemoveData(sizeof(RayTracingInstance), meshComponent.RTXInstanceId * sizeof(RayTracingInstance));
+            InstanceBuffer->RemoveData(sizeof(RayTracingInstance), id * sizeof(RayTracingInstance));
             
             Renderer::BuildTLAS(InstanceBuffer->GetBuffer(), Num(), TLAS);
         }
 
-        void UpdateTransform(int meshId, Transform& transform)
+        void UpdateTransform(int id, Transform& transform)
         {
             auto transposedMatrix = transpose(transform.Matrix);
-            InstanceBuffer->UpdateData(&transposedMatrix, sizeof(Matrix3x4), meshId * sizeof(RayTracingInstance));
+            InstanceBuffer->UpdateData(&transposedMatrix, sizeof(Matrix3x4), id * sizeof(RayTracingInstance));
             Renderer::UpdateTLAS(TLAS, InstanceBuffer->GetBuffer(), Num());
         }
 
-        void UpdateGeometry(MeshComponent& meshComponent)
+        void UpdateGeometry(int id, MeshComponent& meshComponent)
         {
             WArray geometries { RayTracingGeometry(meshComponent.MeshRef.Mesh->VertexBuffer, meshComponent.MeshRef.Mesh->IndexBuffer) };
             
-            Renderer::UpdateBLAS(BLAS[meshComponent.RTXInstanceId], geometries);
+            Renderer::UpdateBLAS(BLAS[id], geometries);
             Renderer::UpdateTLAS(TLAS, InstanceBuffer->GetBuffer(), Num());
         }
 

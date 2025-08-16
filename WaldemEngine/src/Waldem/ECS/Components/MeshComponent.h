@@ -11,8 +11,6 @@ namespace Waldem
         END_COMPONENT()
 
         MeshReference MeshRef;
-        uint DrawId = -1;
-        uint RTXInstanceId = -1;
 
         bool IsValid() const { return MeshRef.IsValid(); }
     };

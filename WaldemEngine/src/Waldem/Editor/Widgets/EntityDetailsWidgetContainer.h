@@ -55,6 +55,12 @@ namespace Waldem
                         for (int i = 0; i < ECS::RegisteredComponents.Num(); i++)
                         {
                         	auto compName = ECS::RegisteredComponents[i].key;
+
+                        	if(compName == "Transform")
+                        	{
+                        		continue;
+                        	}
+                        	
                             if (strstr(compName, searchBuffer) != nullptr) // Filter by search
                             {
                                 if (ImGui::Selectable(compName, false))

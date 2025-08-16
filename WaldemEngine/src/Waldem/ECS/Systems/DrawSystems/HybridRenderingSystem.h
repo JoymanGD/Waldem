@@ -1,4 +1,5 @@
 #pragma once
+#include "Waldem/ECS/IdManager.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/ECS/Systems/DrawSystems/DrawSystem.h"
 #include "Waldem/ECS/Components/EditorCamera.h"
@@ -183,42 +184,49 @@ namespace Waldem
                 CameraIsDirty = true;
             });
             
-            ECS::World.observer<MeshComponent>().event(flecs::OnAdd).each([&](flecs::entity entity, MeshComponent& meshComponent)
+            ECS::World.observer<MeshComponent, Transform>().event(flecs::OnAdd).each([&](flecs::entity entity, MeshComponent& meshComponent, Transform& transform)
             {
                 IndirectCommand command;
                 command.DrawId = WorldTransformsBuffer.Num();
                 command.DrawIndexed = { 1, 1, 0, 0, 0 };
                 IndirectCommands.Add(command);
 
-                meshComponent.DrawId = command.DrawId;
+                IdManager::AddId(entity, DrawId);
                 IndirectBuffer.AddData(&command, sizeof(IndirectCommand));
                 
-                auto transform = entity.get<Transform>();
-                
-                if(transform)
-                {
-                    WorldTransformsBuffer.AddData((Matrix4*)&transform->Matrix, sizeof(Matrix4));
-                }
+                WorldTransformsBuffer.AddData(&transform.Matrix, sizeof(Matrix4));
 
                 auto materialAttribute = MaterialShaderAttribute();
                 MaterialAttributes.Add(materialAttribute);
                 MaterialAttributesBuffer.AddData(&materialAttribute, sizeof(MaterialShaderAttribute));
 
-                Editor::AddEntityID(command.DrawId, entity.id());
-                
-                meshComponent.RTXInstanceId = TLAS.AddEmptyData();
+                TLAS.AddEmptyData();
             });
             
             ECS::World.observer<MeshComponent>().event(flecs::OnSet).each([&](flecs::entity entity, MeshComponent& meshComponent)
             {
-                if(!meshComponent.MeshRef.Reference.empty())
+                int drawId;
+
+                if(!IdManager::GetId(entity, DrawId, drawId))
+                {
+                    WD_CORE_ERROR("Couldn't find DrawId for entity: {}", entity.name());
+                }
+                
+                bool meshReferenceIsEmpty = meshComponent.MeshRef.Reference.empty() || meshComponent.MeshRef.Reference == "Empty";
+                
+                if(meshReferenceIsEmpty && !meshComponent.MeshRef.IsValid())
+                {
+                    return;
+                }
+
+                if(!meshReferenceIsEmpty && !meshComponent.MeshRef.IsValid())
                 {
                     meshComponent.MeshRef.LoadAsset(contentManager);
                 }
                 
-                if(meshComponent.MeshRef.IsValid() && meshComponent.DrawId >= 0)
+                if(meshComponent.MeshRef.IsValid())
                 {
-                    auto& command = IndirectCommands[meshComponent.DrawId];
+                    auto& command = IndirectCommands[drawId];
                     command.DrawIndexed = {
                         (uint)meshComponent.MeshRef.Mesh->IndexData.Num(),
                         1,
@@ -227,12 +235,12 @@ namespace Waldem
                         0
                     };
 
-                    IndirectBuffer.UpdateData(&command, sizeof(IndirectCommand), sizeof(IndirectCommand) * meshComponent.DrawId);
+                    IndirectBuffer.UpdateData(&command, sizeof(IndirectCommand), sizeof(IndirectCommand) * drawId);
 
                     VertexBuffer.AddData(meshComponent.MeshRef.Mesh->VertexData.GetData(), meshComponent.MeshRef.Mesh->VertexData.GetSize());
                     IndexBuffer.AddData(meshComponent.MeshRef.Mesh->IndexData.GetData(), meshComponent.MeshRef.Mesh->IndexData.GetSize());
 
-                    auto& materialAttribute = MaterialAttributes[meshComponent.DrawId];
+                    auto& materialAttribute = MaterialAttributes[drawId];
 
                     materialAttribute.Albedo = meshComponent.MeshRef.Mesh->CurrentMaterial->Albedo;
                     materialAttribute.Metallic = meshComponent.MeshRef.Mesh->CurrentMaterial->Metallic;
@@ -248,101 +256,111 @@ namespace Waldem
                             materialAttribute.ORMTextureID = meshComponent.MeshRef.Mesh->CurrentMaterial->GetORMTexture()->GetIndex(SRV_UAV_CBV);
                     }
 
-                    MaterialAttributesBuffer.UpdateData(&materialAttribute, sizeof(MaterialShaderAttribute), sizeof(MaterialShaderAttribute) * meshComponent.DrawId);
+                    MaterialAttributesBuffer.UpdateData(&materialAttribute, sizeof(MaterialShaderAttribute), sizeof(MaterialShaderAttribute) * drawId);
                 }
 
                 auto transform = entity.get<Transform>();
 
-                if(transform)
-                {
-                    TLAS.SetData(meshComponent, *transform);
-                }
+                TLAS.SetData(drawId, meshComponent, *transform);
             });
             
             ECS::World.observer<MeshComponent>().event(flecs::OnRemove).each([&](flecs::entity entity, MeshComponent& meshComponent)
             {
-                IndirectCommand& command = IndirectCommands[meshComponent.DrawId];
+                int drawId;
+
+                if(!IdManager::GetId(entity, DrawId, drawId))
+                {
+                    WD_CORE_ERROR("Couldn't find DrawId for entity: {}", entity.name());
+                }
+                
+                IndirectCommand& command = IndirectCommands[drawId];
                 command.DrawId = -1;
                 command.DrawIndexed = { 0, 0, 0, 0, 0 };
 
-                IndirectBuffer.RemoveData(sizeof(IndirectCommand), meshComponent.DrawId * sizeof(IndirectCommand));
+                IndirectBuffer.RemoveData(sizeof(IndirectCommand), drawId * sizeof(IndirectCommand));
                 
                 auto transform = entity.get<Transform>();
                 
                 if(transform)
                 {
-                    WorldTransformsBuffer.RemoveData(sizeof(Matrix4), meshComponent.DrawId * sizeof(Matrix4));
+                    WorldTransformsBuffer.RemoveData(sizeof(Matrix4), drawId * sizeof(Matrix4));
                 }
 
-                MaterialAttributesBuffer.RemoveData(sizeof(MaterialShaderAttribute), meshComponent.DrawId * sizeof(MaterialShaderAttribute));
+                MaterialAttributesBuffer.RemoveData(sizeof(MaterialShaderAttribute), drawId * sizeof(MaterialShaderAttribute));
 
-                Editor::RemoveEntityID(meshComponent.DrawId);
-                
-                TLAS.RemoveData(meshComponent);
-            });
-            
-            ECS::World.observer<Transform>().event(flecs::OnAdd).each([&](flecs::entity entity, Transform& transform)
-            {
-                auto meshComponent = entity.get<MeshComponent>();
-                
-                if(meshComponent && meshComponent->IsValid())
-                {
-                    WorldTransformsBuffer.AddData(&transform.Matrix, sizeof(Matrix4));
-                }
+                TLAS.RemoveData(drawId);
+
+                IdManager::RemoveId(entity, DrawId);
             });
             
             ECS::World.observer<Transform>().event(flecs::OnSet).each([&](flecs::entity entity, Transform& transform)
             {
+                int drawId;
+
+                if(!IdManager::GetId(entity, DrawId, drawId))
+                {
+                    WD_CORE_ERROR("Couldn't find DrawId for entity: {}", entity.name());
+                }
+                
                 auto meshComponent = entity.get<MeshComponent>();
                 
-                if(meshComponent && meshComponent->IsValid() && meshComponent->DrawId >= 0)
+                if(meshComponent)
                 {
-                    WorldTransformsBuffer.UpdateData(&transform.Matrix, sizeof(Matrix4), meshComponent->DrawId * sizeof(Matrix4));
+                    WorldTransformsBuffer.UpdateData(&transform.Matrix, sizeof(Matrix4), drawId * sizeof(Matrix4));
                     
-                    TLAS.UpdateTransform(meshComponent->RTXInstanceId, transform);
+                    TLAS.UpdateTransform(drawId, transform);
                 }
                 
                 auto light = entity.get<Light>();
 
-                if(light && light->LightId >= 0)
+                if(light)
                 {
-                    LightTransformsBuffer.UpdateData(&transform.Matrix, sizeof(Matrix4), sizeof(Matrix4) * light->LightId);
-                }
-            });
-            
-            ECS::World.observer<Transform>().event(flecs::OnRemove).each([&](flecs::entity entity, Transform& transform)
-            {
-                auto light = entity.get<Light>();
+                    int lightId;
 
-                if(light && light->LightId >= 0)
-                {
-                    LightTransformsBuffer.RemoveData(sizeof(Matrix4), sizeof(Matrix4) * light->LightId);
+                    if(!IdManager::GetId(entity, LightId, lightId))
+                    {
+                        WD_CORE_ERROR("Couldn't find LightId for entity: {}", entity.name());
+                    }
+                    
+                    LightTransformsBuffer.UpdateData(&transform.Matrix, sizeof(Matrix4), sizeof(Matrix4) * lightId);
                 }
             });
             
-            ECS::World.observer<Light, Transform>().event(flecs::OnAdd).each([&](Light& light, Transform& transform)
+            ECS::World.observer<Light, Transform>().event(flecs::OnAdd).each([&](flecs::entity entity, Light& light, Transform& transform)
             {
-                light.LightId = RayTracingSceneData.NumLights;
+                IdManager::AddId(entity, LightId);
+
                 LightsBuffer.AddData(&light.Data, sizeof(LightData));
                 LightTransformsBuffer.AddData(&transform.Matrix, sizeof(Matrix4));
                 
                 RayTracingSceneData.NumLights = LightsBuffer.Num();
             });
             
-            ECS::World.observer<Light>().event(flecs::OnSet).each([&](Light& light)
+            ECS::World.observer<Light>().event(flecs::OnSet).each([&](flecs::entity entity, Light& light)
             {
-                if(light.LightId >= 0)
+                int lightId;
+
+                if(!IdManager::GetId(entity, LightId, lightId))
                 {
-                    LightsBuffer.UpdateData(&light.Data, sizeof(LightData), sizeof(LightData) * light.LightId);
+                    WD_CORE_ERROR("Couldn't find LightId for entity: {}", entity.name());
                 }
+                
+                LightsBuffer.UpdateData(&light.Data, sizeof(LightData), sizeof(LightData) * lightId);
             });
             
-            ECS::World.observer<Light>().event(flecs::OnRemove).each([&](Light& light)
+            ECS::World.observer<Light>().event(flecs::OnRemove).each([&](flecs::entity entity, Light& light)
             {
-                if(light.LightId >= 0)
+                int lightId;
+
+                if(!IdManager::GetId(entity, LightId, lightId))
                 {
-                    LightsBuffer.RemoveData(sizeof(LightData), sizeof(LightData) * light.LightId);
+                    WD_CORE_ERROR("Couldn't find LightId for entity: {}", entity.name());
                 }
+                
+                LightTransformsBuffer.RemoveData(sizeof(Matrix4), sizeof(Matrix4) * lightId);
+                LightsBuffer.RemoveData(sizeof(LightData), sizeof(LightData) * lightId);
+
+                IdManager::RemoveId(entity, LightId);
             });
 
             ECS::World.observer<Camera>("SceneDataUpdateSystem").event(flecs::OnSet).each([&](flecs::entity entity, Camera& camera)

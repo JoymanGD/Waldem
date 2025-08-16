@@ -5,6 +5,7 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtx/euler_angles.hpp"
 #include "glm/gtx/matrix_decompose.hpp"
+#include "Waldem/ECS/IdManager.h"
 #include "Waldem/Input/KeyCodes.h"
 #include "Waldem/Input/MouseButtonCodes.h"
 #include "Waldem/ECS/Components/EditorCamera.h"
@@ -78,13 +79,14 @@ namespace Waldem
                         });
                     });
 
-                    auto entityId = Editor::GetEntityID(Editor::HoveredEntityID);
+                    flecs::entity outEntity;
 
-                    auto entity = ECS::World.entity(entityId);
-
-                    if(entity.is_valid() && entity.is_alive())
+                    if(IdManager::GetEntityById(Editor::HoveredEntityID, DrawId, outEntity))
                     {
-                        entity.add<Selected>();
+                        if(outEntity.is_valid() && outEntity.is_alive())
+                        {
+                            outEntity.add<Selected>();
+                        }
                     }
                 }
             });

@@ -71,6 +71,8 @@ namespace Waldem
             {
                 WD_CORE_ERROR("RemoveData: Offset + Size exceeds buffer size.");
             }
+
+            Count -= size / Stride;
             
             Renderer::ClearBuffer(InternalBuffer, size, offset);
         }

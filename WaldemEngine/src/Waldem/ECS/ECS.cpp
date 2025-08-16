@@ -2,8 +2,6 @@
 
 #include "ECS.h"
 
-#include <ecs.h>
-
 #include "Components/AudioSource.h"
 #include "Components/Light.h"
 #include "Components/MeshComponent.h"
@@ -68,6 +66,66 @@ namespace Waldem
             AudioSource::RegisterComponent(World);
             MeshComponent::RegisterComponent(World);
             Light::RegisterComponent(World);
+        }
+
+        flecs::entity CreateEntity(const WString& name, bool enabled)
+        {
+            flecs::entity entity = World.entity(name);
+
+            if(enabled)
+            {
+                entity.enable();
+            }
+            else
+            {
+                entity.disable();
+            }
+
+            return entity;
+        }
+
+        flecs::entity CreateSceneEntity(const WString& name, bool enabled, bool visibleInHierarchy)
+        {
+            auto count = HierarchySlots.Allocate();
+            flecs::entity entity = World.entity(name).set<SceneEntity>({
+                .ParentId = 0,
+                .HierarchySlot = (float)count,
+                .VisibleInHierarchy = visibleInHierarchy,
+            }).add<Transform>();
+
+            if(enabled)
+            {
+                entity.enable();
+            }
+            else
+            {
+                entity.disable();
+            }
+
+            return entity;
+        }
+
+        flecs::entity CloneSceneEntity(flecs::entity entity)
+        {
+            auto newSlot = HierarchySlots.Allocate();
+            
+            auto sceneEntityComponent = entity.get<SceneEntity>();
+            
+            auto clone = entity.clone().set<SceneEntity>(
+            {
+                .ParentId = sceneEntityComponent->ParentId,
+                .HierarchySlot = (float)newSlot,
+                .VisibleInHierarchy = sceneEntityComponent->VisibleInHierarchy,
+            });
+
+            auto entityName = entity.name();
+            WString cloneEntityName = std::string(entityName.c_str()) + "_Clone";
+            
+            FormatName(cloneEntityName);
+            
+            clone.set_name(cloneEntityName.C_Str());
+            
+            return clone;
         }
     }
 }
