@@ -99,6 +99,27 @@ namespace Waldem
                                 RenameString = "UnnamedEntity_" + std::to_string(i);
                             }
 
+                            int sameNameCount = 0;
+
+                            for (auto& entryToCheck : HierarchyEntries)
+                            {
+                                auto& entityToCheck = entryToCheck.value;
+                                
+                                if(entityToCheck == entity)
+                                    continue;
+
+                                auto entityToCheckName = std::string(entityToCheck.name());
+                                if(RenameString == entityToCheckName)
+                                {
+                                    sameNameCount++;
+                                }
+                            }
+
+                            if(sameNameCount > 0)
+                            {
+                                RenameString += "_" + std::to_string(sameNameCount);
+                            }
+
                             if(RenameString != originalName)
                             {
                                 entity.set_name(RenameString.c_str());
