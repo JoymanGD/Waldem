@@ -26,6 +26,7 @@
 #include "Waldem/ECS/ECS.h"
 #include "Waldem/ECS/Systems/DrawSystems/HybridRenderingSystem.h"
 #include "Waldem/ECS/Systems/DrawSystems/PostProcessSystem.h"
+#include "Waldem/ECS/Systems/DrawSystems/SkyRenderingSystem.h"
 
 namespace Waldem
 {
