@@ -6,6 +6,7 @@
 #include "Components/Light.h"
 #include "Components/MeshComponent.h"
 #include "Components/RigidBody.h"
+#include "Components/Sky.h"
 #include "Components/Transform.h"
 #include "Waldem/Editor/AssetReference.h"
 
@@ -66,6 +67,7 @@ namespace Waldem
             AudioSource::RegisterComponent(World);
             MeshComponent::RegisterComponent(World);
             Light::RegisterComponent(World);
+            Sky::RegisterComponent(World);
         }
 
         flecs::entity CreateEntity(const WString& name, bool enabled)

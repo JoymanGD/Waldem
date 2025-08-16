@@ -10,6 +10,7 @@
 #include "Waldem/ECS/Components/Transform.h"
 #include "Waldem/ECS/Components/Camera.h"
 #include "Waldem/ECS/Components/EditorComponent.h"
+#include "Waldem/ECS/Components/Sky.h"
 #include "Waldem/Renderer/ResizableAccelerationStructure.h"
 #include "Waldem/Renderer/ResizableBuffer.h"
 
@@ -59,7 +60,23 @@ namespace Waldem
         uint MeshIDRT;
         uint RadianceRT;
         uint TargetRT;
+        uint SkyColorRT;
         uint HoveredMeshes;
+    };
+
+    struct SkySceneData
+    {
+        Matrix4 InverseProjection;
+        Matrix4 InverseView;
+        Vector4 SkyZenithColor;
+        Vector4 SkyHorizonColor;
+        Vector4 GroundColor;
+        Vector4 SunDirection;
+    };
+
+    struct SkyRootConstants
+    {
+        uint SceneDataBuffer;
     };
     
     class WALDEM_API HybridRenderingSystem : public ISystem
@@ -67,6 +84,17 @@ namespace Waldem
         Texture2D* DummyTexture = nullptr;
         Buffer* DummyVertexBuffer = nullptr;
         Buffer* DummyIndexBuffer = nullptr;
+
+        //Sky pass
+        Pipeline* SkyPipeline = nullptr;
+        PixelShader* SkyPixelShader = nullptr;
+        Quad FullscreenQuad = {};
+        SkyRootConstants SkyPassRootConstants;
+        SkySceneData SkyPassSceneData;
+        Buffer* SceneDataBuffer = nullptr;
+        RenderTarget* SkyColorRT = nullptr;
+        bool SceneDataDirty = true;
+        
         //GBuffer pass
         Pipeline* GBufferPipeline = nullptr;
         PixelShader* GBufferPixelShader = nullptr;
@@ -131,6 +159,28 @@ namespace Waldem
         
         void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
         {
+            //Sky
+            WArray<InputLayoutDesc> inputElementDescs = {
+                { "POSITION", 0, TextureFormat::R32G32B32_FLOAT, 0, 0, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+                { "TEXCOORD", 0, TextureFormat::R32G32_FLOAT, 0, 12, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+            };
+            
+            SceneDataBuffer = ResourceManager::CreateBuffer("SkySceneDataBuffer", BufferType::StorageBuffer, sizeof(SkyPassSceneData), sizeof(SkyPassSceneData));
+            SkyPassRootConstants.SceneDataBuffer = SceneDataBuffer->GetIndex(SRV_UAV_CBV);
+            
+            TargetRT = resourceManager->GetRenderTarget("TargetRT");
+            SkyColorRT = resourceManager->CreateRenderTarget("SkyColorRT", TargetRT->GetWidth(), TargetRT->GetHeight(), TargetRT->GetFormat());
+            
+            SkyPixelShader = Renderer::LoadPixelShader("Sky");
+            SkyPipeline = Renderer::CreateGraphicPipeline("SkyPipeline",
+                                                            SkyPixelShader,
+                                                            { TextureFormat::R8G8B8A8_UNORM },
+                                                            TextureFormat::UNKNOWN,
+                                                            DEFAULT_RASTERIZER_DESC,
+                                                            DEFAULT_DEPTH_STENCIL_DESC,
+                                                            WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
+                                                            inputElementDescs);
+            
             //GBuffer
             IndirectBuffer = ResizableBuffer("IndirectDrawBuffer", BufferType::IndirectBuffer, sizeof(IndirectCommand), MAX_INDIRECT_COMMANDS);
             VertexBuffer = ResizableBuffer("VertexBuffer", BufferType::VertexBuffer, sizeof(Vertex));
@@ -139,7 +189,6 @@ namespace Waldem
             MaterialAttributesBuffer = ResizableBuffer("MaterialAttributesBuffer", BufferType::StorageBuffer, sizeof(MaterialShaderAttribute), MAX_INDIRECT_COMMANDS);
             GBufferSceneDataBuffer = ResourceManager::CreateBuffer("SceneDataBuffer", BufferType::StorageBuffer, sizeof(GBufferSceneData), sizeof(GBufferSceneData));
             
-            TargetRT = resourceManager->GetRenderTarget("TargetRT");
             WorldPositionRT = resourceManager->GetRenderTarget("WorldPositionRT");
             NormalRT = resourceManager->GetRenderTarget("NormalRT");
             ColorRT = resourceManager->GetRenderTarget("ColorRT");
@@ -368,15 +417,64 @@ namespace Waldem
 
                 if(transform)
                 {
+                    auto inverseProj = inverse(camera.ProjectionMatrix);
+                    auto world = transform->Matrix;
                     GBufferSceneData.ViewMatrix = camera.ViewMatrix;
                     GBufferSceneData.ProjectionMatrix = camera.ProjectionMatrix;
-                    GBufferSceneData.WorldMatrix = transform->Matrix;
-                    GBufferSceneData.InverseProjectionMatrix = inverse(camera.ProjectionMatrix);
-                    RayTracingSceneData.InvViewMatrix = inverse(camera.ViewMatrix);
-                    RayTracingSceneData.InvProjectionMatrix = inverse(camera.ProjectionMatrix);
+                    GBufferSceneData.WorldMatrix = world;
+                    GBufferSceneData.InverseProjectionMatrix = inverseProj;
+                    RayTracingSceneData.InvViewMatrix = world;
+                    RayTracingSceneData.InvProjectionMatrix = inverseProj;
+                    SkyPassSceneData.InverseProjection = inverseProj;
+                    SkyPassSceneData.InverseView = world;
                     
                     CameraIsDirty = true;
+                    SceneDataDirty = true;
                 }
+            });
+
+            ECS::World.observer<Sky>().event(flecs::OnAdd).each([&](Sky& skybox)
+            {
+                SkyPassSceneData.SkyZenithColor = Vector4(skybox.SkyZenithColor, 1.0f);
+                SkyPassSceneData.SkyHorizonColor = Vector4(skybox.SkyHorizonColor, 1.0f);
+                SkyPassSceneData.GroundColor = Vector4(skybox.GroundColor, 1.0f);
+                SkyPassSceneData.SunDirection = Vector4(skybox.SunDirection, 1.0f);
+                
+                SceneDataDirty = true;
+            });
+
+            ECS::World.observer<Sky>().event(flecs::OnSet).each([&](Sky& skybox)
+            {
+                SkyPassSceneData.SkyZenithColor = Vector4(skybox.SkyZenithColor, 1.0f);
+                SkyPassSceneData.SkyHorizonColor = Vector4(skybox.SkyHorizonColor, 1.0f);
+                SkyPassSceneData.GroundColor = Vector4(skybox.GroundColor, 1.0f);
+                SkyPassSceneData.SunDirection = Vector4(skybox.SunDirection, 1.0f);
+                
+                SceneDataDirty = true;
+            });
+
+            ECS::World.system("SkyColorClearingSystem").kind(flecs::OnDraw).each([&]
+            {
+                Renderer::ResourceBarrier(SkyColorRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
+                Renderer::ClearRenderTarget(SkyColorRT);
+                Renderer::ResourceBarrier(SkyColorRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
+            });
+            
+            ECS::World.system<Sky>("SkyRenderingSystem").kind(flecs::OnDraw).each([&](Sky& skybox)
+            {
+                if(SceneDataDirty)
+                {
+                    Renderer::UploadBuffer(SceneDataBuffer, &SkyPassSceneData, sizeof(SkySceneData));
+                    SceneDataDirty = false;
+                }
+                
+                Renderer::ResourceBarrier(SkyColorRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
+                Renderer::BindRenderTargets(SkyColorRT);
+                Renderer::BindDepthStencil(nullptr);
+                Renderer::SetPipeline(SkyPipeline);
+                Renderer::PushConstants(&SkyPassRootConstants, sizeof(SkyRootConstants));
+                Renderer::Draw(&FullscreenQuad);
+                Renderer::ResourceBarrier(SkyColorRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
             });
             
             ECS::World.system("GBufferSystem").kind(flecs::OnDraw).run([&](flecs::iter& it)
@@ -485,6 +583,7 @@ namespace Waldem
             DeferredRootConstants.MeshIDRT = MeshIDRT->GetIndex(SRV_UAV_CBV);
             DeferredRootConstants.RadianceRT = radianceRTIndex;
             DeferredRootConstants.TargetRT = TargetRT->GetIndex(SRV_UAV_CBV);
+            DeferredRootConstants.SkyColorRT = SkyColorRT->GetIndex(SRV_UAV_CBV);
         }
     };
 }
