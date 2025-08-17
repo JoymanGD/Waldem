@@ -92,7 +92,7 @@ namespace Waldem
 
                 if (ImGui::Button("+"))
                 {
-                    auto entity = ECS::CreateSceneEntity("NewEntity_" + std::to_string(ECS::GetEntitiesCount()));
+                    auto entity = ECS::CreateSceneEntity("NewEntity");
                         
                     SelectEntity(entity);
                 }

@@ -89,11 +89,16 @@ namespace Waldem
         flecs::entity CreateSceneEntity(const WString& name, bool enabled, bool visibleInHierarchy)
         {
             auto count = HierarchySlots.Allocate();
-            flecs::entity entity = World.entity(name).set<SceneEntity>({
+            flecs::entity entity = World.entity().set<SceneEntity>({
                 .ParentId = 0,
                 .HierarchySlot = (float)count,
                 .VisibleInHierarchy = visibleInHierarchy,
             }).add<Transform>();
+
+            WString formattedName = name;
+            FormatName(formattedName);
+            
+            entity.set_name(formattedName.C_Str());
 
             if(enabled)
             {
