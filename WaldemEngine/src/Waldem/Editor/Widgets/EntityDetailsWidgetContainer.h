@@ -55,8 +55,9 @@ namespace Waldem
                         for (int i = 0; i < ECS::RegisteredComponents.Num(); i++)
                         {
                         	auto compName = ECS::RegisteredComponents[i].key;
+                        	auto comp = ECS::RegisteredComponents[i].value;
 
-                        	if(compName == "Transform")
+                        	if(comp.has<EditorComponent>())
                         	{
                         		continue;
                         	}
@@ -65,7 +66,7 @@ namespace Waldem
                             {
                                 if (ImGui::Selectable(compName, false))
                                 {
-									entity.add(ECS::RegisteredComponents[i].value);
+									entity.add(comp);
                                 	
 									ImGui::CloseCurrentPopup();
                                 }

@@ -157,7 +157,7 @@ namespace Waldem
         
         void UpdateCameraControl()
         {
-            ECS::World.system<Camera, Transform, EditorComponent>("UpdateCameraControlSystem").kind(flecs::OnUpdate).each([&](flecs::entity entity, Camera& camera, Transform& transform, EditorComponent)
+            ECS::World.system<Camera, Transform>("UpdateCameraControlSystem").kind(flecs::OnUpdate).each([&](flecs::entity entity, Camera& camera, Transform& transform)
             {
                 if (IsUnderControl)
                 {
@@ -177,7 +177,7 @@ namespace Waldem
                 }
             });
 
-            ECS::World.system<Camera, EditorComponent>("UpdateCameraSpeedControlSystem").kind(flecs::OnUpdate).each([&](flecs::entity entity, Camera& camera, EditorComponent)
+            ECS::World.system<Camera>("UpdateCameraSpeedControlSystem").kind(flecs::OnUpdate).each([&](flecs::entity entity, Camera& camera)
             {
                 if(DeltaScroll != 0.f)
                 {

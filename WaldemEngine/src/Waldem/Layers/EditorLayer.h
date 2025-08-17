@@ -58,10 +58,13 @@ namespace Waldem
             
             auto cameraEntity = ECS::CreateEntity("EditorCamera");
             float aspectRatio = size.x / size.y;
-            cameraEntity.set<Transform>({Vector3(0, 0, -10.f)});
+            cameraEntity.set<Transform>({Vector3(0, 10, -10.f)});
             cameraEntity.set<Camera>({60.0f, aspectRatio, 0.001f, 1000.0f, 30.0f, 30.0f});
-            cameraEntity.add<EditorComponent>();
             cameraEntity.add<AudioListener>();
+
+            auto skyEntity = ECS::CreateEntity("Sky");
+            skyEntity.add<Transform>();
+            skyEntity.add<Sky>();
             
             //do it after all entities set up
             UISystems.Add(new EditorUISystem(BIND_ACTION(OnOpenScene), BIND_ACTION(OnSaveScene), BIND_ACTION(OnSaveSceneAs)));
@@ -107,7 +110,7 @@ namespace Waldem
                 system->OnResize(size);
             }
 
-            ECS::World.query<Camera, EditorComponent>().each([size](flecs::entity entity, Camera& camera, EditorComponent)
+            ECS::World.query<Camera>().each([size](flecs::entity entity, Camera& camera)
             {
                 camera.UpdateProjectionMatrix(camera.FieldOfView, size.x/size.y, camera.NearPlane, camera.FarPlane);
                 entity.modified<Camera>(); 
