@@ -72,6 +72,7 @@ namespace Waldem
         Vector4 SkyHorizonColor;
         Vector4 GroundColor;
         Vector4 SunDirection;
+        Vector4 CameraPosition;
     };
 
     struct SkyRootConstants
@@ -415,6 +416,7 @@ namespace Waldem
                     RayTracingSceneData.InvProjectionMatrix = inverseProj;
                     SkyPassSceneData.InverseProjection = inverseProj;
                     SkyPassSceneData.InverseView = world;
+                    SkyPassSceneData.CameraPosition = Vector4(transform->Position, 1.0f);
                     
                     CameraIsDirty = true;
                     SceneDataDirty = true;
