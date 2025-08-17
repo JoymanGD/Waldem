@@ -2,6 +2,7 @@
 #include <flecs.h>
 #include "Waldem/ECS/ECS.h"
 #include <typeinfo>
+#include "Waldem/ECS/Components/EditorComponent.h"
 
 namespace Waldem
 {
@@ -13,6 +14,9 @@ namespace Waldem
     
     #define FIELD(TYPE, NAME) \
         .member<TYPE>(#NAME)
+        
+    #define EDITOR_ONLY() \
+        .add<EditorComponent>()
     
     #define END_COMPONENT() \
         ; \

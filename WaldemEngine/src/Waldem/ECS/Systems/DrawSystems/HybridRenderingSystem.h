@@ -223,7 +223,7 @@ namespace Waldem
             DeferredRenderingComputeShader = Renderer::LoadComputeShader("DeferredRendering");
             DeferredRenderingPipeline = Renderer::CreateComputePipeline("DeferredLightingPipeline", DeferredRenderingComputeShader);
 
-            ECS::World.query<Camera, Transform, EditorComponent>("SceneDataInitializationSystem").each([&](Camera& camera, Transform& transform, EditorComponent)
+            ECS::World.query<Camera, Transform>("SceneDataInitializationSystem").each([&](Camera& camera, Transform& transform)
             {
                 GBufferSceneData.ViewMatrix = camera.ViewMatrix;
                 GBufferSceneData.ProjectionMatrix = camera.ProjectionMatrix;
@@ -423,7 +423,7 @@ namespace Waldem
                 }
             });
 
-            ECS::World.observer<Sky>().event(flecs::OnAdd).each([&](Sky& skybox)
+            ECS::World.observer<Sky>().event(flecs::OnAdd).yield_existing().each([&](Sky& skybox)
             {
                 SkyPassSceneData.SkyZenithColor = Vector4(skybox.SkyZenithColor, 1.0f);
                 SkyPassSceneData.SkyHorizonColor = Vector4(skybox.SkyHorizonColor, 1.0f);
@@ -433,7 +433,7 @@ namespace Waldem
                 SceneDataDirty = true;
             });
 
-            ECS::World.observer<Sky>().event(flecs::OnSet).each([&](Sky& skybox)
+            ECS::World.observer<Sky>().event(flecs::OnSet).yield_existing().each([&](Sky& skybox)
             {
                 SkyPassSceneData.SkyZenithColor = Vector4(skybox.SkyZenithColor, 1.0f);
                 SkyPassSceneData.SkyHorizonColor = Vector4(skybox.SkyHorizonColor, 1.0f);

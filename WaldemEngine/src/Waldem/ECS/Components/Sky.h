@@ -11,6 +11,7 @@ namespace Waldem
             FIELD(Vector3, SkyHorizonColor)
             FIELD(Vector3, GroundColor)
             FIELD(Vector3, SunDirection)
+            EDITOR_ONLY()
         END_COMPONENT()
         
         Vector3 SkyZenithColor = Vector3(0.20f, 0.45f, 0.90f);

@@ -18,6 +18,7 @@ namespace Waldem
             FIELD(Vector3, Position)
             FIELD(Vector3, Rotation)
             FIELD(Vector3, LocalScale)
+            EDITOR_ONLY()
         END_COMPONENT()
         
         Vector3 Position = { 0, 0, 0 };
