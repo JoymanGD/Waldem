@@ -31,20 +31,63 @@ namespace Waldem
         {
             while(NameExists(name))
             {
-                name += "_1";
+                if (!name.IsEmpty())
+                {
+                    std::string tmp = name.ToString();
+
+                    size_t underscorePos = tmp.find_last_of('_');
+                    if (underscorePos != std::string::npos && underscorePos + 1 < tmp.size())
+                    {
+                        std::string suffix = tmp.substr(underscorePos + 1);
+                        if (std::all_of(suffix.begin(), suffix.end(), ::isdigit))
+                        {
+                            int number = std::stoi(suffix);
+                            ++number;
+                            tmp = tmp.substr(0, underscorePos + 1) + std::to_string(number);
+                            name = tmp.c_str();
+                            continue;
+                        }
+                    }
+
+                    name += "_1";
+                }
+                else
+                {
+                    name = "NewEntity";
+                }
             }
         }
 
         inline void FormatName(std::string& name)
         {
-            while(NameExists(name))
+            while (NameExists(name))
             {
-                name += "_1";
+                if (!name.empty())
+                {
+                    size_t underscorePos = name.find_last_of('_');
+                    if (underscorePos != std::string::npos && underscorePos + 1 < name.size())
+                    {
+                        std::string suffix = name.substr(underscorePos + 1);
+                        if (std::all_of(suffix.begin(), suffix.end(), ::isdigit))
+                        {
+                            int number = std::stoi(suffix);
+                            ++number;
+                            name = name.substr(0, underscorePos + 1) + std::to_string(number);
+                            continue;
+                        }
+                    }
+
+                    name += "_1";
+                }
+                else
+                {
+                    name = "NewEntity";
+                }
             }
         }
         
         flecs::entity CreateEntity(const WString& name = "", bool enabled = true);
-        flecs::entity CreateSceneEntity(const WString& name = "", bool enabled = true, bool visibleInHierarchy = true);
+        flecs::entity CreateSceneEntity(const WString& name, bool enabled = true, bool visibleInHierarchy = true);
         flecs::entity CloneSceneEntity(flecs::entity entity);
         void RegisterTypes();
         void RegisterComponents();
