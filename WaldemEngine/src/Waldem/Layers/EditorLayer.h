@@ -36,7 +36,6 @@ namespace Waldem
     private:
         CWindow* Window;
         bool BlockUIEvents = true;
-        Path CurrentScenePath;
         bool ImportSceneThisFrame = false;
         bool EditorViewportResizeTriggered = false;
         Vector2 NewEditorViewportSize = {};
@@ -67,7 +66,7 @@ namespace Waldem
             skyEntity.add<Sky>();
             
             //do it after all entities set up
-            UISystems.Add(new EditorUISystem(BIND_ACTION(OnOpenScene), BIND_ACTION(OnSaveScene), BIND_ACTION(OnSaveSceneAs)));
+            UISystems.Add(new EditorUISystem());
             UISystems.Add(new EditorGuizmoSystem());
             
             UpdateSystems.Add(new EditorControlSystem());
@@ -162,41 +161,6 @@ namespace Waldem
                     event.Handled = ContentManager.Broadcast(event);
                     break;
                 }
-            }
-        }
-
-        void ExportScene(Path& path)
-        {
-            SceneManager::GetCurrentScene()->Serialize(path);
-        }
-
-        void OnOpenScene()
-        {
-            if(OpenFile(CurrentScenePath))
-            {
-                SceneManager::LoadScene(CurrentScenePath);
-            }
-        }
-
-        void OnSaveScene()
-        {
-            bool save = true;
-            if(CurrentScenePath.empty())
-            {
-                save = SaveFile(CurrentScenePath);
-            }
-
-            if(save)
-            {
-                ExportScene(CurrentScenePath);
-            }
-        }
-
-        void OnSaveSceneAs()
-        {
-            if(SaveFile(CurrentScenePath))
-            {
-                ExportScene(CurrentScenePath);
             }
         }
     };
