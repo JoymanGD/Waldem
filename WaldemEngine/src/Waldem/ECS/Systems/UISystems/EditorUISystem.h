@@ -14,12 +14,10 @@ namespace Waldem
     class WALDEM_API EditorUISystem : public ISystem
     {
         MainWidgetContainer* MainWidget = nullptr;
-        Action OnOpenScene;
-        Action OnSaveScene;
-        Action OnSaveSceneAs;
+        Path CurrentScenePath;
         
     public:
-        EditorUISystem(const Action& onOpenScene, const Action& onSaveScene, const Action& onSaveSceneAs) : OnOpenScene(onOpenScene), OnSaveScene(onSaveScene), OnSaveSceneAs(onSaveSceneAs)
+        EditorUISystem()
         {
            MainWidget = new MainWidgetContainer(
            {
@@ -105,6 +103,11 @@ namespace Waldem
             }
         }
 
+        void ExportScene(Path& path)
+        {
+            SceneManager::GetCurrentScene()->Serialize(path);
+        }
+
         void Update(float deltaTime) override
         {
             UpdateDockSpace();
@@ -116,15 +119,30 @@ namespace Waldem
                     if (ImGui::MenuItem("New scene")) {}
                     if (ImGui::MenuItem("Open scene", "Ctrl+O"))
                     {
-                        OnOpenScene();
+                        if(OpenFile(CurrentScenePath))
+                        {
+                            SceneManager::LoadScene(CurrentScenePath);
+                        }
                     }
                     if (ImGui::MenuItem("Save scene"))
                     {
-                        OnSaveScene();
+                        bool save = true;
+                        if(CurrentScenePath.empty())
+                        {
+                            save = SaveFile(CurrentScenePath);
+                        }
+
+                        if(save)
+                        {
+                            ExportScene(CurrentScenePath);
+                        }
                     }
                     if (ImGui::MenuItem("Save scene as..."))
                     {
-                        OnSaveSceneAs();
+                        if(SaveFile(CurrentScenePath))
+                        {
+                            ExportScene(CurrentScenePath);
+                        }
                     }
             
                     ImGui::Separator();
