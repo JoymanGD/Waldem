@@ -18,7 +18,7 @@ namespace Waldem
     class RenderingTestScene : public GameScene
     {
     public:
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
+        void Initialize() override
         {
 			CModelImporter importer;
 
