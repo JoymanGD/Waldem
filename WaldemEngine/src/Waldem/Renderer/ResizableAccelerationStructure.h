@@ -91,6 +91,11 @@ namespace Waldem
         
         void RemoveData(int id)
         {
+            if(BLAS[id])
+            {
+                Renderer::Destroy(BLAS[id]);
+            }
+            
             auto& instance = Instances[id];
             instance.InstanceID = 0;
             instance.InstanceMask = 0;

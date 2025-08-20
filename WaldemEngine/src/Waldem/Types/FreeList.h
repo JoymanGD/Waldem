@@ -1,5 +1,5 @@
 #pragma once
-#include <queue>
+#include <set>
 
 namespace Waldem
 {
@@ -12,8 +12,9 @@ namespace Waldem
         {
             if (!FreeIndices.empty())
             {
-                int idx = FreeIndices.front();
-                FreeIndices.pop();
+                auto it = FreeIndices.begin(); // smallest
+                int idx = *it;
+                FreeIndices.erase(it);
                 return idx;
             }
             return NextIndex++;
@@ -21,18 +22,17 @@ namespace Waldem
 
         void Free(int index)
         {
-            FreeIndices.push(index);
+            FreeIndices.insert(index);
         }
 
         void Clear()
         {
             NextIndex = 0;
-            std::queue<int> empty;
-            std::swap(FreeIndices, empty);
+            FreeIndices.clear();
         }
 
     private:
         int NextIndex;
-        std::queue<int> FreeIndices;
+        std::set<int> FreeIndices;
     };
 }

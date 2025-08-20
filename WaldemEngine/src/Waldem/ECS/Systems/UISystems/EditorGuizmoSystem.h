@@ -81,7 +81,7 @@ namespace Waldem
 
                     flecs::entity outEntity;
 
-                    if(IdManager::GetEntityById(Editor::HoveredEntityID, DrawId, outEntity))
+                    if(IdManager::GetEntityById(Editor::HoveredEntityID, DrawIdType, outEntity))
                     {
                         if(outEntity.is_valid() && outEntity.is_alive())
                         {

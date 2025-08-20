@@ -377,7 +377,6 @@ namespace Waldem
 							}
 							case EcsOpOpaque:
 							{
-								// if(strcmp(op->name, "Reference") == 0)
 								if(op->type == ECS::World.id<AssetReference>())
 								{
 									ImGui::TableNextRow();

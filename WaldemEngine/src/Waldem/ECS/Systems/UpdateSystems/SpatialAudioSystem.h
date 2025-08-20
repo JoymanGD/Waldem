@@ -16,7 +16,22 @@ namespace Waldem
         
         void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
         {
-            ECS::World.system<AudioListener, Transform>().kind(flecs::OnUpdate).each([&](AudioListener, Transform& listenerTransform)
+            ECS::World.observer<AudioSource>().event(flecs::OnSet).each([&](AudioSource& audioSource)
+            {
+                bool referenceIsEmpty = audioSource.ClipRef.Reference.empty() || audioSource.ClipRef.Reference == "Empty";
+                    
+                if(referenceIsEmpty && !audioSource.ClipRef.IsValid())
+                {
+                    return;
+                }
+
+                if(!referenceIsEmpty && !audioSource.ClipRef.IsValid())
+                {
+                    audioSource.ClipRef.LoadAsset(contentManager);
+                }
+            });
+            
+            ECS::World.system<AudioListener, Transform>("Spatial audio system").kind(flecs::OnUpdate).each([&](AudioListener, Transform& listenerTransform)
             {
                 auto audioSourcesQuery = ECS::World.query<AudioSource, Transform>();
                 

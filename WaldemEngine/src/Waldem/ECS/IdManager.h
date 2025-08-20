@@ -8,9 +8,9 @@ namespace Waldem
 {
     enum IdType
     {
-        LightId,
-        DrawId,
-        RTXInstanceId
+        LightIdType,
+        DrawIdType,
+        RTXInstanceIdType
     };
     
     class WALDEM_API IdManager
@@ -28,17 +28,17 @@ namespace Waldem
 
             switch (idType)
             {
-            case LightId:
+            case LightIdType:
                 {
                     id = LightIdFreeList.Allocate();
                     break;
                 }
-            case DrawId:
+            case DrawIdType:
                 {
                     id = DrawIdFreeList.Allocate();
                     break;
                 }
-            case RTXInstanceId:
+            case RTXInstanceIdType:
                 {
                     id = RTXInstanceIdFreeList.Allocate();
                     break;
@@ -70,14 +70,39 @@ namespace Waldem
         {
             if(EntityIdMap.Contains(entity))
             {
+                int id = -1;
+                
                 if(EntityIdMap[entity].Contains(idType))
                 {
+                    id = EntityIdMap[entity][idType];
                     EntityIdMap[entity].Remove(idType);
                 }
 
                 if(EntityIdMap[entity].IsEmpty())
                 {
                     EntityIdMap.Remove(entity);
+                }
+
+                if(id >= 0)
+                {
+                    switch (idType)
+                    {
+                    case LightIdType:
+                        {
+                            LightIdFreeList.Free(id);
+                            break;
+                        }
+                    case DrawIdType:
+                        {
+                            DrawIdFreeList.Free(id);
+                            break;
+                        }
+                    case RTXInstanceIdType:
+                        {
+                            RTXInstanceIdFreeList.Free(id);
+                            break;
+                        }
+                    }
                 }
             }
         }

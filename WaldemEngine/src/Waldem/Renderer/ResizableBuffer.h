@@ -25,8 +25,6 @@ namespace Waldem
 
         size_t AddData(void* data, uint size)
         {
-            Count += size / Stride;
-            
             uint newSize = Size + size;
             
             if (newSize > Capacity)
@@ -55,8 +53,11 @@ namespace Waldem
                 Renderer::Destroy(oldBuffer);
                 delete oldBuffer;
             }
-            
-            Renderer::UploadBuffer(InternalBuffer, data, size, Size);
+
+            if(data)
+            {
+                Renderer::UploadBuffer(InternalBuffer, data, size, Size);
+            }
 
             size_t offset = Size;
             
@@ -72,7 +73,7 @@ namespace Waldem
                 WD_CORE_ERROR("RemoveData: Offset + Size exceeds buffer size.");
             }
 
-            Count -= size / Stride;
+            Size -= size;
             
             Renderer::ClearBuffer(InternalBuffer, size, offset);
         }
@@ -89,10 +90,8 @@ namespace Waldem
 
         uint64 GetGPUAddress() const { return InternalBuffer->GetGPUAddress(); }
         uint GetIndex(ResourceHeapType heapType) { return InternalBuffer->GetIndex(heapType); }
-        uint Num() { return Count; }
         
     private:
         Buffer* InternalBuffer = nullptr;
-        int Count = 0;
     };
 }
