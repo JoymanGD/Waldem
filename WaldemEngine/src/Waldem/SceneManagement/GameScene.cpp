@@ -127,6 +127,10 @@ void Waldem::GameScene::Deserialize(Path& inPath)
         {
             auto transform = entity.get_mut<Transform>();
             transform->LastRotation = transform->Rotation;
+            transform->Update();
+            // transform->LastPosition = transform->Position;
+            // transform->LastScale = transform->LocalScale;
+            entity.modified<Transform>();
         }
     }
 }

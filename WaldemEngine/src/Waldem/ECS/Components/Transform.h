@@ -19,7 +19,6 @@ namespace Waldem
             FIELD(Vector3, Rotation)
             FIELD(Vector3, LocalScale)
             HIDDEN_FIELD(Quaternion, RotationQuat)
-            HIDDEN_FIELD(Matrix4, Matrix)
             EDITOR_ONLY()
         END_COMPONENT()
         
