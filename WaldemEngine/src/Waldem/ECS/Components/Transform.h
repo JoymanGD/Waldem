@@ -18,14 +18,16 @@ namespace Waldem
             FIELD(Vector3, Position)
             FIELD(Vector3, Rotation)
             FIELD(Vector3, LocalScale)
+            HIDDEN_FIELD(Quaternion, RotationQuat)
+            HIDDEN_FIELD(Matrix4, Matrix)
             EDITOR_ONLY()
         END_COMPONENT()
         
         Vector3 Position = { 0, 0, 0 };
         Vector3 Rotation = { 0, 0, 0 }; 
         Vector3 LocalScale = { 1, 1, 1 };
-        Matrix4 Matrix = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
         Quaternion RotationQuat = { 1, 0, 0, 0 };
+        Matrix4 Matrix = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
         
         Vector3 LastRotation = { 0, 0, 0 };
         Vector3 LastPosition = { 0, 0, 0 };
@@ -57,6 +59,7 @@ namespace Waldem
         Matrix4 Inverse() { return inverse(Matrix); }
         void Update();
         void ApplyPitchYawRoll();
+        void ResetQuaternion();
         void DecompileMatrix();
 
         Matrix3x4 ToMatrix3x4() const

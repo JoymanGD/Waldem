@@ -131,6 +131,11 @@ namespace Waldem
 					{
 						ecs_meta_type_op_t* op = &ops[i];
 
+						if (op->name && strncmp(op->name, "___", 3) == 0)
+						{
+							continue;
+						}
+
 						switch (op->kind)
 						{
 							case EcsOpPush:

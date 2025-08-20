@@ -126,10 +126,7 @@ void Waldem::GameScene::Deserialize(Path& inPath)
         if (entity.has<Transform>())
         {
             auto transform = entity.get_mut<Transform>();
-            transform->ApplyPitchYawRoll();
             transform->LastRotation = transform->Rotation;
-            transform->Update();
-            entity.modified<Transform>();
         }
     }
 }

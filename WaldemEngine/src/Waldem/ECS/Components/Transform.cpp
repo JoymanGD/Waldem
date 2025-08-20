@@ -166,6 +166,19 @@ namespace Waldem
         RotationQuat = deltaQuat * RotationQuat;
     }
 
+    void Transform::ResetQuaternion()
+    {
+        Vector3 r = radians(Rotation);
+
+        // match your Rotate(float yaw, pitch, roll) implementation
+        Quaternion qx = angleAxis(r.x, Vector3(1,0,0));
+        Quaternion qy = angleAxis(r.y, Vector3(0,1,0));
+        Quaternion qz = angleAxis(r.z, Vector3(0,0,1));
+
+        // choose the order consistently (say, Z * Y * X)
+        RotationQuat = qz * qy * qx;
+    }
+
     void Transform::DecompileMatrix()
     {
         Position = Matrix[3];
