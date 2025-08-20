@@ -1,5 +1,6 @@
 #pragma once
 #include "Waldem/ECS/Systems/System.h"
+#include "Waldem/SceneManagement/SceneManager.h"
 
 namespace Waldem
 {
@@ -189,10 +190,16 @@ namespace Waldem
                 if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                 {
                     if (isFolder)
-                        CurrentPath = entry.path(); // Enter folder
+                    {
+                        CurrentPath = entry.path();
+                    }
                     else
                     {
-                        // Handle opening the asset (if applicable)
+                        if(extension == ".scene")
+                        {
+                            auto entryPath = entry.path();
+                            SceneManager::LoadScene(entryPath);
+                        }
                     }
                 }
 

@@ -112,7 +112,7 @@ namespace Waldem
 
 		void OpenScene(GameScene* scene, SceneData* sceneData)
 		{
-			scene->Initialize(&InputManager, CurrentResourceManager);
+			scene->Initialize();
 			
 			for (ISystem* system : DrawSystems)
 			{

@@ -27,6 +27,7 @@
 #include "Waldem/ECS/Systems/DrawSystems/HybridRenderingSystem.h"
 #include "Waldem/ECS/Systems/DrawSystems/PostProcessSystem.h"
 #include "Waldem/ECS/Systems/DrawSystems/SkyRenderingSystem.h"
+#include "Waldem/SceneManagement/SceneManager.h"
 
 namespace Waldem
 {
@@ -34,7 +35,6 @@ namespace Waldem
     {
     private:
         CWindow* Window;
-        GameScene* CurrentScene = nullptr;
         bool BlockUIEvents = true;
         Path CurrentScenePath;
         bool ImportSceneThisFrame = false;
@@ -165,66 +165,16 @@ namespace Waldem
             }
         }
 
-        void CloseScene(GameScene* scene)
-        {                    
-            if(scene)
-            {
-                delete scene;
-                scene = nullptr;
-            }
-        }
-
-        void LoadScene(Path& path)
-        {
-            //create new scene
-            CurrentScene = new GameScene();
-            CurrentScene->Initialize(&InputManager, CurrentResourceManager);
-
-            //deserialize input data into the scene
-            CurrentScene->Deserialize(path);
-        }
-
-        void OpenScene(GameScene* scene)
-        {
-            // Deinitialize();
-            
-            CloseScene(CurrentScene);
-            
-            CurrentScene = scene;
-            CurrentScene->Initialize(&InputManager, CurrentResourceManager);
-
-            // Initialize();
-        }
-
-        void CheckImportSceneThisFrame()
-        {
-            if(ImportSceneThisFrame)
-            {
-                ImportScene(CurrentScenePath);
-                ImportSceneThisFrame = false;
-            }
-        }
-
-        void ImportScene(Path& path)
-        {
-            // Deinitialize();
-            
-            CloseScene(CurrentScene);
-
-            LoadScene(path);
-            // Initialize();
-        }
-
         void ExportScene(Path& path)
         {
-            CurrentScene->Serialize(path);
+            SceneManager::GetCurrentScene()->Serialize(path);
         }
 
         void OnOpenScene()
         {
             if(OpenFile(CurrentScenePath))
             {
-                ImportSceneThisFrame = true;
+                SceneManager::LoadScene(CurrentScenePath);
             }
         }
 

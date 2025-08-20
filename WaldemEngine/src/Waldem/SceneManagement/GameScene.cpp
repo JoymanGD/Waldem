@@ -13,7 +13,7 @@ Waldem::GameScene::~GameScene()
 {
 }
 
-void Waldem::GameScene::Initialize(InputManager* inputManager, ResourceManager* resourceManager)
+void Waldem::GameScene::Initialize()
 {
 }
 
@@ -84,18 +84,6 @@ void Waldem::GameScene::Serialize(Path& outPath)
 
 void Waldem::GameScene::Deserialize(Path& inPath)
 {
-    // Remove existing scene entities
-    {
-        WArray<flecs::entity> to_remove;
-        auto q = ECS::World.query_builder<SceneEntity>().build();
-        q.each([&](flecs::entity e, SceneEntity)
-        {
-            to_remove.Add(e);
-        });
-        for (auto& e : to_remove)
-            e.destruct();
-    }
-
     // Open file
     std::ifstream ifs(inPath.c_str());
     if (!ifs.is_open())

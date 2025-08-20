@@ -9,7 +9,7 @@ namespace Waldem
     {
     public:
         virtual ~GameScene();
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override;
+        void Initialize() override;
         void Draw(float deltaTime) override;
         void Update(float deltaTime) override; 
         void FixedUpdate(float fixedDeltaTime) override;

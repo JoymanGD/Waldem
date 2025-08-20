@@ -78,11 +78,6 @@ namespace Waldem
 		// Debug->Initialize(&sceneData);
 	}
 
-	void Engine::OpenScene(GameScene* scene)
-	{
-		Editor->OpenScene(scene);
-	}
-
 	Engine::~Engine()
 	{
 	}
@@ -146,8 +141,8 @@ namespace Waldem
 
 		while (IsRunning)
 		{
-			Editor->CheckImportSceneThisFrame();
-
+			SceneManager::CheckRequests();
+			
 			Window->Begin();
 			
 			auto currentFrameTime = std::chrono::high_resolution_clock::now();

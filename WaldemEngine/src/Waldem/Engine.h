@@ -28,7 +28,6 @@ namespace Waldem
 		void PushLayer(Layer* layer);
 		void PushOverlay(Layer* overlay);
 		CWindow& GetWindow() { return *Window; }
-		void OpenScene(GameScene* scene);
 
 		//Singleton
 		static Engine* Instance;
