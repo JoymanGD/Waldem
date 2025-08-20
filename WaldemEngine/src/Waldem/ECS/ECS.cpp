@@ -8,6 +8,7 @@
 #include "Components/RigidBody.h"
 #include "Components/Sky.h"
 #include "Components/Transform.h"
+#include "glm/gtc/type_ptr.hpp"
 #include "Waldem/Editor/AssetReference.h"
 
 namespace Waldem
@@ -25,6 +26,61 @@ namespace Waldem
                 .member<float>("x")
                 .member<float>("y")
                 .member<float>("z");
+
+            World.component<Quaternion>("Quaternion")
+                .opaque(
+                    World.component()
+                        .member<float>("x")
+                        .member<float>("y")
+                        .member<float>("z")
+                        .member<float>("w")
+                )
+                .serialize([](const flecs::serializer *s, const Quaternion *q) {
+                    s->member("x"); s->value(q->x);
+                    s->member("y"); s->value(q->y);
+                    s->member("z"); s->value(q->z);
+                    s->member("w"); s->value(q->w);
+                    return 0;
+                })
+                .ensure_member([](Quaternion *dst, const char *member) -> void* {
+                    if (!strcmp(member, "x")) return &dst->x;
+                    if (!strcmp(member, "y")) return &dst->y;
+                    if (!strcmp(member, "z")) return &dst->z;
+                    if (!strcmp(member, "w")) return &dst->w;
+                    return nullptr;
+                });
+
+            World.component<Matrix4>("Matrix4")
+                .opaque(
+                    World.component()
+                        .member<float>("m00").member<float>("m01").member<float>("m02").member<float>("m03")
+                        .member<float>("m10").member<float>("m11").member<float>("m12").member<float>("m13")
+                        .member<float>("m20").member<float>("m21").member<float>("m22").member<float>("m23")
+                        .member<float>("m30").member<float>("m31").member<float>("m32").member<float>("m33")
+                )
+                .serialize([](const flecs::serializer *s, const Matrix4 *m) {
+                    const float *ptr = glm::value_ptr(*m);
+                    for (int i = 0; i < 16; i++) {
+                        char name[8];
+                        sprintf(name, "m%d%d", i/4, i%4);
+                        s->member(name);
+                        s->value(ptr[i]);
+                    }
+                    return 0;
+                })
+                .ensure_member([](Matrix4 *dst, const char *member) -> void* {
+                    float *ptr = glm::value_ptr(*dst);
+                    for (int row = 0; row < 4; row++) {
+                        for (int col = 0; col < 4; col++) {
+                            char name[8];
+                            sprintf(name, "m%d%d", row, col);
+                            if (!strcmp(member, name)) {
+                                return &ptr[row * 4 + col];
+                            }
+                        }
+                    }
+                    return nullptr;
+                });
             
             World.component<WString>()
                 .opaque(flecs::String)
