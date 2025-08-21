@@ -112,18 +112,21 @@ namespace Waldem
 
                 auto componentName = comp.name().c_str();
                 
-                if (ImGui::BeginChild(componentName, ImVec2(0, 0), ImGuiChildFlags_AutoResizeY))
+                if (ImGui::BeginChild(componentName, ImVec2(0, 0), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Border, ImGuiWindowFlags_None))
                 {
-                    ImGui::Text(componentName);
+					ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6, 4));
+					ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8, 6));
+                    ImGui::TextUnformatted(componentName);
+					ImGui::Separator();
 
 					const EcsTypeSerializer* ser = ecs_get(ECS::World, comp, EcsTypeSerializer);
 					auto v_ops = &ser->ops;
 					ecs_meta_type_op_t* ops = ecs_vec_first_t(v_ops, ecs_meta_type_op_t);
 					int op_count = ecs_vec_count(v_ops);
 
-					ImGui::BeginTable("##PropertiesTable", 2, ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_SizingFixedFit);
-					ImGui::TableSetupColumn("Property");
-					ImGui::TableSetupColumn("Value");
+					ImGui::BeginTable("##PropertiesTable", 2, ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_SizingStretchProp);
+					ImGui::TableSetupColumn("Property", ImGuiTableColumnFlags_WidthFixed, 120.0f);
+					ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
 
                 	bool structDrawing = false;
 
@@ -144,7 +147,7 @@ namespace Waldem
 								{
 									ImGui::TableNextRow();
 									ImGui::TableSetColumnIndex(0);
-									ImGui::Text("%s", op->name);
+									ImGui::TextUnformatted(op->name);
 									
 									if (op->op_count - 2 == 3 &&
 										ops[i + 1].kind == EcsOpF32 &&
@@ -325,19 +328,16 @@ namespace Waldem
 								if(!structDrawing)
 								{
 									ImGui::TableNextRow();
-									auto valPtr = (uint8*)ptr + op->offset;
-									ImGui::PushID(ImGui::GetID((void*)valPtr));
-										
 									ImGui::TableSetColumnIndex(0);
-									ImGui::Text("%s", op->name);
+									ImGui::TextUnformatted(op->name);
 									
 									ImGui::TableSetColumnIndex(1);
-									ImGui::SetNextItemWidth(200.f);
-									if(ImGui::DragScalarN("##", ImGuiDataType_Float, (float*)valPtr, op->count, 0.1f, NULL, NULL, "%.3f"))
+									auto valPtr = (uint8*)ptr + op->offset;
+									ImGui::PushID(ImGui::GetID((void*)valPtr));
+									if(ImGui::DragFloat(("##" + std::string(op->name)).c_str(), (float*)valPtr, 0.1f))
 									{
 										entity.modified(id);
 									}
-									// ImGui::InputFloat(op->name, (float*)valPtr, 0.0f, 0.0f, "%.3f");
 									ImGui::PopID();
 								}
 								break;
@@ -425,6 +425,8 @@ namespace Waldem
 						}
 					}
 					ImGui::EndTable();
+
+					ImGui::PopStyleVar(2);
                     
                     // if(componentWidget->IsRemovable() || componentWidget->IsResettable())
                     // {

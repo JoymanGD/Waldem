@@ -23,6 +23,7 @@ namespace Waldem
 
         void OnDraw(float deltaTime) override
         {
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
             if (ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus))
             {
                 auto editorViewport = Renderer::GetEditorViewport();
@@ -48,6 +49,7 @@ namespace Waldem
                 ImGui::Image(renderTarget->GetGPUAddress(), viewportSize);
             }
             ImGui::End();
+            ImGui::PopStyleVar();
         }
     };
 }
