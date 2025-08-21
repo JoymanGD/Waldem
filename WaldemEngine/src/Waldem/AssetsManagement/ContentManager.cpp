@@ -12,7 +12,7 @@ namespace Waldem
         if (extension == ".png" || extension == ".jpg")
         {
             auto texture = ImageImporter.Import(path);
-            assets.Add(&texture->Desc);
+            assets.Add(texture);
         }
         else if (extension == ".gltf" || extension == ".glb" || extension == ".fbx")
         {

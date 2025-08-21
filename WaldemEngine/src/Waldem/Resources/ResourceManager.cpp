@@ -81,21 +81,4 @@ namespace Waldem
 
         return destBuffer;
     }
-
-    Texture2D* ResourceManager::LoadTexture(const Path& path)
-    {
-        Texture2D* texture = ImageImporter.Import(path);
-        auto name = texture->GetName();
-        
-        if(Textures.Contains(name))
-        {
-            Textures[name] = texture;
-        }
-        else
-        {
-            Textures.Add(name, texture);
-        }
-
-        return texture;
-    }
 }

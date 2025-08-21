@@ -198,8 +198,8 @@ namespace Waldem
             ORMRT = resourceManager->GetRenderTarget("ORMRT");
             MeshIDRT = resourceManager->GetRenderTarget("MeshIDRT");
             DepthRT = resourceManager->GetRenderTarget("DepthRT");
+            
             GBufferPixelShader = Renderer::LoadPixelShader("GBuffer");
-
             GBufferPipeline = Renderer::CreateGraphicPipeline("GBufferPipeline",
                                                             GBufferPixelShader,
                                                             { WorldPositionRT->GetFormat(), NormalRT->GetFormat(), ColorRT->GetFormat(), ORMRT->GetFormat(), MeshIDRT->GetFormat() },
@@ -419,27 +419,22 @@ namespace Waldem
                 }
             });
 
-            ECS::World.observer<Camera>("SceneDataUpdateSystem").event(flecs::OnSet).each([&](flecs::entity entity, Camera& camera)
+            ECS::World.observer<Camera, Transform>("SceneDataUpdateSystem").event(flecs::OnSet).each([&](flecs::entity entity, Camera& camera, Transform& transform)
             {
-                auto transform = entity.get<Transform>();
-
-                if(transform)
-                {
-                    auto inverseProj = inverse(camera.ProjectionMatrix);
-                    auto world = transform->Matrix;
-                    GBufferSceneData.ViewMatrix = camera.ViewMatrix;
-                    GBufferSceneData.ProjectionMatrix = camera.ProjectionMatrix;
-                    GBufferSceneData.WorldMatrix = world;
-                    GBufferSceneData.InverseProjectionMatrix = inverseProj;
-                    RayTracingSceneData.InvViewMatrix = world;
-                    RayTracingSceneData.InvProjectionMatrix = inverseProj;
-                    SkyPassSceneData.InverseProjection = inverseProj;
-                    SkyPassSceneData.InverseView = world;
-                    SkyPassSceneData.CameraPosition = Vector4(transform->Position, 1.0f);
-                    
-                    CameraIsDirty = true;
-                    SceneDataDirty = true;
-                }
+                auto inverseProj = inverse(camera.ProjectionMatrix);
+                auto world = transform.Matrix;
+                GBufferSceneData.ViewMatrix = camera.ViewMatrix;
+                GBufferSceneData.ProjectionMatrix = camera.ProjectionMatrix;
+                GBufferSceneData.WorldMatrix = world;
+                GBufferSceneData.InverseProjectionMatrix = inverseProj;
+                RayTracingSceneData.InvViewMatrix = world;
+                RayTracingSceneData.InvProjectionMatrix = inverseProj;
+                SkyPassSceneData.InverseProjection = inverseProj;
+                SkyPassSceneData.InverseView = world;
+                SkyPassSceneData.CameraPosition = Vector4(transform.Position, 1.0f);
+                
+                CameraIsDirty = true;
+                SceneDataDirty = true;
             });
 
             ECS::World.observer<Sky>().event(flecs::OnAdd).yield_existing().each([&](flecs::entity entity, Sky& skybox)
@@ -488,6 +483,11 @@ namespace Waldem
             
             ECS::World.system("GBufferSystem").kind(flecs::OnDraw).run([&](flecs::iter& it)
             {
+                if(IndirectCommands.Num() <= 0)
+                {
+                    return;
+                }
+                
                 if(CameraIsDirty)
                 {
                     Renderer::UploadBuffer(GBufferSceneDataBuffer, &GBufferSceneData, sizeof(GBufferSceneData));
@@ -504,13 +504,6 @@ namespace Waldem
                 Renderer::ResourceBarrier(ORMRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
                 Renderer::ResourceBarrier(MeshIDRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
                 Renderer::ResourceBarrier(DepthRT, ALL_SHADER_RESOURCE, DEPTH_WRITE);
-                
-                Renderer::ClearRenderTarget(WorldPositionRT);
-                Renderer::ClearRenderTarget(NormalRT);
-                Renderer::ClearRenderTarget(ColorRT);
-                Renderer::ClearRenderTarget(ORMRT);
-                Renderer::ClearRenderTarget(MeshIDRT);
-                Renderer::ClearDepthStencil(DepthRT);
 
                 Renderer::SetPipeline(GBufferPipeline);
                 Renderer::PushConstants(&GBufferRootConstants, sizeof(GBufferRootConstants));
