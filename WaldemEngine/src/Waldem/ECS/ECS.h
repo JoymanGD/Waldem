@@ -89,18 +89,15 @@ namespace Waldem
         flecs::entity CreateEntity(const WString& name = "", bool enabled = true);
         flecs::entity CreateSceneEntity(const WString& name, bool enabled = true, bool visibleInHierarchy = true);
         flecs::entity CloneSceneEntity(flecs::entity entity);
-        void RegisterTypes();
-        void RegisterComponents();
 
         class Core
         {
         public:
-            void Initialize()
-            {
-                World = flecs::world();
-                RegisterTypes();
-                RegisterComponents();
-            }
+            void Initialize();
+            
+        private:
+            void RegisterTypes();
+            void RegisterComponents();
         };
     }
 }
