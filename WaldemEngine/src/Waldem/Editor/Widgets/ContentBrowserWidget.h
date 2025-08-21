@@ -37,17 +37,33 @@ namespace Waldem
 
         void RenderFolderTree(const Path& path)
         {
+            ImGui::BeginChild("FolderTreeRegion", ImVec2(0, 0), false, ImGuiWindowFlags_NoScrollbar);
+
             for (const auto& entry : std::filesystem::directory_iterator(path))
             {
                 if (entry.is_directory())
                 {
                     const std::string folderName = entry.path().filename().string() + "/";
 
-                    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
+                    // Base flags
+                    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | 
+                                               ImGuiTreeNodeFlags_OpenOnDoubleClick | 
+                                               ImGuiTreeNodeFlags_SpanAvailWidth;
+
                     if (SelectedFolderTreePath.has_value() && SelectedFolderTreePath.value() == entry.path())
                         flags |= ImGuiTreeNodeFlags_Selected;
 
+                    // Check if this folder has subdirectories
+                    bool hasChildren = false;
+                    for (const auto& sub : std::filesystem::directory_iterator(entry.path()))
+                    {
+                        if (sub.is_directory()) { hasChildren = true; break; }
+                    }
+                    if (!hasChildren)
+                        flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+
                     bool isOpen = ImGui::TreeNodeEx(folderName.c_str(), flags);
+
                     if (ImGui::IsItemClicked())
                     {
                         SelectedFolderTreePath = entry.path();
@@ -69,14 +85,26 @@ namespace Waldem
                         ImGui::EndPopup();
                     }
 
-                    if (isOpen)
+                    if (isOpen && hasChildren)
                     {
                         RenderFolderTree(entry.path()); // Recursive call for subfolders
                         ImGui::TreePop();
                     }
                 }
             }
+
+            // Reset selection if clicking on empty space
+            if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) && 
+                ImGui::IsMouseClicked(ImGuiMouseButton_Left) && 
+                !ImGui::IsAnyItemHovered())
+            {
+                SelectedFolderTreePath.reset();
+                CurrentPath = CONTENT_PATH;
+            }
+
+            ImGui::EndChild();
         }
+
 
         std::string ToLower(const std::string& str)
         {
