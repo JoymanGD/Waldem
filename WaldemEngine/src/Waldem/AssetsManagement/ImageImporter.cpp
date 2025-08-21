@@ -8,15 +8,14 @@
 
 namespace Waldem
 {
-    Texture2D* CImageImporter::Import(const Path& path, bool relative)
+    TextureDesc* CImageImporter::Import(const Path& path, bool relative)
     {
-        Texture2D* result = nullptr;
+        TextureDesc* result = nullptr;
         
         WString fileName = path.filename().string();
         
         int width, height, channels;
         unsigned char *data = stbi_load(path.string().c_str(), &width, &height, &channels, 0);
-        size_t dataSize = width * height * channels;
         if(data)
         {
             unsigned char* rgbaData = data;
@@ -34,13 +33,8 @@ namespace Waldem
                 }
             }
             
-            result = Renderer::CreateTexture(fileName, width, height, TextureFormat::R8G8B8A8_UNORM, rgbaData);
+            result = new TextureDesc(fileName, width, height, TextureFormat::R8G8B8A8_UNORM, rgbaData);
             stbi_image_free(data);
-
-            if(channels == 3)
-            {
-                delete rgbaData;
-            }
         }
         else
         {

@@ -7,6 +7,7 @@
 #include "Components/MeshComponent.h"
 #include "Components/RigidBody.h"
 #include "Components/Sky.h"
+#include "Components/Sprite.h"
 #include "Components/Transform.h"
 #include "glm/gtc/type_ptr.hpp"
 #include "Waldem/Editor/AssetReference.h"
@@ -56,6 +57,12 @@ namespace Waldem
                 .member<float>("x")
                 .member<float>("y")
                 .member<float>("z");
+            
+            World.component<Vector4>("Vector4")
+                .member<float>("x")
+                .member<float>("y")
+                .member<float>("z")
+                .member<float>("w");
 
             World.component<Quaternion>("Quaternion")
                 .opaque(
@@ -154,6 +161,7 @@ namespace Waldem
             MeshComponent::RegisterComponent(World);
             Light::RegisterComponent(World);
             Sky::RegisterComponent(World);
+            Sprite::RegisterComponent(World);
         }
 
         flecs::entity CreateEntity(const WString& name, bool enabled)

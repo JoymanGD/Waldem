@@ -13,7 +13,7 @@ namespace Waldem
     public:
         TextureDesc() : Asset(AssetType::Texture) {}
         TextureDesc(WString name) : Asset(name, AssetType::Texture) {}
-        TextureDesc(WString name, int width, int height, TextureFormat format, uint8* data = nullptr) : Width(width), Height(height), Format(format), Data(std::move(data))
+        TextureDesc(WString name, int width, int height, TextureFormat format, uint8* data = nullptr) : Width(width), Height(height), Format(format), Data(data)
         {
             Type = AssetType::Texture;
             Name = name;

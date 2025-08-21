@@ -148,7 +148,8 @@ namespace Waldem
 									ImGui::TableNextRow();
 									ImGui::TableSetColumnIndex(0);
 									ImGui::TextUnformatted(op->name);
-									
+
+									//Vertex3
 									if (op->op_count - 2 == 3 &&
 										ops[i + 1].kind == EcsOpF32 &&
 										ops[i + 2].kind == EcsOpF32 &&
@@ -159,6 +160,23 @@ namespace Waldem
 										WString name = WString("##") + op->name + WString::FromInt(op->member_index);
 										ImGui::SetNextItemWidth(200);
 										if(ImGui::DragFloat3(name, (float*)((uint8*)ptr + op->offset), 0.1f))
+										{
+											entity.modified(id);
+										}
+									}
+
+									//Vertex4
+									if (op->op_count - 2 == 4 &&
+										ops[i + 1].kind == EcsOpF32 &&
+										ops[i + 2].kind == EcsOpF32 &&
+										ops[i + 3].kind == EcsOpF32 &&
+										ops[i + 4].kind == EcsOpF32)
+									{
+										ImGui::TableSetColumnIndex(1);
+										structDrawing = true;
+										WString name = WString("##") + op->name + WString::FromInt(op->member_index);
+										ImGui::SetNextItemWidth(200);
+										if(ImGui::DragFloat4(name, (float*)((uint8*)ptr + op->offset), 0.1f))
 										{
 											entity.modified(id);
 										}
