@@ -15,7 +15,37 @@ namespace Waldem
 {
     namespace ECS
     {
-        void RegisterTypes()
+        void Core::Initialize()
+        {
+            World = flecs::world();
+            RegisterTypes();
+            RegisterComponents();
+
+            World.observer<SceneEntity>().event(flecs::OnRemove).each([&](SceneEntity& sceneEntity)
+            {
+                HierarchySlots.Free((int)sceneEntity.HierarchySlot);
+            });
+            
+            World.observer<SceneEntity>().event(flecs::OnSet).each([&](SceneEntity& sceneEntity)
+            {
+                bool slotIsValid = sceneEntity.HierarchySlot >= 0.f;
+                bool slotIsAllocated = slotIsValid && HierarchySlots.IsAllocated((int)sceneEntity.HierarchySlot);
+
+                if(!slotIsAllocated)
+                {
+                    if(slotIsValid)
+                    {
+                        HierarchySlots.MarkAsAllocated((int)sceneEntity.HierarchySlot);
+                    }
+                    else
+                    {
+                        sceneEntity.HierarchySlot = (float)HierarchySlots.Allocate();
+                    }
+                }
+            });
+        }
+        
+        void Core::RegisterTypes()
         {
             World.component<SceneEntity>("SceneEntity")
                 .member<uint64>("ParentId")
@@ -116,7 +146,7 @@ namespace Waldem
                 });
         }
 
-        void RegisterComponents()
+        void Core::RegisterComponents()
         {
             Transform::RegisterComponent(World);
             RigidBody::RegisterComponent(World);
@@ -144,10 +174,11 @@ namespace Waldem
 
         flecs::entity CreateSceneEntity(const WString& name, bool enabled, bool visibleInHierarchy)
         {
-            auto count = HierarchySlots.Allocate();
+            auto slot = HierarchySlots.Allocate();
+            
             flecs::entity entity = World.entity().set<SceneEntity>({
                 .ParentId = 0,
-                .HierarchySlot = (float)count,
+                .HierarchySlot = (float)slot,
                 .VisibleInHierarchy = visibleInHierarchy,
             }).add<Transform>();
 

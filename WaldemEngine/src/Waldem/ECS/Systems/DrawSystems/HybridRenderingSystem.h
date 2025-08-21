@@ -442,7 +442,7 @@ namespace Waldem
                 }
             });
 
-            ECS::World.observer<Sky>().event(flecs::OnAdd).yield_existing().each([&](Sky& skybox)
+            ECS::World.observer<Sky>().event(flecs::OnAdd).yield_existing().each([&](flecs::entity entity, Sky& skybox)
             {
                 SkyPassSceneData.SkyZenithColor = Vector4(skybox.SkyZenithColor, 1.0f);
                 SkyPassSceneData.SkyHorizonColor = Vector4(skybox.SkyHorizonColor, 1.0f);

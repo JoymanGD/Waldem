@@ -20,6 +20,20 @@ namespace Waldem
             return NextIndex++;
         }
 
+        bool IsAllocated(int index) const
+        {
+            return index < NextIndex && FreeIndices.find(index) == FreeIndices.end();
+        }
+
+        void MarkAsAllocated(int index)
+        {
+            if (index >= NextIndex)
+            {
+                NextIndex = index + 1;
+            }
+            FreeIndices.erase(index);
+        }
+
         void Free(int index)
         {
             FreeIndices.insert(index);
