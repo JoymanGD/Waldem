@@ -78,6 +78,151 @@ namespace Waldem
             }
         }
 
+        std::string ToLower(const std::string& str)
+        {
+            std::string result = str;
+            std::transform(result.begin(), result.end(), result.begin(), [](unsigned char c){ return std::tolower(c); });
+            return result;
+        }
+
+        void RenderEntry(const std::filesystem::directory_entry& entry)
+        {
+            const std::string relativePath = relative(entry.path(), CONTENT_PATH).string();
+            if (strlen(SearchBuffer) > 0)
+            {
+                std::string searchLower = ToLower(SearchBuffer);
+                std::string pathLower   = ToLower(relativePath);
+
+                if (pathLower.find(searchLower) == std::string::npos)
+                {
+                    return;
+                }
+            }
+
+            WString extension = entry.path().extension().string();
+
+            bool isFolder = entry.is_directory();
+            
+            if(!IsSupportedExtension(extension) && !isFolder)
+            {
+                return;
+            }
+
+            ImGui::BeginGroup();
+
+            std::string id = "##Icon_" + entry.path().string();
+            ImVec2 size(CellSize, CellSize);
+            ImVec2 cursor = ImGui::GetCursorScreenPos();
+            ImVec2 rectMin = cursor;
+            ImVec2 rectMax = ImVec2(cursor.x + size.x, cursor.y + size.y);
+
+            ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+            // Background
+            drawList->AddRectFilled(rectMin, rectMax, IM_COL32(50, 50, 50, 255), 6.0f);
+
+            // Click/hover handling
+            bool clicked = ImGui::InvisibleButton(id.c_str(), size);
+
+            if (entry.is_directory())
+            {
+                // Folder rectangle (yellow)
+                ImVec2 folderMin(rectMin.x + 8, rectMin.y + 12);
+                ImVec2 folderMax(rectMax.x - 8, rectMax.y - 8);
+
+                drawList->AddRectFilled(folderMin, folderMax, IM_COL32(220, 180, 0, 255), 4.0f);
+                drawList->AddRect(folderMin, folderMax, IM_COL32(255, 210, 50, 255), 4.0f);
+            }
+            else
+            {
+                // File rectangle (blue)
+                ImVec2 fileMin(rectMin.x + 12, rectMin.y + 8);
+                ImVec2 fileMax(rectMax.x - 12, rectMax.y - 8);
+
+                drawList->AddRectFilled(fileMin, fileMax, IM_COL32(80, 150, 255, 255), 4.0f);
+                drawList->AddRect(fileMin, fileMax, IM_COL32(180, 220, 255, 255), 4.0f);
+            }
+
+            if (clicked) {
+                // handle click
+            }
+
+            // --- Selection on single click ---
+            if (ImGui::IsItemClicked())
+            {
+                SelectedAssetListPath = entry.path(); // Works for both files and folders
+            }
+
+            // --- Highlight selected item ---
+            if (SelectedAssetListPath.has_value() && SelectedAssetListPath.value() == entry.path())
+            {
+                ImDrawList* drawList = ImGui::GetWindowDrawList();
+                drawList->AddRect(
+                    ImGui::GetItemRectMin(), ImGui::GetItemRectMax(),
+                    IM_COL32(255, 255, 0, 255), 4.0f // Yellow border
+                );
+            }
+
+            // --- Double-click to enter folder or open file ---
+            if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+            {
+                if (isFolder)
+                {
+                    CurrentPath = entry.path();
+                }
+                else
+                {
+                    if(extension == ".scene")
+                    {
+                        auto entryPath = entry.path();
+                        SceneManager::LoadScene(entryPath);
+                    }
+                }
+            }
+
+            // If it's a folder and being hovered, remember it
+            if (isFolder && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup))
+            {
+                HoveredDropTargetFolder = entry.path();
+            }
+            
+            const std::string itemName = entry.path().filename().string();
+            
+            // Drag and drop
+            if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+            {
+                std::string fullPath = std::filesystem::relative(entry.path(), CONTENT_PATH).string();
+                
+                ImGui::SetDragDropPayload(ExtensionToAssetString(extension), fullPath.c_str(), fullPath.size() + 1);
+                ImGui::Text("%s", itemName.c_str());
+                ImGui::EndDragDropSource();
+            }
+
+            // Context menu
+            if (ImGui::BeginPopupContextItem())
+            {
+                if (ImGui::MenuItem("Delete"))
+                    std::filesystem::remove_all(entry.path());
+                ImGui::EndPopup();
+            }
+
+            if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+            {
+                if (isFolder)
+                    CurrentPath = entry.path();
+                else
+                {
+                    // Handle asset open
+                }
+            }
+
+            ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + CellSize);
+            ImGui::TextWrapped("%s", itemName.c_str());
+            ImGui::PopTextWrapPos();
+
+            ImGui::EndGroup();
+        }
+
         void RenderAssetsList()
         {            
             if (CurrentPath != CONTENT_PATH)
@@ -143,110 +288,29 @@ namespace Waldem
 
             int itemIndex = 0;
 
-            for (const auto& entry : std::filesystem::directory_iterator(CurrentPath))
+            if (strlen(SearchBuffer) == 0)
             {
-                WString extension = entry.path().extension().string();
-
-                bool isFolder = entry.is_directory();
-                
-                if(!IsSupportedExtension(extension) && !isFolder)
+                for (const auto& entry : std::filesystem::directory_iterator(CurrentPath))
                 {
-                    continue;
-                }
-                
-                const std::string itemName = entry.path().filename().string();
-                if (strlen(SearchBuffer) > 0 && itemName.find(SearchBuffer) == std::string::npos)
-                {
-                    continue;
-                }
-
-                ImGui::BeginGroup();
-
-                std::string id = "##Icon_" + entry.path().string();
-
-                // Simulate icon box
-                if (ImGui::Button(id.c_str(), ImVec2(CellSize, CellSize)))
-                {
+                    RenderEntry(entry);
                     
+                    // Layout in grid
+                    itemIndex++;
+                    if (itemIndex % columnCount != 0)
+                        ImGui::SameLine();
                 }
-
-                // --- Selection on single click ---
-                if (ImGui::IsItemClicked())
+            }
+            else
+            {
+                for (const auto& entry : std::filesystem::recursive_directory_iterator(CurrentPath))
                 {
-                    SelectedAssetListPath = entry.path(); // Works for both files and folders
-                }
-
-                // --- Highlight selected item ---
-                if (SelectedAssetListPath.has_value() && SelectedAssetListPath.value() == entry.path())
-                {
-                    ImDrawList* drawList = ImGui::GetWindowDrawList();
-                    drawList->AddRect(
-                        ImGui::GetItemRectMin(), ImGui::GetItemRectMax(),
-                        IM_COL32(255, 255, 0, 255), 4.0f // Yellow border
-                    );
-                }
-
-                // --- Double-click to enter folder or open file ---
-                if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-                {
-                    if (isFolder)
-                    {
-                        CurrentPath = entry.path();
-                    }
-                    else
-                    {
-                        if(extension == ".scene")
-                        {
-                            auto entryPath = entry.path();
-                            SceneManager::LoadScene(entryPath);
-                        }
-                    }
-                }
-
-                // If it's a folder and being hovered, remember it
-                if (isFolder && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup))
-                {
-                    HoveredDropTargetFolder = entry.path();
-                }
-                
-                // Drag and drop
-                if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
-                {
-                    std::string fullPath = std::filesystem::relative(entry.path(), CONTENT_PATH).string();
+                    RenderEntry(entry);
                     
-                    ImGui::SetDragDropPayload(ExtensionToAssetString(extension), fullPath.c_str(), fullPath.size() + 1);
-                    ImGui::Text("%s", itemName.c_str());
-                    ImGui::EndDragDropSource();
+                    // Layout in grid
+                    itemIndex++;
+                    if (itemIndex % columnCount != 0)
+                        ImGui::SameLine();
                 }
-
-                // Context menu
-                if (ImGui::BeginPopupContextItem())
-                {
-                    if (ImGui::MenuItem("Delete"))
-                        std::filesystem::remove_all(entry.path());
-                    ImGui::EndPopup();
-                }
-
-                if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-                {
-                    if (isFolder)
-                        CurrentPath = entry.path();
-                    else
-                    {
-                        // Handle asset open
-                    }
-                }
-
-                ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + CellSize);
-                ImGui::TextWrapped("%s", itemName.c_str());
-                ImGui::PopTextWrapPos();
-
-                ImGui::EndGroup();
-
-                // Layout in grid
-                itemIndex++;
-                if (itemIndex % columnCount != 0)
-                    ImGui::SameLine();
             }
 
             if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) &&

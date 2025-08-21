@@ -55,11 +55,12 @@ namespace Waldem
                 ImGuiWindowFlags_NoNavFocus |
                 ImGuiWindowFlags_NoBackground;
 
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
             ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
             ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
     
             ImGui::Begin("MainDockspaceHost", nullptr, host_window_flags); // Host window
-            ImGui::PopStyleVar(2);
+            ImGui::PopStyleVar(3);
 
             ImGuiID dockspace_id = ImGui::GetID("MainDockspace");
             ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
