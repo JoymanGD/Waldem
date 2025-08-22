@@ -26,6 +26,7 @@ Renderer:
 * Shadow mapping
 * Materials
 * FFT Ocean simulation
+* Sprite rendering
 
 Audio:
 * Audio listeners and sources
