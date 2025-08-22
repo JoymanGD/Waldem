@@ -13,6 +13,7 @@ Architecture:
 Editor:
 * Entities list widget
 * Entity details widget
+* Content browser widget
 * ImGuizmo
 * Mesh selection using MeshIdsRenderTarget
 
