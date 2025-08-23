@@ -101,14 +101,14 @@ namespace Waldem
         //Draw mesh
         if(mesh->VertexBuffer)
         {
-            D3D12_VERTEX_BUFFER_VIEW vertexBufferView { mesh->VertexBuffer->GetGPUAddress(), mesh->VertexBuffer->GetCapacity(), mesh->VertexBuffer->GetStride() };
+            D3D12_VERTEX_BUFFER_VIEW vertexBufferView { mesh->VertexBuffer->GetGPUAddress(), (uint)mesh->VertexBuffer->GetCapacity(), mesh->VertexBuffer->GetStride() };
             
             CommandList->IASetVertexBuffers(0, 1, &vertexBufferView);
         }
 
         if(mesh->IndexBuffer)
         {
-            D3D12_INDEX_BUFFER_VIEW indexBufferView { mesh->IndexBuffer->GetGPUAddress(), mesh->IndexBuffer->GetCapacity(), DXGI_FORMAT_R32_UINT };
+            D3D12_INDEX_BUFFER_VIEW indexBufferView { mesh->IndexBuffer->GetGPUAddress(), (uint)mesh->IndexBuffer->GetCapacity(), DXGI_FORMAT_R32_UINT };
             
             CommandList->IASetIndexBuffer(&indexBufferView);
             CommandList->DrawIndexedInstanced(mesh->IndexBuffer->GetCount(), 1, 0, 0, 0);
@@ -117,6 +117,11 @@ namespace Waldem
         {
             CommandList->DrawInstanced(mesh->VertexBuffer->GetCount(), 1, 0, 0);
         }
+    }
+
+    void DX12CommandList::DrawIndexedInstanced(uint indexCount, uint instanceCount, uint startIndexLocation, int baseVertexLocation, uint startInstanceLocation)
+    {
+        CommandList->DrawIndexedInstanced(indexCount, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation);
     }
 
     void DX12CommandList::Dispatch(Point3 groupCount)

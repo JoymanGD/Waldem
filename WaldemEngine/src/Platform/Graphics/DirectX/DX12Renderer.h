@@ -29,6 +29,7 @@ namespace Waldem
         void DeinitializeUI() override;
         void ResizeEditorViewport(Vector2 size);
         void Draw(CMesh* mesh) override;
+        void DrawIndexedInstanced(uint indicesCount, uint instancesCount, uint startIndex, int baseVertex, uint startInstance) override;
         void DrawIndirect(uint numCommands, Buffer* indirectBuffer) override;
         void SetIndexBuffer(Buffer* indexBuffer) override;
         void SetVertexBuffers(Buffer* vertexBuffer, uint32 numBuffers, uint32 startIndex = 0) override;

@@ -81,6 +81,7 @@ namespace Waldem
         virtual void Destroy(GraphicResource* resource) = 0;
         virtual void DestroyImmediate(GraphicResource* resource) = 0;
         virtual void* GetPlatformResource(GraphicResource* resource) = 0;
+        virtual void DrawIndexedInstanced(uint uint, Waldem::uint uint32, Waldem::uint start_index_location, int base_vertex_location, Waldem::uint start_instance_location) = 0;
     };
 
     class Renderer
@@ -96,6 +97,7 @@ namespace Waldem
 
         static void Draw(CMesh* mesh);
         static void DrawIndirect(uint numCommands, Buffer* indirectBuffer);
+        static void DrawIndexedInstanced(uint indexCount, uint instanceCount, uint startIndexLocation, int baseVertexLocation, uint startInstanceLocation);
         static void SetIndexBuffer(Buffer* indexBuffer);
         static void SetVertexBuffers(Buffer* vertexBuffer, uint32 numBuffers, uint32 startIndex = 0);
         static void Signal();

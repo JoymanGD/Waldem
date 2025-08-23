@@ -88,6 +88,42 @@ namespace Waldem
             Renderer::UploadBuffer(InternalBuffer, data, size, offset);
         }
 
+        void UpdateOrAdd(void* data, uint size, uint offset)
+        {
+            uint requiredSize = offset + size;
+
+            if (requiredSize > Capacity)
+            {
+                // Grow capacity like AddData does
+                Capacity = std::max(Capacity * 2, requiredSize);
+
+                auto oldBuffer = InternalBuffer;
+                InternalBuffer = Renderer::CreateBuffer(InternalBuffer->GetName(),
+                                                        InternalBuffer->GetType(),
+                                                        Capacity,
+                                                        Stride);
+
+                if(Size > 0)
+                {
+                    Renderer::CopyBufferRegion(InternalBuffer, 0, oldBuffer, 0, Size);
+                }
+
+                Renderer::Destroy(oldBuffer);
+                delete oldBuffer;
+            }
+
+            if (data)
+            {
+                Renderer::UploadBuffer(InternalBuffer, data, size, offset);
+            }
+
+            // Extend logical size if we wrote beyond current Size
+            if (requiredSize > Size)
+            {
+                Size = requiredSize;
+            }
+        }
+
         uint64 GetGPUAddress() const { return InternalBuffer->GetGPUAddress(); }
         uint GetIndex(ResourceHeapType heapType) { return InternalBuffer->GetIndex(heapType); }
         

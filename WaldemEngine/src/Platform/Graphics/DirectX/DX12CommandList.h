@@ -17,6 +17,7 @@ namespace Waldem
         void EndInternal();
 
         void Draw(CMesh* mesh);
+        void DrawIndexedInstanced(uint indexCount, uint instanceCount, uint startIndexLocation, int baseVertexLocation, uint startInstanceLocation);
         void Dispatch(Point3 groupCount);
         void TraceRays(Pipeline* rayTracingPipeline, Point3 numRays);
         void Clear(D3D12_CPU_DESCRIPTOR_HANDLE renderTarget, D3D12_CPU_DESCRIPTOR_HANDLE depthStencil, Vector3 clearColor);
