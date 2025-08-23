@@ -256,17 +256,18 @@ namespace Waldem
             
             ECS::World.observer<MeshComponent, Transform>().event(flecs::OnAdd).each([&](flecs::entity entity, MeshComponent& meshComponent, Transform& transform)
             {
-                auto drawId = IdManager::AddId(entity, BackFaceCullingDrawIdType);
+                auto globalDrawId = IdManager::AddId(entity, GlobalDrawIdType);
+                auto bfcDrawId = IdManager::AddId(entity, BackFaceCullingDrawIdType);
                 
-                if(drawId >= BFCIndirectCommands.Num())
+                if(bfcDrawId >= BFCIndirectCommands.Num())
                 {
                     BFCIndirectCommands.Add(IndirectCommand());
-                    BFCIndirectBuffer.AddData(nullptr, sizeof(IndirectCommand));
+                    BFCIndirectBuffer.UpdateOrAdd(nullptr, sizeof(IndirectCommand), bfcDrawId * sizeof(IndirectCommand));
                 }
                 
-                WorldTransformsBuffer.AddData(&transform.Matrix, sizeof(Matrix4));
+                WorldTransformsBuffer.UpdateOrAdd(&transform.Matrix, sizeof(Matrix4), globalDrawId * sizeof(Matrix4));
 
-                if(drawId >= MaterialAttributes.Num())
+                if(globalDrawId >= MaterialAttributes.Num())
                 {
                     MaterialAttributes.Add(MaterialShaderAttribute());
                     MaterialAttributesBuffer.AddData(nullptr, sizeof(MaterialShaderAttribute));
@@ -277,121 +278,134 @@ namespace Waldem
             
             ECS::World.observer<MeshComponent>().event(flecs::OnSet).each([&](flecs::entity entity, MeshComponent& meshComponent)
             {
-                int drawId;
+                int globalDrawId;
 
-                if(IdManager::GetId(entity, BackFaceCullingDrawIdType, drawId))
+                if(IdManager::GetId(entity, GlobalDrawIdType, globalDrawId))
                 {
-                    bool meshReferenceIsEmpty = meshComponent.MeshRef.Reference.empty() || meshComponent.MeshRef.Reference == "Empty";
-                    
-                    if(meshReferenceIsEmpty && !meshComponent.MeshRef.IsValid())
+                    int bfcDrawId;
+
+                    if(IdManager::GetId(entity, BackFaceCullingDrawIdType, bfcDrawId))
                     {
-                        return;
-                    }
-
-                    if(!meshReferenceIsEmpty && !meshComponent.MeshRef.IsValid())
-                    {
-                        meshComponent.MeshRef.LoadAsset(contentManager);
-                    }
-                    
-                    if(meshComponent.MeshRef.IsValid())
-                    {
-                        auto& command = BFCIndirectCommands[drawId];
-                        command.DrawId = drawId;
-                        command.DrawIndexed = {
-                            (uint)meshComponent.MeshRef.Mesh->IndexData.Num(),
-                            1,
-                            (uint)IndicesCount,
-                            (int)VerticesCount,
-                            0
-                        };
-
-                        BFCIndirectBuffer.UpdateData(&command, sizeof(IndirectCommand), sizeof(IndirectCommand) * drawId);
-
-                        VertexBuffer.AddData(meshComponent.MeshRef.Mesh->VertexData.GetData(), meshComponent.MeshRef.Mesh->VertexData.GetSize());
-                        IndexBuffer.AddData(meshComponent.MeshRef.Mesh->IndexData.GetData(), meshComponent.MeshRef.Mesh->IndexData.GetSize());
-
-                        VerticesCount += meshComponent.MeshRef.Mesh->VertexData.Num();
-                        IndicesCount += meshComponent.MeshRef.Mesh->IndexData.Num();
-
-                        auto& materialAttribute = MaterialAttributes[drawId];
-
-                        materialAttribute.Albedo = meshComponent.MeshRef.Mesh->CurrentMaterial->Albedo;
-                        materialAttribute.Metallic = meshComponent.MeshRef.Mesh->CurrentMaterial->Metallic;
-                        materialAttribute.Roughness = meshComponent.MeshRef.Mesh->CurrentMaterial->Roughness;
+                        bool meshReferenceIsEmpty = meshComponent.MeshRef.Reference.empty() || meshComponent.MeshRef.Reference == "Empty";
                         
-                        if(meshComponent.MeshRef.Mesh->CurrentMaterial->HasDiffuseTexture())
+                        if(meshReferenceIsEmpty && !meshComponent.MeshRef.IsValid())
                         {
-                            materialAttribute.DiffuseTextureID = meshComponent.MeshRef.Mesh->CurrentMaterial->GetDiffuseTexture()->GetIndex(SRV_UAV_CBV);
-                            
-                            if(meshComponent.MeshRef.Mesh->CurrentMaterial->HasNormalTexture())
-                                materialAttribute.NormalTextureID = meshComponent.MeshRef.Mesh->CurrentMaterial->GetNormalTexture()->GetIndex(SRV_UAV_CBV);
-                            if(meshComponent.MeshRef.Mesh->CurrentMaterial->HasORMTexture())
-                                materialAttribute.ORMTextureID = meshComponent.MeshRef.Mesh->CurrentMaterial->GetORMTexture()->GetIndex(SRV_UAV_CBV);
+                            return;
                         }
 
-                        MaterialAttributesBuffer.UpdateData(&materialAttribute, sizeof(MaterialShaderAttribute), sizeof(MaterialShaderAttribute) * drawId);
+                        if(!meshReferenceIsEmpty && !meshComponent.MeshRef.IsValid())
+                        {
+                            meshComponent.MeshRef.LoadAsset(contentManager);
+                        }
+                        
+                        if(meshComponent.MeshRef.IsValid())
+                        {
+                            auto& command = BFCIndirectCommands[bfcDrawId];
+                            command.DrawId = globalDrawId;
+                            command.DrawIndexed = {
+                                (uint)meshComponent.MeshRef.Mesh->IndexData.Num(),
+                                1,
+                                (uint)IndicesCount,
+                                (int)VerticesCount,
+                                0
+                            };
+
+                            BFCIndirectBuffer.UpdateData(&command, sizeof(IndirectCommand), sizeof(IndirectCommand) * bfcDrawId);
+
+                            VertexBuffer.AddData(meshComponent.MeshRef.Mesh->VertexData.GetData(), meshComponent.MeshRef.Mesh->VertexData.GetSize());
+                            IndexBuffer.AddData(meshComponent.MeshRef.Mesh->IndexData.GetData(), meshComponent.MeshRef.Mesh->IndexData.GetSize());
+
+                            VerticesCount += meshComponent.MeshRef.Mesh->VertexData.Num();
+                            IndicesCount += meshComponent.MeshRef.Mesh->IndexData.Num();
+
+                            auto& materialAttribute = MaterialAttributes[globalDrawId];
+
+                            materialAttribute.Albedo = meshComponent.MeshRef.Mesh->CurrentMaterial->Albedo;
+                            materialAttribute.Metallic = meshComponent.MeshRef.Mesh->CurrentMaterial->Metallic;
+                            materialAttribute.Roughness = meshComponent.MeshRef.Mesh->CurrentMaterial->Roughness;
+                            
+                            if(meshComponent.MeshRef.Mesh->CurrentMaterial->HasDiffuseTexture())
+                            {
+                                materialAttribute.DiffuseTextureID = meshComponent.MeshRef.Mesh->CurrentMaterial->GetDiffuseTexture()->GetIndex(SRV_UAV_CBV);
+                                
+                                if(meshComponent.MeshRef.Mesh->CurrentMaterial->HasNormalTexture())
+                                    materialAttribute.NormalTextureID = meshComponent.MeshRef.Mesh->CurrentMaterial->GetNormalTexture()->GetIndex(SRV_UAV_CBV);
+                                if(meshComponent.MeshRef.Mesh->CurrentMaterial->HasORMTexture())
+                                    materialAttribute.ORMTextureID = meshComponent.MeshRef.Mesh->CurrentMaterial->GetORMTexture()->GetIndex(SRV_UAV_CBV);
+                            }
+
+                            MaterialAttributesBuffer.UpdateData(&materialAttribute, sizeof(MaterialShaderAttribute), globalDrawId * sizeof(MaterialShaderAttribute));
+                        }
+
+                        auto transform = entity.get<Transform>();
+
+                        TLAS.SetData(globalDrawId, meshComponent.MeshRef.Mesh->Name, meshComponent.MeshRef.Mesh->VertexBuffer, meshComponent.MeshRef.Mesh->IndexBuffer, *transform);
                     }
-
-                    auto transform = entity.get<Transform>();
-
-                    TLAS.SetData(drawId, meshComponent.MeshRef.Mesh->Name, meshComponent.MeshRef.Mesh->VertexBuffer, meshComponent.MeshRef.Mesh->IndexBuffer, *transform);
                 }
             });
             
             ECS::World.observer<MeshComponent>().event(flecs::OnRemove).each([&](flecs::entity entity, MeshComponent& meshComponent)
             {
-                int drawId;
+                int globalDrawId;
 
-                if(IdManager::GetId(entity, BackFaceCullingDrawIdType, drawId))
+                if(IdManager::GetId(entity, GlobalDrawIdType, globalDrawId))
                 {
-                    IndirectCommand& command = BFCIndirectCommands[drawId];
-
-                    if(meshComponent.MeshRef.IsValid())
+                    int bfcDrawId;
+                    
+                    if(IdManager::GetId(entity, BackFaceCullingDrawIdType, bfcDrawId))
                     {
-                        VertexBuffer.RemoveData(meshComponent.MeshRef.Mesh->VertexData.GetSize(), command.DrawIndexed.BaseVertexLocation * sizeof(Vertex));
-                        IndexBuffer.RemoveData(meshComponent.MeshRef.Mesh->IndexData.GetSize(), command.DrawIndexed.StartIndexLocation * sizeof(uint));
+                        IndirectCommand& command = BFCIndirectCommands[bfcDrawId];
 
-                        VerticesCount -= meshComponent.MeshRef.Mesh->VertexData.Num();
-                        IndicesCount -= meshComponent.MeshRef.Mesh->IndexData.Num();
+                        if(meshComponent.MeshRef.IsValid())
+                        {
+                            VertexBuffer.RemoveData(meshComponent.MeshRef.Mesh->VertexData.GetSize(), command.DrawIndexed.BaseVertexLocation * sizeof(Vertex));
+                            IndexBuffer.RemoveData(meshComponent.MeshRef.Mesh->IndexData.GetSize(), command.DrawIndexed.StartIndexLocation * sizeof(uint));
+
+                            VerticesCount -= meshComponent.MeshRef.Mesh->VertexData.Num();
+                            IndicesCount -= meshComponent.MeshRef.Mesh->IndexData.Num();
+                        }
+                        
+                        BFCIndirectBuffer.RemoveData(sizeof(IndirectCommand), bfcDrawId * sizeof(IndirectCommand));
+                        
+                        command.DrawId = -1;
+                        command.DrawIndexed = { 0, 0, 0, 0, 0 };
+
+                        MaterialAttributesBuffer.RemoveData(sizeof(MaterialShaderAttribute), globalDrawId * sizeof(MaterialShaderAttribute));
+
+                        TLAS.RemoveData(globalDrawId);
+                        
+                        auto transform = entity.get<Transform>();
+                        
+                        if(transform)
+                        {
+                            WorldTransformsBuffer.RemoveData(sizeof(Matrix4), globalDrawId * sizeof(Matrix4));
+                        }
+
+                        IdManager::RemoveId(entity, BackFaceCullingDrawIdType);
                     }
-                    
-                    BFCIndirectBuffer.RemoveData(sizeof(IndirectCommand), drawId * sizeof(IndirectCommand));
-                    
-                    command.DrawId = -1;
-                    command.DrawIndexed = { 0, 0, 0, 0, 0 };
 
-                    MaterialAttributesBuffer.RemoveData(sizeof(MaterialShaderAttribute), drawId * sizeof(MaterialShaderAttribute));
-
-                    TLAS.RemoveData(drawId);
-                    
-                    auto transform = entity.get<Transform>();
-                    
-                    if(transform)
-                    {
-                        WorldTransformsBuffer.RemoveData(sizeof(Matrix4), drawId * sizeof(Matrix4));
-                    }
-
-                    IdManager::RemoveId(entity, BackFaceCullingDrawIdType);
+                    IdManager::RemoveId(entity, GlobalDrawIdType);
                 }
             });
 
             // OnAdd: allocate slot, write transform, setup indirection
             ECS::World.observer<Sprite, Transform>().event(flecs::OnAdd).each([&](flecs::entity entity, Sprite& sprite, Transform& transform)
             {
-                auto drawId = IdManager::AddId(entity, NoCullingDrawIdType);
+                auto globalDrawId = IdManager::AddId(entity, GlobalDrawIdType);
+                auto ncDrawId = IdManager::AddId(entity, NoCullingDrawIdType);
                 
-                if(drawId >= NCIndirectCommands.Num())
+                if(ncDrawId >= NCIndirectCommands.Num())
                 {
                     NCIndirectCommands.Add(IndirectCommand());
-                    NCIndirectBuffer.AddData(nullptr, sizeof(IndirectCommand));
+                    NCIndirectBuffer.UpdateOrAdd(nullptr, sizeof(IndirectCommand), ncDrawId * sizeof(IndirectCommand));
                 }
                 
-                WorldTransformsBuffer.AddData(&transform.Matrix, sizeof(Matrix4));
+                WorldTransformsBuffer.UpdateOrAdd(&transform.Matrix, sizeof(Matrix4), globalDrawId * sizeof(Matrix4));
 
-                if(drawId >= MaterialAttributes.Num())
+                if(globalDrawId >= MaterialAttributes.Num())
                 {
                     MaterialAttributes.Add(MaterialShaderAttribute());
-                    MaterialAttributesBuffer.AddData(nullptr, sizeof(MaterialShaderAttribute));
+                    MaterialAttributesBuffer.UpdateOrAdd(nullptr, sizeof(MaterialShaderAttribute), globalDrawId * sizeof(MaterialShaderAttribute));
                 }
 
                 TLAS.AddEmptyData();
@@ -400,112 +414,116 @@ namespace Waldem
             // OnSet: when sprite data (like texture) becomes valid
             ECS::World.observer<Sprite>().event(flecs::OnSet).each([&](flecs::entity entity, Sprite& sprite)
             {
-                int drawId;
+                int globalDrawId;
 
-                if(IdManager::GetId(entity, NoCullingDrawIdType, drawId))
+                if(IdManager::GetId(entity, GlobalDrawIdType, globalDrawId))
                 {
-                    bool textureReferenceIsEmpty = sprite.TextureRef.Reference.empty() || sprite.TextureRef.Reference == "Empty";
+                    int ncDrawId;
                     
-                    if(textureReferenceIsEmpty && !sprite.TextureRef.IsValid())
+                    if(IdManager::GetId(entity, NoCullingDrawIdType, ncDrawId))
                     {
-                        return;
-                    }
-
-                    if(!textureReferenceIsEmpty && !sprite.TextureRef.IsValid())
-                    {
-                        sprite.TextureRef.LoadAsset(contentManager);
-                    }
-                    
-                    if(sprite.TextureRef.IsValid())
-                    {
-                        auto& command = NCIndirectCommands[drawId];
-                        command.DrawId = drawId;
-                        command.DrawIndexed = {
-                            (uint)SpriteIndices.Num(),
-                            1,
-                            (uint)IndicesCount,
-                            (int)VerticesCount,
-                            0
-                        };
-
-                        NCIndirectBuffer.UpdateData(&command, sizeof(IndirectCommand), sizeof(IndirectCommand) * drawId);
-
-                        VertexBuffer.AddData(SpriteVertices.GetData(), SpriteVertices.GetSize());
-                        IndexBuffer.AddData(SpriteIndices.GetData(), SpriteIndices.GetSize());
-
-                        VerticesCount += SpriteVertices.Num();
-                        IndicesCount += SpriteIndices.Num();
+                        bool textureReferenceIsEmpty = sprite.TextureRef.Reference.empty() || sprite.TextureRef.Reference == "Empty";
                         
-                        auto& materialAttribute = MaterialAttributes[drawId];
+                        if(textureReferenceIsEmpty && !sprite.TextureRef.IsValid())
+                        {
+                            return;
+                        }
 
-                        materialAttribute.Albedo = sprite.Color;
-                        materialAttribute.DiffuseTextureID = sprite.TextureRef.Texture->GetIndex(SRV_UAV_CBV);
+                        if(!textureReferenceIsEmpty && !sprite.TextureRef.IsValid())
+                        {
+                            sprite.TextureRef.LoadAsset(contentManager);
+                        }
+                        
+                        if(sprite.TextureRef.IsValid())
+                        {
+                            auto& command = NCIndirectCommands[ncDrawId];
+                            command.DrawId = globalDrawId;
+                            command.DrawIndexed = {
+                                (uint)SpriteIndices.Num(),
+                                1,
+                                (uint)IndicesCount,
+                                (int)VerticesCount,
+                                0
+                            };
 
-                        MaterialAttributesBuffer.UpdateData(&materialAttribute, sizeof(MaterialShaderAttribute), sizeof(MaterialShaderAttribute) * drawId);
+                            NCIndirectBuffer.UpdateData(&command, sizeof(IndirectCommand), sizeof(IndirectCommand) * ncDrawId);
+
+                            VertexBuffer.AddData(SpriteVertices.GetData(), SpriteVertices.GetSize());
+                            IndexBuffer.AddData(SpriteIndices.GetData(), SpriteIndices.GetSize());
+
+                            VerticesCount += SpriteVertices.Num();
+                            IndicesCount += SpriteIndices.Num();
+                            
+                            auto& materialAttribute = MaterialAttributes[globalDrawId];
+
+                            materialAttribute.Albedo = sprite.Color;
+                            materialAttribute.DiffuseTextureID = sprite.TextureRef.Texture->GetIndex(SRV_UAV_CBV);
+
+                            MaterialAttributesBuffer.UpdateData(&materialAttribute, sizeof(MaterialShaderAttribute), sizeof(MaterialShaderAttribute) * globalDrawId);
+                        }
+
+                        auto transform = entity.get<Transform>();
+
+                        WString spriteName = "Sprite_";
+                        spriteName += sprite.TextureRef.Texture->GetName(); 
+
+                        TLAS.SetData(globalDrawId, spriteName, SpriteVertexBuffer, SpriteIndexBuffer, *transform);
                     }
-
-                    auto transform = entity.get<Transform>();
-
-                    WString spriteName = "Sprite_";
-                    spriteName += sprite.TextureRef.Texture->GetName(); 
-
-                    TLAS.SetData(drawId, spriteName, SpriteVertexBuffer, SpriteIndexBuffer, *transform);
                 }
             });
 
             ECS::World.observer<Sprite>().event(flecs::OnRemove).each([&](flecs::entity entity, Sprite& sprite)
             {
-                int drawId;
+                int globalDrawId;
 
-                if(IdManager::GetId(entity, NoCullingDrawIdType, drawId))
+                if(IdManager::GetId(entity, GlobalDrawIdType, globalDrawId))
                 {
-                    IndirectCommand& command = NCIndirectCommands[drawId];
-
-                    if(sprite.TextureRef.IsValid())
+                    int ncDrawId;
+                    if(IdManager::GetId(entity, NoCullingDrawIdType, ncDrawId))
                     {
-                        VertexBuffer.RemoveData(SpriteVertices.GetSize(), command.DrawIndexed.BaseVertexLocation * sizeof(Vertex));
-                        IndexBuffer.RemoveData(SpriteIndices.GetSize(), command.DrawIndexed.StartIndexLocation * sizeof(uint));
+                        IndirectCommand& command = NCIndirectCommands[ncDrawId];
 
-                        VerticesCount -= SpriteVertices.Num();
-                        IndicesCount -= SpriteIndices.Num();
+                        if(sprite.TextureRef.IsValid())
+                        {
+                            VertexBuffer.RemoveData(SpriteVertices.GetSize(), command.DrawIndexed.BaseVertexLocation * sizeof(Vertex));
+                            IndexBuffer.RemoveData(SpriteIndices.GetSize(), command.DrawIndexed.StartIndexLocation * sizeof(uint));
+
+                            VerticesCount -= SpriteVertices.Num();
+                            IndicesCount -= SpriteIndices.Num();
+                        }
+                        
+                        NCIndirectBuffer.RemoveData(sizeof(IndirectCommand), ncDrawId * sizeof(IndirectCommand));
+                        
+                        command.DrawId = -1;
+                        command.DrawIndexed = { 0, 0, 0, 0, 0 };
+
+                        MaterialAttributesBuffer.RemoveData(sizeof(MaterialShaderAttribute), globalDrawId * sizeof(MaterialShaderAttribute));
+
+                        TLAS.RemoveData(globalDrawId);
+                        
+                        auto transform = entity.get<Transform>();
+                        
+                        if(transform)
+                        {
+                            WorldTransformsBuffer.RemoveData(sizeof(Matrix4), globalDrawId * sizeof(Matrix4));
+                        }
+
+                        IdManager::RemoveId(entity, NoCullingDrawIdType);
                     }
-                    
-                    NCIndirectBuffer.RemoveData(sizeof(IndirectCommand), drawId * sizeof(IndirectCommand));
-                    
-                    command.DrawId = -1;
-                    command.DrawIndexed = { 0, 0, 0, 0, 0 };
 
-                    MaterialAttributesBuffer.RemoveData(sizeof(MaterialShaderAttribute), drawId * sizeof(MaterialShaderAttribute));
-
-                    TLAS.RemoveData(drawId);
-                    
-                    auto transform = entity.get<Transform>();
-                    
-                    if(transform)
-                    {
-                        WorldTransformsBuffer.RemoveData(sizeof(Matrix4), drawId * sizeof(Matrix4));
-                    }
-
-                    IdManager::RemoveId(entity, NoCullingDrawIdType);
+                    IdManager::RemoveId(entity, GlobalDrawIdType);
                 }
             });
             
             ECS::World.observer<Transform>().event(flecs::OnSet).each([&](flecs::entity entity, Transform& transform)
             {
-                int drawId;
+                int globalDrawId;
 
-                if(IdManager::GetId(entity, BackFaceCullingDrawIdType, drawId))
+                if(IdManager::GetId(entity, GlobalDrawIdType, globalDrawId))
                 {
-                    WorldTransformsBuffer.UpdateData(&transform.Matrix, sizeof(Matrix4), drawId * sizeof(Matrix4));
+                    WorldTransformsBuffer.UpdateData(&transform.Matrix, sizeof(Matrix4), globalDrawId * sizeof(Matrix4));
                     
-                    TLAS.UpdateTransform(drawId, transform);
-                }
-                
-                if(IdManager::GetId(entity, NoCullingDrawIdType, drawId))
-                {
-                    WorldTransformsBuffer.UpdateData(&transform.Matrix, sizeof(Matrix4), drawId * sizeof(Matrix4));
-                    
-                    TLAS.UpdateTransform(drawId, transform);
+                    TLAS.UpdateTransform(globalDrawId, transform);
                 }
                 
                 if(entity.has<Light>())
