@@ -104,29 +104,6 @@ namespace Waldem
             return (T*)asset;
         }
         
-        static void SerializeAsset(WDataBuffer& dataBuffer, Asset* asset)
-        {
-            if(asset)
-            {
-                dataBuffer << ExportAsset(asset);
-                return;
-            }
-
-            dataBuffer << 0;
-        }
-        
-        template <typename T>
-        static void DeserializeAsset(WDataBuffer& dataBuffer, T*& asset)
-        {
-            uint64 hash;
-            dataBuffer >> hash;
-            
-            if(hash > 0)
-            {
-                asset = ImportAsset<T>(hash);
-            }
-        }
-        
     private:
         inline static WMap<WString, RenderTarget*> RenderTargets;
         inline static WMap<WString, Texture2D*> Textures;

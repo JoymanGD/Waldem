@@ -9,7 +9,8 @@ namespace Waldem
     enum IdType
     {
         LightIdType,
-        DrawIdType,
+        BackFaceCullingDrawIdType,
+        NoCullingDrawIdType,
         RTXInstanceIdType
     };
     
@@ -18,7 +19,8 @@ namespace Waldem
     private:
         inline static WMap<flecs::entity, WMap<IdType, int>> EntityIdMap;
         inline static FreeList LightIdFreeList;
-        inline static FreeList DrawIdFreeList;
+        inline static FreeList BackFaceCullingDrawIdFreeList;
+        inline static FreeList NoCullingDrawIdFreeList;
         inline static FreeList RTXInstanceIdFreeList;
         
     public:
@@ -33,9 +35,14 @@ namespace Waldem
                     id = LightIdFreeList.Allocate();
                     break;
                 }
-            case DrawIdType:
+            case BackFaceCullingDrawIdType:
                 {
-                    id = DrawIdFreeList.Allocate();
+                    id = BackFaceCullingDrawIdFreeList.Allocate();
+                    break;
+                }
+            case NoCullingDrawIdType:
+                {
+                    id = NoCullingDrawIdFreeList.Allocate();
                     break;
                 }
             case RTXInstanceIdType:
@@ -92,9 +99,14 @@ namespace Waldem
                             LightIdFreeList.Free(id);
                             break;
                         }
-                    case DrawIdType:
+                    case BackFaceCullingDrawIdType:
                         {
-                            DrawIdFreeList.Free(id);
+                            BackFaceCullingDrawIdFreeList.Free(id);
+                            break;
+                        }
+                    case NoCullingDrawIdType:
+                        {
+                            NoCullingDrawIdFreeList.Free(id);
                             break;
                         }
                     case RTXInstanceIdType:
@@ -128,7 +140,8 @@ namespace Waldem
         {
             EntityIdMap.Clear();
             LightIdFreeList.Clear();
-            DrawIdFreeList.Clear();
+            BackFaceCullingDrawIdFreeList.Clear();
+            NoCullingDrawIdFreeList.Clear();
             RTXInstanceIdFreeList.Clear();
         }
     };

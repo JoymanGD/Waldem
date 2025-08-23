@@ -16,9 +16,8 @@ namespace Waldem
         Vector3 Tangent;
         Vector3 Bitangent;
         Vector2 UV;
-        uint MeshId;
 
-        Vertex(Vector3 position, Vector4 color, Vector3 normal, Vector3 tangent, Vector3 bitangent, Vector2 uv, uint meshId) : Position(position), Color(color), Normal(normal), Tangent(tangent), Bitangent(bitangent), UV(uv), MeshId(meshId) {}
+        Vertex(Vector3 position, Vector4 color, Vector3 normal, Vector3 tangent, Vector3 bitangent, Vector2 uv) : Position(position), Color(color), Normal(normal), Tangent(tangent), Bitangent(bitangent), UV(uv) {}
         Vertex() {}
     };
     

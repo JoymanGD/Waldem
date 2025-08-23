@@ -11,6 +11,7 @@
 #include "Waldem/ECS/Components/Camera.h"
 #include "Waldem/ECS/Components/EditorComponent.h"
 #include "Waldem/ECS/Components/Sky.h"
+#include "Waldem/ECS/Components/Sprite.h"
 #include "Waldem/Renderer/ResizableAccelerationStructure.h"
 #include "Waldem/Renderer/ResizableBuffer.h"
 
@@ -97,7 +98,8 @@ namespace Waldem
         bool SceneDataDirty = true;
         
         //GBuffer pass
-        Pipeline* GBufferPipeline = nullptr;
+        Pipeline* BFCGBufferPipeline = nullptr; // Back face culling GBuffer pipeline
+        Pipeline* NCGBufferPipeline = nullptr; // No culling GBuffer pipeline
         PixelShader* GBufferPixelShader = nullptr;
         RenderTarget* WorldPositionRT = nullptr;
         RenderTarget* NormalRT = nullptr;
@@ -105,7 +107,10 @@ namespace Waldem
         RenderTarget* ORMRT = nullptr;
         RenderTarget* DepthRT = nullptr;
         RenderTarget* MeshIDRT = nullptr;
-        ResizableBuffer IndirectBuffer;
+        ResizableBuffer BFCIndirectBuffer; //Back face culling indirect buffer
+        WArray<IndirectCommand> BFCIndirectCommands;
+        ResizableBuffer NCIndirectBuffer; //No culling indirect buffer
+        WArray<IndirectCommand> NCIndirectCommands;
         ResizableBuffer VertexBuffer;
         ResizableBuffer IndexBuffer;
         ResizableBuffer WorldTransformsBuffer;
@@ -114,7 +119,6 @@ namespace Waldem
         GBufferRootConstants GBufferRootConstants;
         bool CameraIsDirty = true;
         GBufferSceneData GBufferSceneData;
-        WArray<IndirectCommand> IndirectCommands;
         WArray<MaterialShaderAttribute> MaterialAttributes;
         size_t VerticesCount = 0;
         size_t IndicesCount = 0;
@@ -140,24 +144,27 @@ namespace Waldem
         Point3 GroupCount;
         DeferredRootConstants DeferredRootConstants;
         Buffer* HoveredMeshesBuffer = nullptr;
+
+        //Sprite rendering
+        WArray<Vertex> SpriteVertices;
+        WArray<uint32> SpriteIndices;
+        Buffer* SpriteVertexBuffer;
+        Buffer* SpriteIndexBuffer;
         
     public:
         HybridRenderingSystem()
         {
-            Vector4 dummyColor = Vector4(1.f, 1.f, 1.f, 1.f);
-            uint8_t* image_data = (uint8_t*)&dummyColor;
-
-            DummyTexture = Renderer::CreateTexture("DummyTexture", 1, 1, TextureFormat::R8G8B8A8_UNORM, image_data);
-
-            WArray DummyVertexData
+            SpriteVertices =
             {
-                Vertex(Vector3(0, 0, 0), Vector4(1, 1, 1, 1), Vector3(0, 0, 1), Vector3(0, 0, 0), Vector3(0, 0, 1), Vector2(0, 0), 0),
-                Vertex(Vector3(0, 2, 0), Vector4(1, 1, 1, 1), Vector3(0, 0, 1), Vector3(0, 0, 0), Vector3(0, 0, 1), Vector2(0, 0), 0),
-                Vertex(Vector3(2, 2, 0), Vector4(1, 1, 1, 1), Vector3(0, 0, 1), Vector3(0, 0, 0), Vector3(0, 0, 1), Vector2(0, 0), 0),
+                { {-0.5f, -0.5f, 0}, {1,1,1,1}, {0,0,1}, {0,1,0}, {1,0,0}, {0,1} },
+                { { 0.5f, -0.5f, 0}, {1,1,1,1}, {0,0,1}, {0,1,0}, {1,0,0}, {1,1} },
+                { { 0.5f,  0.5f, 0}, {1,1,1,1}, {0,0,1}, {0,1,0}, {1,0,0}, {1,0} },
+                { {-0.5f,  0.5f, 0}, {1,1,1,1}, {0,0,1}, {0,1,0}, {1,0,0}, {0,0} },
             };
-            WArray DummyIndexData { 0, 1, 2 };
-            DummyVertexBuffer = Renderer::CreateBuffer("DummyVertexBuffer", BufferType::VertexBuffer, sizeof(Vertex), sizeof(Vertex));
-            DummyIndexBuffer = Renderer::CreateBuffer("DummyIndexBuffer", BufferType::IndexBuffer, sizeof(uint), sizeof(uint));
+            SpriteIndices = { 0,1,2, 2,3,0 };
+
+            SpriteVertexBuffer = Renderer::CreateBuffer("SpriteVertexBuffer", BufferType::VertexBuffer, SpriteVertices.GetSize(), sizeof(Vertex), SpriteVertices.GetData());
+            SpriteIndexBuffer = Renderer::CreateBuffer("SpriteIndexBuffer", BufferType::IndexBuffer, SpriteIndices.GetSize(), sizeof(uint32_t), SpriteIndices.GetData());
         }
         
         void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
@@ -185,7 +192,8 @@ namespace Waldem
                                                             inputElementDescs);
             
             //GBuffer
-            IndirectBuffer = ResizableBuffer("IndirectDrawBuffer", BufferType::IndirectBuffer, sizeof(IndirectCommand), MAX_INDIRECT_COMMANDS);
+            BFCIndirectBuffer = ResizableBuffer("BFCIndirectBuffer", BufferType::IndirectBuffer, sizeof(IndirectCommand), MAX_INDIRECT_COMMANDS);
+            NCIndirectBuffer = ResizableBuffer("NCIndirectBuffer", BufferType::IndirectBuffer, sizeof(IndirectCommand), MAX_INDIRECT_COMMANDS);
             VertexBuffer = ResizableBuffer("VertexBuffer", BufferType::VertexBuffer, sizeof(Vertex), 1000);
             IndexBuffer = ResizableBuffer("IndexBuffer", BufferType::IndexBuffer, sizeof(uint), 1000);
             WorldTransformsBuffer = ResizableBuffer("WorldTransformsBuffer", BufferType::StorageBuffer, sizeof(Matrix4), MAX_INDIRECT_COMMANDS);
@@ -200,11 +208,22 @@ namespace Waldem
             DepthRT = resourceManager->GetRenderTarget("DepthRT");
             
             GBufferPixelShader = Renderer::LoadPixelShader("GBuffer");
-            GBufferPipeline = Renderer::CreateGraphicPipeline("GBufferPipeline",
+            BFCGBufferPipeline = Renderer::CreateGraphicPipeline("BFCGBufferPipeline",
                                                             GBufferPixelShader,
                                                             { WorldPositionRT->GetFormat(), NormalRT->GetFormat(), ColorRT->GetFormat(), ORMRT->GetFormat(), MeshIDRT->GetFormat() },
                                                             TextureFormat::D32_FLOAT,
                                                             DEFAULT_RASTERIZER_DESC,
+                                                            DEFAULT_DEPTH_STENCIL_DESC,
+                                                            WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
+                                                            DEFAULT_INPUT_LAYOUT_DESC);
+
+            RasterizerDesc spriteRasterizer = DEFAULT_RASTERIZER_DESC;
+            spriteRasterizer.CullMode = WD_CULL_MODE_NONE;
+            NCGBufferPipeline = Renderer::CreateGraphicPipeline("NCGBufferPipeline",
+                                                            GBufferPixelShader,
+                                                            { WorldPositionRT->GetFormat(), NormalRT->GetFormat(), ColorRT->GetFormat(), ORMRT->GetFormat(), MeshIDRT->GetFormat() },
+                                                            TextureFormat::D32_FLOAT,
+                                                            spriteRasterizer,
                                                             DEFAULT_DEPTH_STENCIL_DESC,
                                                             WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
                                                             DEFAULT_INPUT_LAYOUT_DESC);
@@ -237,12 +256,12 @@ namespace Waldem
             
             ECS::World.observer<MeshComponent, Transform>().event(flecs::OnAdd).each([&](flecs::entity entity, MeshComponent& meshComponent, Transform& transform)
             {
-                auto drawId = IdManager::AddId(entity, DrawIdType);
+                auto drawId = IdManager::AddId(entity, BackFaceCullingDrawIdType);
                 
-                if(drawId >= IndirectCommands.Num())
+                if(drawId >= BFCIndirectCommands.Num())
                 {
-                    IndirectCommands.Add(IndirectCommand());
-                    IndirectBuffer.AddData(nullptr, sizeof(IndirectCommand));
+                    BFCIndirectCommands.Add(IndirectCommand());
+                    BFCIndirectBuffer.AddData(nullptr, sizeof(IndirectCommand));
                 }
                 
                 WorldTransformsBuffer.AddData(&transform.Matrix, sizeof(Matrix4));
@@ -260,7 +279,7 @@ namespace Waldem
             {
                 int drawId;
 
-                if(IdManager::GetId(entity, DrawIdType, drawId))
+                if(IdManager::GetId(entity, BackFaceCullingDrawIdType, drawId))
                 {
                     bool meshReferenceIsEmpty = meshComponent.MeshRef.Reference.empty() || meshComponent.MeshRef.Reference == "Empty";
                     
@@ -276,7 +295,7 @@ namespace Waldem
                     
                     if(meshComponent.MeshRef.IsValid())
                     {
-                        auto& command = IndirectCommands[drawId];
+                        auto& command = BFCIndirectCommands[drawId];
                         command.DrawId = drawId;
                         command.DrawIndexed = {
                             (uint)meshComponent.MeshRef.Mesh->IndexData.Num(),
@@ -284,9 +303,9 @@ namespace Waldem
                             (uint)IndicesCount,
                             (int)VerticesCount,
                             0
-                        };  
+                        };
 
-                        IndirectBuffer.UpdateData(&command, sizeof(IndirectCommand), sizeof(IndirectCommand) * drawId);
+                        BFCIndirectBuffer.UpdateData(&command, sizeof(IndirectCommand), sizeof(IndirectCommand) * drawId);
 
                         VertexBuffer.AddData(meshComponent.MeshRef.Mesh->VertexData.GetData(), meshComponent.MeshRef.Mesh->VertexData.GetSize());
                         IndexBuffer.AddData(meshComponent.MeshRef.Mesh->IndexData.GetData(), meshComponent.MeshRef.Mesh->IndexData.GetSize());
@@ -315,7 +334,7 @@ namespace Waldem
 
                     auto transform = entity.get<Transform>();
 
-                    TLAS.SetData(drawId, meshComponent, *transform);
+                    TLAS.SetData(drawId, meshComponent.MeshRef.Mesh->Name, meshComponent.MeshRef.Mesh->VertexBuffer, meshComponent.MeshRef.Mesh->IndexBuffer, *transform);
                 }
             });
             
@@ -323,9 +342,9 @@ namespace Waldem
             {
                 int drawId;
 
-                if(IdManager::GetId(entity, DrawIdType, drawId))
+                if(IdManager::GetId(entity, BackFaceCullingDrawIdType, drawId))
                 {
-                    IndirectCommand& command = IndirectCommands[drawId];
+                    IndirectCommand& command = BFCIndirectCommands[drawId];
 
                     if(meshComponent.MeshRef.IsValid())
                     {
@@ -336,7 +355,7 @@ namespace Waldem
                         IndicesCount -= meshComponent.MeshRef.Mesh->IndexData.Num();
                     }
                     
-                    IndirectBuffer.RemoveData(sizeof(IndirectCommand), drawId * sizeof(IndirectCommand));
+                    BFCIndirectBuffer.RemoveData(sizeof(IndirectCommand), drawId * sizeof(IndirectCommand));
                     
                     command.DrawId = -1;
                     command.DrawIndexed = { 0, 0, 0, 0, 0 };
@@ -352,7 +371,122 @@ namespace Waldem
                         WorldTransformsBuffer.RemoveData(sizeof(Matrix4), drawId * sizeof(Matrix4));
                     }
 
-                    IdManager::RemoveId(entity, DrawIdType);
+                    IdManager::RemoveId(entity, BackFaceCullingDrawIdType);
+                }
+            });
+
+            // OnAdd: allocate slot, write transform, setup indirection
+            ECS::World.observer<Sprite, Transform>().event(flecs::OnAdd).each([&](flecs::entity entity, Sprite& sprite, Transform& transform)
+            {
+                auto drawId = IdManager::AddId(entity, NoCullingDrawIdType);
+                
+                if(drawId >= NCIndirectCommands.Num())
+                {
+                    NCIndirectCommands.Add(IndirectCommand());
+                    NCIndirectBuffer.AddData(nullptr, sizeof(IndirectCommand));
+                }
+                
+                WorldTransformsBuffer.AddData(&transform.Matrix, sizeof(Matrix4));
+
+                if(drawId >= MaterialAttributes.Num())
+                {
+                    MaterialAttributes.Add(MaterialShaderAttribute());
+                    MaterialAttributesBuffer.AddData(nullptr, sizeof(MaterialShaderAttribute));
+                }
+
+                TLAS.AddEmptyData();
+            });
+
+            // OnSet: when sprite data (like texture) becomes valid
+            ECS::World.observer<Sprite>().event(flecs::OnSet).each([&](flecs::entity entity, Sprite& sprite)
+            {
+                int drawId;
+
+                if(IdManager::GetId(entity, NoCullingDrawIdType, drawId))
+                {
+                    bool textureReferenceIsEmpty = sprite.TextureRef.Reference.empty() || sprite.TextureRef.Reference == "Empty";
+                    
+                    if(textureReferenceIsEmpty && !sprite.TextureRef.IsValid())
+                    {
+                        return;
+                    }
+
+                    if(!textureReferenceIsEmpty && !sprite.TextureRef.IsValid())
+                    {
+                        sprite.TextureRef.LoadAsset(contentManager);
+                    }
+                    
+                    if(sprite.TextureRef.IsValid())
+                    {
+                        auto& command = NCIndirectCommands[drawId];
+                        command.DrawId = drawId;
+                        command.DrawIndexed = {
+                            (uint)SpriteIndices.Num(),
+                            1,
+                            (uint)IndicesCount,
+                            (int)VerticesCount,
+                            0
+                        };
+
+                        NCIndirectBuffer.UpdateData(&command, sizeof(IndirectCommand), sizeof(IndirectCommand) * drawId);
+
+                        VertexBuffer.AddData(SpriteVertices.GetData(), SpriteVertices.GetSize());
+                        IndexBuffer.AddData(SpriteIndices.GetData(), SpriteIndices.GetSize());
+
+                        VerticesCount += SpriteVertices.Num();
+                        IndicesCount += SpriteIndices.Num();
+                        
+                        auto& materialAttribute = MaterialAttributes[drawId];
+
+                        materialAttribute.Albedo = sprite.Color;
+                        materialAttribute.DiffuseTextureID = sprite.TextureRef.Texture->GetIndex(SRV_UAV_CBV);
+
+                        MaterialAttributesBuffer.UpdateData(&materialAttribute, sizeof(MaterialShaderAttribute), sizeof(MaterialShaderAttribute) * drawId);
+                    }
+
+                    auto transform = entity.get<Transform>();
+
+                    WString spriteName = "Sprite_";
+                    spriteName += sprite.TextureRef.Texture->GetName(); 
+
+                    TLAS.SetData(drawId, spriteName, SpriteVertexBuffer, SpriteIndexBuffer, *transform);
+                }
+            });
+
+            ECS::World.observer<Sprite>().event(flecs::OnRemove).each([&](flecs::entity entity, Sprite& sprite)
+            {
+                int drawId;
+
+                if(IdManager::GetId(entity, NoCullingDrawIdType, drawId))
+                {
+                    IndirectCommand& command = NCIndirectCommands[drawId];
+
+                    if(sprite.TextureRef.IsValid())
+                    {
+                        VertexBuffer.RemoveData(SpriteVertices.GetSize(), command.DrawIndexed.BaseVertexLocation * sizeof(Vertex));
+                        IndexBuffer.RemoveData(SpriteIndices.GetSize(), command.DrawIndexed.StartIndexLocation * sizeof(uint));
+
+                        VerticesCount -= SpriteVertices.Num();
+                        IndicesCount -= SpriteIndices.Num();
+                    }
+                    
+                    NCIndirectBuffer.RemoveData(sizeof(IndirectCommand), drawId * sizeof(IndirectCommand));
+                    
+                    command.DrawId = -1;
+                    command.DrawIndexed = { 0, 0, 0, 0, 0 };
+
+                    MaterialAttributesBuffer.RemoveData(sizeof(MaterialShaderAttribute), drawId * sizeof(MaterialShaderAttribute));
+
+                    TLAS.RemoveData(drawId);
+                    
+                    auto transform = entity.get<Transform>();
+                    
+                    if(transform)
+                    {
+                        WorldTransformsBuffer.RemoveData(sizeof(Matrix4), drawId * sizeof(Matrix4));
+                    }
+
+                    IdManager::RemoveId(entity, NoCullingDrawIdType);
                 }
             });
             
@@ -360,21 +494,21 @@ namespace Waldem
             {
                 int drawId;
 
-                if(IdManager::GetId(entity, DrawIdType, drawId))
+                if(IdManager::GetId(entity, BackFaceCullingDrawIdType, drawId))
                 {
-                    auto meshComponent = entity.get<MeshComponent>();
+                    WorldTransformsBuffer.UpdateData(&transform.Matrix, sizeof(Matrix4), drawId * sizeof(Matrix4));
                     
-                    if(meshComponent)
-                    {
-                        WorldTransformsBuffer.UpdateData(&transform.Matrix, sizeof(Matrix4), drawId * sizeof(Matrix4));
-                        
-                        TLAS.UpdateTransform(drawId, transform);
-                    }
+                    TLAS.UpdateTransform(drawId, transform);
                 }
                 
-                auto light = entity.get<Light>();
-
-                if(light)
+                if(IdManager::GetId(entity, NoCullingDrawIdType, drawId))
+                {
+                    WorldTransformsBuffer.UpdateData(&transform.Matrix, sizeof(Matrix4), drawId * sizeof(Matrix4));
+                    
+                    TLAS.UpdateTransform(drawId, transform);
+                }
+                
+                if(entity.has<Light>())
                 {
                     int lightId;
 
@@ -481,9 +615,33 @@ namespace Waldem
                 Renderer::ResourceBarrier(SkyColorRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
             });
             
+            ECS::World.system("GBufferClearSystem").kind(flecs::OnDraw).run([&](flecs::iter& it)
+            {
+                Renderer::ResourceBarrier(WorldPositionRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
+                Renderer::ResourceBarrier(NormalRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
+                Renderer::ResourceBarrier(ColorRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
+                Renderer::ResourceBarrier(ORMRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
+                Renderer::ResourceBarrier(MeshIDRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
+                Renderer::ResourceBarrier(DepthRT, ALL_SHADER_RESOURCE, DEPTH_WRITE);
+
+                Renderer::ClearRenderTarget(WorldPositionRT);
+                Renderer::ClearRenderTarget(NormalRT);
+                Renderer::ClearRenderTarget(ColorRT);
+                Renderer::ClearRenderTarget(ORMRT);
+                Renderer::ClearRenderTarget(MeshIDRT);
+                Renderer::ClearDepthStencil(DepthRT);
+                
+                Renderer::ResourceBarrier(WorldPositionRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
+                Renderer::ResourceBarrier(NormalRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
+                Renderer::ResourceBarrier(ColorRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
+                Renderer::ResourceBarrier(ORMRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
+                Renderer::ResourceBarrier(MeshIDRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
+                Renderer::ResourceBarrier(DepthRT, DEPTH_WRITE, ALL_SHADER_RESOURCE);
+            });
+            
             ECS::World.system("GBufferSystem").kind(flecs::OnDraw).run([&](flecs::iter& it)
             {
-                if(IndirectCommands.Num() <= 0)
+                if(BFCIndirectCommands.Num() <= 0 && NCIndirectCommands.Num() <= 0)
                 {
                     return;
                 }
@@ -504,14 +662,30 @@ namespace Waldem
                 Renderer::ResourceBarrier(ORMRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
                 Renderer::ResourceBarrier(MeshIDRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
                 Renderer::ResourceBarrier(DepthRT, ALL_SHADER_RESOURCE, DEPTH_WRITE);
-
-                Renderer::SetPipeline(GBufferPipeline);
-                Renderer::PushConstants(&GBufferRootConstants, sizeof(GBufferRootConstants));
-                Renderer::BindRenderTargets({ WorldPositionRT, NormalRT, ColorRT, ORMRT, MeshIDRT });
-                Renderer::BindDepthStencil(DepthRT);
-                Renderer::SetVertexBuffers(VertexBuffer, 1);
-                Renderer::SetIndexBuffer(IndexBuffer);
-                Renderer::DrawIndirect(IndirectCommands.Num(), IndirectBuffer);
+                
+                // Back face culling pass
+                if(BFCIndirectCommands.Num() > 0)
+                {
+                    Renderer::SetPipeline(BFCGBufferPipeline);
+                    Renderer::PushConstants(&GBufferRootConstants, sizeof(GBufferRootConstants));
+                    Renderer::BindRenderTargets({ WorldPositionRT, NormalRT, ColorRT, ORMRT, MeshIDRT });
+                    Renderer::BindDepthStencil(DepthRT);
+                    Renderer::SetVertexBuffers(VertexBuffer, 1);
+                    Renderer::SetIndexBuffer(IndexBuffer);
+                    Renderer::DrawIndirect(BFCIndirectCommands.Num(), BFCIndirectBuffer);
+                }
+                
+                // No culling pass
+                if(NCIndirectCommands.Num() > 0)
+                {
+                    Renderer::SetPipeline(NCGBufferPipeline);
+                    Renderer::PushConstants(&GBufferRootConstants, sizeof(GBufferRootConstants));
+                    Renderer::BindRenderTargets({ WorldPositionRT, NormalRT, ColorRT, ORMRT, MeshIDRT });
+                    Renderer::BindDepthStencil(DepthRT);
+                    Renderer::SetVertexBuffers(VertexBuffer, 1);
+                    Renderer::SetIndexBuffer(IndexBuffer);
+                    Renderer::DrawIndirect(NCIndirectCommands.Num(), NCIndirectBuffer);
+                }
                 
                 Renderer::ResourceBarrier(WorldPositionRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
                 Renderer::ResourceBarrier(NormalRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
@@ -554,7 +728,7 @@ namespace Waldem
                 GroupCount = Point3((resolution.x + numThreads.x - 1) / numThreads.x, (resolution.y + numThreads.y - 1) / numThreads.y, 1);
                 
                 Renderer::Compute(GroupCount);
-                int hoveredEntityId = 0;
+                int hoveredEntityId = {};
                 Renderer::DownloadBuffer(HoveredMeshesBuffer, &hoveredEntityId, sizeof(int));
                 Editor::HoveredEntityID = hoveredEntityId - 1;
                 Renderer::ResourceBarrier(TargetRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);

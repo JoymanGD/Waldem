@@ -254,7 +254,7 @@ namespace Waldem
 	        Data = buffer;
 	        UpdateHash();
 	        return *this;
-	    }
+	    } 
 
 	    // Comparison operators
 	    FORCEINLINE constexpr bool operator==(const WString& other) const
