@@ -55,6 +55,11 @@ namespace Waldem
         Instance->PlatformRenderer->DrawIndirect(numCommands, indirectBuffer);
     }
 
+    void Renderer::DrawIndexedInstanced(uint indexCount, uint instanceCount, uint startIndexLocation, int baseVertexLocation, uint startInstanceLocation)
+    {
+        Instance->PlatformRenderer->DrawIndexedInstanced(indexCount, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation);
+    }
+
     void Renderer::SetIndexBuffer(Buffer* indexBuffer)
     {
         Instance->PlatformRenderer->SetIndexBuffer(indexBuffer);

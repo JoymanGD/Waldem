@@ -656,6 +656,14 @@ namespace Waldem
         cmd->Draw(mesh);
     }
 
+    void DX12Renderer::DrawIndexedInstanced(uint indicesCount, uint instancesCount, uint startIndex, int baseVertex, uint startInstance)
+    {
+        SetRenderTargets();
+        
+        auto& cmd = WorldCommandList.first;
+        cmd->DrawIndexedInstanced(indicesCount, instancesCount, startIndex, baseVertex, startInstance);
+    }
+
     void DX12Renderer::DrawIndirect(uint numCommands, Buffer* indirectBuffer)
     {
         SetRenderTargets();
