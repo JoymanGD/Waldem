@@ -9,6 +9,7 @@ namespace Waldem
     enum IdType
     {
         LightIdType,
+        GlobalDrawIdType,
         BackFaceCullingDrawIdType,
         NoCullingDrawIdType,
         RTXInstanceIdType
@@ -19,6 +20,7 @@ namespace Waldem
     private:
         inline static WMap<flecs::entity, WMap<IdType, int>> EntityIdMap;
         inline static FreeList LightIdFreeList;
+        inline static FreeList GlobalDrawIdFreeList;
         inline static FreeList BackFaceCullingDrawIdFreeList;
         inline static FreeList NoCullingDrawIdFreeList;
         inline static FreeList RTXInstanceIdFreeList;
@@ -33,6 +35,11 @@ namespace Waldem
             case LightIdType:
                 {
                     id = LightIdFreeList.Allocate();
+                    break;
+                }
+            case GlobalDrawIdType:
+                {
+                    id = GlobalDrawIdFreeList.Allocate();
                     break;
                 }
             case BackFaceCullingDrawIdType:
@@ -99,6 +106,11 @@ namespace Waldem
                             LightIdFreeList.Free(id);
                             break;
                         }
+                    case GlobalDrawIdType:
+                        {
+                            GlobalDrawIdFreeList.Free(id);
+                            break;
+                        }
                     case BackFaceCullingDrawIdType:
                         {
                             BackFaceCullingDrawIdFreeList.Free(id);
@@ -140,6 +152,7 @@ namespace Waldem
         {
             EntityIdMap.Clear();
             LightIdFreeList.Clear();
+            GlobalDrawIdFreeList.Clear();
             BackFaceCullingDrawIdFreeList.Clear();
             NoCullingDrawIdFreeList.Clear();
             RTXInstanceIdFreeList.Clear();

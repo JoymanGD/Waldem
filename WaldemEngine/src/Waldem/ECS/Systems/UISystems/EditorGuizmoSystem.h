@@ -81,7 +81,7 @@ namespace Waldem
 
                     flecs::entity outEntity;
 
-                    if(IdManager::GetEntityById(Editor::HoveredEntityID, BackFaceCullingDrawIdType, outEntity))
+                    if(IdManager::GetEntityById(Editor::HoveredEntityID, GlobalDrawIdType, outEntity))
                     {
                         if(outEntity.is_valid() && outEntity.is_alive())
                         {

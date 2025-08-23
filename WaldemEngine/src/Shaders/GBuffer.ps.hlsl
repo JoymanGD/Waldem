@@ -12,6 +12,7 @@ struct PS_INPUT
     float3 Bitangent : BITANGENT;
     float2 UV : TEXCOORD;
     uint MeshId : MESH_ID;
+    bool IsFrontFace : SV_IsFrontFace;
 };
 
 struct PS_OUTPUT
@@ -64,6 +65,11 @@ PS_OUTPUT main(PS_INPUT input)
     else
     {
         normal = float4(input.Normal, 0.0f);
+    }
+
+    if(!input.IsFrontFace)
+    {
+        normal = -normal;
     }
 
     float4 orm = float4(0.0f, matAttr.Roughness, matAttr.Metallic, 0.0f);
