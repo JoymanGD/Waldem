@@ -76,6 +76,7 @@ namespace Waldem
         std::vector<flecs::entity> IndirectionToEntity; // reverse lookup
         FreeList SlotAllocator;    // manages slot indices
         uint32_t InstanceCount = 0; // number of active sprites
+        int StartInstanceLocation = -1;
 
     public:
         SpriteRenderingSystem() {}
@@ -98,6 +99,9 @@ namespace Waldem
                 { {-0.5f,  0.5f, 0}, {0,0}, {1,1,1,1} },
             };
             QuadIndices = { 0,1,2, 2,3,0 };
+
+            VertexBuffer.AddData(QuadVertices.GetData(), QuadVertices.GetSize());
+            IndexBuffer.AddData(QuadIndices.GetData(), QuadIndices.GetSize());
 
             WArray<InputLayoutDesc> inputElementDescs = {
                 { "POSITION", 0, TextureFormat::R32G32B32_FLOAT,    0, 0,  WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
@@ -125,9 +129,34 @@ namespace Waldem
                                                              WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
                                                              inputElementDescs);
 
+            ECS::World.query<Camera, Transform>("SpriteSceneDataInitializationSystem").each([&](Camera& camera, Transform& transform)
+            {
+                SceneData.ViewMatrix = camera.ViewMatrix;
+                SceneData.ProjectionMatrix = camera.ProjectionMatrix;
+                SceneData.WorldMatrix = transform.Matrix;
+                SceneData.InverseProjectionMatrix = inverse(camera.ProjectionMatrix);
+                
+                CameraIsDirty = true;
+            });
+
+            ECS::World.observer<Camera, Transform>("SpriteSceneDataUpdateSystem").event(flecs::OnSet).each([&](Camera& camera, Transform& transform)
+            {
+                SceneData.ViewMatrix = camera.ViewMatrix;
+                SceneData.ProjectionMatrix = camera.ProjectionMatrix;
+                SceneData.WorldMatrix = transform.Matrix;
+                SceneData.InverseProjectionMatrix = inverse(camera.ProjectionMatrix);
+                
+                CameraIsDirty = true;
+            });
+
             // OnAdd: allocate slot, write transform, setup indirection
             ECS::World.observer<Sprite, Transform>().event(flecs::OnAdd).each([&](flecs::entity entity, Sprite& sprite, Transform& transform)
             {
+                if(StartInstanceLocation == -1)
+                {
+                    StartInstanceLocation = IdManager::AddId(entity, BackFaceCullingDrawIdType);
+                }
+                
                 uint32_t slotIndex = SlotAllocator.Allocate();
 
                 // Write transform now
@@ -143,7 +172,6 @@ namespace Waldem
                 IndirectionToEntity[indirectionIndex] = entity;
 
                 SpriteTable[entity.id()] = { slotIndex, indirectionIndex };
-                InstanceCount++;
             });
 
             // OnSet: when sprite data (like texture) becomes valid
@@ -166,6 +194,7 @@ namespace Waldem
                 
                 if(sprite.TextureRef.IsValid())
                 {
+                    InstanceCount++;
                     int index = sprite.TextureRef.Texture->GetIndex(SRV_UAV_CBV);
                     TextureIdsBuffer.UpdateOrAdd(&index, sizeof(int), it->second.slotIndex * sizeof(int));
                 }
@@ -195,6 +224,12 @@ namespace Waldem
                 }
 
                 InstanceCount--;
+
+                if(InstanceCount == 0)
+                {
+                    StartInstanceLocation = -1;
+                }
+                
                 SlotAllocator.Free(meta.slotIndex);
                 SpriteTable.erase(it);
             });
@@ -245,7 +280,7 @@ namespace Waldem
 
                 if (InstanceCount > 0)
                 {
-                    Renderer::DrawIndexedInstanced(6, InstanceCount, 0, 0, 0);
+                    Renderer::DrawIndexedInstanced(6, InstanceCount, 0, 0, StartInstanceLocation);
                 }
 
                 Renderer::ResourceBarrier(WorldPositionRT, RENDER_TARGET, ALL_SHADER_RESOURCE);

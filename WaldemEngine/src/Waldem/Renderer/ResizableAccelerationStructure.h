@@ -20,9 +20,9 @@ namespace Waldem
 
             WArray DummyVertexData
             {
-                Vertex(Vector3(0, 0, 0), Vector4(1, 1, 1, 1), Vector3(0, 0, 1), Vector3(1, 0, 0), Vector3(0, 1, 0), Vector2(0, 0), 0),
-                Vertex(Vector3(0, 2, 0), Vector4(1, 1, 1, 1), Vector3(0, 0, 1), Vector3(1, 0, 0), Vector3(0, 1, 0), Vector2(0, 1), 0),
-                Vertex(Vector3(2, 2, 0), Vector4(1, 1, 1, 1), Vector3(0, 0, 1), Vector3(1, 0, 0), Vector3(0, 1, 0), Vector2(1, 1), 0),
+                Vertex(Vector3(0, 0, 0), Vector4(1, 1, 1, 1), Vector3(0, 0, 1), Vector3(1, 0, 0), Vector3(0, 1, 0), Vector2(0, 0)),
+                Vertex(Vector3(0, 2, 0), Vector4(1, 1, 1, 1), Vector3(0, 0, 1), Vector3(1, 0, 0), Vector3(0, 1, 0), Vector2(0, 1)),
+                Vertex(Vector3(2, 2, 0), Vector4(1, 1, 1, 1), Vector3(0, 0, 1), Vector3(1, 0, 0), Vector3(0, 1, 0), Vector2(1, 1)),
             };
             WArray DummyIndexData { 0, 1, 2 };
 
@@ -68,11 +68,11 @@ namespace Waldem
             return instance.InstanceID;
         }
         
-        void SetData(int id, MeshComponent& meshComponent, const Transform& transform)
+        void SetData(int id, WString& name, Buffer* VertexBuffer, Buffer* IndexBuffer, const Transform& transform)
         {
-            WArray geometries { RayTracingGeometry(meshComponent.MeshRef.Mesh->VertexBuffer, meshComponent.MeshRef.Mesh->IndexBuffer) };
+            WArray geometries { RayTracingGeometry(VertexBuffer, IndexBuffer) };
 
-            AccelerationStructure* blas = Renderer::CreateBLAS(meshComponent.MeshRef.Mesh->Name, geometries);
+            AccelerationStructure* blas = Renderer::CreateBLAS(name, geometries);
             
             BLAS[id] = blas;
             

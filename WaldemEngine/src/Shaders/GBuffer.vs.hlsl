@@ -8,7 +8,6 @@ struct VS_INPUT
     float3 Tangent : TANGENT;
     float3 Bitangent : BITANGENT;
     float2 UV : TEXCOORD;
-    uint MeshId : MESH_ID;
 };
 
 struct PS_INPUT
