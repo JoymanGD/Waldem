@@ -19,7 +19,7 @@
 
 namespace Waldem
 {
-    struct GBufferSceneData
+    struct SGBufferSceneData
     {
         Matrix4 ViewMatrix;
         Matrix4 ProjectionMatrix;
@@ -62,13 +62,16 @@ namespace Waldem
         uint RadianceRT;
         uint TargetRT;
         uint SkyColorRT;
+        uint DepthRTID; 
         uint HoveredMeshes;
+        uint SceneDataBuffer;
     };
 
     struct SkySceneData
     {
         Matrix4 InverseProjection;
         Matrix4 InverseView;
+        Matrix4 ViewProjection;
         Vector4 SkyZenithColor;
         Vector4 SkyHorizonColor;
         Vector4 GroundColor;
@@ -118,7 +121,7 @@ namespace Waldem
         Buffer* GBufferSceneDataBuffer = nullptr;
         GBufferRootConstants GBufferRootConstants;
         bool CameraIsDirty = true;
-        GBufferSceneData GBufferSceneData;
+        SGBufferSceneData GBufferSceneData;
         WArray<MaterialShaderAttribute> MaterialAttributes;
         size_t VerticesCount = 0;
         size_t IndicesCount = 0;
@@ -198,7 +201,7 @@ namespace Waldem
             IndexBuffer = ResizableBuffer("IndexBuffer", BufferType::IndexBuffer, sizeof(uint), 1000);
             WorldTransformsBuffer = ResizableBuffer("WorldTransformsBuffer", BufferType::StorageBuffer, sizeof(Matrix4), MAX_INDIRECT_COMMANDS);
             MaterialAttributesBuffer = ResizableBuffer("MaterialAttributesBuffer", BufferType::StorageBuffer, sizeof(MaterialShaderAttribute), MAX_INDIRECT_COMMANDS);
-            GBufferSceneDataBuffer = ResourceManager::CreateBuffer("SceneDataBuffer", BufferType::StorageBuffer, sizeof(GBufferSceneData), sizeof(GBufferSceneData));
+            GBufferSceneDataBuffer = ResourceManager::CreateBuffer("SceneDataBuffer", BufferType::StorageBuffer, sizeof(SGBufferSceneData), sizeof(SGBufferSceneData));
             
             WorldPositionRT = resourceManager->GetRenderTarget("WorldPositionRT");
             NormalRT = resourceManager->GetRenderTarget("NormalRT");
@@ -240,6 +243,8 @@ namespace Waldem
             //Deferred
             HoveredMeshesBuffer = Renderer::CreateBuffer("HoveredMeshes", StorageBuffer, sizeof(int), sizeof(int));
             DeferredRootConstants.HoveredMeshes = HoveredMeshesBuffer->GetIndex(SRV_UAV_CBV);
+            DeferredRootConstants.DepthRTID = DepthRT->GetIndex(SRV_UAV_CBV);
+            DeferredRootConstants.SceneDataBuffer = SceneDataBuffer->GetIndex(SRV_UAV_CBV);
 
             DeferredRenderingComputeShader = Renderer::LoadComputeShader("DeferredRendering");
             DeferredRenderingPipeline = Renderer::CreateComputePipeline("DeferredLightingPipeline", DeferredRenderingComputeShader);
@@ -581,6 +586,7 @@ namespace Waldem
                 RayTracingSceneData.InvProjectionMatrix = inverseProj;
                 SkyPassSceneData.InverseProjection = inverseProj;
                 SkyPassSceneData.InverseView = world;
+                SkyPassSceneData.ViewProjection = camera.ViewProjectionMatrix;
                 SkyPassSceneData.CameraPosition = Vector4(transform.Position, 1.0f);
                 
                 CameraIsDirty = true;
@@ -664,7 +670,7 @@ namespace Waldem
                 
                 if(CameraIsDirty)
                 {
-                    Renderer::UploadBuffer(GBufferSceneDataBuffer, &GBufferSceneData, sizeof(GBufferSceneData));
+                    Renderer::UploadBuffer(GBufferSceneDataBuffer, &GBufferSceneData, sizeof(SGBufferSceneData));
                     CameraIsDirty = false;
                 }
 
@@ -771,6 +777,7 @@ namespace Waldem
             DeferredRootConstants.RadianceRT = radianceRTIndex;
             DeferredRootConstants.TargetRT = TargetRT->GetIndex(SRV_UAV_CBV);
             DeferredRootConstants.SkyColorRT = SkyColorRT->GetIndex(SRV_UAV_CBV);
+            DeferredRootConstants.DepthRTID = DepthRT->GetIndex(SRV_UAV_CBV);
         }
     };
 }
