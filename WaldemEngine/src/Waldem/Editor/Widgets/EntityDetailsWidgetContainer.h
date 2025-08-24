@@ -113,8 +113,22 @@ namespace Waldem
                 if (ImGui::BeginChild(componentName, ImVec2(0, 0), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Border, ImGuiWindowFlags_None))
                 {
 					ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6, 4));
-					ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8, 6));
-                    ImGui::TextUnformatted(componentName);
+                	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8, 6));
+					ImGui::TextUnformatted(componentName);
+					ImGui::SameLine(ImGui::GetWindowWidth() - 60); // push to right edge (padding ~30px)
+                	if (ImGui::SmallButton("..."))
+                	{
+						ImGui::OpenPopup((std::string(componentName) + "_options").c_str());
+					}
+
+					if (ImGui::BeginPopup((std::string(componentName) + "_options").c_str()))
+					{
+						if (ImGui::MenuItem("Remove"))
+						{
+							entity.remove(id);
+						}
+						ImGui::EndPopup();
+					}
 					ImGui::Separator();
 
 					const EcsTypeSerializer* ser = ecs_get(ECS::World, comp, EcsTypeSerializer);
@@ -443,36 +457,6 @@ namespace Waldem
 					ImGui::EndTable();
 
 					ImGui::PopStyleVar(2);
-                    
-                    // if(componentWidget->IsRemovable() || componentWidget->IsResettable())
-                    // {
-                    //     ImGui::SameLine(ImGui::GetWindowWidth() - 50);
-                    //     if (ImGui::Button("..."))
-                    //     {
-                    //         ImGui::OpenPopup("ComponentContextMenu");
-                    //     }
-                    //
-                    //     if (ImGui::BeginPopupContextItem("ComponentContextMenu", ImGuiPopupFlags_MouseButtonLeft))
-                    //     {
-                    //         if(componentWidget->IsResettable())
-                    //         {
-                    //             if (ImGui::MenuItem("Reset"))
-                    //             {
-                    //                 componentWidget->ResetComponent(entity);
-                    //             }
-                    //         }
-                    //
-                    //         if(componentWidget->IsRemovable())
-                    //         {
-                    //             if (ImGui::MenuItem("Remove"))
-                    //             {
-                    //                 componentWidget->RemoveComponent(entity);
-                    //             }
-                    //         }
-                    //
-                    //         ImGui::EndPopup();
-                    //     }
-                    // }
                 }
                 ImGui::EndChild();
                 
