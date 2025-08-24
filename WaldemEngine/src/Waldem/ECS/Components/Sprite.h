@@ -12,6 +12,5 @@ namespace Waldem
         
         Vector4 Color = Vector4(1,1,1,1); // tint
         TextureReference TextureRef;
-        Vector4 Rect = Vector4(0,0,1,1); // UV region in atlas
     };
 }
