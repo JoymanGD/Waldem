@@ -126,7 +126,7 @@
 //             return reversed & ((1 << numBits) - 1);
 //         }
 //         
-//         void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
+//         void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
 //         {
 //             for (auto [entity, transform, meshComponent, ocean] : Manager->EntitiesWith<Transform, MeshComponent, Ocean>())
 //             {

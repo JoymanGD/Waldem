@@ -41,25 +41,25 @@ namespace Waldem
 		{
 			for (ISystem* system : UISystems)
 			{
-				system->Initialize(&InputManager, CurrentResourceManager, &ContentManager);
+				system->Initialize(&InputManager, CurrentResourceManager);
 			}
         	
 			for (ISystem* system : UpdateSystems)
 			{
-				system->Initialize(&InputManager, CurrentResourceManager, &ContentManager);
+				system->Initialize(&InputManager, CurrentResourceManager);
 			}
         	
 			for (ISystem* system : DrawSystems)
 			{
-				system->Initialize(&InputManager, CurrentResourceManager, &ContentManager);
+				system->Initialize(&InputManager, CurrentResourceManager);
 			}
 			
 			for (ISystem* system : PhysicsSystems)
 			{
-				system->Initialize(&InputManager, CurrentResourceManager, &ContentManager);
+				system->Initialize(&InputManager, CurrentResourceManager);
 			}
 
-			ScriptSystem->Initialize(&InputManager, CurrentResourceManager, &ContentManager);
+			ScriptSystem->Initialize(&InputManager, CurrentResourceManager);
 
 			Initialized = true;
 		}
@@ -116,20 +116,20 @@ namespace Waldem
 			
 			for (ISystem* system : DrawSystems)
 			{
-				system->Initialize(&InputManager, CurrentResourceManager, &ContentManager);
+				system->Initialize(&InputManager, CurrentResourceManager);
 			}
 			
 			for (ISystem* system : UpdateSystems)
 			{
-				system->Initialize(&InputManager, CurrentResourceManager, &ContentManager);
+				system->Initialize(&InputManager, CurrentResourceManager);
 			}
 			
 			for (ISystem* system : PhysicsSystems)
 			{
-				system->Initialize(&InputManager, CurrentResourceManager, &ContentManager);
+				system->Initialize(&InputManager, CurrentResourceManager);
 			}
 
-			ScriptSystem->Initialize(&InputManager, CurrentResourceManager, &ContentManager);
+			ScriptSystem->Initialize(&InputManager, CurrentResourceManager);
 			
 			// CurrentScene = scene;
 		}

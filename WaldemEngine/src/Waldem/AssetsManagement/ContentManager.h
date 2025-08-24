@@ -3,6 +3,8 @@
 #include "ImageImporter.h"
 #include "ModelImporter.h"
 #include "Waldem/Events/FileEvent.h" 
+#include "Waldem/Utils/AssetUtils.h"
+#include <fstream>
 
 namespace Waldem
 {
@@ -11,10 +13,10 @@ namespace Waldem
     class WALDEM_API CContentManager
     {
     public:
-        bool ImportTo(const Path& from, Path& to);
+        static bool ImportTo(const Path& from, Path& to);
         
         template <class T>
-        T* LoadAsset(const Path& inPath)
+        static T* LoadAsset(const Path& inPath)
         {
             Asset* asset = nullptr;
             Path finalPath = inPath;
@@ -64,16 +66,16 @@ namespace Waldem
         }
         
         template<typename T>
-        bool LoadAsset(const Path& inPath, T& outAsset);
+        static bool LoadAsset(const Path& inPath, T& outAsset);
 
-        bool Broadcast(Event& event);
-        void SubscribeToFileDroppedEvent(FileDroppedEventHandler handler);
+        static bool Broadcast(Event& event);
+        static void SubscribeToFileDroppedEvent(FileDroppedEventHandler handler);
     private:
-        CModelImporter ModelImporter;
-        CImageImporter ImageImporter;
-        CAudioImporter AudioImporter;
-        WArray<FileDroppedEventHandler> FileDroppedEventHandlers;
+        inline static CModelImporter ModelImporter;
+        inline static CImageImporter ImageImporter;
+        inline static CAudioImporter AudioImporter;
+        inline static WArray<FileDroppedEventHandler> FileDroppedEventHandlers;
         
-        WArray<Asset*> ImportInternal(const Path& path);
+        static WArray<Asset*> ImportInternal(const Path& from, Path& to);
     };
 }

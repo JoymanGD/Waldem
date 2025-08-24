@@ -40,8 +40,6 @@ namespace Waldem
             IndexBuffer = Renderer::CreateBuffer("QuadIndexBuffer", BufferType::IndexBuffer, sizeof(QuadIndices), sizeof(uint32_t), QuadIndices);
             BBox = CalculateBoundingBox();
 
-            CurrentMaterial = nullptr;
-
             ObjectMatrix = glm::identity<Matrix4>();
         }
     };

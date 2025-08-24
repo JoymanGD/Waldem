@@ -24,22 +24,22 @@ namespace Waldem
         {
             for (ISystem* system : UISystems)
             {
-                system->Initialize(&InputManager, CurrentResourceManager, &ContentManager);
+                system->Initialize(&InputManager, CurrentResourceManager);
             }
         	
             for (ISystem* system : UpdateSystems)
             {
-                system->Initialize(&InputManager, CurrentResourceManager, &ContentManager);
+                system->Initialize(&InputManager, CurrentResourceManager);
             }
         	
             for (ISystem* system : DrawSystems)
             {
-                system->Initialize(&InputManager, CurrentResourceManager, &ContentManager);
+                system->Initialize(&InputManager, CurrentResourceManager);
             }
 			
             for (ISystem* system : PhysicsSystems)
             {
-                system->Initialize(&InputManager, CurrentResourceManager, &ContentManager);
+                system->Initialize(&InputManager, CurrentResourceManager);
             }
 
             Initialized = true;
@@ -79,7 +79,6 @@ namespace Waldem
         CWindow* MainWindow;
         ResourceManager* CurrentResourceManager;
         InputManager InputManager;
-        CContentManager ContentManager;
         
         WArray<ISystem*> UISystems;
         WArray<ISystem*> UpdateSystems;

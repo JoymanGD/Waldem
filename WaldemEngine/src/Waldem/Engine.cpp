@@ -8,8 +8,8 @@
 #include <mono/metadata/assembly.h>
 #include "Time.h"
 #include "Audio/Audio.h"
-#include "SceneManagement/Scenes/RenderingTestScene.h"
 #include "FlecsUtils.h"
+#include "PlatformInitializer.h"
 #include "ECS/ECS.h"
 
 namespace Waldem

@@ -1,13 +1,13 @@
 #pragma once
+#include "Waldem/Serialization/Asset.h"
 
 namespace Waldem
 {
-    template<typename T>
     class IImporter
     {
     public:
         virtual ~IImporter() = default;
         
-        virtual T* Import(const Path& path, bool relative = true) = 0;
+        virtual WArray<Asset*> Import(const Path& from, Path& to, bool relative = true) = 0;
     };
 }

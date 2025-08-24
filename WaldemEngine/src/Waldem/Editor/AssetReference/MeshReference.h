@@ -9,9 +9,9 @@ namespace Waldem
     {
         CMesh* Mesh = nullptr;
         
-        void LoadAsset(CContentManager* contentManager) override
+        void LoadAsset() override
         {
-            Mesh = contentManager->LoadAsset<CMesh>(Reference);
+            Mesh = CContentManager::LoadAsset<CMesh>(Reference);
         }
 
         AssetType GetType() override { return AssetType::Mesh; }

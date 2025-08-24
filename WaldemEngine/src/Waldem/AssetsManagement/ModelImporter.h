@@ -2,10 +2,12 @@
 
 #include "assimp/Importer.hpp"
 #include "Waldem/Interfaces/Importer.h"
-#include "Waldem/Renderer/Model/Model.h"
 
 namespace Waldem
 {
+    class Texture2D;
+    struct CModel;
+
     enum class ModelImportFlags
     {
         None = 0x0,
@@ -47,18 +49,18 @@ namespace Waldem
         return static_cast<ModelImportFlags>(static_cast<int>(a) | static_cast<int>(b));
     }
     
-    class CModelImporter : public IImporter<CModel>
+    class CModelImporter : public IImporter
     {
     public:
-        virtual ~CModelImporter() override = default;
+        CModelImporter() = default;
+        ~CModelImporter() override = default;
 
-        CModelImporter();
-
-        virtual CModel* Import(const Path& path, bool relative = true) override;
+        WArray<Asset*> Import(const Path& from, Path& to, bool relative = true) override;
 
     protected:
-        const aiScene* ImportInternal(Path& path, ModelImportFlags importFlags = ModelImportFlags::None, bool relative = true);
-        
+        const aiScene* ImportInternal(const Path& path, ModelImportFlags importFlags = ModelImportFlags::None, bool relative = true);
+
+    protected:
         Assimp::Importer AssimpImporter;
 
         Texture2D* DummyTexture;

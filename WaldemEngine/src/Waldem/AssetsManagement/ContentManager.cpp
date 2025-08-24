@@ -1,39 +1,42 @@
 #include "wdpch.h"
 #include "ContentManager.h"
+#include "Waldem/Renderer/Model/Mesh.h"
+#include "Waldem/Utils/AssetUtils.h"
+#include "Waldem/Utils/DataUtils.h"
 
 namespace Waldem
 {
-    WArray<Asset*> CContentManager::ImportInternal(const Path& path)
+    WArray<Asset*> CContentManager::ImportInternal(const Path& from, Path& to)
     {
-        auto extension = path.extension().string();
+        auto extension = from.extension().string();
 
         WArray<Asset*> assets;
 
+        IImporter* importer = nullptr;
+
         if (extension == ".png" || extension == ".jpg")
         {
-            auto texture = ImageImporter.Import(path);
-            assets.Add(texture);
+            importer = &ImageImporter;
         }
         else if (extension == ".gltf" || extension == ".glb" || extension == ".fbx")
         {
-            auto model = ModelImporter.Import(path);
-
-            for (auto mesh : model->GetMeshes())
-            {
-                assets.Add(mesh);
-            }
+            importer = &ModelImporter;
         }
         else if (extension == ".wav")
         {
-            assets.Add(AudioImporter.Import(path));
+            importer = &AudioImporter;
         }
+
+        assets.AddRange(importer->Import(from, to));
+
+        importer = nullptr;
 
         return assets;
     }
 
     bool CContentManager::ImportTo(const Path& from, Path& to)
     {
-        WArray<Asset*> assets = ImportInternal(from);
+        WArray<Asset*> assets = ImportInternal(from, to);
         bool multipleAssets = assets.Num() > 1;
 
         for (auto asset : assets)

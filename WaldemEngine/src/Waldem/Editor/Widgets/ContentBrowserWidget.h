@@ -21,15 +21,15 @@ namespace Waldem
 
         WString GetName() override { return "Content"; }
 
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
+        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
         {
-            contentManager->SubscribeToFileDroppedEvent([contentManager, this](Path path)
+            CContentManager::SubscribeToFileDroppedEvent([this](Path path)
             {
                 Path target = HoveredDropTargetFolder.has_value() ? HoveredDropTargetFolder.value() : CurrentPath;
                 
                 if(!target.empty())
                 {
-                    contentManager->ImportTo(path, target);
+                    CContentManager::ImportTo(path, target);
                     SelectedAssetListPath = target;
                 }
             });
@@ -219,9 +219,9 @@ namespace Waldem
             // Drag and drop
             if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
             {
-                std::string fullPath = std::filesystem::relative(entry.path(), CONTENT_PATH).string();
+                std::string relativePath = std::filesystem::relative(entry.path(), CONTENT_PATH).string();
                 
-                ImGui::SetDragDropPayload(ExtensionToAssetString(extension), fullPath.c_str(), fullPath.size() + 1);
+                ImGui::SetDragDropPayload(ExtensionToAssetString(extension), relativePath.c_str(), relativePath.size() + 1);
                 ImGui::Text("%s", itemName.c_str());
                 ImGui::EndDragDropSource();
             }

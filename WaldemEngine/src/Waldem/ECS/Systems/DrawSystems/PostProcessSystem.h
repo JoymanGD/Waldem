@@ -31,7 +31,7 @@ namespace Waldem
     public:
         PostProcessSystem() {}
         
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
+        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
         {
             ECS::World.observer<BloomPostProcess>().event(flecs::OnAdd).each([&](flecs::entity entity, BloomPostProcess& bloom)
             {

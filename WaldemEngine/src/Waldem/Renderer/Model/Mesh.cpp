@@ -1,6 +1,6 @@
 #include "wdpch.h"
 #include "Mesh.h"
-#include "..\..\Engine.h"
+#include "Waldem/Engine.h"
 
 namespace Waldem
 {
@@ -13,7 +13,7 @@ namespace Waldem
 		}
 	}
 	
-	CMesh::CMesh(WArray<Vertex> vertexData, WArray<uint> indexData, Material* material, AABB bBox, WString name, Matrix4 objectMatrix)
+	CMesh::CMesh(WArray<Vertex> vertexData, WArray<uint> indexData, MaterialReference materialRef, AABB bBox, WString name, Matrix4 objectMatrix)
 	{
 		VertexData = vertexData;
 		IndexData = indexData;
@@ -22,7 +22,7 @@ namespace Waldem
 		IndexBuffer = Renderer::CreateBuffer("MeshIndexBuffer", BufferType::IndexBuffer, IndexData.GetSize(), sizeof(uint), IndexData.GetData());
 		BBox = bBox;
 		Name = name;
-		CurrentMaterial = material;
+		MaterialRef = materialRef;
 		ObjectMatrix = objectMatrix;
 		Type = AssetType::Mesh;
 	}
@@ -31,7 +31,7 @@ namespace Waldem
 	{
 		VertexData.Serialize(outData);
 		IndexData.Serialize(outData);
-		CurrentMaterial->Serialize(outData);
+		outData << MaterialRef.Reference;
 		outData << BBox;
 		outData << ObjectMatrix;
 	}
@@ -40,12 +40,16 @@ namespace Waldem
 	{
 		VertexData.Deserialize(inData);
 		IndexData.Deserialize(inData);
-		CurrentMaterial = new Material();
-		CurrentMaterial->Deserialize(inData);
+		inData >> MaterialRef.Reference;
 		inData >> BBox;
 		inData >> ObjectMatrix;
 		ExtractPositionsFromVertexData(VertexData, Positions);
 		VertexBuffer = Renderer::CreateBuffer("MeshVertexBuffer", BufferType::VertexBuffer, VertexData.GetSize(), sizeof(Vertex), VertexData.GetData());
 		IndexBuffer = Renderer::CreateBuffer("MeshIndexBuffer", BufferType::IndexBuffer, IndexData.GetSize(), sizeof(uint), IndexData.GetData());
+
+		if(MaterialRef.Reference != "Empty")
+		{
+			MaterialRef.LoadAsset();
+		}
 	}
 }

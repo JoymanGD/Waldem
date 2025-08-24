@@ -24,7 +24,7 @@ namespace Waldem
     public:
         LinesRenderingSystem() {}
 
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
+        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
         {
             WArray<InputLayoutDesc> inputElementDescs = {
                 { "POSITION", 0, TextureFormat::R32G32B32A32_FLOAT, 0, 0, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },

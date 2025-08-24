@@ -27,7 +27,7 @@ namespace Waldem
     public:
         EditorGuizmoSystem() {}
         
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
+        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
         {
             inputManager->SubscribeToMouseButtonEvent(WD_MOUSE_BUTTON_RIGHT, [&](bool isPressed)
             {
