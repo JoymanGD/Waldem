@@ -15,7 +15,7 @@ namespace Waldem
     public:
         SkyRenderingSystem() {}
         
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
+        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
         {
 
         }

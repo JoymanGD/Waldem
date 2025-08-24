@@ -9,9 +9,9 @@ namespace Waldem
     {
         AudioClip* Clip = nullptr;
         
-        void LoadAsset(CContentManager* contentManager) override
+        void LoadAsset() override
         {
-            Clip = contentManager->LoadAsset<AudioClip>(Reference);
+            Clip = CContentManager::LoadAsset<AudioClip>(Reference);
         }
 
         AssetType GetType() override { return AssetType::Audio; }

@@ -1,18 +1,17 @@
 #pragma once
 #include "AccelerationStructure.h"
-#include "CommandSignature.h"
 #include "Pipeline.h"
 #include "Waldem/Window.h"
 #include "GraphicResource.h"
 #include "Shader.h"
 #include "Texture.h"
+#include "RenderTarget.h"
 
 #define SWAPCHAIN_SIZE 2
 
 namespace Waldem
 {
     class CMesh;
-    class RenderTarget;
     struct SViewport;
     struct CModel;
 

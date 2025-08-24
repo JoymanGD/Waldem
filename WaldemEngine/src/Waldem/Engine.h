@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Core.h"
-#include "PlatformInitializer.h"
 #include "Window.h"
 #include "ECS/ECS.h"
 #include "Layers/DebugLayer.h"

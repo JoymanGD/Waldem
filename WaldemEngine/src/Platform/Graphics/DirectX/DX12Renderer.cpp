@@ -1186,10 +1186,14 @@ namespace Waldem
                 DX12Helper::PrintHResultError(hr);
             }
 
+            int bpp = GetBytesPerPixel(format);
+            UINT64 rowPitch = (UINT64)width * bpp;
+            UINT64 slicePitch = rowPitch * height;
+            
             D3D12_SUBRESOURCE_DATA subResourceData;
             subResourceData.pData = data;
-            subResourceData.RowPitch = uploadBufferSize / height;
-            subResourceData.SlicePitch = uploadBufferSize;
+            subResourceData.RowPitch = rowPitch;
+            subResourceData.SlicePitch = slicePitch;
 
             cmdList->UpdateSubresoures(Resource, textureUploadHeap, 1, &subResourceData);
         }

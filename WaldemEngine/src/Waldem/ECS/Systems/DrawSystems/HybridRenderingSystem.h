@@ -167,7 +167,7 @@ namespace Waldem
             SpriteIndexBuffer = Renderer::CreateBuffer("SpriteIndexBuffer", BufferType::IndexBuffer, SpriteIndices.GetSize(), sizeof(uint32_t), SpriteIndices.GetData());
         }
         
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
+        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
         {
             //Sky
             WArray<InputLayoutDesc> inputElementDescs = {
@@ -295,7 +295,7 @@ namespace Waldem
 
                         if(!meshReferenceIsEmpty && !meshComponent.MeshRef.IsValid())
                         {
-                            meshComponent.MeshRef.LoadAsset(contentManager);
+                            meshComponent.MeshRef.LoadAsset();
                         }
                         
                         if(meshComponent.MeshRef.IsValid())
@@ -320,18 +320,18 @@ namespace Waldem
 
                             auto& materialAttribute = MaterialAttributes[globalDrawId];
 
-                            materialAttribute.Albedo = meshComponent.MeshRef.Mesh->CurrentMaterial->Albedo;
-                            materialAttribute.Metallic = meshComponent.MeshRef.Mesh->CurrentMaterial->Metallic;
-                            materialAttribute.Roughness = meshComponent.MeshRef.Mesh->CurrentMaterial->Roughness;
+                            materialAttribute.Albedo = meshComponent.MeshRef.Mesh->MaterialRef.Mat->Albedo;
+                            materialAttribute.Metallic = meshComponent.MeshRef.Mesh->MaterialRef.Mat->Metallic;
+                            materialAttribute.Roughness = meshComponent.MeshRef.Mesh->MaterialRef.Mat->Roughness;
                             
-                            if(meshComponent.MeshRef.Mesh->CurrentMaterial->HasDiffuseTexture())
+                            if(meshComponent.MeshRef.Mesh->MaterialRef.Mat->HasDiffuseTexture())
                             {
-                                materialAttribute.DiffuseTextureID = meshComponent.MeshRef.Mesh->CurrentMaterial->GetDiffuseTexture()->GetIndex(SRV_UAV_CBV);
+                                materialAttribute.DiffuseTextureID = meshComponent.MeshRef.Mesh->MaterialRef.Mat->GetDiffuseTexture()->GetIndex(SRV_UAV_CBV);
                                 
-                                if(meshComponent.MeshRef.Mesh->CurrentMaterial->HasNormalTexture())
-                                    materialAttribute.NormalTextureID = meshComponent.MeshRef.Mesh->CurrentMaterial->GetNormalTexture()->GetIndex(SRV_UAV_CBV);
-                                if(meshComponent.MeshRef.Mesh->CurrentMaterial->HasORMTexture())
-                                    materialAttribute.ORMTextureID = meshComponent.MeshRef.Mesh->CurrentMaterial->GetORMTexture()->GetIndex(SRV_UAV_CBV);
+                                if(meshComponent.MeshRef.Mesh->MaterialRef.Mat->HasNormalTexture())
+                                    materialAttribute.NormalTextureID = meshComponent.MeshRef.Mesh->MaterialRef.Mat->GetNormalTexture()->GetIndex(SRV_UAV_CBV);
+                                if(meshComponent.MeshRef.Mesh->MaterialRef.Mat->HasORMTexture())
+                                    materialAttribute.ORMTextureID = meshComponent.MeshRef.Mesh->MaterialRef.Mat->GetORMTexture()->GetIndex(SRV_UAV_CBV);
                             }
 
                             MaterialAttributesBuffer.UpdateData(&materialAttribute, sizeof(MaterialShaderAttribute), globalDrawId * sizeof(MaterialShaderAttribute));
@@ -388,7 +388,6 @@ namespace Waldem
                 }
             });
 
-            // OnAdd: allocate slot, write transform, setup indirection
             ECS::World.observer<Sprite, Transform>().event(flecs::OnAdd).each([&](flecs::entity entity, Sprite& sprite, Transform& transform)
             {
                 auto globalDrawId = IdManager::AddId(entity, GlobalDrawIdType);
@@ -411,7 +410,6 @@ namespace Waldem
                 TLAS.AddEmptyData();
             });
 
-            // OnSet: when sprite data (like texture) becomes valid
             ECS::World.observer<Sprite>().event(flecs::OnSet).each([&](flecs::entity entity, Sprite& sprite)
             {
                 int globalDrawId;
@@ -431,7 +429,7 @@ namespace Waldem
 
                         if(!textureReferenceIsEmpty && !sprite.TextureRef.IsValid())
                         {
-                            sprite.TextureRef.LoadAsset(contentManager);
+                            sprite.TextureRef.LoadAsset();
                         }
                         
                         if(sprite.TextureRef.IsValid())

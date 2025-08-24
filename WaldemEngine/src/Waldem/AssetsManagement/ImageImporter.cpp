@@ -4,18 +4,18 @@
 #include "Waldem/Renderer/Texture.h"
 #include <filesystem>
 #include <fstream>
-#include "..\Engine.h"
+#include "Waldem/Engine.h"
 
 namespace Waldem
 {
-    TextureDesc* CImageImporter::Import(const Path& path, bool relative)
+    WArray<Asset*> CImageImporter::Import(const Path& from, Path& to, bool relative)
     {
-        TextureDesc* result = nullptr;
+        WArray<Asset*> assets;
         
-        WString fileName = path.filename().string();
+        WString fileName = from.filename().string();
         
         int width, height, channels;
-        unsigned char *data = stbi_load(path.string().c_str(), &width, &height, &channels, 0);
+        unsigned char *data = stbi_load(from.string().c_str(), &width, &height, &channels, 0);
         if(data)
         {
             unsigned char* rgbaData = data;
@@ -33,14 +33,15 @@ namespace Waldem
                 }
             }
             
-            result = new TextureDesc(fileName, width, height, TextureFormat::R8G8B8A8_UNORM, rgbaData);
+            auto texDesc = new TextureDesc(fileName, width, height, TextureFormat::R8G8B8A8_UNORM, rgbaData);
+            assets.Add(texDesc);
             stbi_image_free(data);
         }
         else
         {
-		    WD_CORE_ERROR("Failed to load Image from path: {0}", path);
+		    WD_CORE_ERROR("Failed to load Image from path: {0}", from);
         }
 
-        return result;
+        return assets;
     }
 }

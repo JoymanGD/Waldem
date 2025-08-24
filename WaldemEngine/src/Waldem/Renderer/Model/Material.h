@@ -1,6 +1,5 @@
 #pragma once
-#include "Waldem/Renderer/Renderer.h"
-#include "Waldem/Resources/ResourceManager.h"
+#include "Waldem/Editor/AssetReference/TextureReference.h"
 #include "Waldem/Types/DataBuffer.h"
 
 namespace Waldem
@@ -19,73 +18,32 @@ namespace Waldem
         float Roughness = 1.0f;
     };
     
-    class Material : public ISerializable
+    class Material : public Asset
     {
     public:
         Material() = default;
-        Material(Texture2D* diffuse, Texture2D* normal, Texture2D* metalRoughness) : Diffuse(diffuse), Normal(normal), MetalRoughness(metalRoughness) {}
-        Material(Texture2D* diffuse, Texture2D* normal, Texture2D* metalRoughness, Vector4 albedo, float roughness, float metallic) : Diffuse(diffuse), Normal(normal), MetalRoughness(metalRoughness), Albedo(albedo), Roughness(roughness), Metallic(metallic) {}
+        Material(WString name, TextureReference diffuse, TextureReference normal, TextureReference metalRoughness) : Asset(name, AssetType::Material), DiffuseRef(diffuse), NormalRef(normal), MetalRoughnessRef(metalRoughness) {}
+        Material(WString name, TextureReference diffuse, TextureReference normal, TextureReference metalRoughness, Vector4 albedo, float roughness, float metallic) : Asset(name, AssetType::Material), Albedo(albedo), Metallic(metallic), Roughness(roughness), DiffuseRef(diffuse), NormalRef(normal), MetalRoughnessRef(metalRoughness) { Type = AssetType::Material; }
 
-        Texture2D* GetDiffuseTexture() { return Diffuse; }
-        Texture2D* GetNormalTexture() { return Normal; }
-        Texture2D* GetORMTexture() { return MetalRoughness; }
+        Texture2D* GetDiffuseTexture() { return DiffuseRef.Texture; }
+        Texture2D* GetNormalTexture() { return NormalRef.Texture; }
+        Texture2D* GetORMTexture() { return MetalRoughnessRef.Texture; }
 
-        bool HasDiffuseTexture() { return Diffuse != nullptr; }
-        bool HasNormalTexture() { return Normal != nullptr; }
-        bool HasORMTexture() { return MetalRoughness != nullptr; }
-
-        void SerializeTexture(WDataBuffer& outData, Texture2D* texture)
-        {
-            if(texture)
-            {
-                uint64 hash = ResourceManager::ExportAsset(&texture->Desc);
-                outData << hash;
-                return;
-            }
-
-            outData << (uint64)0;
-        }
-
-        void DeserializeTexture(WDataBuffer& inData, Texture2D*& texture)
-        {
-            uint64 hash;
-            inData >> hash;
-            
-            if(hash > 0)
-            {
-                auto textureDesc = ResourceManager::ImportAsset<TextureDesc>(hash);
-
-                texture = Renderer::CreateTexture(textureDesc->Name, textureDesc->Width, textureDesc->Height, textureDesc->Format, textureDesc->Data);
-            }
-        }
+        bool HasDiffuseTexture() { return DiffuseRef.IsValid(); }
+        bool HasNormalTexture() { return NormalRef.IsValid(); }
+        bool HasORMTexture() { return MetalRoughnessRef.IsValid(); }
         
-        void Serialize(WDataBuffer& outData) override
-        {
-            SerializeTexture(outData, Diffuse);
-            SerializeTexture(outData, Normal);
-            SerializeTexture(outData, MetalRoughness);
-            outData << Albedo;
-            outData << Metallic;
-            outData << Roughness;
-        }
+        void Serialize(WDataBuffer& outData) override;
         
-        void Deserialize(WDataBuffer& inData) override
-        {
-            DeserializeTexture(inData, Diffuse);
-            DeserializeTexture(inData, Normal);
-            DeserializeTexture(inData, MetalRoughness);
-            inData >> Albedo;
-            inData >> Metallic;
-            inData >> Roughness;
-        }
+        void Deserialize(WDataBuffer& inData) override;
 
         Vector4 Albedo = Vector4(1.0f);
         float Metallic = 0.0f;
         float Roughness = 0.0f;
         
     private:
-        Texture2D* Diffuse = nullptr;
-        Texture2D* Normal = nullptr;
-        Texture2D* MetalRoughness = nullptr;
+        TextureReference DiffuseRef = {};
+        TextureReference NormalRef = {};
+        TextureReference MetalRoughnessRef = {};
     };
 }

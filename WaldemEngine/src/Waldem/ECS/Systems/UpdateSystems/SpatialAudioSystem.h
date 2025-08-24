@@ -14,7 +14,7 @@ namespace Waldem
     public:
         SpatialAudioSystem() {}
         
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
+        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
         {
             ECS::World.observer<AudioSource>().event(flecs::OnSet).each([&](AudioSource& audioSource)
             {
@@ -27,7 +27,7 @@ namespace Waldem
 
                 if(!referenceIsEmpty && !audioSource.ClipRef.IsValid())
                 {
-                    audioSource.ClipRef.LoadAsset(contentManager);
+                    audioSource.ClipRef.LoadAsset();
                 }
             });
             

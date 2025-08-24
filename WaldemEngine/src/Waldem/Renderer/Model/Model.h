@@ -1,8 +1,10 @@
 #pragma once
-#include "Mesh.h"
 
 namespace Waldem
 {
+    class CMesh;
+    class Texture2D;
+    
     struct WALDEM_API CModel
     {
         CModel() = default;
@@ -11,17 +13,7 @@ namespace Waldem
         std::vector<CMesh*> GetMeshes() { return Meshes; }
         void AddMesh(CMesh* mesh) { Meshes.push_back(mesh); }
 
-        std::vector<Texture2D*> GetTextures()
-        {
-            std::vector<Texture2D*> textures;
-
-            for (auto mesh : Meshes)
-            {
-                textures.push_back(mesh->CurrentMaterial->GetDiffuseTexture());
-            }
-
-            return textures;
-        }
+        std::vector<Texture2D*> GetTextures();
     private:
         std::vector<CMesh*> Meshes;
     };

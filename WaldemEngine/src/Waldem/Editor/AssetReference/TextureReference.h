@@ -1,16 +1,21 @@
 #pragma once
 #include "Waldem/AssetsManagement/ContentManager.h"
 #include "Waldem/Editor/AssetReference.h"
+#include "Waldem/Renderer/Renderer.h"
 
 namespace Waldem
 {
     struct TextureReference : AssetReference
     {
+        TextureReference(Path reference = "Empty") : AssetReference(reference) {}
+        
         Texture2D* Texture = nullptr;
         
-        void LoadAsset(CContentManager* contentManager) override
+        void LoadAsset() override
         {
-            auto textureDesc = contentManager->LoadAsset<TextureDesc>(Reference);
+            auto path = Reference;
+            path.replace_extension(".img");
+            auto textureDesc = CContentManager::LoadAsset<TextureDesc>(path);
             Texture = Renderer::CreateTexture(textureDesc->Name, textureDesc->Width, textureDesc->Height, textureDesc->Format, textureDesc->Data);
         }
 

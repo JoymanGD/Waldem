@@ -1,18 +1,17 @@
 #pragma once
 
 #include "Waldem/Interfaces/Importer.h"
-#include "Waldem/Renderer/Texture.h"
-#include "Waldem/Types/String.h"
 
 namespace Waldem
 {
+    class TextureDesc;
     class Texture2D;
 
-    class CImageImporter : public IImporter<TextureDesc>
+    class CImageImporter : public IImporter
     {
     public:
         virtual ~CImageImporter() override = default;
 
-        virtual TextureDesc* Import(const Path& path, bool relative = true) override;
+        WArray<Asset*> Import(const Path& from, Path& to, bool relative = true) override;
     };
 }

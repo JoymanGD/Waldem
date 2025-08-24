@@ -13,7 +13,7 @@ namespace Waldem
         bool IsInitialized = false;
     public:
         ISystem() {}
-        virtual void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) {}
+        virtual void Initialize(InputManager* inputManager, ResourceManager* resourceManager) {}
         virtual void Deinitialize() {}
         virtual void Update(float deltaTime) {}
         virtual void OnResize(Vector2 size) {}

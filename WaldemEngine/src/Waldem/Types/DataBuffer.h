@@ -113,6 +113,42 @@ namespace Waldem
             return *this;
         }
 
+        // Write std::string
+        WDataBuffer& operator<<(const std::string& str)
+        {
+            size_t length = str.size();
+            *this << length;            // store length first
+            Write(str.data(), length);  // then raw chars
+            return *this;
+        }
+
+        // Read std::string
+        WDataBuffer& operator>>(std::string& str)
+        {
+            size_t length;
+            *this >> length;            // read length first
+            str.resize(length);
+            Read(str.data(), length);   // read raw chars
+            return *this;
+        }
+
+        // Write filesystem::path
+        WDataBuffer& operator<<(const Path& path)
+        {
+            std::string s = path.string();
+            *this << s;
+            return *this;
+        }
+
+        // Read filesystem::path
+        WDataBuffer& operator>>(Path& path)
+        {
+            std::string s;
+            *this >> s;
+            path = s;
+            return *this;
+        }
+
         void Prepend(const void* data, size_t size)
         {
             unsigned char* newData = new unsigned char[Size + size];

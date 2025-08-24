@@ -6,9 +6,11 @@ namespace Waldem
 
     struct AssetReference
     {
+        AssetReference(Path reference = "Empty") : Reference(reference) {}
+        
         Path Reference = "Empty";
 
-        virtual void LoadAsset(CContentManager* contentManager) = 0;
+        virtual void LoadAsset() = 0;
         virtual AssetType GetType() = 0;
     };
 }

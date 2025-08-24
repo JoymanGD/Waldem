@@ -31,7 +31,7 @@ namespace Waldem
     public:
         CollisionRenderingSystem() {}
 
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
+        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
         {
             DepthRT = resourceManager->GetRenderTarget("DepthRT");
             

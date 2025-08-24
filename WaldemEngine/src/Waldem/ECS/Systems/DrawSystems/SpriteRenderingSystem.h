@@ -81,7 +81,7 @@ namespace Waldem
     public:
         SpriteRenderingSystem() {}
 
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
+        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
         {
             VertexBuffer          = ResizableBuffer("SpriteVertexBuffer", BufferType::VertexBuffer, sizeof(SpriteVertex), 1000);
             IndexBuffer           = ResizableBuffer("SpriteIndexBuffer", BufferType::IndexBuffer, sizeof(uint32_t), 1000);

@@ -32,10 +32,12 @@ namespace Waldem
         return path;
     }
 
-    AudioClip* CAudioImporter::Import(const Path& path, bool relative)
+    WArray<Asset*> CAudioImporter::Import(const Path& from, Path& to, bool relative)
     {
+        WArray<Asset*> assets;
+        
         Path p = GetPathForAsset(AssetType::Audio);
-        p /= path;
+        p /= from;
         p = GetPathToSound(p);
         
         AudioClip* clip = new AudioClip();
@@ -49,13 +51,13 @@ namespace Waldem
             if (SDL_LoadWAV(p.string().c_str(), &clipSpec, &wavData, &wavLength) == nullptr)
             {
                 WD_CORE_ERROR("Failed to load WAV: {0}", SDL_GetError());
-                return nullptr;
+                return assets;
             }
         }
         else
         {
             WD_CORE_ERROR("Unsupported audio format: {0}", p.extension().string());
-            return nullptr;
+            return assets;
         }
             
         SDL_AudioCVT cvt;
@@ -84,8 +86,9 @@ namespace Waldem
         
         clip->Stride = SDL_AUDIO_BITSIZE(format) / 8;
         clip->ChannelsNum = clipSpec.channels;
-        clip->Name = path.filename().string();
-        
-        return clip;
+        clip->Name = from.filename().string();
+
+        assets.Add(clip);
+        return assets;
     }
 }

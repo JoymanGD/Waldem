@@ -158,7 +158,7 @@ namespace Waldem
                 }
             case EventType::FileDropped:
                 {
-                    event.Handled = ContentManager.Broadcast(event);
+                    event.Handled = CContentManager::Broadcast(event);
                     break;
                 }
             }

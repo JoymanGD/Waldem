@@ -11,16 +11,14 @@ namespace Waldem
     {
     private:
         ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
-    	CContentManager* ContentManager; //TODO: remove this dependency
         
     public:
         EntityDetailsWidgetContainer() {}
 
         WString GetName() override { return "Details"; }
 
-    	void Initialize(InputManager* inputManager, ResourceManager* resourceManager, CContentManager* contentManager) override
+    	void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
 		{
-			ContentManager = contentManager;
 		}
 
         void OnDraw(float deltaTime) override
