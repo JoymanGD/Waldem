@@ -33,7 +33,7 @@ float SmithGeometry(float3 normal, float3 viewDirection, float3 lightDirection, 
     return SchlickBeckmannGS(normal, viewDirection, roughnessFactor) * SchlickBeckmannGS(normal, lightDirection, roughnessFactor);
 }
 
-float3 CookTorrenceBRDF(float3 normal, float3 viewDirection, float3 pixelToLightDirection, float3 albedo, float roughnessFactor, float metallicFactor)
+float3 CookTorrenceBRDF(float3 normal, float3 viewDirection, float3 pixelToLightDirection, float3 albedo, float3 reflection, float roughnessFactor, float metallicFactor)
 {
     float3 halfWayVector = normalize(viewDirection + pixelToLightDirection);
 
@@ -46,6 +46,9 @@ float3 CookTorrenceBRDF(float3 normal, float3 viewDirection, float3 pixelToLight
     float geometryFunction = SmithGeometry(normal, viewDirection, pixelToLightDirection, roughnessFactor);
 
     float3 specularBRDF = (normalDistribution * geometryFunction * fresnel) / max(4.0f * saturate(dot(viewDirection, normal)) * saturate(dot(pixelToLightDirection, normal)), MIN_FLOAT_VALUE);
+    bool hasReflection = any(reflection);
+    float reflectionStrength = saturate(1.0 - roughnessFactor);
+    specularBRDF = hasReflection ? lerp(specularBRDF, reflection * fresnel, reflectionStrength) : specularBRDF;
 
     // Metals have kD as 0.0f, so more metallic a surface is, closes kS ~ 1 and kD ~ 0.
     // Using lambertian model for diffuse light now.
