@@ -54,6 +54,7 @@ namespace Waldem
             resourceManager->CreateRenderTarget("MeshIDRT", size.x, size.y, TextureFormat::R32_SINT);
             resourceManager->CreateRenderTarget("DepthRT", size.x, size.y, TextureFormat::D32_FLOAT);
             resourceManager->CreateRenderTarget("RadianceRT", size.x, size.y, TextureFormat::R32G32B32A32_FLOAT);
+            resourceManager->CreateRenderTarget("ReflectionRT", size.x, size.y, TextureFormat::R32G32B32A32_FLOAT);
             
             auto cameraEntity = ECS::CreateEntity("EditorCamera");
             float aspectRatio = size.x / size.y;

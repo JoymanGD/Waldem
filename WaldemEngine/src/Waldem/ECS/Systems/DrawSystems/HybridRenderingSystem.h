@@ -38,6 +38,7 @@ namespace Waldem
     {
         Matrix4 InvViewMatrix;
         Matrix4 InvProjectionMatrix;
+        Vector3 CameraPosition;
         int NumLights = 0;
     };
 
@@ -47,11 +48,16 @@ namespace Waldem
         uint NormalRT;
         uint ColorRT;
         uint ORMRT;
-        uint OutputColorRT;
+        uint RadianceRT;
+        uint ReflectionRT;
         uint LightsBuffer;
         uint LightTransformsBuffer;
         uint SceneDataBuffer; 
         uint TLAS;
+        uint VertexBuffer;
+        uint IndexBuffer;
+        uint OffsetsArgsBuffer;
+        uint MaterialBuffer;
     };
     
     struct DeferredRootConstants
@@ -83,6 +89,12 @@ namespace Waldem
     {
         uint SceneDataBuffer;
     };
+
+    struct OffsetsArgs
+    {
+        uint VertexOffset;
+        uint IndexOffset;
+    };
     
     class WALDEM_API HybridRenderingSystem : public ISystem
     {
@@ -110,6 +122,8 @@ namespace Waldem
         RenderTarget* ORMRT = nullptr;
         RenderTarget* DepthRT = nullptr;
         RenderTarget* MeshIDRT = nullptr;
+        ResizableBuffer OffsetsArgsBuffer;
+        WArray<OffsetsArgs> OffsetsArgsArray;
         ResizableBuffer BFCIndirectBuffer; //Back face culling indirect buffer
         WArray<IndirectCommand> BFCIndirectCommands;
         ResizableBuffer NCIndirectBuffer; //No culling indirect buffer
@@ -128,6 +142,7 @@ namespace Waldem
 
         //RayTracing
         RenderTarget* RadianceRT = nullptr;
+        RenderTarget* ReflectionRT = nullptr;
         Pipeline* RTPipeline = nullptr;
         RayTracingShader* RTShader = nullptr;
         WArray<AccelerationStructure*> BLAS;
@@ -195,6 +210,7 @@ namespace Waldem
                                                             inputElementDescs);
             
             //GBuffer
+            OffsetsArgsBuffer = ResizableBuffer("OffsetsArgsBuffer", BufferType::StorageBuffer, sizeof(OffsetsArgs), MAX_INDIRECT_COMMANDS);
             BFCIndirectBuffer = ResizableBuffer("BFCIndirectBuffer", BufferType::IndirectBuffer, sizeof(IndirectCommand), MAX_INDIRECT_COMMANDS);
             NCIndirectBuffer = ResizableBuffer("NCIndirectBuffer", BufferType::IndirectBuffer, sizeof(IndirectCommand), MAX_INDIRECT_COMMANDS);
             VertexBuffer = ResizableBuffer("VertexBuffer", BufferType::VertexBuffer, sizeof(Vertex), 1000);
@@ -233,6 +249,7 @@ namespace Waldem
 
             //Raytracing
             RadianceRT = resourceManager->GetRenderTarget("RadianceRT");
+            ReflectionRT = resourceManager->GetRenderTarget("ReflectionRT");
             RTShader = Renderer::LoadRayTracingShader("RayTracing/Radiance");
             RTPipeline = Renderer::CreateRayTracingPipeline("RayTracingPipeline", RTShader);
             LightsBuffer = ResizableBuffer("LightsBuffer", StorageBuffer, sizeof(LightData), 40);
@@ -268,7 +285,7 @@ namespace Waldem
                 {
                     BFCIndirectCommands.Add(IndirectCommand());
                     BFCIndirectBuffer.UpdateOrAdd(nullptr, sizeof(IndirectCommand), bfcDrawId * sizeof(IndirectCommand));
-                }
+                }                
                 
                 WorldTransformsBuffer.UpdateOrAdd(&transform.Matrix, sizeof(Matrix4), globalDrawId * sizeof(Matrix4));
 
@@ -276,6 +293,7 @@ namespace Waldem
                 {
                     MaterialAttributes.Add(MaterialShaderAttribute());
                     MaterialAttributesBuffer.AddData(nullptr, sizeof(MaterialShaderAttribute));
+                    OffsetsArgsBuffer.AddData(nullptr, sizeof(OffsetsArgs));
                 }
 
                 TLAS.AddEmptyData();
@@ -305,13 +323,17 @@ namespace Waldem
                         
                         if(meshComponent.MeshRef.IsValid())
                         {
+                            OffsetsArgs offsets;
+                            offsets.VertexOffset = (uint)VerticesCount;
+                            offsets.IndexOffset = (uint)IndicesCount;
+                            
                             auto& command = BFCIndirectCommands[bfcDrawId];
                             command.DrawId = globalDrawId;
                             command.DrawIndexed = {
                                 (uint)meshComponent.MeshRef.Mesh->IndexData.Num(),
                                 1,
-                                (uint)IndicesCount,
-                                (int)VerticesCount,
+                                offsets.IndexOffset,
+                                (int)offsets.VertexOffset,
                                 0
                             };
 
@@ -340,6 +362,8 @@ namespace Waldem
                             }
 
                             MaterialAttributesBuffer.UpdateData(&materialAttribute, sizeof(MaterialShaderAttribute), globalDrawId * sizeof(MaterialShaderAttribute));
+
+                            OffsetsArgsBuffer.UpdateData(&offsets, sizeof(OffsetsArgs), globalDrawId * sizeof(OffsetsArgs));
                         }
 
                         auto transform = entity.get<Transform>();
@@ -376,6 +400,7 @@ namespace Waldem
                         command.DrawIndexed = { 0, 0, 0, 0, 0 };
 
                         MaterialAttributesBuffer.RemoveData(sizeof(MaterialShaderAttribute), globalDrawId * sizeof(MaterialShaderAttribute));
+                        OffsetsArgsBuffer.RemoveData(sizeof(OffsetsArgs), globalDrawId * sizeof(OffsetsArgs));
 
                         TLAS.RemoveData(globalDrawId);
                         
@@ -410,6 +435,7 @@ namespace Waldem
                 {
                     MaterialAttributes.Add(MaterialShaderAttribute());
                     MaterialAttributesBuffer.UpdateOrAdd(nullptr, sizeof(MaterialShaderAttribute), globalDrawId * sizeof(MaterialShaderAttribute));
+                    OffsetsArgsBuffer.UpdateOrAdd(nullptr, sizeof(OffsetsArgs), globalDrawId * sizeof(OffsetsArgs));
                 }
 
                 TLAS.AddEmptyData();
@@ -439,13 +465,17 @@ namespace Waldem
                         
                         if(sprite.TextureRef.IsValid())
                         {
+                            OffsetsArgs offsets;
+                            offsets.VertexOffset = (uint)VerticesCount;
+                            offsets.IndexOffset = (uint)IndicesCount;
+                            
                             auto& command = NCIndirectCommands[ncDrawId];
                             command.DrawId = globalDrawId;
                             command.DrawIndexed = {
                                 (uint)SpriteIndices.Num(),
                                 1,
-                                (uint)IndicesCount,
-                                (int)VerticesCount,
+                                (uint)offsets.IndexOffset,
+                                (int)offsets.VertexOffset,
                                 0
                             };
 
@@ -463,6 +493,7 @@ namespace Waldem
                             materialAttribute.DiffuseTextureID = sprite.TextureRef.Texture->GetIndex(SRV_UAV_CBV);
 
                             MaterialAttributesBuffer.UpdateData(&materialAttribute, sizeof(MaterialShaderAttribute), sizeof(MaterialShaderAttribute) * globalDrawId);
+                            OffsetsArgsBuffer.UpdateData(&offsets, sizeof(OffsetsArgs), sizeof(OffsetsArgs) * globalDrawId);
                         }
 
                         auto transform = entity.get<Transform>();
@@ -501,6 +532,7 @@ namespace Waldem
                         command.DrawIndexed = { 0, 0, 0, 0, 0 };
 
                         MaterialAttributesBuffer.RemoveData(sizeof(MaterialShaderAttribute), globalDrawId * sizeof(MaterialShaderAttribute));
+                        OffsetsArgsBuffer.RemoveData(sizeof(OffsetsArgs), globalDrawId * sizeof(OffsetsArgs));
 
                         TLAS.RemoveData(globalDrawId);
                         
@@ -584,6 +616,7 @@ namespace Waldem
                 GBufferSceneData.InverseProjectionMatrix = inverseProj;
                 RayTracingSceneData.InvViewMatrix = world;
                 RayTracingSceneData.InvProjectionMatrix = inverseProj;
+                RayTracingSceneData.CameraPosition = transform.Position;
                 SkyPassSceneData.InverseProjection = inverseProj;
                 SkyPassSceneData.InverseView = world;
                 SkyPassSceneData.ViewProjection = camera.ViewProjectionMatrix;
@@ -723,15 +756,21 @@ namespace Waldem
                 RayTracingRootConstants.LightTransformsBuffer = LightTransformsBuffer.GetIndex(SRV_UAV_CBV);
                 RayTracingRootConstants.SceneDataBuffer = RayTracingSceneDataBuffer->GetIndex(SRV_UAV_CBV);
                 RayTracingRootConstants.TLAS = TLAS.GetIndex(SRV_UAV_CBV);
+                RayTracingRootConstants.VertexBuffer = VertexBuffer.GetIndex(SRV_UAV_CBV);
+                RayTracingRootConstants.IndexBuffer = IndexBuffer.GetIndex(SRV_UAV_CBV);
+                RayTracingRootConstants.OffsetsArgsBuffer = OffsetsArgsBuffer.GetIndex(SRV_UAV_CBV);
+                RayTracingRootConstants.MaterialBuffer = MaterialAttributesBuffer.GetIndex(SRV_UAV_CBV);
                 
                 Renderer::UploadBuffer(RayTracingSceneDataBuffer, &RayTracingSceneData, sizeof(RayTracingSceneData));
 
                 //dispatching
                 Renderer::ResourceBarrier(RadianceRT, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
+                Renderer::ResourceBarrier(ReflectionRT, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
                 Renderer::SetPipeline(RTPipeline);
                 Renderer::PushConstants(&RayTracingRootConstants, sizeof(RayTracingRootConstants));
                 Renderer::TraceRays(RTPipeline, Point3(RadianceRT->GetWidth(), RadianceRT->GetHeight(), 1));
                 Renderer::ResourceBarrier(RadianceRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
+                Renderer::ResourceBarrier(ReflectionRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
             });
 
             ECS::World.system("DeferredRenderingSystem").kind(flecs::OnDraw).run([&](flecs::iter& it)
@@ -765,12 +804,14 @@ namespace Waldem
         {
             auto colorRTIndex = ColorRT->GetIndex(SRV_UAV_CBV);
             auto radianceRTIndex = RadianceRT->GetIndex(SRV_UAV_CBV);
+            auto reflectionRTIndex = ReflectionRT->GetIndex(SRV_UAV_CBV);
             
             RayTracingRootConstants.WorldPositionRT = WorldPositionRT->GetIndex(SRV_UAV_CBV);
             RayTracingRootConstants.NormalRT = NormalRT->GetIndex(SRV_UAV_CBV);
             RayTracingRootConstants.ColorRT = colorRTIndex;
             RayTracingRootConstants.ORMRT = ORMRT->GetIndex(SRV_UAV_CBV);
-            RayTracingRootConstants.OutputColorRT = radianceRTIndex;
+            RayTracingRootConstants.RadianceRT = radianceRTIndex;
+            RayTracingRootConstants.ReflectionRT = reflectionRTIndex;
             
             DeferredRootConstants.AlbedoRT = colorRTIndex;
             DeferredRootConstants.MeshIDRT = MeshIDRT->GetIndex(SRV_UAV_CBV);

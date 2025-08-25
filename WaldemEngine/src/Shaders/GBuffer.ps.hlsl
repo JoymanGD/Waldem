@@ -1,6 +1,7 @@
 #include "Core.hlsl"
 #include "Materials.hlsl"
 #include "GBufferCommon.hlsl"
+#include "Shading.hlsl"
 
 struct PS_INPUT
 {
@@ -25,12 +26,6 @@ struct PS_OUTPUT
 };
 
 SamplerState myStaticSampler : register(s0);
-
-float3 GetNormal(float3 normal, float3 tangent, float3 bitangent, float4 normalMap)
-{
-    float3x3 TBN = float3x3(tangent, bitangent, normal);
-    return mul(normalMap.xyz * 2.0 - 1.0, TBN);
-}
 
 PS_OUTPUT main(PS_INPUT input)
 {

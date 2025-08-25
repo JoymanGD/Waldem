@@ -6,16 +6,6 @@
 
 namespace Waldem
 {
-    struct WALDEM_API HierarchyEntry
-    {
-        WString Name;
-        uint64 EntityId;
-        uint64 ParentId;
-        bool Enabled;
-        bool Selected;
-        bool VisibleInHierarchy;
-    };
-    
     class WALDEM_API HierarchyWidget : public IWidget
     {
         std::string RenameString = "";
