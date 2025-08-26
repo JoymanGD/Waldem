@@ -50,6 +50,7 @@ namespace Waldem
         {
             World.component<SceneEntity>("SceneEntity")
                 .member<uint64>("ParentId")
+                .member<float>("HierarchyDepth")
                 .member<float>("HierarchySlot")
                 .member<bool>("VisibleInHierarchy");
             
