@@ -222,19 +222,23 @@ void RayGenShader()
     RadianceRT[dispatchIndex] = float4(radiance, 1.0);
 }
 
-[shader("miss")]
-void MissShader(inout Payload payload)
-{
-    payload.Missed = true;
-    payload.Color = float4(0.53f, 0.81f, 0.92f, 1.0f);
-}
-
 float4 SampleTexture(Texture2D texture, float2 uv)
 {
     uint2 texSize;
     texture.GetDimensions(texSize.x, texSize.y);
     int3 pixelCoord = int3(uv * texSize, 0);
     return texture.Load(pixelCoord);
+}
+
+[shader("miss")]
+void MissShader(inout Payload payload)
+{
+    payload.Missed = true;
+
+    if(payload.IsReflectionPass)
+    {
+        payload.Color = float4(0.53f, 0.81f, 0.92f, 1.0f);
+    }
 }
 
 [shader("closesthit")]
@@ -269,11 +273,6 @@ void ClosestHitShader(inout Payload payload, in Attributes attribs)
         Vertex v1 = vertexBuffer[offsets.VertexOffset + triIndices.x];
         Vertex v2 = vertexBuffer[offsets.VertexOffset + triIndices.y];
         Vertex v3 = vertexBuffer[offsets.VertexOffset + triIndices.z];
-    
-        float3 p0 = v1.Position;
-        float3 p1 = v2.Position;
-        float3 p2 = v3.Position;
-        float3 hitPos = p0 * b0 + p1 * b1 + p2 * b2;
 
         float4 c0 = v1.Color;
         float4 c1 = v2.Color;
@@ -313,7 +312,7 @@ void ClosestHitShader(inout Payload payload, in Attributes attribs)
             color *= sampledColor;
         }
     
-        float4 normal = float4(0.0f, 1.0f, 0.0f, 1.0f);
+        float4 normal = float4(hitNormal, 0.0f);
 
         if(material.NormalTextureIndex != -1)
         {
@@ -321,16 +320,12 @@ void ClosestHitShader(inout Payload payload, in Attributes attribs)
             normal = SampleTexture(NormalTexture, hitUV);
             normal = float4(GetNormal(hitNormal, hitTangent, hitBitangent, normal), 0.0f);
         }
-        else
-        {
-            normal = float4(hitNormal, 0.0f);
-        }
 
-        float frontFacing = dot(WorldRayDirection(), normal.xyz) < 0.0;
-        if(!frontFacing)
-        {
-            normal = -normal;
-        }
+        // float frontFacing = dot(WorldRayDirection(), normal.xyz) < 0.0;
+        // if(!frontFacing)
+        // {
+        //     normal = -normal;
+        // }
 
         float4 orm = float4(0.0f, material.Roughness, material.Metallic, 0.0f);
     
@@ -342,12 +337,15 @@ void ClosestHitShader(inout Payload payload, in Attributes attribs)
         
         payload.IsReflectionPass = false;
 
+        float3 hitPos = WorldRayOrigin() + WorldRayDirection() * RayTCurrent();
+
         StructuredBuffer<RayTracingSceneData> SceneDataBuffer = ResourceDescriptorHeap[SceneDataBufferID];
         RayTracingSceneData sceneData = SceneDataBuffer[0];
 
+        normal = mul(ObjectToWorld4x3(), normal);
         float3 rayOrigin = hitPos + normal.xyz * 0.001f;
-        float4 reflection = float4(0.f, 0.f, 0.f, 0.f); //dont use reflection here
-        float3 reflectedRadiance = GetRadiance(payload, hitPos, normal.xyz, color, orm, reflection, sceneData, rayOrigin, WorldRayDirection());
+        float4 reflection = 0; //dont use reflection here
+        float3 reflectedRadiance = GetRadiance(payload, hitPos, normal.xyz, color, orm, reflection, sceneData, rayOrigin, -WorldRayDirection());
 
         payload.Color = float4(reflectedRadiance, 1.0f);
     }
