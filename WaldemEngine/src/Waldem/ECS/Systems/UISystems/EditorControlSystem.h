@@ -135,7 +135,17 @@ namespace Waldem
                         }
                         
                         cameraRight.y = 0;
+                        cameraRight = normalize(cameraRight);
+
                         cameraUp.y = 0;
+                        if (length(cameraUp) > 0.0001f)
+                        {
+                            cameraUp = normalize(cameraUp);
+                        }
+                        else
+                        {
+                            cameraUp = Vector3(0,1,0);
+                        }
                     
                         float deltaX = (MousePos.x - LastMousePos.x) * Time::DeltaTime;
                         float deltaY = (MousePos.y - LastMousePos.y) * Time::DeltaTime;
