@@ -1,7 +1,6 @@
 #include "wdpch.h"
 #include "ModelImporter.h"
 #include "Waldem/Renderer/Texture.h"
-#include "Waldem/Renderer/Model/Model.h"
 #include <filesystem>
 #include <fstream>
 #include "assimp/scene.h"
