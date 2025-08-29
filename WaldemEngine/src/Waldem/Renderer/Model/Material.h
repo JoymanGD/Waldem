@@ -39,7 +39,7 @@ namespace Waldem
 
         Vector4 Albedo = Vector4(1.0f);
         float Metallic = 0.0f;
-        float Roughness = 0.0f;
+        float Roughness = 1.0f;
         
     private:
         TextureReference DiffuseRef = {};

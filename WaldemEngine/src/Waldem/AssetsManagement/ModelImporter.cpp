@@ -114,7 +114,14 @@ namespace Waldem
             WD_CORE_INFO("No metallic factor stored in material for mesh: {0}. Using default value.", from.string());
         }
 
-        return new Material(WString(assimpMaterial->GetName().C_Str()), diffuseRef, normalRef, metalRoughnessRef, albedo, roughness, metallic);
+        WString materialName = "Default";
+
+        if(assimpModel->mName.length > 0)
+        {
+            materialName = assimpModel->mName.C_Str();
+        }
+        
+        return new Material(materialName, diffuseRef, normalRef, metalRoughnessRef, albedo, roughness, metallic);
     }
 
     WArray<Asset*> CModelImporter::Import(const Path& from, Path& to, bool relative)
