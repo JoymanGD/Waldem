@@ -217,7 +217,7 @@ void RayGenShader()
 
     payload.IsReflectionPass = false;
 
-    float3 radiance = GetRadiance(payload, worldPosition, normal, albedo, orm, reflectionColor, sceneData, rayOrigin, viewDirection);
+    float3 radiance = GetRadiance(payload, worldPosition, normal, albedo, orm, reflectionColor, sceneData, rayOrigin, -viewDirection);
     
     RadianceRT[dispatchIndex] = float4(radiance, 1.0);
 }
