@@ -20,7 +20,7 @@ namespace Waldem
 	class WALDEM_API GameLayer : public Layer
 	{
 	public:
-		GameLayer(CWindow* window, ResourceManager* resourceManager) : Layer("GameLayer", window, resourceManager)
+		GameLayer(CWindow* window) : Layer("GameLayer", window)
 		{
 			InputManager = {};
 
@@ -41,25 +41,25 @@ namespace Waldem
 		{
 			for (ISystem* system : UISystems)
 			{
-				system->Initialize(&InputManager, CurrentResourceManager);
+				system->Initialize(&InputManager);
 			}
         	
 			for (ISystem* system : UpdateSystems)
 			{
-				system->Initialize(&InputManager, CurrentResourceManager);
+				system->Initialize(&InputManager);
 			}
         	
 			for (ISystem* system : DrawSystems)
 			{
-				system->Initialize(&InputManager, CurrentResourceManager);
+				system->Initialize(&InputManager);
 			}
 			
 			for (ISystem* system : PhysicsSystems)
 			{
-				system->Initialize(&InputManager, CurrentResourceManager);
+				system->Initialize(&InputManager);
 			}
 
-			ScriptSystem->Initialize(&InputManager, CurrentResourceManager);
+			ScriptSystem->Initialize(&InputManager);
 
 			Initialized = true;
 		}
@@ -116,20 +116,20 @@ namespace Waldem
 			
 			for (ISystem* system : DrawSystems)
 			{
-				system->Initialize(&InputManager, CurrentResourceManager);
+				system->Initialize(&InputManager);
 			}
 			
 			for (ISystem* system : UpdateSystems)
 			{
-				system->Initialize(&InputManager, CurrentResourceManager);
+				system->Initialize(&InputManager);
 			}
 			
 			for (ISystem* system : PhysicsSystems)
 			{
-				system->Initialize(&InputManager, CurrentResourceManager);
+				system->Initialize(&InputManager);
 			}
 
-			ScriptSystem->Initialize(&InputManager, CurrentResourceManager);
+			ScriptSystem->Initialize(&InputManager);
 			
 			// CurrentScene = scene;
 		}

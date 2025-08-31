@@ -30,7 +30,7 @@ void main(uint2 tid : SV_DispatchThreadID)
         vertex.Position.x = originalVertex.Position.x - displacement.x * WaveChoppiness;
         vertex.Position.z = originalVertex.Position.z - displacement.z * WaveChoppiness;
 
-        vertex.Normal = float3(normal.x, normal.z, normal.y);
+        vertex.Normal = float4(normal.x, normal.z, normal.y, 0.0f);
 
         VertexBuffers[i][index] = vertex;
     }

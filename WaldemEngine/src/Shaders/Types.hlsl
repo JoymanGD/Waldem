@@ -1,9 +1,18 @@
 struct Vertex
 {
-    float3 Position;
+    float4 Position;
     float4 Color;
-    float3 Normal;
-    float3 Tangent;
-    float3 Bitangent;
+    float4 Normal;
+    float4 Tangent;
+    float4 Bitangent;
     float2 UV;
+};
+
+struct DrawCommand
+{
+    uint IndexCountPerInstance;
+    uint InstanceCount;
+    uint StartIndexLocation;
+    int BaseVertexLocation;
+    uint StartInstanceLocation;
 };

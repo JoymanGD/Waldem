@@ -19,7 +19,7 @@ namespace Waldem
     public:
         FreeLookCameraSystem() {}
         
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
+        void Initialize(InputManager* inputManager) override
         {
             inputManager->SubscribeToKeyEvent(W, [&](bool isPressed) 
             {

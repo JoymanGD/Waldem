@@ -7,7 +7,6 @@
 #include "Layers/EditorLayer.h"
 #include "Layers/GameLayer.h"
 #include "Renderer/Renderer.h"
-#include "Resources/ResourceManager.h"
 #include "Scripting/Mono.h"
 #include "Waldem/Layers/LayerStack.h"
 #include "Waldem/Events/Event.h"
@@ -37,7 +36,6 @@ namespace Waldem
 
 		CWindow* Window;
 		Renderer CurrentRenderer;
-		ResourceManager ResourceManager;
 		Audio AudioManager;
 		Mono MonoRuntime;
 		bool IsRunning = true;

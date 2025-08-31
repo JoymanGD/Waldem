@@ -2,8 +2,6 @@
 
 #define GLM_ENABLE_EXPERIMENTAL
 
-#include <fstream>
-#include <filesystem>
 #include "imgui.h"
 #include "Waldem/AssetsManagement/ContentManager.h"
 #include "Waldem/ECS/Components/AudioListener.h"
@@ -11,23 +9,20 @@
 #include "Waldem/ECS/Systems/UISystems/EditorGuizmoSystem.h"
 #include "Waldem/ECS/Systems/UpdateSystems/FreeLookCameraSystem.h"
 #include "Waldem/ECS/Components/Camera.h"
-#include "Waldem/ECS/Components/EditorComponent.h"
 #include "Waldem/ECS/Systems/UISystems/EditorUISystem.h"
 #include "Waldem/ECS/Systems/DrawSystems/OceanSimulationSystem.h"
 #include "Waldem/ECS/Systems/DrawSystems/ScreenQuadSystem.h"
 #include "Waldem/ECS/Systems/UpdateSystems/SpatialAudioSystem.h"
 #include "Waldem/Events/ApplicationEvent.h"
-#include "Waldem/Events/FileEvent.h"
 #include "Waldem/Input/InputManager.h"
 #include "Waldem/Layers/Layer.h"
 #include "Waldem/Renderer/Renderer.h"
-#include "Waldem/SceneManagement/GameScene.h"
 #include "Waldem/Utils/FileUtils.h"
 #include "Waldem/ECS/ECS.h"
+#include "Waldem/ECS/Systems/DrawSystems/AnimationSystem.h"
 #include "Waldem/ECS/Systems/DrawSystems/HybridRenderingSystem.h"
 #include "Waldem/ECS/Systems/DrawSystems/PostProcessSystem.h"
 #include "Waldem/ECS/Systems/DrawSystems/SkyRenderingSystem.h"
-#include "Waldem/SceneManagement/SceneManager.h"
 
 namespace Waldem
 {
@@ -41,20 +36,20 @@ namespace Waldem
         Vector2 NewEditorViewportSize = {};
         
     public:
-        EditorLayer(CWindow* window, ResourceManager* resourceManager) : Layer("EditorLayer", window, resourceManager)
+        EditorLayer(CWindow* window) : Layer("EditorLayer", window)
         {
             InputManager = {};
             
             Vector2 size = { 1920, 1080 };
-            resourceManager->CreateRenderTarget("TargetRT", size.x, size.y, TextureFormat::R8G8B8A8_UNORM);
-            resourceManager->CreateRenderTarget("WorldPositionRT", size.x, size.y, TextureFormat::R32G32B32A32_FLOAT);
-            resourceManager->CreateRenderTarget("NormalRT", size.x, size.y, TextureFormat::R16G16B16A16_FLOAT);
-            resourceManager->CreateRenderTarget("ColorRT", size.x, size.y, TextureFormat::R8G8B8A8_UNORM);
-            resourceManager->CreateRenderTarget("ORMRT", size.x, size.y, TextureFormat::R32G32B32A32_FLOAT);
-            resourceManager->CreateRenderTarget("MeshIDRT", size.x, size.y, TextureFormat::R32_SINT);
-            resourceManager->CreateRenderTarget("DepthRT", size.x, size.y, TextureFormat::D32_FLOAT);
-            resourceManager->CreateRenderTarget("RadianceRT", size.x, size.y, TextureFormat::R32G32B32A32_FLOAT);
-            resourceManager->CreateRenderTarget("ReflectionRT", size.x, size.y, TextureFormat::R32G32B32A32_FLOAT);
+            Renderer::CreateRenderTarget("TargetRT", size.x, size.y, TextureFormat::R8G8B8A8_UNORM);
+            Renderer::CreateRenderTarget("WorldPositionRT", size.x, size.y, TextureFormat::R32G32B32A32_FLOAT);
+            Renderer::CreateRenderTarget("NormalRT", size.x, size.y, TextureFormat::R16G16B16A16_FLOAT);
+            Renderer::CreateRenderTarget("ColorRT", size.x, size.y, TextureFormat::R8G8B8A8_UNORM);
+            Renderer::CreateRenderTarget("ORMRT", size.x, size.y, TextureFormat::R32G32B32A32_FLOAT);
+            Renderer::CreateRenderTarget("MeshIDRT", size.x, size.y, TextureFormat::R32_SINT);
+            Renderer::CreateRenderTarget("DepthRT", size.x, size.y, TextureFormat::D32_FLOAT);
+            Renderer::CreateRenderTarget("RadianceRT", size.x, size.y, TextureFormat::R32G32B32A32_FLOAT);
+            Renderer::CreateRenderTarget("ReflectionRT", size.x, size.y, TextureFormat::R32G32B32A32_FLOAT);
             
             auto cameraEntity = ECS::CreateEntity("EditorCamera");
             float aspectRatio = size.x / size.y;
@@ -74,6 +69,7 @@ namespace Waldem
             UpdateSystems.Add(new SpatialAudioSystem());
 
             // DrawSystems.Add(new OceanSimulationSystem());
+            DrawSystems.Add(new AnimationSystem());
             DrawSystems.Add(new HybridRenderingSystem());
             DrawSystems.Add(new PostProcessSystem());
             DrawSystems.Add(new ScreenQuadSystem());
@@ -96,14 +92,14 @@ namespace Waldem
 
         void OnResize(Vector2 size)
         {
-            CurrentResourceManager->ResizeRenderTarget("TargetRT", size.x, size.y);
-            CurrentResourceManager->ResizeRenderTarget("WorldPositionRT", size.x, size.y);
-            CurrentResourceManager->ResizeRenderTarget("NormalRT", size.x, size.y);
-            CurrentResourceManager->ResizeRenderTarget("ColorRT", size.x, size.y);
-            CurrentResourceManager->ResizeRenderTarget("ORMRT", size.x, size.y);
-            CurrentResourceManager->ResizeRenderTarget("MeshIDRT", size.x, size.y);
-            CurrentResourceManager->ResizeRenderTarget("DepthRT", size.x, size.y);
-            CurrentResourceManager->ResizeRenderTarget("RadianceRT", size.x, size.y);
+            Renderer::ResizeRenderTarget("TargetRT", size.x, size.y);
+            Renderer::ResizeRenderTarget("WorldPositionRT", size.x, size.y);
+            Renderer::ResizeRenderTarget("NormalRT", size.x, size.y);
+            Renderer::ResizeRenderTarget("ColorRT", size.x, size.y);
+            Renderer::ResizeRenderTarget("ORMRT", size.x, size.y);
+            Renderer::ResizeRenderTarget("MeshIDRT", size.x, size.y);
+            Renderer::ResizeRenderTarget("DepthRT", size.x, size.y);
+            Renderer::ResizeRenderTarget("RadianceRT", size.x, size.y);
             
             for (ISystem* system : DrawSystems)
             {

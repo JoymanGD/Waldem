@@ -2,8 +2,8 @@
 
 namespace Waldem
 {
-#define CALCULATE_IMAGE_DATA_SIZE(width, height, format) \
-((width) * (height) * GetBytesPerPixel(format))
+#define CALCULATE_IMAGE_DATA_SIZE(width, height, depth, format) \
+((width) * (height) * (depth) * GetBytesPerPixel(format))
 
     inline int GetBytesPerPixel(TextureFormat format)
     {

@@ -12,5 +12,6 @@ namespace Waldem
         
         Vector4 Color = Vector4(1,1,1,1); // tint
         TextureReference TextureRef;
+        DrawCommand DrawCommand;
     };
 }

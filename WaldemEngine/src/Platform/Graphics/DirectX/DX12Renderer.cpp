@@ -349,7 +349,7 @@ namespace Waldem
         }
 
         //create srv
-        renderTarget->SetIndex(slot, SRV_UAV_CBV);
+        renderTarget->SetIndex(slot, SRV_CBV);
         
         D3D12_CPU_DESCRIPTOR_HANDLE srvHandle = externalHeap->GetCPUDescriptorHandleForHeapStart();
         descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -460,7 +460,7 @@ namespace Waldem
 
         //create srv
         index = GeneralAllocator.Allocate();
-        renderTarget->SetIndex(index, SRV_UAV_CBV);
+        renderTarget->SetIndex(index, SRV_CBV);
         
         D3D12_CPU_DESCRIPTOR_HANDLE srvHandle = GeneralResourcesHeap->GetCPUDescriptorHandleForHeapStart();
         descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -930,12 +930,14 @@ namespace Waldem
 
         if(resource->GetType() == RTYPE_Texture || resource->GetType() == RTYPE_Buffer || resource->GetType() == RTYPE_AccelerationStructure)
         {
-            GeneralAllocator.Free(resource->GetIndex(SRV_UAV_CBV));
+            GeneralAllocator.Free(resource->GetIndex(SRV_CBV));
+            GeneralAllocator.Free(resource->GetIndex(UAV));
         }
         else if(resource->GetType() == RTYPE_RenderTarget)
         {
             RenderTargetAllocator.Free(resource->GetIndex(RTV_DSV));
-            GeneralAllocator.Free(resource->GetIndex(SRV_UAV_CBV));
+            GeneralAllocator.Free(resource->GetIndex(SRV_CBV));
+            GeneralAllocator.Free(resource->GetIndex(UAV));
         }
         else
         {
@@ -1003,12 +1005,14 @@ namespace Waldem
 
         if(resource->GetType() == RTYPE_Texture || resource->GetType() == RTYPE_Buffer || resource->GetType() == RTYPE_AccelerationStructure)
         {
-            GeneralAllocator.Free(resource->GetIndex(SRV_UAV_CBV));
+            GeneralAllocator.Free(resource->GetIndex(SRV_CBV));
+            GeneralAllocator.Free(resource->GetIndex(UAV));
         }
         else if(resource->GetType() == RTYPE_RenderTarget)
         {
             RenderTargetAllocator.Free(resource->GetIndex(RTV_DSV));
-            GeneralAllocator.Free(resource->GetIndex(SRV_UAV_CBV));
+            GeneralAllocator.Free(resource->GetIndex(SRV_CBV));
+            GeneralAllocator.Free(resource->GetIndex(UAV));
         }
         else
         {
@@ -1109,7 +1113,7 @@ namespace Waldem
         return new DX12RayTracingPipeline(name, Device, GeneralRootSignature, shader);
     }
 
-    Texture2D* DX12Renderer::CreateTexture(WString name, int width, int height, TextureFormat format, uint8_t* data)
+    Texture2D* DX12Renderer::CreateTexture2D(WString name, int width, int height, TextureFormat format, uint8_t* data)
     {
         auto cmdList = WorldCommandList.first;
         
@@ -1211,7 +1215,7 @@ namespace Waldem
         ResourceMap[(GraphicResource*)texture] = Resource;
         
         uint index = GeneralAllocator.Allocate();
-        texture->SetIndex(index, SRV_UAV_CBV);
+        texture->SetIndex(index, SRV_CBV);
         
         D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = GeneralResourcesHeap->GetCPUDescriptorHandleForHeapStart();
         UINT descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -1228,6 +1232,133 @@ namespace Waldem
 
         Device->CreateShaderResourceView(Resource, &srvDesc, cpuHandle);
         
+        return texture;
+    }
+
+    Texture3D* DX12Renderer::CreateTexture3D(WString name, int width, int height, int depth, TextureFormat format, uint8_t* data)
+    {
+        auto cmdList = WorldCommandList.first;
+
+        Texture3D* texture = new Texture3D(name, width, height, depth, format, data);
+
+        HRESULT hr;
+
+        // Describe the 3D texture
+        D3D12_RESOURCE_DESC textureDesc = {};
+        textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
+        textureDesc.Width = width;
+        textureDesc.Height = height;
+        textureDesc.DepthOrArraySize = depth;
+        textureDesc.MipLevels = 1;
+        textureDesc.Format = (DXGI_FORMAT)format;
+        textureDesc.SampleDesc.Count = 1;
+        textureDesc.SampleDesc.Quality = 0;
+        textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+        textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+        // Default heap for GPU resource
+        D3D12_HEAP_PROPERTIES heapProps = {};
+        heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
+        heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+        heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+        heapProps.CreationNodeMask = 1;
+        heapProps.VisibleNodeMask = 1;
+
+        ID3D12Resource* Resource;
+        hr = Device->CreateCommittedResource(
+            &heapProps,
+            D3D12_HEAP_FLAG_NONE,
+            &textureDesc,
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            nullptr,
+            IID_PPV_ARGS(&Resource));
+
+        if (FAILED(hr))
+            DX12Helper::PrintHResultError(hr);
+
+        std::wstring widestr = std::wstring(name.Begin(), name.End());
+        Resource->SetName(widestr.c_str());
+
+        // Upload data if provided
+        if (data)
+        {
+            D3D12_HEAP_PROPERTIES uploadHeapProps = {};
+            uploadHeapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+            uploadHeapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+            uploadHeapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+            uploadHeapProps.CreationNodeMask = 1;
+            uploadHeapProps.VisibleNodeMask = 1;
+
+            UINT64 uploadBufferSize;
+            Device->GetCopyableFootprints(&textureDesc, 0, 1, 0, nullptr, nullptr, nullptr, &uploadBufferSize);
+
+            D3D12_RESOURCE_DESC uploadBufferDesc = {};
+            uploadBufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+            uploadBufferDesc.Width = uploadBufferSize;
+            uploadBufferDesc.Height = 1;
+            uploadBufferDesc.DepthOrArraySize = 1;
+            uploadBufferDesc.MipLevels = 1;
+            uploadBufferDesc.Format = DXGI_FORMAT_UNKNOWN;
+            uploadBufferDesc.SampleDesc.Count = 1;
+            uploadBufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+            uploadBufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+            ID3D12Resource* uploadHeap;
+            hr = Device->CreateCommittedResource(
+                &uploadHeapProps, D3D12_HEAP_FLAG_NONE,
+                &uploadBufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ,
+                nullptr, IID_PPV_ARGS(&uploadHeap));
+
+            if (FAILED(hr))
+                DX12Helper::PrintHResultError(hr);
+
+            int bpp = GetBytesPerPixel(format);
+            UINT64 rowPitch = (UINT64)width * bpp;
+            UINT64 slicePitch = rowPitch * height;
+
+            D3D12_SUBRESOURCE_DATA subResourceData = {};
+            subResourceData.pData = data;
+            subResourceData.RowPitch = rowPitch;
+            subResourceData.SlicePitch = slicePitch;
+
+            cmdList->UpdateSubresoures(Resource, uploadHeap, 1, &subResourceData);
+        }
+
+        // Transition to COMMON
+        D3D12_RESOURCE_BARRIER barrier = {};
+        barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+        barrier.Transition.pResource = Resource;
+        barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+        barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COMMON;
+        barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+        cmdList->ResourceBarrier(1, &barrier);
+
+        texture->SetCurrentState((ResourceStates)D3D12_RESOURCE_STATE_COMMON);
+
+        // Track resource
+        ResourceMap[(GraphicResource*)texture] = Resource;
+
+        // Descriptor index
+        uint index = GeneralAllocator.Allocate();
+        texture->SetIndex(index, SRV_CBV);
+
+        D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = GeneralResourcesHeap->GetCPUDescriptorHandleForHeapStart();
+        UINT descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        cpuHandle.ptr += index * descriptorSize;
+
+        texture->SetGPUAddress(cpuHandle.ptr);
+
+        // SRV for 3D texture
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.Format = (DXGI_FORMAT)format;
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
+        srvDesc.Texture3D.MipLevels = 1;
+        srvDesc.Texture3D.MostDetailedMip = 0;
+        srvDesc.Texture3D.ResourceMinLODClamp = 0.0f;
+
+        Device->CreateShaderResourceView(Resource, &srvDesc, cpuHandle);
+
         return texture;
     }
 
@@ -1334,7 +1465,7 @@ namespace Waldem
 
         //create srv
         index = GeneralAllocator.Allocate();
-        renderTarget->SetIndex(index, SRV_UAV_CBV);
+        renderTarget->SetIndex(index, SRV_CBV);
         
         D3D12_CPU_DESCRIPTOR_HANDLE srvHandle = GeneralResourcesHeap->GetCPUDescriptorHandleForHeapStart();
         descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -1376,14 +1507,16 @@ namespace Waldem
             D3D12_RAYTRACING_GEOMETRY_DESC geomDesc = {};
             geomDesc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
             geomDesc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
-            
-            geomDesc.Triangles.VertexBuffer.StartAddress = geometry.VertexBuffer->GetGPUAddress();
-            geomDesc.Triangles.VertexBuffer.StrideInBytes = geometry.VertexBuffer->GetStride();
-            geomDesc.Triangles.VertexCount = geometry.VertexBuffer->GetCount();
+
+            auto vertexStride = geometry.VertexBuffer->GetStride();
+            auto indexStride = geometry.IndexBuffer->GetStride();
+            geomDesc.Triangles.VertexBuffer.StartAddress = geometry.VertexBuffer->GetGPUAddress() + geometry.DrawCommand.BaseVertexLocation * vertexStride;
+            geomDesc.Triangles.VertexBuffer.StrideInBytes = vertexStride;
+            geomDesc.Triangles.VertexCount = geometry.VertexCount;
             geomDesc.Triangles.VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT;
-            geomDesc.Triangles.IndexBuffer = geometry.IndexBuffer->GetGPUAddress();
-            geomDesc.Triangles.IndexCount = geometry.IndexBuffer->GetCount();
-            geomDesc.Triangles.IndexFormat = geometry.IndexBuffer->GetStride() == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT;
+            geomDesc.Triangles.IndexBuffer = geometry.IndexBuffer->GetGPUAddress() + geometry.DrawCommand.StartIndexLocation * indexStride;
+            geomDesc.Triangles.IndexCount = geometry.DrawCommand.IndexCountPerInstance;
+            geomDesc.Triangles.IndexFormat = indexStride == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT;
             geomDesc.Triangles.Transform3x4 = 0; //No transform for the BLAS, better to use instances' transforms
             
             dx12Geometries.Add(geomDesc);
@@ -1475,7 +1608,7 @@ namespace Waldem
         auto cmdList = WorldCommandList.first;
         
         uint index = GeneralAllocator.Allocate();
-        tlas->SetIndex(index, SRV_UAV_CBV);
+        tlas->SetIndex(index, SRV_CBV);
 
         D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS asInputs = {};
         asInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
@@ -1633,12 +1766,12 @@ namespace Waldem
             geomDesc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
             geomDesc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
 
-            geomDesc.Triangles.VertexBuffer.StartAddress = geometry.VertexBuffer->GetGPUAddress();
+            geomDesc.Triangles.VertexBuffer.StartAddress = geometry.VertexBuffer->GetGPUAddress() + geometry.DrawCommand.BaseVertexLocation * geometry.VertexBuffer->GetStride();
             geomDesc.Triangles.VertexBuffer.StrideInBytes = geometry.VertexBuffer->GetStride();
-            geomDesc.Triangles.VertexCount = geometry.VertexBuffer->GetCount();
+            geomDesc.Triangles.VertexCount = geometry.VertexCount;
             geomDesc.Triangles.VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT;
-            geomDesc.Triangles.IndexBuffer = geometry.IndexBuffer->GetGPUAddress();
-            geomDesc.Triangles.IndexCount = geometry.IndexBuffer->GetCount();
+            geomDesc.Triangles.IndexBuffer = geometry.IndexBuffer->GetGPUAddress() + geometry.DrawCommand.StartIndexLocation * geometry.IndexBuffer->GetStride();
+            geomDesc.Triangles.IndexCount = geometry.DrawCommand.IndexCountPerInstance;
             geomDesc.Triangles.IndexFormat = geometry.IndexBuffer->GetStride() == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT;
             geomDesc.Triangles.Transform3x4 = 0;
 
@@ -1813,13 +1946,14 @@ namespace Waldem
         cmdList->ResourceBarrier(Resource, beforeState, afterState | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
         buffer->SetCurrentState((ResourceStates)(afterState | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
+
+        //SRV
+        uint srvIndex = GeneralAllocator.Allocate();
+        buffer->SetIndex(srvIndex, SRV_CBV);
         
-        uint index = GeneralAllocator.Allocate();
-        buffer->SetIndex(index, SRV_UAV_CBV);
-        
-        D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = GeneralResourcesHeap->GetCPUDescriptorHandleForHeapStart();
+        D3D12_CPU_DESCRIPTOR_HANDLE srvHandle = GeneralResourcesHeap->GetCPUDescriptorHandleForHeapStart();
         UINT descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-        cpuHandle.ptr += index * descriptorSize;
+        srvHandle.ptr += srvIndex * descriptorSize;
 
         D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
         srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -1830,8 +1964,26 @@ namespace Waldem
         srvDesc.Buffer.StructureByteStride = buffer->GetStride();
         srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 
-        Device->CreateShaderResourceView(Resource, &srvDesc, cpuHandle);
+        Device->CreateShaderResourceView(Resource, &srvDesc, srvHandle);
 
+        //UAV
+        uint uavIndex = GeneralAllocator.Allocate();
+        buffer->SetIndex(uavIndex, UAV);
+        
+        D3D12_CPU_DESCRIPTOR_HANDLE uavHandle = GeneralResourcesHeap->GetCPUDescriptorHandleForHeapStart();
+        uavHandle.ptr += uavIndex * descriptorSize;
+
+        D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+        uavDesc.Format = DXGI_FORMAT_UNKNOWN;
+        uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+        uavDesc.Buffer.FirstElement = 0;
+        uavDesc.Buffer.NumElements = buffer->GetCapacity() / buffer->GetStride();
+        uavDesc.Buffer.StructureByteStride = buffer->GetStride();
+        uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
+
+        Device->CreateUnorderedAccessView(Resource, nullptr, &uavDesc, uavHandle);
+
+        //Readback buffer
         ID3D12Resource* readbackBuffer;
         auto heapDesc = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK);
 
@@ -1991,5 +2143,10 @@ namespace Waldem
         ResourceBarrier(resource, currentState, after);
 
         return currentState;
+    }
+
+    void DX12Renderer::UAVBarrier(GraphicResource* resource)
+    {
+        WorldCommandList.first->UAVBarrier(ResourceMap[resource]);
     }
 }

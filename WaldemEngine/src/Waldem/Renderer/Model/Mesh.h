@@ -11,14 +11,14 @@ namespace Waldem
 {
     struct Vertex
     {
-        Vector3 Position;
+        Vector4 Position;
         Vector4 Color;
-        Vector3 Normal;
-        Vector3 Tangent;
-        Vector3 Bitangent;
+        Vector4 Normal;
+        Vector4 Tangent;
+        Vector4 Bitangent;
         Vector2 UV;
 
-        Vertex(Vector3 position, Vector4 color, Vector3 normal, Vector3 tangent, Vector3 bitangent, Vector2 uv) : Position(position), Color(color), Normal(normal), Tangent(tangent), Bitangent(bitangent), UV(uv) {}
+        Vertex(Vector4 position, Vector4 color, Vector4 normal, Vector4 tangent, Vector4 bitangent, Vector2 uv) : Position(position), Color(color), Normal(normal), Tangent(tangent), Bitangent(bitangent), UV(uv) {}
         Vertex() {}
     };
     

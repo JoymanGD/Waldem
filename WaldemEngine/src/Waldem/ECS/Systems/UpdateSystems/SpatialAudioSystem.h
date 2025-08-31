@@ -14,7 +14,7 @@ namespace Waldem
     public:
         SpatialAudioSystem() {}
         
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
+        void Initialize(InputManager* inputManager) override
         {
             ECS::World.observer<AudioSource>().event(flecs::OnSet).each([&](AudioSource& audioSource)
             {

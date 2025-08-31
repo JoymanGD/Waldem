@@ -34,7 +34,7 @@ namespace Waldem
 
         WString GetName() override { return "Hierarchy"; }
         
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
+        void Initialize(InputManager* inputManager) override
         {
             inputManager->SubscribeToKeyEvent(KEY_DELETE, [&](bool isPressed)
             {

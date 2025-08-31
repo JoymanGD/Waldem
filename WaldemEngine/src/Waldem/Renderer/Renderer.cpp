@@ -157,21 +157,52 @@ namespace Waldem
         return Instance->PlatformRenderer->CreateRayTracingPipeline(name, shader);
     }
 
-    Texture2D* Renderer::CreateTexture(WString name, int width, int height, TextureFormat format, uint8_t* data)
+    Texture2D* Renderer::CreateTexture2D(WString name, int width, int height, TextureFormat format, uint8_t* data)
     {
-        Texture2D* texture = Instance->PlatformRenderer->CreateTexture(name, width, height, format, data);
+        Texture2D* texture = Instance->PlatformRenderer->CreateTexture2D(name, width, height, format, data);
         return texture;
+    }
+
+    Texture3D* Renderer::CreateTexture3D(WString name, int width, int height, int depth, TextureFormat format, uint8_t* data)
+    {
+        return Instance->PlatformRenderer->CreateTexture3D(name, width, height, depth, format, data);
     }
 
     RenderTarget* Renderer::CreateRenderTarget(WString name, int width, int height, TextureFormat format)
     {
         RenderTarget* renderTarget = Instance->PlatformRenderer->CreateRenderTarget(name, width, height, format);
+
+        if(RenderTargets.Contains(name))
+        {
+            RenderTargets[name] = renderTarget;
+        }
+        else
+        {
+            RenderTargets.Add(name, renderTarget);
+        }
+        
         return renderTarget;
     }
 
     void Renderer::InitializeRenderTarget(WString name, int width, int height, TextureFormat format, RenderTarget*& renderTarget)
     {
         Instance->PlatformRenderer->InitializeRenderTarget(name, width, height, format, renderTarget);
+    }
+
+    RenderTarget* Renderer::ResizeRenderTarget(WString name, int width, int height)
+    {
+        auto& renderTarget = RenderTargets[name];
+
+        if(renderTarget)
+        {
+            auto format = renderTarget->GetFormat();
+            
+            Destroy(renderTarget);
+            
+            InitializeRenderTarget(name, width, height, format, renderTarget);
+        }
+
+        return renderTarget;
     }
 
     SViewport* Renderer::GetEditorViewport()
@@ -262,6 +293,11 @@ namespace Waldem
     ResourceStates Renderer::ResourceBarrier(GraphicResource* resource, ResourceStates after)
     {
         return Instance->PlatformRenderer->ResourceBarrier(resource, after);
+    }
+
+    void Renderer::UAVBarrier(GraphicResource* resource)
+    {
+        Instance->PlatformRenderer->UAVBarrier(resource);
     }
 
     void Renderer::ClearRenderTarget(RenderTarget* rt)

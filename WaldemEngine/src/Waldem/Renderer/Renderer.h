@@ -3,6 +3,7 @@
 #include "Pipeline.h"
 #include "Waldem/Window.h"
 #include "GraphicResource.h"
+#include "RenderData.h"
 #include "Shader.h"
 #include "Texture.h"
 #include "RenderTarget.h"
@@ -50,7 +51,8 @@ namespace Waldem
         virtual Pipeline* CreateGraphicPipeline(const WString& name, PixelShader* shader, WArray<TextureFormat> RTFormats, TextureFormat depthFormat, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout) = 0;
         virtual Pipeline* CreateComputePipeline(const WString& name, ComputeShader* shader) = 0;
         virtual Pipeline* CreateRayTracingPipeline(const WString& name, RayTracingShader* shader) = 0;
-        virtual Texture2D* CreateTexture(WString name, int width, int height, TextureFormat format, uint8_t* data = nullptr) = 0;
+        virtual Texture2D* CreateTexture2D(WString name, int width, int height, TextureFormat format, uint8_t* data = nullptr) = 0;
+        virtual Texture3D* CreateTexture3D(WString name, int width, int height, int depth, TextureFormat format, uint8_t* data = nullptr) = 0;
         virtual RenderTarget* CreateRenderTarget(WString name, int width, int height, TextureFormat format) = 0;
         virtual void InitializeRenderTarget(WString name, int width, int height, TextureFormat format, RenderTarget*& renderTarget) = 0;
         virtual SViewport* GetEditorViewport() = 0;
@@ -68,6 +70,7 @@ namespace Waldem
         virtual void InitializeBuffer(WString name, BufferType type, uint32_t size, uint32_t stride, Buffer*& buffer, void* data, size_t dataSize) = 0;
         virtual void ResourceBarrier(GraphicResource* resource, ResourceStates before, ResourceStates after) = 0;
         virtual ResourceStates ResourceBarrier(GraphicResource* resource, ResourceStates after) = 0;
+        virtual void UAVBarrier(GraphicResource* resource) = 0;
         virtual void UploadBuffer(Buffer* buffer, void* data, uint32_t size, uint offset = 0) = 0;
         virtual void ClearBuffer(Buffer* buffer, uint32_t size, uint offset = 0) = 0;
         virtual void DownloadBuffer(Buffer* buffer, void* data, size_t size) = 0;
@@ -116,9 +119,12 @@ namespace Waldem
         static Pipeline* CreateGraphicPipeline(const WString& name, PixelShader* shader, WArray<TextureFormat> RTFormats, TextureFormat depthFormat = TextureFormat::D32_FLOAT, RasterizerDesc rasterizerDesc = DEFAULT_RASTERIZER_DESC, DepthStencilDesc depthStencilDesc = DEFAULT_DEPTH_STENCIL_DESC, PrimitiveTopologyType primitiveTopologyType = WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, const WArray<InputLayoutDesc>& inputLayout = DEFAULT_INPUT_LAYOUT_DESC);
         static Pipeline* CreateComputePipeline(const WString& name, ComputeShader* shader);
         static Pipeline* CreateRayTracingPipeline(const WString& name, RayTracingShader* shader);
-        static Texture2D* CreateTexture(WString name, int width, int height, TextureFormat format, uint8_t* data = nullptr);
+        static Texture2D* CreateTexture2D(WString name, int width, int height, TextureFormat format, uint8_t* data = nullptr);
+        static Texture3D* CreateTexture3D(WString name, int width, int height, int depth, TextureFormat format, uint8_t* data = nullptr);
         static RenderTarget* CreateRenderTarget(WString name, int width, int height, TextureFormat format);
         static void InitializeRenderTarget(WString name, int width, int height, TextureFormat format, RenderTarget*& renderTarget);
+        static RenderTarget* ResizeRenderTarget(WString name, int width, int height);
+        static RenderTarget* GetRenderTarget(WString name) { return RenderTargets[name]; }
         static SViewport* GetEditorViewport();
         static SViewport* GetGameViewport();
         static SViewport* GetMainViewport();
@@ -134,6 +140,7 @@ namespace Waldem
         static void InitializeBuffer(WString name, BufferType type, uint32_t size, uint32_t stride, Buffer*& buffer, void* data = nullptr, size_t dataSize = 0);
         static void ResourceBarrier(GraphicResource* resource, ResourceStates before, ResourceStates after);
         static ResourceStates ResourceBarrier(GraphicResource* resource, ResourceStates after);
+        static void UAVBarrier(GraphicResource* resource);
         static void UploadBuffer(Buffer* buffer, void* data, uint32_t size, uint offset = 0);
         static void ClearBuffer(Buffer* buffer, uint32_t size, uint offset = 0);
         static void DownloadBuffer(Buffer* buffer, void* data, size_t size);
@@ -148,8 +155,10 @@ namespace Waldem
 
         static RendererAPI RAPI;
         inline static Renderer* Instance;
+        inline static RenderData RenderData;
         
     private:
         IRenderer* PlatformRenderer;
+        inline static WMap<WString, RenderTarget*> RenderTargets;
     };
 }

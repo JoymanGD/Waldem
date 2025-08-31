@@ -108,7 +108,7 @@ namespace Waldem
         //     // }
         // }
 
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
+        void Initialize(InputManager* inputManager) override
         {
             CacheFrustrumCorners();
 
@@ -197,16 +197,16 @@ namespace Waldem
                 }
             });
 
-            TargetRT = resourceManager->GetRenderTarget("TargetRT");
-            DebugRT_1 = resourceManager->GetRenderTarget("DebugRT_1");
-            DebugRT_2 = resourceManager->GetRenderTarget("DebugRT_2");
-            DebugRT_3 = resourceManager->GetRenderTarget("DebugRT_3");
-            DebugRT_4 = resourceManager->GetRenderTarget("DebugRT_4");
-            DebugRT_5 = resourceManager->GetRenderTarget("DebugRT_5");
-            DebugRT_6 = resourceManager->GetRenderTarget("DebugRT_6");
-            DebugRT_7 = resourceManager->GetRenderTarget("DebugRT_7");
-            DebugRT_8 = resourceManager->GetRenderTarget("DebugRT_8");
-            DebugRT_9 = resourceManager->GetRenderTarget("DebugRT_9");
+            TargetRT = Renderer::GetRenderTarget("TargetRT");
+            DebugRT_1 = Renderer::GetRenderTarget("DebugRT_1");
+            DebugRT_2 = Renderer::GetRenderTarget("DebugRT_2");
+            DebugRT_3 = Renderer::GetRenderTarget("DebugRT_3");
+            DebugRT_4 = Renderer::GetRenderTarget("DebugRT_4");
+            DebugRT_5 = Renderer::GetRenderTarget("DebugRT_5");
+            DebugRT_6 = Renderer::GetRenderTarget("DebugRT_6");
+            DebugRT_7 = Renderer::GetRenderTarget("DebugRT_7");
+            DebugRT_8 = Renderer::GetRenderTarget("DebugRT_8");
+            DebugRT_9 = Renderer::GetRenderTarget("DebugRT_9");
             
             Vector2 resolution = Vector2(TargetRT->GetWidth(), TargetRT->GetHeight());
             

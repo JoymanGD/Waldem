@@ -2,6 +2,7 @@
 
 #include "ECS.h"
 
+#include "Components/AnimationListener.h"
 #include "Components/AudioSource.h"
 #include "Components/Light.h"
 #include "Components/MeshComponent.h"
@@ -163,6 +164,7 @@ namespace Waldem
             Light::RegisterComponent(World);
             Sky::RegisterComponent(World);
             Sprite::RegisterComponent(World);
+            AnimationListener::RegisterComponent(World);
         }
 
         flecs::entity CreateEntity(const WString& name, bool enabled)

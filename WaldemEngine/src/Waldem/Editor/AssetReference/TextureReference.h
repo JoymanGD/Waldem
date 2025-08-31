@@ -16,7 +16,7 @@ namespace Waldem
             auto path = Reference;
             path.replace_extension(".img");
             auto textureDesc = CContentManager::LoadAsset<TextureDesc>(path);
-            Texture = Renderer::CreateTexture(textureDesc->Name, textureDesc->Width, textureDesc->Height, textureDesc->Format, textureDesc->Data);
+            Texture = Renderer::CreateTexture2D(textureDesc->Name, textureDesc->Width, textureDesc->Height, textureDesc->Format, textureDesc->Data);
         }
 
         AssetType GetType() override { return AssetType::Texture; }

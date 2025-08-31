@@ -30,7 +30,7 @@ namespace Waldem
         Vector4 dummyColor = Vector4(1.f, 1.f, 1.f, 1.f);
         uint8_t* image_data = (uint8_t*)&dummyColor;
 
-        return Renderer::CreateTexture(name, 1, 1, TextureFormat::R8G8B8A8_UNORM, image_data);
+        return Renderer::CreateTexture2D(name, 1, 1, TextureFormat::R8G8B8A8_UNORM, image_data);
     }
 
     TextureDesc* CreateTextureDesc(const Path& path, WString name, TextureType textureType, const aiScene* assimpModel, aiMaterial* assimpMaterial)
@@ -151,10 +151,10 @@ namespace Waldem
                 for (uint32_t j = 0; j < assimpMesh->mNumVertices; ++j)
                 {
                     Vertex vertex = {};
-                    vertex.Position = Vector3(assimpMesh->mVertices[j].x, assimpMesh->mVertices[j].y, assimpMesh->mVertices[j].z);
-                    vertex.Normal = Vector3(assimpMesh->mNormals[j].x, assimpMesh->mNormals[j].y, assimpMesh->mNormals[j].z);
-                    vertex.Tangent = Vector3(assimpMesh->mTangents[j].x, assimpMesh->mTangents[j].y, assimpMesh->mTangents[j].z);
-                    vertex.Bitangent = Vector3(assimpMesh->mBitangents[j].x, assimpMesh->mBitangents[j].y, assimpMesh->mBitangents[j].z);
+                    vertex.Position = Vector4(assimpMesh->mVertices[j].x, assimpMesh->mVertices[j].y, assimpMesh->mVertices[j].z, 1.0f);
+                    vertex.Normal = Vector4(assimpMesh->mNormals[j].x, assimpMesh->mNormals[j].y, assimpMesh->mNormals[j].z, 0.0f);
+                    vertex.Tangent = Vector4(assimpMesh->mTangents[j].x, assimpMesh->mTangents[j].y, assimpMesh->mTangents[j].z, 0.0f);
+                    vertex.Bitangent = Vector4(assimpMesh->mBitangents[j].x, assimpMesh->mBitangents[j].y, assimpMesh->mBitangents[j].z, 0.0f);
                     
                     if(assimpMesh->HasVertexColors(0))
                     {

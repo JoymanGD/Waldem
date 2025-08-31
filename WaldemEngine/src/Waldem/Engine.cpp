@@ -30,8 +30,6 @@ namespace Waldem
 		MonoRuntime = Mono();
 		// MonoRuntime.Initialize();
 		
-		ResourceManager = {};
-
 		WD_CORE_ASSERT(!Instance, "Application already exists!")
 		Instance = this;
 
@@ -51,7 +49,7 @@ namespace Waldem
 
 		CurrentRenderer = {};
 		CurrentRenderer.Initialize(Window);
-		Editor = new EditorLayer(Window, &ResourceManager);
+		Editor = new EditorLayer(Window);
 		PushOverlay(Editor);
 		
 		// Game = new GameLayer(Window, &CoreECSManager, &ResourceManager);

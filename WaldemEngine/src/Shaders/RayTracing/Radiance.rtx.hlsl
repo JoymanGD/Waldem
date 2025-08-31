@@ -16,12 +16,6 @@ struct Payload
     bool IsReflectionPass;
 };
 
-struct OffsetsArgs
-{
-    uint VertexOffset;
-    uint IndexOffset;
-};
-
 struct Attributes
 {
     float2 barycentrics;
@@ -49,7 +43,7 @@ cbuffer RootConstants : register(b0)
     uint TLASID;
     uint VertexBufferId;
     uint IndexBufferId;
-    uint OffsetsArgsBufferId;
+    uint DrawCommandsBufferId;
     uint MaterialBufferId;
 };
 
@@ -255,13 +249,13 @@ void ClosestHitShader(inout Payload payload, in Attributes attribs)
         // Access vertex attributes from your bound geometry buffers
         StructuredBuffer<Vertex> vertexBuffer = ResourceDescriptorHeap[VertexBufferId];
         StructuredBuffer<uint> indexBuffer = ResourceDescriptorHeap[IndexBufferId];
-        StructuredBuffer<OffsetsArgs> offsetsArgsBuffer = ResourceDescriptorHeap[OffsetsArgsBufferId];
-        OffsetsArgs offsets = offsetsArgsBuffer[instanceId];
+        StructuredBuffer<DrawCommand> drawCommandsBuffer = ResourceDescriptorHeap[DrawCommandsBufferId];
+        DrawCommand drawCommand = drawCommandsBuffer[instanceId];
         
         uint3 triIndices = uint3(
-            indexBuffer[offsets.IndexOffset + primIndex * 3 + 0],
-            indexBuffer[offsets.IndexOffset + primIndex * 3 + 1],
-            indexBuffer[offsets.IndexOffset + primIndex * 3 + 2]
+            indexBuffer[drawCommand.StartIndexLocation + primIndex * 3 + 0],
+            indexBuffer[drawCommand.StartIndexLocation + primIndex * 3 + 1],
+            indexBuffer[drawCommand.StartIndexLocation + primIndex * 3 + 2]
         );
 
         // Barycentrics
@@ -270,29 +264,29 @@ void ClosestHitShader(inout Payload payload, in Attributes attribs)
         float b2 = attribs.barycentrics.y;
 
         // Interpolated attributes
-        Vertex v1 = vertexBuffer[offsets.VertexOffset + triIndices.x];
-        Vertex v2 = vertexBuffer[offsets.VertexOffset + triIndices.y];
-        Vertex v3 = vertexBuffer[offsets.VertexOffset + triIndices.z];
+        Vertex v1 = vertexBuffer[drawCommand.BaseVertexLocation + triIndices.x];
+        Vertex v2 = vertexBuffer[drawCommand.BaseVertexLocation + triIndices.y];
+        Vertex v3 = vertexBuffer[drawCommand.BaseVertexLocation + triIndices.z];
 
         float4 c0 = v1.Color;
         float4 c1 = v2.Color;
         float4 c2 = v3.Color;
         float4 hitColor = c0 * b0 + c1 * b1 + c2 * b2;
 
-        float3 n0 = v1.Normal;
-        float3 n1 = v2.Normal;
-        float3 n2 = v3.Normal;
-        float3 hitNormal = normalize(n0 * b0 + n1 * b1 + n2 * b2);
+        float4 n0 = v1.Normal;
+        float4 n1 = v2.Normal;
+        float4 n2 = v3.Normal;
+        float4 hitNormal = normalize(n0 * b0 + n1 * b1 + n2 * b2);
 
         float2 uv0 = v1.UV;
         float2 uv1 = v2.UV;
         float2 uv2 = v3.UV;
         float2 hitUV = uv0 * b0 + uv1 * b1 + uv2 * b2;
 
-        float3 t0 = v1.Tangent;
-        float3 t1 = v2.Tangent;
-        float3 t2 = v3.Tangent;
-        float3 hitTangent = normalize(t0 * b0 + t1 * b1 + t2 * b2);
+        float4 t0 = v1.Tangent;
+        float4 t1 = v2.Tangent;
+        float4 t2 = v3.Tangent;
+        float4 hitTangent = normalize(t0 * b0 + t1 * b1 + t2 * b2);
 
         float3 bt0 = v1.Bitangent;
         float3 bt1 = v2.Bitangent;
@@ -312,13 +306,13 @@ void ClosestHitShader(inout Payload payload, in Attributes attribs)
             color *= sampledColor;
         }
     
-        float4 normal = float4(hitNormal, 0.0f);
+        float4 normal = hitNormal;
 
         if(material.NormalTextureIndex != -1)
         {
             Texture2D<float4> NormalTexture = ResourceDescriptorHeap[NonUniformResourceIndex(material.NormalTextureIndex)]; 
             normal = SampleTexture(NormalTexture, hitUV);
-            normal = float4(GetNormal(hitNormal, hitTangent, hitBitangent, normal), 0.0f);
+            normal = float4(GetNormal(hitNormal.xyz, hitTangent.xyz, hitBitangent.xyz, normal), 0.0f);
         }
 
         // float frontFacing = dot(WorldRayDirection(), normal.xyz) < 0.0;

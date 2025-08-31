@@ -31,24 +31,24 @@ namespace Waldem
     public:
         PostProcessSystem() {}
         
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
+        void Initialize(InputManager* inputManager) override
         {
             ECS::World.observer<BloomPostProcess>().event(flecs::OnAdd).each([&](flecs::entity entity, BloomPostProcess& bloom)
             {
                 if(!IsInitialized)
                 {
-                    TargetRT = resourceManager->GetRenderTarget("TargetRT");
+                    TargetRT = Renderer::GetRenderTarget("TargetRT");
                     
                     Vector2 resolution = Vector2(TargetRT->GetWidth(), TargetRT->GetHeight());
                     TexelSize = Vector2(1.f / resolution.x, 1.f / resolution.y);
                     
-                    TargetRTBack = resourceManager->CreateRenderTarget("TargetRTBack", resolution.x, resolution.y, TextureFormat::R8G8B8A8_UNORM);
+                    TargetRTBack = Renderer::CreateRenderTarget("TargetRTBack", resolution.x, resolution.y, TextureFormat::R8G8B8A8_UNORM);
 
                     BloomParamsBuffer = Renderer::CreateBuffer("BloomParamsBuffer", StorageBuffer, sizeof(BloomPostProcess), sizeof(BloomPostProcess));
 
-                    RootConstants.TargetRT = TargetRT->GetIndex(SRV_UAV_CBV);
-                    RootConstants.TargetRTBack = TargetRTBack->GetIndex(SRV_UAV_CBV);
-                    RootConstants.BloomParamsBuffer = BloomParamsBuffer->GetIndex(SRV_UAV_CBV);
+                    RootConstants.TargetRT = TargetRT->GetIndex(SRV_CBV);
+                    RootConstants.TargetRTBack = TargetRTBack->GetIndex(SRV_CBV);
+                    RootConstants.BloomParamsBuffer = BloomParamsBuffer->GetIndex(SRV_CBV);
                     
                     PostProcessComputeShader = Renderer::LoadComputeShader("PostProcess");
                     PostProcessPipeline = Renderer::CreateComputePipeline("PostProcessPipeline", PostProcessComputeShader);
