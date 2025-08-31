@@ -58,7 +58,7 @@ namespace Waldem
                 image_data = stbi_load(externalTexturePath.string().c_str(), &width, &height, &componentsCount, 4);
             }
 
-            return new TextureDesc(name, width, height, TextureFormat::R8G8B8A8_UNORM, image_data);
+            return new TextureDesc(name, width, height, 1, TextureFormat::R8G8B8A8_UNORM, image_data);
         }
 
         return nullptr;
