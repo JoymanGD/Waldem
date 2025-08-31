@@ -1,8 +1,7 @@
 #pragma once
 
 #include "flecs.h"
-#include "Components/Selected.h"
-#include "Components\SceneEntity.h"
+#include "Components/SceneEntity.h"
 #include "Waldem/Types/FreeList.h"
 #include "Waldem/Types/String.h"
 #include "Waldem/Types/WMap.h"

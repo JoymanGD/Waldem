@@ -13,7 +13,7 @@ namespace Waldem
         
         PhysicsUpdateSystem() {}
         
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
+        void Initialize(InputManager* inputManager) override
         {
             ECS::World.system<Transform, RigidBody>().kind(flecs::OnUpdate).each([&](Transform& transform, RigidBody& rigidBody)
             {

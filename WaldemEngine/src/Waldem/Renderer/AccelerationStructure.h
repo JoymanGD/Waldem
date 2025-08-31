@@ -9,11 +9,13 @@ namespace Waldem
     {
     public:
         RayTracingGeometry() = default;
-        RayTracingGeometry(Buffer* vertexBuffer, Buffer* indexBuffer) : VertexBuffer(vertexBuffer), IndexBuffer(indexBuffer) {}
+        RayTracingGeometry(Buffer* vertexBuffer, Buffer* indexBuffer, DrawCommand drawCommand, uint vertexCount) : VertexBuffer(vertexBuffer), IndexBuffer(indexBuffer), DrawCommand(drawCommand), VertexCount(vertexCount) {}
         virtual ~RayTracingGeometry() {}
         
         Buffer* VertexBuffer = nullptr;
         Buffer* IndexBuffer = nullptr;
+        DrawCommand DrawCommand = {0,1,0,0,0};
+        uint VertexCount;
     };
     
     class AccelerationStructure : public GraphicResource

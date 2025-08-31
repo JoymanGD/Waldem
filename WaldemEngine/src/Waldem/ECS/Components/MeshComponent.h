@@ -1,6 +1,6 @@
 #pragma once
 #include "Waldem/Editor/AssetReference/MeshReference.h"
-#include "Waldem/Renderer/Model/Mesh.h"
+#include "Waldem/ECS/Components/ComponentBase.h"
 
 namespace Waldem
 {
@@ -11,6 +11,7 @@ namespace Waldem
         END_COMPONENT()
 
         MeshReference MeshRef;
+        DrawCommand DrawCommand;
 
         bool IsValid() const { return MeshRef.IsValid(); }
     };

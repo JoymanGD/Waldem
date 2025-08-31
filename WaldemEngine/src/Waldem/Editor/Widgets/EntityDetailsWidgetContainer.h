@@ -17,7 +17,7 @@ namespace Waldem
 
         WString GetName() override { return "Details"; }
 
-    	void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
+    	void Initialize(InputManager* inputManager) override
 		{
 		}
 

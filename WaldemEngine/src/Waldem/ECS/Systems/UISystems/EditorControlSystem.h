@@ -27,7 +27,7 @@ namespace Waldem
     public:
         EditorControlSystem() {}
 
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
+        void Initialize(InputManager* inputManager) override
         {
             InitializeCameraControl(inputManager);
             InitializeLightControl(inputManager);

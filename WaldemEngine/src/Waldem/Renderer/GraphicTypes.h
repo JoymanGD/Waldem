@@ -133,7 +133,7 @@ namespace Waldem
         uint32_t InstanceDataStepRate;
     };
 
-    struct IndirectDrawIndexedArgs
+    struct DrawCommand
     {
         uint IndexCountPerInstance;
         uint InstanceCount;
@@ -145,7 +145,7 @@ namespace Waldem
     struct IndirectCommand
     {
         uint DrawId;
-        IndirectDrawIndexedArgs DrawIndexed;
+        DrawCommand DrawIndexed;
     };
     
     enum PrimitiveTopologyType
@@ -199,10 +199,17 @@ namespace Waldem
     }
 
     #define DEFAULT_INPUT_LAYOUT_DESC \
-    {{ "POSITION", 0, TextureFormat::R32G32B32_FLOAT, 0, 0, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }, \
-    { "COLOR", 0, TextureFormat::R32G32B32A32_FLOAT, 0, 12, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }, \
-    { "NORMAL", 0, TextureFormat::R32G32B32_FLOAT, 0, 28, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }, \
-    { "TANGENT", 0, TextureFormat::R32G32B32_FLOAT, 0, 40, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }, \
-    { "BITANGENT", 0, TextureFormat::R32G32B32_FLOAT, 0, 52, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }, \
-    { "TEXCOORD", 0, TextureFormat::R32G32_FLOAT, 0, 64, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }}
+    {{ "POSITION", 0, TextureFormat::R32G32B32A32_FLOAT, 0, 0, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }, \
+    { "COLOR", 0, TextureFormat::R32G32B32A32_FLOAT, 0, 16, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }, \
+    { "NORMAL", 0, TextureFormat::R32G32B32A32_FLOAT, 0, 32, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }, \
+    { "TANGENT", 0, TextureFormat::R32G32B32A32_FLOAT, 0, 48, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }, \
+    { "BITANGENT", 0, TextureFormat::R32G32B32A32_FLOAT, 0, 64, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }, \
+    { "TEXCOORD", 0, TextureFormat::R32G32_FLOAT, 0, 80, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }}
+    // #define DEFAULT_INPUT_LAYOUT_DESC \
+    // {{ "POSITION", 0, TextureFormat::R32G32B32_FLOAT, 0, 0, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }, \
+    // { "COLOR", 0, TextureFormat::R32G32B32A32_FLOAT, 0, 12, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }, \
+    // { "NORMAL", 0, TextureFormat::R32G32B32_FLOAT, 0, 28, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }, \
+    // { "TANGENT", 0, TextureFormat::R32G32B32_FLOAT, 0, 40, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }, \
+    // { "BITANGENT", 0, TextureFormat::R32G32B32_FLOAT, 0, 52, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }, \
+    // { "TEXCOORD", 0, TextureFormat::R32G32_FLOAT, 0, 64, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }}
 }

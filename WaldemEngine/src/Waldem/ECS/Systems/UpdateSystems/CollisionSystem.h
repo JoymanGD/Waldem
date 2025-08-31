@@ -517,7 +517,7 @@ namespace Waldem
     public:
         CollisionSystem() {}
         
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
+        void Initialize(InputManager* inputManager) override
         {
             ECS::World.system<Transform, ColliderComponent, RigidBody, const MeshComponent>().kind(flecs::OnUpdate).each([&](flecs::entity e, Transform& transform, ColliderComponent& collider, RigidBody& rigidBody, const MeshComponent& meshComponent)
             {

@@ -8,7 +8,7 @@ namespace Waldem
     {
     public:
         IWidget() {}
-        virtual void Initialize(InputManager* inputManager, ResourceManager* resourceManager) {}
+        virtual void Initialize(InputManager* inputManager) {}
         virtual void Deinitialize() {}
         virtual WString GetName() = 0;
         virtual void OnDraw(float deltaTime) {}

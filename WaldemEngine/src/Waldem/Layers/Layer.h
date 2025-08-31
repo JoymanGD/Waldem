@@ -4,15 +4,13 @@
 #include "Waldem/Window.h"
 #include "Waldem/Events/Event.h"
 #include "Waldem/ECS/Systems/System.h"
-#include "Waldem/Resources/ResourceManager.h"
-#include "Waldem/SceneManagement/Scene.h"
 
 namespace Waldem
 {
     class WALDEM_API Layer
     {
     public:
-        Layer(const WString& name = "Layer", CWindow* window = nullptr, ResourceManager* resourceManager = nullptr) : DebugName(name), MainWindow(window), CurrentResourceManager(resourceManager) {} 
+        Layer(const WString& name = "Layer", CWindow* window = nullptr) : DebugName(name), MainWindow(window) {} 
         virtual ~Layer() = default;
         virtual void Begin() {}
         virtual void End() {}
@@ -24,22 +22,22 @@ namespace Waldem
         {
             for (ISystem* system : UISystems)
             {
-                system->Initialize(&InputManager, CurrentResourceManager);
+                system->Initialize(&InputManager);
             }
         	
             for (ISystem* system : UpdateSystems)
             {
-                system->Initialize(&InputManager, CurrentResourceManager);
+                system->Initialize(&InputManager);
             }
         	
             for (ISystem* system : DrawSystems)
             {
-                system->Initialize(&InputManager, CurrentResourceManager);
+                system->Initialize(&InputManager);
             }
 			
             for (ISystem* system : PhysicsSystems)
             {
-                system->Initialize(&InputManager, CurrentResourceManager);
+                system->Initialize(&InputManager);
             }
 
             Initialized = true;
@@ -77,7 +75,6 @@ namespace Waldem
     protected:
         WString DebugName;
         CWindow* MainWindow;
-        ResourceManager* CurrentResourceManager;
         InputManager InputManager;
         
         WArray<ISystem*> UISystems;

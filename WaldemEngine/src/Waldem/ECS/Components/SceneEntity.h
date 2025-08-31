@@ -1,5 +1,4 @@
 #pragma once
-#include "Waldem/Types/String.h"
 
 namespace Waldem
 {

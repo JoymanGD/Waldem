@@ -8,6 +8,7 @@
 #include "Editor/Widgets/EntityDetailsWidgetContainer.h"
 #include "Editor/Widgets/ContentBrowserWidget.h"
 #include "Editor/Widgets/MainViewportWidget.h"
+#include "Waldem/Utils/FileUtils.h"
 
 namespace Waldem
 {
@@ -28,9 +29,9 @@ namespace Waldem
            });
         }
         
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
+        void Initialize(InputManager* inputManager) override
         {
-            MainWidget->Initialize(inputManager, resourceManager);
+            MainWidget->Initialize(inputManager);
         }
 
         void Deinitialize() override

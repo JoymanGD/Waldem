@@ -126,7 +126,7 @@
 //             return reversed & ((1 << numBits) - 1);
 //         }
 //         
-//         void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
+//         void Initialize(InputManager* inputManager) override
 //         {
 //             for (auto [entity, transform, meshComponent, ocean] : Manager->EntitiesWith<Transform, MeshComponent, Ocean>())
 //             {
@@ -135,21 +135,21 @@
 //                 VertexBuffers.Add(meshComponent.Mesh.Asset->VertexBuffer);
 // 			    Point2 fftResolution = Point2(N, N);
 //                 Stages = glm::log2(fftResolution.x);
-//                 GaussianNoiseRenderTarget = resourceManager->CreateRenderTarget("GaussianNoise", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
-//                 H0 = resourceManager->CreateRenderTarget("H0", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
-//                 H0Inverse = resourceManager->CreateRenderTarget("H0Inverse", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
-//                 DxCoefficients = resourceManager->CreateRenderTarget("DxCoefficients", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
-//                 DyCoefficients = resourceManager->CreateRenderTarget("DyCoefficients", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
-//                 DzCoefficients = resourceManager->CreateRenderTarget("DzCoefficients", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
-//                 Normal = resourceManager->CreateRenderTarget("Normals", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
-//                 Displacement = resourceManager->CreateRenderTarget("Displacement", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
-//                 DxPingPong = resourceManager->CreateRenderTarget("DxPingPong", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
-//                 DyPingPong = resourceManager->CreateRenderTarget("DyPingPong", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
-//                 DzPingPong = resourceManager->CreateRenderTarget("DzPingPong", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
-//                 Dx = resourceManager->CreateRenderTarget("Dx", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
-//                 Dy = resourceManager->CreateRenderTarget("Dy", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
-//                 Dz = resourceManager->CreateRenderTarget("Dz", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
-//                 ButterflyTexture512 = resourceManager->CreateRenderTarget("ButterflyTexture512", Stages, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
+//                 GaussianNoiseRenderTarget = Renderer::CreateRenderTarget("GaussianNoise", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
+//                 H0 = Renderer::CreateRenderTarget("H0", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
+//                 H0Inverse = Renderer::CreateRenderTarget("H0Inverse", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
+//                 DxCoefficients = Renderer::CreateRenderTarget("DxCoefficients", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
+//                 DyCoefficients = Renderer::CreateRenderTarget("DyCoefficients", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
+//                 DzCoefficients = Renderer::CreateRenderTarget("DzCoefficients", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
+//                 Normal = Renderer::CreateRenderTarget("Normals", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
+//                 Displacement = Renderer::CreateRenderTarget("Displacement", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
+//                 DxPingPong = Renderer::CreateRenderTarget("DxPingPong", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
+//                 DyPingPong = Renderer::CreateRenderTarget("DyPingPong", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
+//                 DzPingPong = Renderer::CreateRenderTarget("DzPingPong", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
+//                 Dx = Renderer::CreateRenderTarget("Dx", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
+//                 Dy = Renderer::CreateRenderTarget("Dy", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
+//                 Dz = Renderer::CreateRenderTarget("Dz", fftResolution.x, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
+//                 ButterflyTexture512 = Renderer::CreateRenderTarget("ButterflyTexture512", Stages, fftResolution.y, TextureFormat::R32G32B32A32_FLOAT);
 //                 
 //                 //Gaussian noise initialization
 //                 WArray<GraphicResource> resources;

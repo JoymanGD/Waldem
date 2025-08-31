@@ -23,14 +23,14 @@ namespace Waldem
     public:
         ScreenQuadSystem() {}
         
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
+        void Initialize(InputManager* inputManager) override
         {
             WArray<InputLayoutDesc> inputElementDescs = {
                 { "POSITION", 0, TextureFormat::R32G32B32_FLOAT, 0, 0, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
                 { "TEXCOORD", 0, TextureFormat::R32G32_FLOAT, 0, 12, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
             };
             
-            TargetRT = resourceManager->GetRenderTarget("TargetRT");
+            TargetRT = Renderer::GetRenderTarget("TargetRT");
             
             QuadDrawPixelShader = Renderer::LoadPixelShader("QuadDraw");
             QuadDrawPipeline = Renderer::CreateGraphicPipeline("QuadDrawPipeline",
@@ -44,7 +44,7 @@ namespace Waldem
 
             ECS::World.system<>("ScreenQuadSystem").kind(flecs::OnDraw).each([&]
             {
-                RootConstants.TargetRT = TargetRT->GetIndex(SRV_UAV_CBV);
+                RootConstants.TargetRT = TargetRT->GetIndex(SRV_CBV);
                 auto viewport = Renderer::GetEditorViewport();
                 Renderer::BindRenderTargets(viewport->FrameBuffer->GetCurrentRenderTarget());
                 Renderer::BindDepthStencil(nullptr);

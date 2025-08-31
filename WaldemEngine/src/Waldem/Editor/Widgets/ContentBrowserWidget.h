@@ -21,7 +21,7 @@ namespace Waldem
 
         WString GetName() override { return "Content"; }
 
-        void Initialize(InputManager* inputManager, ResourceManager* resourceManager) override
+        void Initialize(InputManager* inputManager) override
         {
             CContentManager::SubscribeToFileDroppedEvent([this](Path path)
             {

@@ -51,10 +51,12 @@ namespace Waldem
         void SetViewport(SViewport& viewport) override;
         void ResourceBarrier(GraphicResource* resource, ResourceStates before, ResourceStates after) override;
         ResourceStates ResourceBarrier(GraphicResource* resource, ResourceStates after) override;
+        void UAVBarrier(GraphicResource* resource) override;
         Pipeline* CreateGraphicPipeline(const WString& name, PixelShader* shader, WArray<TextureFormat> RTFormats, TextureFormat depthFormat, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout) override;
         Pipeline* CreateComputePipeline(const WString& name, ComputeShader* shader) override;
         Pipeline* CreateRayTracingPipeline(const WString& name, RayTracingShader* shader) override;
-        Texture2D* CreateTexture(WString name, int width, int height, TextureFormat format, uint8_t* data = nullptr) override;
+        Texture2D* CreateTexture2D(WString name, int width, int height, TextureFormat format, uint8_t* data = nullptr) override;
+        Texture3D* CreateTexture3D(WString name, int width, int height, int depth, TextureFormat format, uint8_t* data = nullptr) override;
         RenderTarget* CreateRenderTarget(WString name, int width, int height, TextureFormat format) override;
         void InitializeRenderTarget(WString name, int width, int height, TextureFormat format, RenderTarget*& renderTarget) override;
         Buffer* CreateBuffer(WString name, BufferType type, uint32_t size, uint32_t stride, void* data, size_t dataSize) override;
