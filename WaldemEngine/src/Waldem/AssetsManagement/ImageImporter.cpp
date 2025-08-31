@@ -33,7 +33,7 @@ namespace Waldem
                 }
             }
             
-            auto texDesc = new TextureDesc(fileName, width, height, TextureFormat::R8G8B8A8_UNORM, rgbaData);
+            auto texDesc = new TextureDesc(fileName, width, height, 1, TextureFormat::R8G8B8A8_UNORM, rgbaData);
             assets.Add(texDesc);
             stbi_image_free(data);
         }
