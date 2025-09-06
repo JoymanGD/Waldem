@@ -41,6 +41,7 @@ namespace Waldem
                                                             TextureFormat::D32_FLOAT,
                                                             DEFAULT_RASTERIZER_DESC,
                                                             depthStencilDesc,
+                                                            DEFAULT_BLEND_DESC,
                                                             WD_PRIMITIVE_TOPOLOGY_TYPE_LINE,
                                                             inputElementDescs);
             

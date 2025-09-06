@@ -12,7 +12,8 @@ namespace Waldem
         GlobalDrawIdType,
         BackFaceCullingDrawIdType,
         NoCullingDrawIdType,
-        RTXInstanceIdType
+        RTXInstanceIdType,
+        ParticleSystemIdType,
     };
     
     class WALDEM_API IdManager
@@ -24,6 +25,7 @@ namespace Waldem
         inline static FreeList BackFaceCullingDrawIdFreeList;
         inline static FreeList NoCullingDrawIdFreeList;
         inline static FreeList RTXInstanceIdFreeList;
+        inline static FreeList ParticleSystemIdFreeList;
         
     public:
         static int AddId(flecs::entity entity, IdType idType)
@@ -55,6 +57,11 @@ namespace Waldem
             case RTXInstanceIdType:
                 {
                     id = RTXInstanceIdFreeList.Allocate();
+                    break;
+                }
+            case ParticleSystemIdType:
+                {
+                    id = ParticleSystemIdFreeList.Allocate();
                     break;
                 }
             }
@@ -126,6 +133,11 @@ namespace Waldem
                             RTXInstanceIdFreeList.Free(id);
                             break;
                         }
+                    case ParticleSystemIdType:
+                        {
+                            ParticleSystemIdFreeList.Free(id);
+                            break;
+                        }
                     }
                 }
             }
@@ -156,6 +168,7 @@ namespace Waldem
             BackFaceCullingDrawIdFreeList.Clear();
             NoCullingDrawIdFreeList.Clear();
             RTXInstanceIdFreeList.Clear();
+            ParticleSystemIdFreeList.Clear();
         }
     };
 }

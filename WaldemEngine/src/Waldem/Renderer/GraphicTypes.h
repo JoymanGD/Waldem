@@ -104,9 +104,59 @@ namespace Waldem
     };
     #define DEFAULT_RASTERIZER_DESC { WD_FILL_MODE_SOLID, WD_CULL_MODE_BACK, false, 0, 0.0f, 0.0f, true, false, false, 0, ConservativeRasterizationMode::WD_CONSERVATIVE_RASTERIZATION_MODE_OFF }
     
+    
+    enum class Blend
+    {
+        ZERO = 1,
+        ONE = 2,
+        SRC_COLOR = 3,
+        INV_SRC_COLOR = 4,
+        SRC_ALPHA = 5,
+        INV_SRC_ALPHA = 6,
+        DEST_ALPHA = 7,
+        INV_DEST_ALPHA = 8,
+        DEST_COLOR = 9,
+        INV_DEST_COLOR = 10,
+    };
+
+    enum class BlendOperation
+    {
+        ADD = 1,
+        SUBTRACT = 2,
+        REV_SUBTRACT = 3,
+        MIN = 4,
+        MAX = 5,
+    };
+    
+    enum COLOR_WRITE_ENABLE
+    {
+        COLOR_WRITE_ENABLE_RED	= 1,
+        COLOR_WRITE_ENABLE_GREEN	= 2,
+        COLOR_WRITE_ENABLE_BLUE	= 4,
+        COLOR_WRITE_ENABLE_ALPHA	= 8,
+        COLOR_WRITE_ENABLE_ALL	= ( ( ( COLOR_WRITE_ENABLE_RED | COLOR_WRITE_ENABLE_GREEN )  | COLOR_WRITE_ENABLE_BLUE )  | COLOR_WRITE_ENABLE_ALPHA ) 
+    };
+
+    struct RenderTargetBlendDesc
+    {
+        bool BlendEnable = false;
+        Blend SrcBlend = Blend::ONE;
+        Blend DestBlend = Blend::ZERO;
+        BlendOperation BlendOp = BlendOperation::ADD;
+        Blend SrcBlendAlpha = Blend::ONE;
+        Blend DestBlendAlpha = Blend::ZERO;
+        BlendOperation BlendOpAlpha = BlendOperation::ADD;
+        uint8_t RenderTargetWriteMask = COLOR_WRITE_ENABLE_ALL;
+    };
+
     struct BlendDesc
     {
+        bool AlphaToCoverageEnable = false;
+        bool IndependentBlendEnable = false;
+        RenderTargetBlendDesc RenderTarget[8];
     };
+    #define DEFAULT_BLEND_DESC { false, false, { { false, Blend::ONE, Blend::ZERO, BlendOperation::ADD, Blend::ONE, Blend::ZERO, BlendOperation::ADD, COLOR_WRITE_ENABLE_ALL } } }
+    #define ALPHA_BLEND_DESC { false, false, { { true, Blend::SRC_ALPHA, Blend::INV_SRC_ALPHA, BlendOperation::ADD, Blend::ONE, Blend::ONE, BlendOperation::ADD, COLOR_WRITE_ENABLE_ALL } } }
     
     struct StreamOutputDesc
     {
@@ -205,11 +255,4 @@ namespace Waldem
     { "TANGENT", 0, TextureFormat::R32G32B32A32_FLOAT, 0, 48, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }, \
     { "BITANGENT", 0, TextureFormat::R32G32B32A32_FLOAT, 0, 64, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }, \
     { "TEXCOORD", 0, TextureFormat::R32G32_FLOAT, 0, 80, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }}
-    // #define DEFAULT_INPUT_LAYOUT_DESC \
-    // {{ "POSITION", 0, TextureFormat::R32G32B32_FLOAT, 0, 0, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }, \
-    // { "COLOR", 0, TextureFormat::R32G32B32A32_FLOAT, 0, 12, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }, \
-    // { "NORMAL", 0, TextureFormat::R32G32B32_FLOAT, 0, 28, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }, \
-    // { "TANGENT", 0, TextureFormat::R32G32B32_FLOAT, 0, 40, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }, \
-    // { "BITANGENT", 0, TextureFormat::R32G32B32_FLOAT, 0, 52, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }, \
-    // { "TEXCOORD", 0, TextureFormat::R32G32_FLOAT, 0, 64, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }}
 }

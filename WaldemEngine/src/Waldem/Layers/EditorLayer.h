@@ -21,6 +21,7 @@
 #include "Waldem/ECS/ECS.h"
 #include "Waldem/ECS/Systems/DrawSystems/AnimationSystem.h"
 #include "Waldem/ECS/Systems/DrawSystems/HybridRenderingSystem.h"
+#include "Waldem/ECS/Systems/DrawSystems/ParticleSystem.h"
 #include "Waldem/ECS/Systems/DrawSystems/PostProcessSystem.h"
 #include "Waldem/ECS/Systems/DrawSystems/SkyRenderingSystem.h"
 
@@ -71,6 +72,7 @@ namespace Waldem
             // DrawSystems.Add(new OceanSimulationSystem());
             DrawSystems.Add(new AnimationSystem());
             DrawSystems.Add(new HybridRenderingSystem());
+            DrawSystems.Add(new ParticleSystem());
             DrawSystems.Add(new PostProcessSystem());
             DrawSystems.Add(new ScreenQuadSystem());
 

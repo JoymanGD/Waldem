@@ -6,6 +6,7 @@
 #include "Components/AudioSource.h"
 #include "Components/Light.h"
 #include "Components/MeshComponent.h"
+#include "Components/ParticleSystemComponent.h"
 #include "Components/RigidBody.h"
 #include "Components/Selected.h"
 #include "Components/Sky.h"
@@ -167,6 +168,7 @@ namespace Waldem
             Sprite::RegisterComponent(World);
             AnimationListener::RegisterComponent(World);
             Selected::RegisterComponent(World);
+            ParticleSystemComponent::RegisterComponent(World);
         }
 
         flecs::entity CreateEntity(const WString& name, bool enabled)

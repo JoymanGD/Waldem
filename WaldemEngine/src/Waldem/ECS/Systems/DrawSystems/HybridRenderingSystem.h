@@ -111,7 +111,6 @@ namespace Waldem
         RenderTarget* DepthRT = nullptr;
         RenderTarget* MeshIDRT = nullptr;
         ResizableBuffer DrawCommandsBuffer;
-        WArray<DrawCommand> DrawCommandsArray;
         ResizableBuffer BFCIndirectBuffer; //Back face culling indirect buffer
         WArray<IndirectCommand> BFCIndirectCommands;
         ResizableBuffer NCIndirectBuffer; //No culling indirect buffer
@@ -191,6 +190,7 @@ namespace Waldem
                                                             TextureFormat::UNKNOWN,
                                                             DEFAULT_RASTERIZER_DESC,
                                                             DEFAULT_DEPTH_STENCIL_DESC,
+                                                            DEFAULT_BLEND_DESC,
                                                             WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
                                                             inputElementDescs);
             
@@ -218,6 +218,7 @@ namespace Waldem
                                                             TextureFormat::D32_FLOAT,
                                                             DEFAULT_RASTERIZER_DESC,
                                                             DEFAULT_DEPTH_STENCIL_DESC,
+                                                            DEFAULT_BLEND_DESC,
                                                             WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
                                                             DEFAULT_INPUT_LAYOUT_DESC);
 
@@ -229,6 +230,7 @@ namespace Waldem
                                                             TextureFormat::D32_FLOAT,
                                                             spriteRasterizer,
                                                             DEFAULT_DEPTH_STENCIL_DESC,
+                                                            DEFAULT_BLEND_DESC,
                                                             WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
                                                             DEFAULT_INPUT_LAYOUT_DESC);
 
