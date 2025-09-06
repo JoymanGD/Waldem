@@ -38,8 +38,29 @@ namespace Waldem
         dx12State.BackFace.StencilPassOp = (D3D12_STENCIL_OP)wdState.BackFace.StencilPassOp;
         dx12State.BackFace.StencilFunc = (D3D12_COMPARISON_FUNC)wdState.BackFace.StencilFunc;
     }
+
+    void FillBlendState(D3D12_BLEND_DESC& dx12State, BlendDesc& wdState)
+    {
+        dx12State.AlphaToCoverageEnable = wdState.AlphaToCoverageEnable;
+        dx12State.IndependentBlendEnable = wdState.IndependentBlendEnable;
+
+        for (int i = 0; i < 8; ++i)
+        {
+            auto& src = wdState.RenderTarget[i];
+            auto& dst = dx12State.RenderTarget[i];
+
+            dst.BlendEnable = src.BlendEnable;
+            dst.SrcBlend = (D3D12_BLEND)src.SrcBlend;
+            dst.DestBlend = (D3D12_BLEND)src.DestBlend;
+            dst.BlendOp = (D3D12_BLEND_OP)src.BlendOp;
+            dst.SrcBlendAlpha = (D3D12_BLEND)src.SrcBlendAlpha;
+            dst.DestBlendAlpha = (D3D12_BLEND)src.DestBlendAlpha;
+            dst.BlendOpAlpha = (D3D12_BLEND_OP)src.BlendOpAlpha;
+            dst.RenderTargetWriteMask = src.RenderTargetWriteMask;
+        }
+    }
     
-    DX12GraphicPipeline::DX12GraphicPipeline(const WString& name, ID3D12Device* device, ID3D12RootSignature* rootSignature, PixelShader* shader, WArray<TextureFormat> RTFormats, TextureFormat depthFormat, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout) : Pipeline(name)
+    DX12GraphicPipeline::DX12GraphicPipeline(const WString& name, ID3D12Device* device, ID3D12RootSignature* rootSignature, PixelShader* shader, WArray<TextureFormat> RTFormats, TextureFormat depthFormat, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, BlendDesc blendDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout) : Pipeline(name)
     {
         CurrentPipelineType = PipelineType::Graphics;
         
@@ -52,14 +73,7 @@ namespace Waldem
         PsoDesc.PS = { PixelShaderBlob->GetBufferPointer(), PixelShaderBlob->GetBufferSize() };
         FillRasterizerState(PsoDesc.RasterizerState, rasterizerDesc);
         FillDepthStencilState(PsoDesc.DepthStencilState, depthStencilDesc);
-        PsoDesc.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-        PsoDesc.BlendState.RenderTarget[1].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-        PsoDesc.BlendState.RenderTarget[2].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-        PsoDesc.BlendState.RenderTarget[3].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-        PsoDesc.BlendState.RenderTarget[4].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-        PsoDesc.BlendState.RenderTarget[5].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-        PsoDesc.BlendState.RenderTarget[6].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-        PsoDesc.BlendState.RenderTarget[7].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+        FillBlendState(PsoDesc.BlendState, blendDesc);
         PsoDesc.DSVFormat = (DXGI_FORMAT)depthFormat;
         PsoDesc.SampleMask = UINT_MAX;
         PsoDesc.PrimitiveTopologyType = (D3D12_PRIMITIVE_TOPOLOGY_TYPE)primitiveTopologyType;

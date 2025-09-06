@@ -1098,9 +1098,9 @@ namespace Waldem
         WorldCommandList.first->SetViewport(d3d12Viewport, d3d12ScissorRect);
     }
 
-    Pipeline* DX12Renderer::CreateGraphicPipeline(const WString& name, PixelShader* shader, WArray<TextureFormat> RTFormats, TextureFormat depthFormat, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout)
+    Pipeline* DX12Renderer::CreateGraphicPipeline(const WString& name, PixelShader* shader, WArray<TextureFormat> RTFormats, TextureFormat depthFormat, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, BlendDesc blendDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout)
     {
-        return new DX12GraphicPipeline(name, Device, GeneralRootSignature, shader, RTFormats, depthFormat, rasterizerDesc, depthStencilDesc, primitiveTopologyType, inputLayout);
+        return new DX12GraphicPipeline(name, Device, GeneralRootSignature, shader, RTFormats, depthFormat, rasterizerDesc, depthStencilDesc, blendDesc, primitiveTopologyType, inputLayout);
     }
 
     Pipeline* DX12Renderer::CreateComputePipeline(const WString& name, ComputeShader* shader)

@@ -141,10 +141,11 @@ namespace Waldem
                                               TextureFormat depthFormat,
                                               RasterizerDesc rasterizerDesc,
                                               DepthStencilDesc depthStencilDesc,
+                                              BlendDesc blendDesc,
                                               PrimitiveTopologyType primitiveTopologyType,
                                               const WArray<InputLayoutDesc>& inputLayout)
     {
-        return Instance->PlatformRenderer->CreateGraphicPipeline(name, shader, RTFormats, depthFormat, rasterizerDesc, depthStencilDesc, primitiveTopologyType, inputLayout);
+        return Instance->PlatformRenderer->CreateGraphicPipeline(name, shader, RTFormats, depthFormat, rasterizerDesc, depthStencilDesc, blendDesc, primitiveTopologyType, inputLayout);
     }
 
     Pipeline* Renderer::CreateComputePipeline(const WString& name, ComputeShader* shader)

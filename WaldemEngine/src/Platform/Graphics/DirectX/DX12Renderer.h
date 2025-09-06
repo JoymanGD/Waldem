@@ -52,7 +52,7 @@ namespace Waldem
         void ResourceBarrier(GraphicResource* resource, ResourceStates before, ResourceStates after) override;
         ResourceStates ResourceBarrier(GraphicResource* resource, ResourceStates after) override;
         void UAVBarrier(GraphicResource* resource) override;
-        Pipeline* CreateGraphicPipeline(const WString& name, PixelShader* shader, WArray<TextureFormat> RTFormats, TextureFormat depthFormat, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout) override;
+        Pipeline* CreateGraphicPipeline(const WString& name, PixelShader* shader, WArray<TextureFormat> RTFormats, TextureFormat depthFormat, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, BlendDesc blendDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout) override;
         Pipeline* CreateComputePipeline(const WString& name, ComputeShader* shader) override;
         Pipeline* CreateRayTracingPipeline(const WString& name, RayTracingShader* shader) override;
         Texture2D* CreateTexture2D(WString name, int width, int height, TextureFormat format, uint8_t* data = nullptr) override;

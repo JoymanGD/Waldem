@@ -39,6 +39,7 @@ namespace Waldem
                                                             TextureFormat::UNKNOWN,
                                                             DEFAULT_RASTERIZER_DESC,
                                                             DEFAULT_DEPTH_STENCIL_DESC,
+                                                            DEFAULT_BLEND_DESC,
                                                             WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
                                                             inputElementDescs);
 

@@ -52,6 +52,7 @@ namespace Waldem
                                                             TextureFormat::D32_FLOAT,
                                                             rasterizerDesc,
                                                             DEFAULT_DEPTH_STENCIL_DESC,
+                                                            DEFAULT_BLEND_DESC,
                                                             WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
                                                             DEFAULT_INPUT_LAYOUT_DESC);
 
