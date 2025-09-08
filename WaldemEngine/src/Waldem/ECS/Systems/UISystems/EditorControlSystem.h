@@ -178,7 +178,7 @@ namespace Waldem
 
                     if(DeltaPos != Vector3(0, 0, 0))
                     {
-                        transform.Move(normalize(DeltaPos) * Time::DeltaTime * camera.MovementSpeed * camera.SpeedModificator);
+                        transform.Move(normalize(DeltaPos) * Time::DeltaTime * camera.MovementSpeed * camera.SpeedModificator, Local);
                     }
                 
                     camera.SetViewMatrix(&transform);

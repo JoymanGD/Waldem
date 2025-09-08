@@ -83,13 +83,20 @@ namespace Waldem
         SetRotation(quatLookAt(direction, adjustedUp));
     }
 
-    void Transform::Move(Vector3 delta)
+    void Transform::Move(Vector3 delta, TransformSpace space)
     {
-        Vector3 forward = GetForwardVector();
-        Vector3 right = GetRightVector();
-        Vector3 up = GetUpVector();
+        Vector3 movement = delta;
+        
+        if(space == Local)
+        {
+            Vector3 forward = GetForwardVector();
+            Vector3 right = GetRightVector();
+            Vector3 up = GetUpVector();
 
-        Translate(forward * delta.z + right * delta.x + up * delta.y);
+            movement = forward * delta.z + right * delta.x + up * delta.y;
+        }
+        
+        Translate(movement);
     }
 
     void Transform::SetRotation(float pitch, float yaw, float roll)
