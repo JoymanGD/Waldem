@@ -24,6 +24,7 @@
 #include "Waldem/ECS/Systems/DrawSystems/ParticleSystem.h"
 #include "Waldem/ECS/Systems/DrawSystems/PostProcessSystem.h"
 #include "Waldem/ECS/Systems/DrawSystems/SkyRenderingSystem.h"
+#include "Waldem/ECS/Systems/UpdateSystems/PlayerControllerSystem.h"
 
 namespace Waldem
 {
@@ -67,6 +68,7 @@ namespace Waldem
             UISystems.Add(new EditorGuizmoSystem());
             
             UpdateSystems.Add(new EditorControlSystem());
+            UpdateSystems.Add(new PlayerControllerSystem());
             UpdateSystems.Add(new SpatialAudioSystem());
 
             // DrawSystems.Add(new OceanSimulationSystem());

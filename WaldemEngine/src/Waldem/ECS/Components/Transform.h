@@ -48,7 +48,7 @@ namespace Waldem
         void Rotate(Quaternion rotation);
         void Rotate(float yaw, float pitch, float roll);
         void LookAt(Vector3 target);
-        void Move(Vector3 delta);
+        void Move(Vector3 delta, TransformSpace space = World);
         void SetRotation(Vector3 pitchYawRoll);
         void SetRotation(float pitch, float yaw, float roll);
         void SetRotation(Quaternion newRotation);
