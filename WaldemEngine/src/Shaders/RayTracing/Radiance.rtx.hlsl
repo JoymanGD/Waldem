@@ -58,7 +58,7 @@ float smoothstep(float edge0, float edge1, float x)
 float3 GetRadiance(Payload payload, float3 worldPosition, float3 normal, float4 albedo, float4 orm, float4 reflection, RayTracingSceneData sceneData, float3 rayOrigin, float3 viewDirection)
 {
     float3 radiance = 0.0f;
-    float3 finalColor = float3(0.0f, 0.0f, 0.0f);
+    float3 finalColor = albedo.rgb * AMBIENT;
     
     StructuredBuffer<Light> Lights = ResourceDescriptorHeap[LightsBufferID];
     StructuredBuffer<float4x4> LightTransforms = ResourceDescriptorHeap[LightTransformsBufferID];

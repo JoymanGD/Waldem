@@ -146,10 +146,7 @@ void main(uint2 tid : SV_DispatchThreadID)
     float3 finalColor;
     if (meshId > 0)
     {
-        float4 albedo = albedoRT.Load(int3(tid, 0));
-        float3 radiance = radianceRT.Load(uint3(tid, 0));
-        float3 ambient = albedo.rgb * AMBIENT;
-        finalColor = ambient + radiance;
+        finalColor = radianceRT.Load(uint3(tid, 0));
     }
     else
     {
