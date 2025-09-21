@@ -18,6 +18,8 @@ Editor:
 * Mesh selection using MeshIdsRenderTarget
 
 Renderer:
+* Fully bindless
+* Indirect draw
 * Ray tracing
 * PBR
 * GBuffer
@@ -27,6 +29,7 @@ Renderer:
 * Materials
 * FFT Ocean simulation
 * Sprite rendering
+* Particle system
 
 Audio:
 * Audio listeners and sources
