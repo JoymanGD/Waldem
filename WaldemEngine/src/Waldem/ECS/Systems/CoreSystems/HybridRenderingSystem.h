@@ -1,5 +1,6 @@
 #pragma once
 #include "Waldem/ECS/IdManager.h"
+#include "Waldem/Input/Input.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
 #include "Waldem/Editor/Editor.h"
@@ -12,6 +13,8 @@
 #include "Waldem/ECS/Components/Sprite.h"
 #include "Waldem/Renderer/ResizableAccelerationStructure.h"
 #include "Waldem/Renderer/ResizableBuffer.h"
+#include "Waldem/Renderer/Viewport/Viewport.h"
+#include "Waldem/Renderer/Viewport/ViewportManager.h"
 
 #define MAX_INDIRECT_COMMANDS 500
 
@@ -32,7 +35,7 @@ namespace Waldem
         uint SceneDataBuffer;
     };
     
-    struct RayTracingSceneData
+    struct SRayTracingSceneData
     {
         Matrix4 InvViewMatrix;
         Matrix4 InvProjectionMatrix;
@@ -64,7 +67,7 @@ namespace Waldem
         uint AlbedoRT;
         uint MeshIDRT;
         uint RadianceRT;
-        uint TargetRT;
+        uint DeferredRT;
         uint SkyColorRT;
         uint DepthRTID; 
         uint HoveredMeshes;
@@ -88,7 +91,7 @@ namespace Waldem
         uint SceneDataBuffer;
     };
     
-    class WALDEM_API HybridRenderingSystem : public ISystem
+    class WALDEM_API HybridRenderingSystem : public ICoreSystem
     {
         //Sky pass
         Pipeline* SkyPipeline = nullptr;
@@ -97,19 +100,11 @@ namespace Waldem
         SkyRootConstants SkyPassRootConstants;
         SkySceneData SkyPassSceneData;
         Buffer* SceneDataBuffer = nullptr;
-        RenderTarget* SkyColorRT = nullptr;
-        bool SceneDataDirty = true;
         
         //GBuffer pass
         Pipeline* BFCGBufferPipeline = nullptr; // Back face culling GBuffer pipeline
         Pipeline* NCGBufferPipeline = nullptr; // No culling GBuffer pipeline
         PixelShader* GBufferPixelShader = nullptr;
-        RenderTarget* WorldPositionRT = nullptr;
-        RenderTarget* NormalRT = nullptr;
-        RenderTarget* ColorRT = nullptr;
-        RenderTarget* ORMRT = nullptr;
-        RenderTarget* DepthRT = nullptr;
-        RenderTarget* MeshIDRT = nullptr;
         ResizableBuffer DrawCommandsBuffer;
         ResizableBuffer BFCIndirectBuffer; //Back face culling indirect buffer
         WArray<IndirectCommand> BFCIndirectCommands;
@@ -119,20 +114,17 @@ namespace Waldem
         ResizableBuffer MaterialAttributesBuffer;
         Buffer* GBufferSceneDataBuffer = nullptr;
         GBufferRootConstants GBufferRootConstants;
-        bool CameraIsDirty = true;
         SGBufferSceneData GBufferSceneData;
         WArray<MaterialShaderAttribute> MaterialAttributes;
         size_t VerticesCount = 0;
         size_t IndicesCount = 0;
 
         //RayTracing
-        RenderTarget* RadianceRT = nullptr;
-        RenderTarget* ReflectionRT = nullptr;
         Pipeline* RTPipeline = nullptr;
         RayTracingShader* RTShader = nullptr;
         WArray<AccelerationStructure*> BLAS;
         WMap<CMesh*, AccelerationStructure*> BLASToUpdate;
-        RayTracingSceneData RayTracingSceneData;
+        SRayTracingSceneData RayTracingSceneData;
         ResizableBuffer LightsBuffer;
         ResizableBuffer LightTransformsBuffer;
         Buffer* RayTracingSceneDataBuffer = nullptr;
@@ -140,7 +132,6 @@ namespace Waldem
         WArray<Matrix4> LightTransforms;
 
         //Deferred
-        RenderTarget* TargetRT = nullptr;
         Pipeline* DeferredRenderingPipeline = nullptr;
         ComputeShader* DeferredRenderingComputeShader = nullptr;
         Point3 GroupCount;
@@ -169,7 +160,7 @@ namespace Waldem
             SpriteIndexBuffer = Renderer::CreateBuffer("SpriteIndexBuffer", BufferType::IndexBuffer, SpriteIndices.GetSize(), sizeof(uint32_t), SpriteIndices.GetData());
         }
         
-        void Initialize(InputManager* inputManager) override
+        void Initialize() override
         {
             //Sky
             WArray<InputLayoutDesc> inputElementDescs = {
@@ -179,9 +170,6 @@ namespace Waldem
             
             SceneDataBuffer = Renderer::CreateBuffer("SkySceneDataBuffer", BufferType::StorageBuffer, sizeof(SkyPassSceneData), sizeof(SkyPassSceneData));
             SkyPassRootConstants.SceneDataBuffer = SceneDataBuffer->GetIndex(SRV_CBV);
-            
-            TargetRT = Renderer::GetRenderTarget("TargetRT");
-            SkyColorRT = Renderer::CreateRenderTarget("SkyColorRT", TargetRT->GetWidth(), TargetRT->GetHeight(), TargetRT->GetFormat());
             
             SkyPixelShader = Renderer::LoadPixelShader("Sky");
             SkyPipeline = Renderer::CreateGraphicPipeline("SkyPipeline",
@@ -204,17 +192,10 @@ namespace Waldem
             MaterialAttributesBuffer = ResizableBuffer("MaterialAttributesBuffer", BufferType::StorageBuffer, sizeof(MaterialShaderAttribute), MAX_INDIRECT_COMMANDS);
             GBufferSceneDataBuffer = Renderer::CreateBuffer("SceneDataBuffer", BufferType::StorageBuffer, sizeof(SGBufferSceneData), sizeof(SGBufferSceneData));
             
-            WorldPositionRT = Renderer::GetRenderTarget("WorldPositionRT");
-            NormalRT = Renderer::GetRenderTarget("NormalRT");
-            ColorRT = Renderer::GetRenderTarget("ColorRT");
-            ORMRT = Renderer::GetRenderTarget("ORMRT");
-            MeshIDRT = Renderer::GetRenderTarget("MeshIDRT");
-            DepthRT = Renderer::GetRenderTarget("DepthRT");
-            
             GBufferPixelShader = Renderer::LoadPixelShader("GBuffer");
             BFCGBufferPipeline = Renderer::CreateGraphicPipeline("BFCGBufferPipeline",
                                                             GBufferPixelShader,
-                                                            { WorldPositionRT->GetFormat(), NormalRT->GetFormat(), ColorRT->GetFormat(), ORMRT->GetFormat(), MeshIDRT->GetFormat() },
+                                                            { SGBuffer::GetFormat(WorldPosition), SGBuffer::GetFormat(Normal), SGBuffer::GetFormat(Color), SGBuffer::GetFormat(ORM), SGBuffer::GetFormat(MeshID) },
                                                             TextureFormat::D32_FLOAT,
                                                             DEFAULT_RASTERIZER_DESC,
                                                             DEFAULT_DEPTH_STENCIL_DESC,
@@ -226,7 +207,7 @@ namespace Waldem
             spriteRasterizer.CullMode = WD_CULL_MODE_NONE;
             NCGBufferPipeline = Renderer::CreateGraphicPipeline("NCGBufferPipeline",
                                                             GBufferPixelShader,
-                                                            { WorldPositionRT->GetFormat(), NormalRT->GetFormat(), ColorRT->GetFormat(), ORMRT->GetFormat(), MeshIDRT->GetFormat() },
+                                                            { SGBuffer::GetFormat(WorldPosition), SGBuffer::GetFormat(Normal), SGBuffer::GetFormat(Color), SGBuffer::GetFormat(ORM), SGBuffer::GetFormat(MeshID) },
                                                             TextureFormat::D32_FLOAT,
                                                             spriteRasterizer,
                                                             DEFAULT_DEPTH_STENCIL_DESC,
@@ -235,33 +216,20 @@ namespace Waldem
                                                             DEFAULT_INPUT_LAYOUT_DESC);
 
             //Raytracing
-            RadianceRT = Renderer::GetRenderTarget("RadianceRT");
-            ReflectionRT = Renderer::GetRenderTarget("ReflectionRT");
             RTShader = Renderer::LoadRayTracingShader("RayTracing/Radiance");
             RTPipeline = Renderer::CreateRayTracingPipeline("RayTracingPipeline", RTShader);
             LightsBuffer = ResizableBuffer("LightsBuffer", StorageBuffer, sizeof(LightData), 40);
             LightTransformsBuffer = ResizableBuffer("LightTransformsBuffer", StorageBuffer, sizeof(Matrix4), 40);
-            RayTracingSceneDataBuffer = Renderer::CreateBuffer("SceneDataBuffer", StorageBuffer, sizeof(RayTracingSceneData), sizeof(RayTracingSceneData), &RayTracingSceneData);
+            RayTracingSceneDataBuffer = Renderer::CreateBuffer("SceneDataBuffer", StorageBuffer, sizeof(SRayTracingSceneData), sizeof(SRayTracingSceneData), &RayTracingSceneData);
             Renderer::RenderData.TLAS = ResizableAccelerationStructure("RayTracingTLAS", 50);
             
             //Deferred
             HoveredMeshesBuffer = Renderer::CreateBuffer("HoveredMeshes", StorageBuffer, sizeof(int), sizeof(int));
             DeferredRootConstants.HoveredMeshes = HoveredMeshesBuffer->GetIndex(UAV);
-            DeferredRootConstants.DepthRTID = DepthRT->GetIndex(SRV_CBV);
             DeferredRootConstants.SceneDataBuffer = SceneDataBuffer->GetIndex(SRV_CBV);
 
             DeferredRenderingComputeShader = Renderer::LoadComputeShader("DeferredRendering");
             DeferredRenderingPipeline = Renderer::CreateComputePipeline("DeferredLightingPipeline", DeferredRenderingComputeShader);
-
-            ECS::World.query<Camera, Transform>("SceneDataInitializationSystem").each([&](Camera& camera, Transform& transform)
-            {
-                GBufferSceneData.ViewMatrix = camera.ViewMatrix;
-                GBufferSceneData.ProjectionMatrix = camera.ProjectionMatrix;
-                GBufferSceneData.WorldMatrix = transform.Matrix;
-                GBufferSceneData.InverseProjectionMatrix = glm::inverse(camera.ProjectionMatrix);
-                
-                CameraIsDirty = true;
-            });
             
             ECS::World.observer<MeshComponent, Transform>().event(flecs::OnAdd).each([&](flecs::entity entity, MeshComponent& meshComponent, Transform& transform)
             {
@@ -592,92 +560,57 @@ namespace Waldem
                 }
             });
 
-            ECS::World.observer<Camera, Transform>("SceneDataUpdateSystem").event(flecs::OnSet).each([&](flecs::entity entity, Camera& camera, Transform& transform)
-            {
-                auto inverseProj = inverse(camera.ProjectionMatrix);
-                auto world = transform.Matrix;
-                GBufferSceneData.ViewMatrix = camera.ViewMatrix;
-                GBufferSceneData.ProjectionMatrix = camera.ProjectionMatrix;
-                GBufferSceneData.WorldMatrix = world;
-                GBufferSceneData.InverseProjectionMatrix = inverseProj;
-                RayTracingSceneData.InvViewMatrix = world;
-                RayTracingSceneData.InvProjectionMatrix = inverseProj;
-                RayTracingSceneData.CameraPosition = transform.Position;
-                SkyPassSceneData.InverseProjection = inverseProj;
-                SkyPassSceneData.InverseView = world;
-                SkyPassSceneData.ViewProjection = camera.ViewProjectionMatrix;
-                SkyPassSceneData.CameraPosition = Vector4(transform.Position, 1.0f);
-                
-                CameraIsDirty = true;
-                SceneDataDirty = true;
-            });
-
-            ECS::World.observer<Sky>().event(flecs::OnAdd).yield_existing().each([&](flecs::entity entity, Sky& skybox)
-            {
-                SkyPassSceneData.SkyZenithColor = Vector4(skybox.SkyZenithColor, 1.0f);
-                SkyPassSceneData.SkyHorizonColor = Vector4(skybox.SkyHorizonColor, 1.0f);
-                SkyPassSceneData.GroundColor = Vector4(skybox.GroundColor, 1.0f);
-                SkyPassSceneData.SunDirection = Vector4(skybox.SunDirection, 1.0f);
-                
-                SceneDataDirty = true;
-            });
-
             ECS::World.observer<Sky>().event(flecs::OnSet).yield_existing().each([&](Sky& skybox)
             {
                 SkyPassSceneData.SkyZenithColor = Vector4(skybox.SkyZenithColor, 1.0f);
                 SkyPassSceneData.SkyHorizonColor = Vector4(skybox.SkyHorizonColor, 1.0f);
                 SkyPassSceneData.GroundColor = Vector4(skybox.GroundColor, 1.0f);
                 SkyPassSceneData.SunDirection = Vector4(skybox.SunDirection, 1.0f);
-                
-                SceneDataDirty = true;
             });
 
             ECS::World.system("SkyColorClearingSystem").kind(flecs::OnDraw).each([&]
             {
-                Renderer::ResourceBarrier(SkyColorRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
-                Renderer::ClearRenderTarget(SkyColorRT);
-                Renderer::ResourceBarrier(SkyColorRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
+                auto viewport = Renderer::GetCurrentViewport();
+                
+                viewport->GetGBuffer()->Clear({SkyColor});
             });
             
             ECS::World.system<Sky>("SkyRenderingSystem").kind(flecs::OnDraw).each([&](Sky& skybox)
             {
-                if(SceneDataDirty)
-                {
-                    Renderer::UploadBuffer(SceneDataBuffer, &SkyPassSceneData, sizeof(SkySceneData));
-                    SceneDataDirty = false;
-                }
+                auto viewport = Renderer::GetCurrentViewport();
                 
-                Renderer::ResourceBarrier(SkyColorRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
-                Renderer::BindRenderTargets(SkyColorRT);
-                Renderer::BindDepthStencil(nullptr);
-                Renderer::SetPipeline(SkyPipeline);
-                Renderer::PushConstants(&SkyPassRootConstants, sizeof(SkyRootConstants));
-                Renderer::Draw(&FullscreenQuad);
-                Renderer::ResourceBarrier(SkyColorRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
+                ECS::Entity linkedCamera;
+                
+                if(viewport->TryGetLinkedCamera(linkedCamera))
+                {
+                    auto skyColor = viewport->GetGBufferRenderTarget(SkyColor);
+                    auto cameraComponent = linkedCamera.get<Camera>();
+                    auto transformComponent = linkedCamera.get<Transform>();
+
+                    SkyPassSceneData.InverseProjection = inverse(cameraComponent->ProjectionMatrix);
+                    SkyPassSceneData.InverseView = transformComponent->Matrix;
+                    SkyPassSceneData.ViewProjection = cameraComponent->ProjectionMatrix * inverse(transformComponent->Matrix);
+                    SkyPassSceneData.SkyZenithColor = Vector4(skybox.SkyZenithColor, 1.0f);
+                    SkyPassSceneData.SkyHorizonColor = Vector4(skybox.SkyHorizonColor, 1.0f);
+                    SkyPassSceneData.GroundColor = Vector4(skybox.GroundColor, 1.0f);
+                    SkyPassSceneData.SunDirection = Vector4(skybox.SunDirection, 1.0f);
+                    SkyPassSceneData.CameraPosition = Vector4(transformComponent->Position, 1.0f);
+                    
+                    Renderer::UploadBuffer(SceneDataBuffer, &SkyPassSceneData, sizeof(SkySceneData));
+                    Renderer::ResourceBarrier(skyColor, ALL_SHADER_RESOURCE, RENDER_TARGET);
+                    Renderer::BindRenderTargets(skyColor);
+                    Renderer::BindDepthStencil(nullptr);
+                    Renderer::SetPipeline(SkyPipeline);
+                    Renderer::PushConstants(&SkyPassRootConstants, sizeof(SkyRootConstants));
+                    Renderer::Draw(&FullscreenQuad);
+                    Renderer::ResourceBarrier(skyColor, RENDER_TARGET, ALL_SHADER_RESOURCE);
+                }
             });
             
             ECS::World.system("GBufferClearSystem").kind(flecs::OnDraw).run([&](flecs::iter& it)
             {
-                Renderer::ResourceBarrier(WorldPositionRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
-                Renderer::ResourceBarrier(NormalRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
-                Renderer::ResourceBarrier(ColorRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
-                Renderer::ResourceBarrier(ORMRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
-                Renderer::ResourceBarrier(MeshIDRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
-                Renderer::ResourceBarrier(DepthRT, ALL_SHADER_RESOURCE, DEPTH_WRITE);
-
-                Renderer::ClearRenderTarget(WorldPositionRT);
-                Renderer::ClearRenderTarget(NormalRT);
-                Renderer::ClearRenderTarget(ColorRT);
-                Renderer::ClearRenderTarget(ORMRT);
-                Renderer::ClearRenderTarget(MeshIDRT);
-                Renderer::ClearDepthStencil(DepthRT);
-                
-                Renderer::ResourceBarrier(WorldPositionRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
-                Renderer::ResourceBarrier(NormalRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
-                Renderer::ResourceBarrier(ColorRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
-                Renderer::ResourceBarrier(ORMRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
-                Renderer::ResourceBarrier(MeshIDRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
-                Renderer::ResourceBarrier(DepthRT, DEPTH_WRITE, ALL_SHADER_RESOURCE);
+                SViewport* viewport = Renderer::GetCurrentViewport();
+                viewport->GetGBuffer()->Clear({WorldPosition, Normal, Color, ORM, MeshID, Depth});
             });
             
             ECS::World.system("GBufferSystem").kind(flecs::OnDraw).run([&](flecs::iter& it)
@@ -687,124 +620,140 @@ namespace Waldem
                     return;
                 }
                 
-                if(CameraIsDirty)
+                auto viewport = Renderer::GetCurrentViewport();
+                
+                ECS::Entity linkedCamera;
+                
+                if(viewport->TryGetLinkedCamera(linkedCamera))
                 {
+                    auto cameraComponent = linkedCamera.get<Camera>();
+                    auto transformComponent = linkedCamera.get<Transform>();
+                    
+                    GBufferSceneData.ProjectionMatrix = cameraComponent->ProjectionMatrix;
+                    GBufferSceneData.ViewMatrix = inverse(transformComponent->Matrix);
+                    GBufferSceneData.WorldMatrix = transformComponent->Matrix;
+                    GBufferSceneData.InverseProjectionMatrix = glm::inverse(cameraComponent->ProjectionMatrix);
+                    
                     Renderer::UploadBuffer(GBufferSceneDataBuffer, &GBufferSceneData, sizeof(SGBufferSceneData));
-                    CameraIsDirty = false;
-                }
 
-                GBufferRootConstants.WorldTransforms = WorldTransformsBuffer.GetIndex(SRV_CBV);
-                GBufferRootConstants.MaterialAttributes = MaterialAttributesBuffer.GetIndex(SRV_CBV);
-                GBufferRootConstants.SceneDataBuffer = GBufferSceneDataBuffer->GetIndex(SRV_CBV);
+                    auto gbuffer = viewport->GetGBuffer();
 
-                Renderer::ResourceBarrier(WorldPositionRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
-                Renderer::ResourceBarrier(NormalRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
-                Renderer::ResourceBarrier(ColorRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
-                Renderer::ResourceBarrier(ORMRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
-                Renderer::ResourceBarrier(MeshIDRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
-                Renderer::ResourceBarrier(DepthRT, ALL_SHADER_RESOURCE, DEPTH_WRITE);
-                
-                // Back face culling pass
-                if(BFCIndirectCommands.Num() > 0)
-                {
-                    Renderer::SetPipeline(BFCGBufferPipeline);
-                    Renderer::PushConstants(&GBufferRootConstants, sizeof(GBufferRootConstants));
-                    Renderer::BindRenderTargets({ WorldPositionRT, NormalRT, ColorRT, ORMRT, MeshIDRT });
-                    Renderer::BindDepthStencil(DepthRT);
-                    Renderer::SetVertexBuffers(Renderer::RenderData.VertexBuffer.GetBuffer(), 1);
-                    Renderer::SetIndexBuffer(Renderer::RenderData.IndexBuffer.GetBuffer());
-                    Renderer::DrawIndirect(BFCIndirectCommands.Num(), BFCIndirectBuffer);
+                    GBufferRootConstants.WorldTransforms = WorldTransformsBuffer.GetIndex(SRV_CBV);
+                    GBufferRootConstants.MaterialAttributes = MaterialAttributesBuffer.GetIndex(SRV_CBV);
+                    GBufferRootConstants.SceneDataBuffer = GBufferSceneDataBuffer->GetIndex(SRV_CBV);
+
+                    gbuffer->Barriers({WorldPosition, Normal, Color, ORM, MeshID}, ALL_SHADER_RESOURCE, RENDER_TARGET);
+                    gbuffer->Barrier(Depth, ALL_SHADER_RESOURCE, DEPTH_WRITE);
+                    
+                    // Back face culling pass
+                    if(BFCIndirectCommands.Num() > 0)
+                    {
+                        Renderer::SetPipeline(BFCGBufferPipeline);
+                        Renderer::PushConstants(&GBufferRootConstants, sizeof(GBufferRootConstants));
+                        Renderer::BindRenderTargets({ gbuffer->GetRenderTarget(WorldPosition), gbuffer->GetRenderTarget(Normal), gbuffer->GetRenderTarget(Color), gbuffer->GetRenderTarget(ORM), gbuffer->GetRenderTarget(MeshID) });
+                        Renderer::BindDepthStencil(gbuffer->GetRenderTarget(Depth));
+                        Renderer::SetVertexBuffers(Renderer::RenderData.VertexBuffer.GetBuffer(), 1);
+                        Renderer::SetIndexBuffer(Renderer::RenderData.IndexBuffer.GetBuffer());
+                        Renderer::DrawIndirect(BFCIndirectCommands.Num(), BFCIndirectBuffer);
+                    }
+                    
+                    // No culling pass
+                    if(NCIndirectCommands.Num() > 0)
+                    {
+                        Renderer::SetPipeline(NCGBufferPipeline);
+                        Renderer::PushConstants(&GBufferRootConstants, sizeof(GBufferRootConstants));
+                        Renderer::BindRenderTargets({ gbuffer->GetRenderTarget(WorldPosition), gbuffer->GetRenderTarget(Normal), gbuffer->GetRenderTarget(Color), gbuffer->GetRenderTarget(ORM), gbuffer->GetRenderTarget(MeshID) });
+                        Renderer::BindDepthStencil(gbuffer->GetRenderTarget(Depth));
+                        Renderer::SetVertexBuffers(Renderer::RenderData.VertexBuffer.GetBuffer(), 1);
+                        Renderer::SetIndexBuffer(Renderer::RenderData.IndexBuffer.GetBuffer());
+                        Renderer::DrawIndirect(NCIndirectCommands.Num(), NCIndirectBuffer);
+                    }
+                    
+                    gbuffer->Barriers({WorldPosition, Normal, Color, ORM, MeshID}, RENDER_TARGET, ALL_SHADER_RESOURCE);
+                    gbuffer->Barrier(Depth, DEPTH_WRITE, ALL_SHADER_RESOURCE);
                 }
-                
-                // No culling pass
-                if(NCIndirectCommands.Num() > 0)
-                {
-                    Renderer::SetPipeline(NCGBufferPipeline);
-                    Renderer::PushConstants(&GBufferRootConstants, sizeof(GBufferRootConstants));
-                    Renderer::BindRenderTargets({ WorldPositionRT, NormalRT, ColorRT, ORMRT, MeshIDRT });
-                    Renderer::BindDepthStencil(DepthRT);
-                    Renderer::SetVertexBuffers(Renderer::RenderData.VertexBuffer.GetBuffer(), 1);
-                    Renderer::SetIndexBuffer(Renderer::RenderData.IndexBuffer.GetBuffer());
-                    Renderer::DrawIndirect(NCIndirectCommands.Num(), NCIndirectBuffer);
-                }
-                
-                Renderer::ResourceBarrier(WorldPositionRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
-                Renderer::ResourceBarrier(NormalRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
-                Renderer::ResourceBarrier(ColorRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
-                Renderer::ResourceBarrier(ORMRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
-                Renderer::ResourceBarrier(MeshIDRT, RENDER_TARGET, ALL_SHADER_RESOURCE);
-                Renderer::ResourceBarrier(DepthRT, DEPTH_WRITE, ALL_SHADER_RESOURCE);
             });
 
-            ECS::World.system<>("RayTracingSystem").kind(flecs::OnDraw).each([&]
+            ECS::World.system("RayTracingSystem").kind(flecs::OnDraw).each([&]
             {
-                RayTracingRootConstants.LightsBuffer = LightsBuffer.GetIndex(SRV_CBV);
-                RayTracingRootConstants.LightTransformsBuffer = LightTransformsBuffer.GetIndex(SRV_CBV);
-                RayTracingRootConstants.SceneDataBuffer = RayTracingSceneDataBuffer->GetIndex(SRV_CBV);
-                RayTracingRootConstants.TLAS = Renderer::RenderData.TLAS.GetIndex(SRV_CBV);
-                RayTracingRootConstants.VertexBuffer = Renderer::RenderData.VertexBuffer.GetIndex(SRV_CBV);
-                RayTracingRootConstants.IndexBuffer = Renderer::RenderData.IndexBuffer.GetIndex(SRV_CBV);
-                RayTracingRootConstants.DrawCommandsBuffer = DrawCommandsBuffer.GetIndex(SRV_CBV);
-                RayTracingRootConstants.MaterialBuffer = MaterialAttributesBuffer.GetIndex(SRV_CBV);
+                auto viewport = Renderer::GetCurrentViewport();
                 
-                Renderer::UploadBuffer(RayTracingSceneDataBuffer, &RayTracingSceneData, sizeof(RayTracingSceneData));
+                ECS::Entity linkedCamera;
+                
+                if(viewport->TryGetLinkedCamera(linkedCamera))
+                {
+                    auto gbuffer = viewport->GetGBuffer();
+                    auto radianceRT = gbuffer->GetRenderTarget(Radiance);
 
-                //dispatching
-                Renderer::ResourceBarrier(RadianceRT, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
-                Renderer::ResourceBarrier(ReflectionRT, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
-                Renderer::SetPipeline(RTPipeline);
-                Renderer::PushConstants(&RayTracingRootConstants, sizeof(RayTracingRootConstants));
-                Renderer::TraceRays(RTPipeline, Point3(RadianceRT->GetWidth(), RadianceRT->GetHeight(), 1));
-                Renderer::ResourceBarrier(RadianceRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
-                Renderer::ResourceBarrier(ReflectionRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
+                    auto cameraComponent = linkedCamera.get<Camera>();
+                    auto transformComponent = linkedCamera.get<Transform>();
+
+                    RayTracingSceneData.CameraPosition = transformComponent->Position;
+                    RayTracingSceneData.InvViewMatrix = transformComponent->Matrix;
+                    RayTracingSceneData.InvProjectionMatrix = inverse(cameraComponent->ProjectionMatrix);
+                    Renderer::UploadBuffer(RayTracingSceneDataBuffer, &RayTracingSceneData, sizeof(SRayTracingSceneData));
+
+                    RayTracingRootConstants.WorldPositionRT = gbuffer->GetRenderTarget(WorldPosition)->GetIndex(SRV_CBV);
+                    RayTracingRootConstants.NormalRT = gbuffer->GetRenderTarget(Normal)->GetIndex(SRV_CBV);
+                    RayTracingRootConstants.ColorRT = gbuffer->GetRenderTarget(Color)->GetIndex(SRV_CBV);
+                    RayTracingRootConstants.ORMRT = gbuffer->GetRenderTarget(ORM)->GetIndex(SRV_CBV);
+                    RayTracingRootConstants.RadianceRT = radianceRT->GetIndex(SRV_CBV);
+                    RayTracingRootConstants.ReflectionRT = gbuffer->GetRenderTarget(Reflection)->GetIndex(SRV_CBV);
+                    RayTracingRootConstants.LightsBuffer = LightsBuffer.GetIndex(SRV_CBV);
+                    RayTracingRootConstants.LightTransformsBuffer = LightTransformsBuffer.GetIndex(SRV_CBV);
+                    RayTracingRootConstants.SceneDataBuffer = RayTracingSceneDataBuffer->GetIndex(SRV_CBV);
+                    RayTracingRootConstants.TLAS = Renderer::RenderData.TLAS.GetIndex(SRV_CBV);
+                    RayTracingRootConstants.VertexBuffer = Renderer::RenderData.VertexBuffer.GetIndex(SRV_CBV);
+                    RayTracingRootConstants.IndexBuffer = Renderer::RenderData.IndexBuffer.GetIndex(SRV_CBV);
+                    RayTracingRootConstants.DrawCommandsBuffer = DrawCommandsBuffer.GetIndex(SRV_CBV);
+                    RayTracingRootConstants.MaterialBuffer = MaterialAttributesBuffer.GetIndex(SRV_CBV);
+
+                    //dispatching
+                    viewport->GetGBuffer()->Barriers({Radiance, Reflection}, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
+                    Renderer::SetPipeline(RTPipeline);
+                    Renderer::PushConstants(&RayTracingRootConstants, sizeof(RayTracingRootConstants));
+                    Renderer::TraceRays(RTPipeline, Point3(radianceRT->GetWidth(), radianceRT->GetHeight(), 1));
+                    viewport->GetGBuffer()->Barriers({Radiance, Reflection}, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
+                }
             });
 
             ECS::World.system("DeferredRenderingSystem").kind(flecs::OnDraw).run([&](flecs::iter& it)
             {
-                Renderer::ResourceBarrier(TargetRT, ALL_SHADER_RESOURCE, RENDER_TARGET);
-                Renderer::ClearRenderTarget(TargetRT);
-                Renderer::ResourceBarrier(TargetRT, RENDER_TARGET, UNORDERED_ACCESS);
-                Renderer::SetPipeline(DeferredRenderingPipeline);
-                auto mousePos = Input::GetMousePos();
-                Point2 relativeMousePos = Renderer::GetEditorViewport()->TransformMousePosition(mousePos);
-                DeferredRootConstants.MousePos = relativeMousePos;
-                Renderer::PushConstants(&DeferredRootConstants, sizeof(DeferredRootConstants));
+                auto viewport = Renderer::GetCurrentViewport();
                 
-                Vector2 resolution = Vector2(TargetRT->GetWidth(), TargetRT->GetHeight());
-                Point3 numThreads = Renderer::GetNumThreadsPerGroup(DeferredRenderingComputeShader);
-                GroupCount = Point3((resolution.x + numThreads.x - 1) / numThreads.x, (resolution.y + numThreads.y - 1) / numThreads.y, 1);
+                ECS::Entity linkedCamera;
                 
-                Renderer::Compute(GroupCount);
-                int hoveredEntityId = {};
-                Renderer::DownloadBuffer(HoveredMeshesBuffer, &hoveredEntityId, sizeof(int));
-                Editor::HoveredEntityID = hoveredEntityId - 1;
-                Renderer::ResourceBarrier(TargetRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
+                if(viewport->TryGetLinkedCamera(linkedCamera))
+                {
+                    auto gbuffer = viewport->GetGBuffer();
+                    
+                    auto deferredRT = viewport->GetGBufferRenderTarget(Deferred);
+                    gbuffer->Clear({Deferred});
+                    gbuffer->Barrier(Deferred, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
+                    
+                    DeferredRootConstants.AlbedoRT = gbuffer->GetRenderTarget(Color)->GetIndex(SRV_CBV);
+                    DeferredRootConstants.MeshIDRT = gbuffer->GetRenderTarget(MeshID)->GetIndex(SRV_CBV);
+                    DeferredRootConstants.RadianceRT = gbuffer->GetRenderTarget(Radiance)->GetIndex(SRV_CBV);
+                    DeferredRootConstants.DeferredRT = deferredRT->GetIndex(SRV_CBV);
+                    DeferredRootConstants.SkyColorRT = gbuffer->GetRenderTarget(SkyColor)->GetIndex(SRV_CBV);
+                    DeferredRootConstants.DepthRTID = gbuffer->GetRenderTarget(Depth)->GetIndex(SRV_CBV);
+                    Renderer::SetPipeline(DeferredRenderingPipeline);
+                    auto mousePos = Input::GetMousePos();
+                    Point2 relativeMousePos = viewport->TransformMousePosition(mousePos);
+                    DeferredRootConstants.MousePos = relativeMousePos;
+                    Renderer::PushConstants(&DeferredRootConstants, sizeof(DeferredRootConstants));
+                    
+                    Vector2 resolution = Vector2(deferredRT->GetWidth(), deferredRT->GetHeight());
+                    Point3 numThreads = Renderer::GetNumThreadsPerGroup(DeferredRenderingComputeShader);
+                    GroupCount = Point3((resolution.x + numThreads.x - 1) / numThreads.x, (resolution.y + numThreads.y - 1) / numThreads.y, 1);
+                    
+                    Renderer::Compute(GroupCount);
+                    int hoveredEntityId = {};
+                    Renderer::DownloadBuffer(HoveredMeshesBuffer, &hoveredEntityId, sizeof(int));
+                    Editor::HoveredEntityID = hoveredEntityId - 1;
+                    viewport->GetGBuffer()->Barrier(Deferred, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
+                }
             });
-        }
-
-        void Update(float deltaTime) override
-        {
-        }
-
-        void OnResize(Vector2 size) override
-        {
-            auto colorRTIndex = ColorRT->GetIndex(SRV_CBV);
-            auto radianceRTIndex = RadianceRT->GetIndex(SRV_CBV);
-            auto reflectionRTIndex = ReflectionRT->GetIndex(SRV_CBV);
-            
-            RayTracingRootConstants.WorldPositionRT = WorldPositionRT->GetIndex(SRV_CBV);
-            RayTracingRootConstants.NormalRT = NormalRT->GetIndex(SRV_CBV);
-            RayTracingRootConstants.ColorRT = colorRTIndex;
-            RayTracingRootConstants.ORMRT = ORMRT->GetIndex(SRV_CBV);
-            RayTracingRootConstants.RadianceRT = radianceRTIndex;
-            RayTracingRootConstants.ReflectionRT = reflectionRTIndex;
-            
-            DeferredRootConstants.AlbedoRT = colorRTIndex;
-            DeferredRootConstants.MeshIDRT = MeshIDRT->GetIndex(SRV_CBV);
-            DeferredRootConstants.RadianceRT = radianceRTIndex;
-            DeferredRootConstants.TargetRT = TargetRT->GetIndex(SRV_CBV);
-            DeferredRootConstants.SkyColorRT = SkyColorRT->GetIndex(SRV_CBV);
-            DeferredRootConstants.DepthRTID = DepthRT->GetIndex(SRV_CBV);
         }
     };
 }

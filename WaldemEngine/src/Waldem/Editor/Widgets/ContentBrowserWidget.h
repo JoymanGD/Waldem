@@ -1,5 +1,5 @@
 #pragma once
-#include "Waldem/ECS/Systems/System.h"
+#include "Widget.h"
 #include "Waldem/SceneManagement/SceneManager.h"
 
 namespace Waldem
@@ -18,8 +18,6 @@ namespace Waldem
         
     public:
         ContentBrowserWidget() {}
-
-        WString GetName() override { return "Content"; }
 
         void Initialize(InputManager* inputManager) override
         {

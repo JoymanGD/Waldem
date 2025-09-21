@@ -1,19 +1,10 @@
 #pragma once
 
 #include "Waldem/ECS/Systems/System.h"
-#include "Waldem/ECS/Systems/DrawSystems/OceanSimulationSystem.h"
-#include "Waldem/ECS/Systems/DrawSystems/ScreenQuadSystem.h"
-#include "Waldem/ECS/Systems/UpdateSystems/CollisionSystem.h"
-#include "Waldem/ECS/Systems/UpdateSystems/PhysicsUpdateSystem.h"
-#include "Waldem/ECS/Systems/UpdateSystems/PhysicsIntegrationSystem.h"
-#include "Waldem/ECS/Systems/UpdateSystems/ScriptExecutionSystem.h"
-#include "Waldem/ECS/Systems/UpdateSystems/SpatialAudioSystem.h"
+#include "Waldem/ECS/Systems/GameSystems/PlayerControllerSystem.h"
+#include "Waldem/ECS/Systems/GameSystems/ScriptExecutionSystem.h"
 #include "Waldem/Input/InputManager.h"
 #include "Waldem/Layers/Layer.h"
-#include "Waldem/SceneManagement/Scene.h"
-#include "Waldem/Renderer/Renderer.h"
-#include <glm/gtc/integer.hpp>
-#include "Waldem/SceneManagement/GameScene.h"
 
 namespace Waldem
 {
@@ -24,17 +15,31 @@ namespace Waldem
 		{
 			InputManager = {};
 
-			// DrawSystems.Add(new OceanSimulationSystem(ecsManager));
-			// DrawSystems.Add(new HybridRenderingSystem());
-			// DrawSystems.Add(new PostProcessSystem());
-			DrawSystems.Add(new ScreenQuadSystem());
-			
-			UpdateSystems.Add(new SpatialAudioSystem());
-			// PhysicsSystems.Add(new PhysicsIntegrationSystem());
-			// PhysicsSystems.Add(new PhysicsUpdateSystem());
-			// PhysicsSystems.Add(new CollisionSystem());
+			UpdateSystems.Add(new PlayerControllerSystem());
 
-			ScriptSystem = new ScriptExecutionSystem();
+			//Should be added last
+			UpdateSystems.Add(new ScriptExecutionSystem());
+
+			ECS::World.observer<Camera>().without<EditorComponent>().event(flecs::OnAdd).each([&](flecs::entity entity, Camera& camera)
+			{
+				ViewportManager::GetGameViewport()->LinkCamera(entity);
+			});
+
+			ViewportManager::GetGameViewport()->SubscribeOnResize([this](Vector2 size)
+			{
+				OnResize(size);
+			});
+		}
+
+		void OnResize(Vector2 size)
+		{
+			ECS::Entity linkedCamera;
+			if(ViewportManager::GetGameViewport()->TryGetLinkedCamera(linkedCamera))
+			{
+				auto camera = linkedCamera.get_mut<Camera>();
+				camera->UpdateProjectionMatrix(camera->FieldOfView, size.x/size.y, camera->NearPlane, camera->FarPlane);
+				linkedCamera.modified<Camera>(); 
+			}
 		}
 
 		void Initialize() override
@@ -58,8 +63,6 @@ namespace Waldem
 			{
 				system->Initialize(&InputManager);
 			}
-
-			ScriptSystem->Initialize(&InputManager);
 
 			Initialized = true;
 		}
@@ -86,8 +89,6 @@ namespace Waldem
 				system->Deinitialize();
 			}
 
-			ScriptSystem->Deinitialize();
-
 			Initialized = false;
 		}
 
@@ -110,39 +111,9 @@ namespace Waldem
 			}
 		}
 
-		void OpenScene(GameScene* scene, SceneData* sceneData)
-		{
-			scene->Initialize();
-			
-			for (ISystem* system : DrawSystems)
-			{
-				system->Initialize(&InputManager);
-			}
-			
-			for (ISystem* system : UpdateSystems)
-			{
-				system->Initialize(&InputManager);
-			}
-			
-			for (ISystem* system : PhysicsSystems)
-			{
-				system->Initialize(&InputManager);
-			}
-
-			ScriptSystem->Initialize(&InputManager);
-			
-			// CurrentScene = scene;
-		}
-
-		// GameScene* GetCurrentScene() { return CurrentScene; }
-        
 		void Begin() override {}
 		void End() override {}
 		void OnAttach() override {}
 		void OnDetach() override{}
-
-	private:
-		// GameScene* CurrentScene = nullptr;
-		ScriptExecutionSystem* ScriptSystem = nullptr;
 	};
 }

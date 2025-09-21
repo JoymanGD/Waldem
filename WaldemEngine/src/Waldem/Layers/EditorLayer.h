@@ -5,26 +5,24 @@
 #include "imgui.h"
 #include "Waldem/AssetsManagement/ContentManager.h"
 #include "Waldem/ECS/Components/AudioListener.h"
-#include "Waldem/ECS/Systems/UISystems/EditorControlSystem.h"
-#include "Waldem/ECS/Systems/UISystems/EditorGuizmoSystem.h"
-#include "Waldem/ECS/Systems/UpdateSystems/FreeLookCameraSystem.h"
+#include "Waldem/ECS/Systems/EditorSystems/EditorControlSystem.h"
+#include "Waldem/ECS/Systems/EditorSystems/EditorGuizmoSystem.h"
+#include "Waldem/ECS/Systems/GameSystems/FreeLookCameraSystem.h"
 #include "Waldem/ECS/Components/Camera.h"
-#include "Waldem/ECS/Systems/UISystems/EditorUISystem.h"
-#include "Waldem/ECS/Systems/DrawSystems/OceanSimulationSystem.h"
-#include "Waldem/ECS/Systems/DrawSystems/ScreenQuadSystem.h"
-#include "Waldem/ECS/Systems/UpdateSystems/SpatialAudioSystem.h"
+#include "Waldem/ECS/Systems/CoreSystems/OceanSimulationSystem.h"
 #include "Waldem/Events/ApplicationEvent.h"
 #include "Waldem/Input/InputManager.h"
 #include "Waldem/Layers/Layer.h"
 #include "Waldem/Renderer/Renderer.h"
 #include "Waldem/Utils/FileUtils.h"
 #include "Waldem/ECS/ECS.h"
-#include "Waldem/ECS/Systems/DrawSystems/AnimationSystem.h"
-#include "Waldem/ECS/Systems/DrawSystems/HybridRenderingSystem.h"
-#include "Waldem/ECS/Systems/DrawSystems/ParticleSystem.h"
-#include "Waldem/ECS/Systems/DrawSystems/PostProcessSystem.h"
-#include "Waldem/ECS/Systems/DrawSystems/SkyRenderingSystem.h"
-#include "Waldem/ECS/Systems/UpdateSystems/PlayerControllerSystem.h"
+#include "Waldem/ECS/Systems/CoreSystems/AnimationSystem.h"
+#include "Waldem/ECS/Systems/CoreSystems/HybridRenderingSystem.h"
+#include "Waldem/Editor/Widgets/ContentBrowserWidget.h"
+#include "Waldem/Editor/Widgets/ViewportWidget.h"
+#include "Waldem/Editor/Widgets/EntityDetailsWidgetContainer.h"
+#include "Waldem/Editor/Widgets/HierarchyWidget.h"
+#include "Waldem/Editor/Widgets/MenuBarWidget.h"
 
 namespace Waldem
 {
@@ -36,6 +34,7 @@ namespace Waldem
         bool ImportSceneThisFrame = false;
         bool EditorViewportResizeTriggered = false;
         Vector2 NewEditorViewportSize = {};
+        WArray<IWidget*> Widgets;
         
     public:
         EditorLayer(CWindow* window) : Layer("EditorLayer", window)
@@ -43,83 +42,60 @@ namespace Waldem
             InputManager = {};
             
             Vector2 size = { 1920, 1080 };
-            Renderer::CreateRenderTarget("TargetRT", size.x, size.y, TextureFormat::R8G8B8A8_UNORM);
-            Renderer::CreateRenderTarget("WorldPositionRT", size.x, size.y, TextureFormat::R32G32B32A32_FLOAT);
-            Renderer::CreateRenderTarget("NormalRT", size.x, size.y, TextureFormat::R16G16B16A16_FLOAT);
-            Renderer::CreateRenderTarget("ColorRT", size.x, size.y, TextureFormat::R8G8B8A8_UNORM);
-            Renderer::CreateRenderTarget("ORMRT", size.x, size.y, TextureFormat::R32G32B32A32_FLOAT);
-            Renderer::CreateRenderTarget("MeshIDRT", size.x, size.y, TextureFormat::R32_SINT);
-            Renderer::CreateRenderTarget("DepthRT", size.x, size.y, TextureFormat::D32_FLOAT);
-            Renderer::CreateRenderTarget("RadianceRT", size.x, size.y, TextureFormat::R32G32B32A32_FLOAT);
-            Renderer::CreateRenderTarget("ReflectionRT", size.x, size.y, TextureFormat::R32G32B32A32_FLOAT);
-            
             auto cameraEntity = ECS::CreateEntity("EditorCamera");
             float aspectRatio = size.x / size.y;
             cameraEntity.set<Transform>({Vector3(0, 10, -10.f)});
             cameraEntity.set<Camera>({60.0f, aspectRatio, 0.001f, 1000.0f, 30.0f, 30.0f});
             cameraEntity.add<AudioListener>();
+            cameraEntity.add<EditorComponent>();
+            ViewportManager::GetEditorViewport()->LinkCamera(cameraEntity);
 
             auto skyEntity = ECS::CreateEntity("Sky");
             skyEntity.add<Transform>();
             skyEntity.add<Sky>();
+
+            Widgets.Add(new MenuBarWidget());
+            Widgets.Add(new ViewportWidget(ViewportManager::GetEditorViewport()));
+            Widgets.Add(new ViewportWidget(ViewportManager::GetGameViewport()));
+            Widgets.Add(new HierarchyWidget());
+            Widgets.Add(new EntityDetailsWidgetContainer());
+            Widgets.Add(new ContentBrowserWidget());
             
             //do it after all entities set up
-            UISystems.Add(new EditorUISystem());
-            UISystems.Add(new EditorGuizmoSystem());
-            
+            UpdateSystems.Add(new EditorGuizmoSystem());
             UpdateSystems.Add(new EditorControlSystem());
-            UpdateSystems.Add(new PlayerControllerSystem());
-            UpdateSystems.Add(new SpatialAudioSystem());
-
-            // DrawSystems.Add(new OceanSimulationSystem());
-            DrawSystems.Add(new AnimationSystem());
-            DrawSystems.Add(new HybridRenderingSystem());
-            DrawSystems.Add(new ParticleSystem());
-            DrawSystems.Add(new PostProcessSystem());
-            DrawSystems.Add(new ScreenQuadSystem());
 
             Window = window;
 
-            Renderer::GetEditorViewport()->SubscribeOnResize([this](Vector2 size)
+            ViewportManager::GetEditorViewport()->SubscribeOnResize([this](Vector2 size)
             {
                 OnResize(size);
             });
 
-            ECS::World.system<>("UISystems").kind(flecs::OnGUI).each([&]
+            ECS::World.system("WidgetDrawing").kind(flecs::OnGUI).each([&]
             {
-                for (auto system : UISystems)
+                UpdateDockSpace();
+                
+                for (auto widget : Widgets)
                 {
-                    system->Update(ECS::World.delta_time());
+                    widget->OnDraw(Time::DeltaTime);
                 }
             });
         }
 
         void OnResize(Vector2 size)
         {
-            Renderer::ResizeRenderTarget("TargetRT", size.x, size.y);
-            Renderer::ResizeRenderTarget("WorldPositionRT", size.x, size.y);
-            Renderer::ResizeRenderTarget("NormalRT", size.x, size.y);
-            Renderer::ResizeRenderTarget("ColorRT", size.x, size.y);
-            Renderer::ResizeRenderTarget("ORMRT", size.x, size.y);
-            Renderer::ResizeRenderTarget("MeshIDRT", size.x, size.y);
-            Renderer::ResizeRenderTarget("DepthRT", size.x, size.y);
-            Renderer::ResizeRenderTarget("RadianceRT", size.x, size.y);
-            
-            for (ISystem* system : DrawSystems)
+            ECS::Entity linkedCamera;
+            if(ViewportManager::GetEditorViewport()->TryGetLinkedCamera(linkedCamera))
             {
-                system->OnResize(size);
+                auto camera = linkedCamera.get_mut<Camera>();
+                camera->UpdateProjectionMatrix(camera->FieldOfView, size.x/size.y, camera->NearPlane, camera->FarPlane);
+                linkedCamera.modified<Camera>(); 
             }
-
-            ECS::World.query<Camera>().each([size](flecs::entity entity, Camera& camera)
-            {
-                camera.UpdateProjectionMatrix(camera.FieldOfView, size.x/size.y, camera.NearPlane, camera.FarPlane);
-                entity.modified<Camera>(); 
-            });
         }
         
         void OnEvent(Event& event) override
         {
-            auto editorViewport = Renderer::GetEditorViewport();
             auto eventType = event.GetEventType();
 
             if (BlockUIEvents)
@@ -145,7 +121,7 @@ namespace Waldem
                 }
             case EventType::MouseButtonPressed:
                 {
-                    event.Handled |= event.IsInCategory(EventCategoryMouse) & (ImGui::GetIO().WantCaptureMouse && !editorViewport->IsMouseOver);
+                    event.Handled |= event.IsInCategory(EventCategoryMouse) & (ImGui::GetIO().WantCaptureMouse && !ViewportManager::GetEditorViewport()->IsMouseOver);
                 }
             case EventType::MouseButtonReleased:
                 {
@@ -162,6 +138,132 @@ namespace Waldem
                     event.Handled = CContentManager::Broadcast(event);
                     break;
                 }
+            }
+        }
+        
+        void Initialize() override
+        {
+            for (ISystem* system : UISystems)
+            {
+                system->Initialize(&InputManager);
+            }
+        	
+            for (ISystem* system : UpdateSystems)
+            {
+                system->Initialize(&InputManager);
+            }
+        	
+            for (ISystem* system : DrawSystems)
+            {
+                system->Initialize(&InputManager);
+            }
+			
+            for (ISystem* system : PhysicsSystems)
+            {
+                system->Initialize(&InputManager);
+            }
+            
+            for (auto widget : Widgets)
+            {
+                widget->Initialize(&InputManager);
+            }
+
+            Initialized = true;
+        }
+        
+        void Deinitialize() override
+        {
+            for (ISystem* system : UISystems)
+            {
+                system->Deinitialize();
+            }
+        	
+            for (ISystem* system : UpdateSystems)
+            {
+                system->Deinitialize();
+            }
+        	
+            for (ISystem* system : DrawSystems)
+            {
+                system->Deinitialize();
+            }
+			
+            for (ISystem* system : PhysicsSystems)
+            {
+                system->Deinitialize();
+            }
+            
+            for (auto widget : Widgets)
+            {
+                widget->Deinitialize();
+            }
+
+            Initialized = false;
+        }
+
+        void UpdateDockSpace()
+        {
+            // 🪟 Fullscreen invisible host window for the dockspace
+            ImGuiViewport* viewport = ImGui::GetMainViewport();
+            ImGui::SetNextWindowPos(viewport->WorkPos);
+            ImGui::SetNextWindowSize(viewport->WorkSize);
+            ImGui::SetNextWindowViewport(viewport->ID);
+
+            ImGuiWindowFlags host_window_flags =
+                ImGuiWindowFlags_NoTitleBar |
+                ImGuiWindowFlags_NoCollapse |
+                ImGuiWindowFlags_NoResize |
+                ImGuiWindowFlags_NoMove |
+                ImGuiWindowFlags_NoBringToFrontOnFocus |
+                ImGuiWindowFlags_NoNavFocus |
+                ImGuiWindowFlags_NoBackground;
+
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+    
+            ImGui::Begin("MainDockspaceHost", nullptr, host_window_flags); // Host window
+            ImGui::PopStyleVar(3);
+
+            ImGuiID dockspace_id = ImGui::GetID("MainDockspace");
+            ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
+
+            ImGui::End();
+            
+            static bool dockspaceInitialized = false;
+            
+            // Build the layout once
+            if(!dockspaceInitialized)
+            {
+                ImGui::DockBuilderRemoveNode(dockspace_id); // clear any previous layout
+                ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
+                ImGui::DockBuilderSetNodeSize(dockspace_id, ImGui::GetMainViewport()->Size);
+
+                // Start from root dockspace
+                ImGuiID dock_main_id = dockspace_id;
+
+                // Split horizontally: left (Entities) and right side (everything else)
+                ImGuiID dock_left, dock_right;
+                ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Left, 0.2f, &dock_left, &dock_main_id); // 20% left
+
+                // Split right side horizontally: right (Details) and center+bottom
+                ImGuiID dock_details, dock_centerblock;
+                ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Right, 0.25f, &dock_details, &dock_centerblock); // 25% right
+
+                // Split centerblock vertically: bottom (Content) and center
+                ImGuiID dock_bottom, dock_center;
+                ImGui::DockBuilderSplitNode(dock_centerblock, ImGuiDir_Down, 0.25f, &dock_bottom, &dock_center); // 25% bottom
+
+                // Now assign windows to docks
+                ImGui::DockBuilderDockWindow("Entities", dock_left);
+                ImGui::DockBuilderDockWindow("Details", dock_details);
+                ImGui::DockBuilderDockWindow("Content", dock_bottom);
+                ImGui::DockBuilderDockWindow("Viewport", dock_center);
+                // (Optional) nothing docked to center, can leave it empty or use a viewport/game window
+
+                ImGui::DockBuilderFinish(dockspace_id);
+
+                dockspaceInitialized = true;
             }
         }
     };

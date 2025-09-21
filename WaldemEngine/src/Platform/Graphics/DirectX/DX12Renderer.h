@@ -5,7 +5,7 @@
 #include "DescriptorAllocator.h"
 #include "DX12CommandList.h"
 #include "Waldem/Renderer/Pipeline.h"
-#include "Waldem/Renderer/Viewport.h"
+#include "Waldem/Renderer/Viewport/Viewport.h"
 
 namespace Waldem
 {
@@ -27,7 +27,6 @@ namespace Waldem
         void Initialize(CWindow* window) override;
         void InitializeUI() override;
         void DeinitializeUI() override;
-        void ResizeEditorViewport(Vector2 size);
         void Draw(CMesh* mesh) override;
         void DrawIndexedInstanced(uint indicesCount, uint instancesCount, uint startIndex, int baseVertex, uint startInstance) override;
         void DrawIndirect(uint numCommands, Buffer* indirectBuffer) override;
@@ -38,7 +37,7 @@ namespace Waldem
         Point3 GetNumThreadsPerGroup(ComputeShader* computeShader) override;
         void Compute(Point3 groupCount) override;
         void TraceRays(Pipeline* rayTracingPipeline, Point3 numRays) override;
-        void Begin() override;
+        void Begin(SViewport* viewport) override;
         void End() override;
         void Present() override; 
         PixelShader* LoadPixelShader(const Path& shaderName, WString entryPoint) override;
@@ -67,9 +66,6 @@ namespace Waldem
         void BuildTLAS(Buffer* instanceBuffer, uint numInstances, AccelerationStructure*& tlas) override;
         void UpdateBLAS(AccelerationStructure* BLAS, WArray<RayTracingGeometry>& geometries) override;
         void UpdateTLAS(AccelerationStructure* TLAS, Buffer* instanceBuffer, uint numInstances) override;
-        SViewport* GetEditorViewport() override { return &EditorViewport; }
-        SViewport* GetGameViewport() override { return &GameViewport; }
-        SViewport* GetMainViewport() override { return &MainViewport; }
         void CopyResource(GraphicResource* dstResource, GraphicResource* srcResource) override;
         void CopyBufferRegion(GraphicResource* dstResource, size_t dstOffset, GraphicResource* srcResource, size_t srcOffset, size_t size) override;
         void UploadBuffer(Buffer* buffer, void* data, uint32_t size, uint offset = 0) override;
@@ -82,6 +78,7 @@ namespace Waldem
         void Destroy(GraphicResource* resource) override; 
         void DestroyImmediate(GraphicResource* resource) override; 
         void* GetPlatformResource(GraphicResource* resource) override;
+        SViewport* GetCurrentViewport() override { return CurrentViewport; }
 
     private:
         void InitializeBindless();
@@ -89,6 +86,8 @@ namespace Waldem
         RenderTarget* CreateRenderTarget(WString name, int width, int height, TextureFormat format, ID3D12DescriptorHeap* externalHeap, uint slot);
         RenderTarget* CreateRenderTarget(WString name, int width, int height, TextureFormat format, ID3D12Resource* resource);
         void SetRenderTargets();
+        void ResizeEditorViewport(Vector2 size);
+        void ResizeGameViewport(Vector2 size);
 
         CWindow* CurrentWindow = nullptr;
 
@@ -114,11 +113,6 @@ namespace Waldem
         ID3D12Fence* WaitFence = nullptr;
         ID3D12Fence* SecondaryWaitFence = nullptr;
         UINT64 SecondaryWaitFenceValue = 0;
-        SViewport MainViewport = {};
-        SViewport EditorViewport = {};
-        SViewport GameViewport = {};
-        bool ResizeTriggered = false;
-        Point2 NewSize = {};
 
         WArray<ID3D12Resource*> ResourcesToDestroy;
 
@@ -132,5 +126,8 @@ namespace Waldem
         ID3D12DescriptorHeap* GeneralSamplerHeap = nullptr;
         ID3D12RootSignature* GeneralRootSignature = nullptr;
         ID3D12CommandSignature* GeneralCommandSignature = nullptr;
+
+        //viewport
+        SViewport* CurrentViewport;
     };
 }

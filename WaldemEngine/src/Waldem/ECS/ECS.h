@@ -2,6 +2,7 @@
 
 #include "flecs.h"
 #include "Components/SceneEntity.h"
+#include "Systems/CoreSystem.h"
 #include "Waldem/Types/FreeList.h"
 #include "Waldem/Types/String.h"
 #include "Waldem/Types/WMap.h"
@@ -10,20 +11,46 @@ namespace Waldem
 {
     namespace ECS
     {
+        using Entity = flecs::entity;
+        
         inline flecs::world World;
-        inline WMap<WString, flecs::entity> RegisteredComponents;
-        inline FreeList HierarchySlots;
+        inline Entity UpdatePipeline;
+        inline Entity FixedUpdatePipeline;
+        inline Entity DrawPipeline;
+        inline Entity GUIPipeline;
+        inline WMap<WString, Entity> RegisteredComponents;
+        inline FreeList HierarchySlots; 
+
+        inline void RunUpdatePipeline(float deltaTime)
+        {
+            World.run_pipeline(UpdatePipeline, deltaTime);
+        }
+
+        inline void RunFixedUpdatePipeline(float fixedDeltaTime)
+        {
+            World.run_pipeline(FixedUpdatePipeline, fixedDeltaTime);
+        }
+
+        inline void RunDrawPipeline(float deltaTime)
+        {
+            World.run_pipeline(DrawPipeline, deltaTime);
+        }
+
+        inline void RunGUIPipeline(float deltaTime)
+        {
+            World.run_pipeline(GUIPipeline, deltaTime);
+        }
         
         inline int GetEntitiesCount() { return World.query<SceneEntity>().count(); }
 
         inline bool NameExists(const WString& name)
         {
-            return World.lookup(name) != flecs::entity::null();
+            return World.lookup(name) != Entity::null();
         }
 
         inline bool NameExists(const std::string& name)
         {
-            return World.lookup(name.c_str()) != flecs::entity::null();
+            return World.lookup(name.c_str()) != Entity::null();
         }
 
         inline void FormatName(WString& name)
@@ -85,18 +112,21 @@ namespace Waldem
             }
         }
         
-        flecs::entity CreateEntity(const WString& name = "", bool enabled = true);
-        flecs::entity CreateSceneEntity(const WString& name, bool enabled = true, bool visibleInHierarchy = true);
-        flecs::entity CloneSceneEntity(flecs::entity entity);
+        Entity CreateEntity(const WString& name = "", bool enabled = true);
+        Entity CreateSceneEntity(const WString& name, bool enabled = true, bool visibleInHierarchy = true);
+        Entity CloneSceneEntity(Entity entity);
 
         class Core
         {
         public:
             void Initialize();
+            void InitializeSystems();
             
         private:
             void RegisterTypes();
             void RegisterComponents();
+
+            WArray<ICoreSystem*> Systems;
         };
     }
 }

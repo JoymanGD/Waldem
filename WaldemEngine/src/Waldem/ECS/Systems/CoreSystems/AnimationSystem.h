@@ -2,8 +2,8 @@
 #include <FlecsUtils.h>
 
 #include "Waldem/ECS/ECS.h"
+#include "Waldem/ECS/IdManager.h"
 #include "Waldem/ECS/Components/AnimationListener.h"
-#include "Waldem/ECS/Components/BloomPostProcess.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/Renderer/Renderer.h"
@@ -20,7 +20,7 @@ namespace Waldem
         Matrix4 WorldTransform;
     };
     
-    class WALDEM_API AnimationSystem : public ISystem
+    class WALDEM_API AnimationSystem : public ICoreSystem
     {
         //Post process pass
         Pipeline* AnimationPipeline = nullptr;
@@ -31,7 +31,7 @@ namespace Waldem
     public:
         AnimationSystem() {}
         
-        void Initialize(InputManager* inputManager) override
+        void Initialize() override
         {
             AnimationComputeShader = Renderer::LoadComputeShader("Animation");
             AnimationPipeline = Renderer::CreateComputePipeline("AnimationPipeline", AnimationComputeShader);

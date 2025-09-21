@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Widget.h"
 #include "Waldem/ECS/Components/Selected.h"
 #include "Waldem/ECS/ECS.h"
 #include "Waldem/Editor/AssetReference/AudioClipReference.h"
@@ -14,8 +15,6 @@ namespace Waldem
         
     public:
         EntityDetailsWidgetContainer() {}
-
-        WString GetName() override { return "Details"; }
 
     	void Initialize(InputManager* inputManager) override
 		{

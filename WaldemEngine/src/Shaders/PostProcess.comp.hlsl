@@ -1,10 +1,7 @@
-#include "Lighting.hlsl"
-#include "Shadows.hlsl"
-
 SamplerState myStaticSampler : register(s0);
 
-Texture2D<float4> TargetRTBack : register(t0);
-RWTexture2D<float4> TargetRT : register(u0);
+Texture2D DeferredRT : register(t0);
+RWTexture2D<float4> PostProcess : register(u0);
 
 cbuffer MyConstantBuffer : register(b0)
 {
@@ -21,7 +18,7 @@ cbuffer BloomParams : register(b1)
 float4 BloomEffect(float2 uv)
 {
     // 1. Bright Pass: Extract bright regions
-    float4 color = TargetRTBack.SampleLevel(myStaticSampler, uv, 0);
+    float4 color = DeferredRT.SampleLevel(myStaticSampler, uv, 0);
     float brightness = max(max(color.r, color.g), color.b);
     float4 brightColor = brightness > BrightThreshold ? color : float4(0, 0, 0, 0);
 
@@ -36,10 +33,10 @@ float4 BloomEffect(float2 uv)
         float2 offsetH = float2(TexelSize.x * (float)i, 0);
         float2 offsetV = float2(0, TexelSize.y * (float)i);
 
-        blurredColor += TargetRTBack.SampleLevel(myStaticSampler, uv + offsetH, 0) * weights[i];
-        blurredColor += TargetRTBack.SampleLevel(myStaticSampler, uv - offsetH, 0) * weights[i];
-        blurredColor += TargetRTBack.SampleLevel(myStaticSampler, uv + offsetV, 0) * weights[i];
-        blurredColor += TargetRTBack.SampleLevel(myStaticSampler, uv - offsetV, 0) * weights[i];
+        blurredColor += DeferredRT.SampleLevel(myStaticSampler, uv + offsetH, 0) * weights[i];
+        blurredColor += DeferredRT.SampleLevel(myStaticSampler, uv - offsetH, 0) * weights[i];
+        blurredColor += DeferredRT.SampleLevel(myStaticSampler, uv + offsetV, 0) * weights[i];
+        blurredColor += DeferredRT.SampleLevel(myStaticSampler, uv - offsetV, 0) * weights[i];
     }
     
     float4 bloom = brightColor * blurredColor * BloomIntensity;
@@ -52,15 +49,11 @@ void main(uint2 tid : SV_DispatchThreadID)
 {
     float2 UV = (float2)tid / Resolution;
     
-    // // Compute the bloom effect
+    // Compute the bloom effect
     float4 bloom = BloomEffect(UV);
-    //
-    // // Combine bloom with the original scene
-    float4 originalColor = TargetRTBack.SampleLevel(myStaticSampler, UV, 0);
+    // Combine bloom with the original scene
+    float4 originalColor = DeferredRT.SampleLevel(myStaticSampler, UV, 0);
     float4 finalColor = originalColor + bloom;
-    //
-    // //Writing the result to the render target
-    TargetRT[tid] = finalColor;
-    
-    // TargetRT[tid] = TargetRTBack.Sample(myStaticSampler, UV);
+    //Writing the result to the render target
+    PostProcess[tid] = finalColor;
 }

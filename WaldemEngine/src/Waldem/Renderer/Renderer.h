@@ -15,6 +15,7 @@ namespace Waldem
     class CMesh;
     struct SViewport;
     struct CModel;
+    enum ViewportType : uint;
 
     enum class RendererAPI
     {
@@ -28,7 +29,7 @@ namespace Waldem
     public:
         virtual ~IRenderer() = default;
         virtual void Initialize(CWindow* window) = 0;
-        virtual void Begin() = 0; 
+        virtual void Begin(SViewport* viewport) = 0; 
         virtual void End() = 0;
         virtual void Present() = 0;
         virtual void Draw(CMesh* mesh) = 0;
@@ -55,9 +56,6 @@ namespace Waldem
         virtual Texture3D* CreateTexture3D(WString name, int width, int height, int depth, TextureFormat format, uint8_t* data = nullptr) = 0;
         virtual RenderTarget* CreateRenderTarget(WString name, int width, int height, TextureFormat format) = 0;
         virtual void InitializeRenderTarget(WString name, int width, int height, TextureFormat format, RenderTarget*& renderTarget) = 0;
-        virtual SViewport* GetEditorViewport() = 0;
-        virtual SViewport* GetGameViewport() = 0;
-        virtual SViewport* GetMainViewport() = 0;
         virtual AccelerationStructure* CreateBLAS(WString name, WArray<RayTracingGeometry>& geometries) = 0;
         virtual AccelerationStructure* CreateTLAS(WString name, Buffer* instanceBuffer, uint numInstances) = 0;
         virtual void InitializeTLAS(WString name, Buffer* instanceBuffer, uint numInstances, AccelerationStructure*& tlas) = 0;
@@ -84,6 +82,7 @@ namespace Waldem
         virtual void DestroyImmediate(GraphicResource* resource) = 0;
         virtual void* GetPlatformResource(GraphicResource* resource) = 0;
         virtual void DrawIndexedInstanced(uint uint, Waldem::uint uint32, Waldem::uint start_index_location, int base_vertex_location, Waldem::uint start_instance_location) = 0;
+        virtual SViewport* GetCurrentViewport() = 0;
     };
 
     class Renderer
@@ -93,7 +92,7 @@ namespace Waldem
 
         void Initialize(CWindow* window);
 
-        static void Begin();
+        static void Begin(SViewport* viewport);
         static void End();
         static void Present();
 
@@ -124,10 +123,8 @@ namespace Waldem
         static RenderTarget* CreateRenderTarget(WString name, int width, int height, TextureFormat format);
         static void InitializeRenderTarget(WString name, int width, int height, TextureFormat format, RenderTarget*& renderTarget);
         static RenderTarget* ResizeRenderTarget(WString name, int width, int height);
+        static void ResizeRenderTarget(RenderTarget* renderTarget, int width, int height);
         static RenderTarget* GetRenderTarget(WString name) { return RenderTargets[name]; }
-        static SViewport* GetEditorViewport();
-        static SViewport* GetGameViewport();
-        static SViewport* GetMainViewport();
         static AccelerationStructure* CreateBLAS(WString name, WArray<RayTracingGeometry>& geometries);
         static AccelerationStructure* CreateTLAS(WString name, Buffer* instanceBuffer, uint numInstances);
         static void InitializeTLAS(WString name, Buffer* instanceBuffer, uint numInstances, AccelerationStructure*& tlas);
@@ -152,6 +149,7 @@ namespace Waldem
         static void Destroy(GraphicResource* resource);
         static void DestroyImmediate(GraphicResource* resource);
         static void* GetPlatformResource(GraphicResource* resource);
+        static SViewport* GetCurrentViewport();
 
         static RendererAPI RAPI;
         inline static Renderer* Instance;

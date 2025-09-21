@@ -11,6 +11,7 @@ namespace Waldem
         Point2 Position;
         float Width, Height;
         bool VSync;
+        uint Id;
 
         EventCallbackFn EventCallback;
     };

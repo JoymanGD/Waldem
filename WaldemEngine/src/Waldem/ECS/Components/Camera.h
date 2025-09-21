@@ -119,7 +119,12 @@ namespace Waldem
 
     struct WALDEM_API Camera
     {
-        Camera() = default;
+        COMPONENT(Camera)
+            FIELD(float, FieldOfView)
+            FIELD(float, AspectRatio)
+            FIELD(float, NearPlane)
+            FIELD(float, FarPlane)
+        END_COMPONENT()
         
         Camera(float fov, float aspectRatio, float nearClip, float farClip, float movementSpeed, float rotationSpeed);
 

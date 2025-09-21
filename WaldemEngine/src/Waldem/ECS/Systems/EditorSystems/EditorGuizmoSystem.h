@@ -14,7 +14,8 @@
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/Editor/Editor.h"
 #include "Waldem/ECS/Components/Camera.h"
-#include "Waldem/Renderer/Viewport.h"
+#include "Waldem/Renderer/Viewport/Viewport.h"
+#include "Waldem/Renderer/Viewport/ViewportManager.h"
 
 namespace Waldem
 {
@@ -93,12 +94,13 @@ namespace Waldem
 
             ECS::World.system<Transform, Selected>("EditorGizmoSystem").kind(flecs::OnGUI).each([&](flecs::entity entity, Transform& transform, Selected)
             {
-                if(auto editorCameraEntity = ECS::World.lookup("EditorCamera"))
+                auto editorViewport = ViewportManager::GetEditorViewport();
+                
+                ECS::Entity linkedCamera;
+                if(editorViewport->TryGetLinkedCamera(linkedCamera))
                 {
-                    if(auto editorCamera = editorCameraEntity.get<Camera>())
+                    if(auto editorCamera = linkedCamera.get<Camera>())
                     {
-                        auto editorViewport = Renderer::GetEditorViewport();
-
                         ImGuizmo::SetOrthographic(false);
                         ImGuizmo::SetRect(editorViewport->Position.x, editorViewport->Position.y, editorViewport->Size.x, editorViewport->Size.y);
                         ImGuizmo::Manipulate(value_ptr(editorCamera->ViewMatrix), value_ptr(editorCamera->ProjectionMatrix), CurrentOperation, CurrentMode, value_ptr(transform.Matrix));

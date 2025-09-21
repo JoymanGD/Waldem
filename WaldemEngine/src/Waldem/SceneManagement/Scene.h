@@ -14,7 +14,6 @@ namespace Waldem
     public:
         virtual void Initialize() = 0;
         virtual void Draw(float deltaTime) = 0;
-        virtual void Update(float deltaTime) = 0;
         virtual void FixedUpdate(float fixedDeltaTime) = 0;
         virtual void DrawUI(float deltaTime) = 0;
     };

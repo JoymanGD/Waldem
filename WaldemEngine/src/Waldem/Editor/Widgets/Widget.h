@@ -1,6 +1,4 @@
 #pragma once
-#include "imgui.h"
-#include "Waldem/ECS/Systems/System.h"
 
 namespace Waldem
 {
@@ -10,7 +8,7 @@ namespace Waldem
         IWidget() {}
         virtual void Initialize(InputManager* inputManager) {}
         virtual void Deinitialize() {}
-        virtual WString GetName() = 0;
-        virtual void OnDraw(float deltaTime) {}
+        virtual void OnDraw(float deltaTime) = 0;
+        virtual void OnResize(Vector2 size) {}
     };
 }

@@ -3,7 +3,7 @@
 #include "Waldem/Types/String.h"
 
 namespace Waldem
-{
+{    
     enum class PipelineType
     {
         Graphics = 0,
