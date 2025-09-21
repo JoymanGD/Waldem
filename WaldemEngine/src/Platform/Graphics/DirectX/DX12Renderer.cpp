@@ -19,6 +19,7 @@
 #include "Waldem/Editor/Editor.h"
 #include "Waldem/Editor/UIStyles.h"
 #include "Waldem/Renderer/Model/Quad.h"
+#include "Waldem/Renderer/Viewport/ViewportManager.h"
 
 struct ImGuiIO;
 
@@ -347,9 +348,6 @@ namespace Waldem
             //create rtv
             Device->CreateRenderTargetView(Resource, nullptr, rtvHandle);
         }
-
-        //create srv
-        renderTarget->SetIndex(slot, SRV_CBV);
         
         D3D12_CPU_DESCRIPTOR_HANDLE srvHandle = externalHeap->GetCPUDescriptorHandleForHeapStart();
         descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -547,21 +545,20 @@ namespace Waldem
         WArray editorRenderTargets = { CreateRenderTarget("EditorViewRT", size.x, size.y, TextureFormat::R8G8B8A8_UNORM, ImGuiHeap, 1) };
         RenderTarget* editorViewportDepth = CreateRenderTarget("EditorViewDepth", size.x, size.y, TextureFormat::D32_FLOAT);
         auto editorFrameBuffer = new SFrameBuffer(editorRenderTargets, editorViewportDepth);
-        EditorViewport = SViewport(Vector2(0, 0), Vector2(size.x, size.y), Vector2(0, 1), editorFrameBuffer);
-
-        EditorViewport.SubscribeOnResize([this](Point2 size)
+        auto editorViewport = ViewportManager::CreateViewport(Editor, "Editor", Vector2(0, 0), size, Vector2(0, 1), editorFrameBuffer);
+        editorViewport->SubscribeOnResize([this](Point2 size)
         {
-            if (size.x > 0 && size.y > 0)
-            {
-                ResizeTriggered = true;
-                NewSize = size;
-            }
+            ResizeEditorViewport(size);
         });
         
         WArray gameRenderTargets = { CreateRenderTarget("GameViewRT", size.x, size.y, TextureFormat::R8G8B8A8_UNORM, ImGuiHeap, 2) };
         RenderTarget* gameViewportDepth = CreateRenderTarget("GameViewDepth", size.x, size.y, TextureFormat::D32_FLOAT);
         auto gameFrameBuffer = new SFrameBuffer(gameRenderTargets, gameViewportDepth);
-        GameViewport = SViewport(Vector2(0, 0), Vector2(size.x, size.y), Vector2(0, 1), gameFrameBuffer);
+        auto gameViewport = ViewportManager::CreateViewport(Game, "Game", Vector2(0, 0), size, Vector2(0, 1), gameFrameBuffer);
+        gameViewport->SubscribeOnResize([this](Point2 size)
+        {
+            ResizeGameViewport(size);
+        });
         
         // Platform/Renderer bindings
         ImGui_ImplDX12_Init(Device, SWAPCHAIN_SIZE, DXGI_FORMAT_R8G8B8A8_UNORM, ImGuiHeap, ImGuiHeap->GetCPUDescriptorHandleForHeapStart(), ImGuiHeap->GetGPUDescriptorHandleForHeapStart());
@@ -587,16 +584,16 @@ namespace Waldem
         }
         mainFrameBuffer->SetDepth(CreateRenderTarget("MainViewport_Depth", size.x, size.y, TextureFormat::D32_FLOAT));
         
-        MainViewport = SViewport(Point2(0, 0), Point2(size.x, size.y), Point2(0, 1), mainFrameBuffer);
+        auto mainViewport = ViewportManager::CreateViewport(Main, "Main", Vector2(0, 0), size, Vector2(0, 1), mainFrameBuffer, false, false);
 
-        MainViewport.SubscribeOnResize([this](Point2 size)
+        mainViewport->SubscribeOnResize([this, mainViewport](Point2 size)
         {
             if (size.x > 0 && size.y > 0)
             {
                 Wait();
                 
                 // Release old RTVs
-                MainViewport.FrameBuffer->Destroy();
+                mainViewport->FrameBuffer->Destroy();
 
                 // Resize swapchain buffers
                 DXGI_SWAP_CHAIN_DESC desc = {};
@@ -620,10 +617,10 @@ namespace Waldem
                         throw std::runtime_error("Failed to get D3D12 SwapChain buffer");
                     }
 
-                    MainViewport.FrameBuffer->AddRenderTarget(renderTarget);
+                    mainViewport->FrameBuffer->AddRenderTarget(renderTarget);
                 }
 
-                MainViewport.FrameBuffer->SetDepth(CreateRenderTarget("MainViewport_Depth", size.x, size.y, TextureFormat::D32_FLOAT));
+                mainViewport->FrameBuffer->SetDepth(CreateRenderTarget("MainViewport_Depth", size.x, size.y, TextureFormat::D32_FLOAT));
             }
         });
     }
@@ -638,13 +635,27 @@ namespace Waldem
     void DX12Renderer::ResizeEditorViewport(Vector2 size)
     {
         // Release old RTVs
-        EditorViewport.FrameBuffer->Destroy();
+        auto editorViewport = ViewportManager::GetEditorViewport();
+        editorViewport->FrameBuffer->Destroy();
 
         RenderTarget* editorRenderTarget = { CreateRenderTarget("EditorViewRT", size.x, size.y, TextureFormat::R8G8B8A8_UNORM, ImGuiHeap, 1) };
-        EditorViewport.FrameBuffer->AddRenderTarget(editorRenderTarget);
+        editorViewport->FrameBuffer->AddRenderTarget(editorRenderTarget);
 
         RenderTarget* editorViewportDepth = CreateRenderTarget("EditorViewDepth", size.x, size.y, TextureFormat::D32_FLOAT);
-        EditorViewport.FrameBuffer->SetDepth(editorViewportDepth);
+        editorViewport->FrameBuffer->SetDepth(editorViewportDepth);
+    }
+
+    void DX12Renderer::ResizeGameViewport(Vector2 size)
+    {
+        // Release old RTVs
+        auto gameViewport = ViewportManager::GetGameViewport();
+        gameViewport->FrameBuffer->Destroy();
+
+        RenderTarget* gameRenderTarget = { CreateRenderTarget("GameViewRT", size.x, size.y, TextureFormat::R8G8B8A8_UNORM, ImGuiHeap, 2) };
+        gameViewport->FrameBuffer->AddRenderTarget(gameRenderTarget);
+
+        RenderTarget* gameViewportDepth = CreateRenderTarget("GameViewDepth", size.x, size.y, TextureFormat::D32_FLOAT);
+        gameViewport->FrameBuffer->SetDepth(gameViewportDepth);
     }
 
     void DX12Renderer::Draw(CMesh* mesh)
@@ -750,10 +761,11 @@ namespace Waldem
         WorldCommandList.first->TraceRays(rayTracingPipeline, numRays);
     }
 
-    void DX12Renderer::Begin()
+    void DX12Renderer::Begin(SViewport* viewport)
     {
-        auto color = EditorViewport.FrameBuffer->GetCurrentRenderTarget();
-        auto depth = EditorViewport.FrameBuffer->GetDepth();
+        CurrentViewport = viewport;
+        auto color = viewport->FrameBuffer->GetCurrentRenderTarget();
+        auto depth = viewport->FrameBuffer->GetDepth();
 
         DefaultRenderPassState.RenderTargets = { color };
         DefaultRenderPassState.DepthStencil = depth;
@@ -773,9 +785,7 @@ namespace Waldem
             ClearRenderTarget(color);
             ClearDepthStencil(depth);
             
-            SetViewport(EditorViewport);
-            
-            // worldCmd->BeginInternal(EditorViewport, RTVHeap, DSVHeap);
+            SetViewport(*viewport);
             
             WorldCommandList.second = true;
         }
@@ -792,8 +802,8 @@ namespace Waldem
             WorldCommandList.second = false;
         }
 
-        ResourceBarrier(EditorViewport.FrameBuffer->GetCurrentRenderTarget(), RENDER_TARGET, ALL_SHADER_RESOURCE);
-        ResourceBarrier(EditorViewport.FrameBuffer->GetDepth(), DEPTH_WRITE, ALL_SHADER_RESOURCE);
+        ResourceBarrier(CurrentViewport->FrameBuffer->GetCurrentRenderTarget(), RENDER_TARGET, ALL_SHADER_RESOURCE);
+        ResourceBarrier(CurrentViewport->FrameBuffer->GetDepth(), DEPTH_WRITE, ALL_SHADER_RESOURCE);
         
         worldCmd->Close();
 
@@ -804,8 +814,10 @@ namespace Waldem
 
     void DX12Renderer::BeginUI()
     {
-        auto color = MainViewport.FrameBuffer->GetCurrentRenderTarget();
-        auto depth = MainViewport.FrameBuffer->GetDepth();
+        auto mainViewport = ViewportManager::GetMainViewport();
+        
+        auto color = mainViewport->FrameBuffer->GetCurrentRenderTarget();
+        auto depth = mainViewport->FrameBuffer->GetDepth();
         
         ResourceBarrier(color, PRESENT, RENDER_TARGET);
         ResourceBarrier(depth, ALL_SHADER_RESOURCE, DEPTH_WRITE);
@@ -815,10 +827,9 @@ namespace Waldem
             ClearRenderTarget(color);
             ClearDepthStencil(depth);
             
-            SetViewport(MainViewport);
+            SetViewport(*mainViewport);
             BindRenderTargets({color});
             BindDepthStencil(depth);
-            // worldCmd->BeginInternal(MainViewport, RTVHeap, DSVHeap);
             
             WorldCommandList.second = true;
         }
@@ -832,13 +843,12 @@ namespace Waldem
 
     void DX12Renderer::EndUI()
     {
+        auto mainViewport = ViewportManager::GetMainViewport();
+        
         auto& worldCmd = WorldCommandList.first;
 
-        if(ResizeTriggered)
-        {
-            ResizeEditorViewport(NewSize);
-            ResizeTriggered = false;
-        }
+        ViewportManager::GetEditorViewport()->ApplyPendingResize();
+        ViewportManager::GetGameViewport()->ApplyPendingResize();
 
         ImGui::Render();
         ImDrawData* drawData = ImGui::GetDrawData();
@@ -860,8 +870,8 @@ namespace Waldem
             WorldCommandList.second = false;
         }
 
-        ResourceBarrier(MainViewport.FrameBuffer->GetCurrentRenderTarget(), RENDER_TARGET, PRESENT);
-        ResourceBarrier(MainViewport.FrameBuffer->GetDepth(), DEPTH_WRITE, ALL_SHADER_RESOURCE);
+        ResourceBarrier(mainViewport->FrameBuffer->GetCurrentRenderTarget(), RENDER_TARGET, PRESENT);
+        ResourceBarrier(mainViewport->FrameBuffer->GetDepth(), DEPTH_WRITE, ALL_SHADER_RESOURCE);
         
         worldCmd->Close();
 
@@ -930,14 +940,37 @@ namespace Waldem
 
         if(resource->GetType() == RTYPE_Texture || resource->GetType() == RTYPE_Buffer || resource->GetType() == RTYPE_AccelerationStructure)
         {
-            GeneralAllocator.Free(resource->GetIndex(SRV_CBV));
-            GeneralAllocator.Free(resource->GetIndex(UAV));
+            auto srvCbvIndex = resource->GetIndex(SRV_CBV);
+            if(srvCbvIndex != -1)
+            {
+                GeneralAllocator.Free(srvCbvIndex);
+            }
+            
+            auto uavIndex = resource->GetIndex(UAV);
+            if(uavIndex != -1)
+            {
+                GeneralAllocator.Free(uavIndex);
+            }
         }
         else if(resource->GetType() == RTYPE_RenderTarget)
         {
-            RenderTargetAllocator.Free(resource->GetIndex(RTV_DSV));
-            GeneralAllocator.Free(resource->GetIndex(SRV_CBV));
-            GeneralAllocator.Free(resource->GetIndex(UAV));
+            auto rtvIndex = resource->GetIndex(RTV_DSV);
+            if(rtvIndex != -1)
+            {
+                RenderTargetAllocator.Free(rtvIndex);
+            }
+            
+            auto srvCbvIndex = resource->GetIndex(SRV_CBV);
+            if(srvCbvIndex != -1)
+            {
+                GeneralAllocator.Free(srvCbvIndex);
+            }
+            
+            auto uavIndex = resource->GetIndex(UAV);
+            if(uavIndex != -1)
+            {
+                GeneralAllocator.Free(uavIndex);
+            }
         }
         else
         {
@@ -1005,14 +1038,37 @@ namespace Waldem
 
         if(resource->GetType() == RTYPE_Texture || resource->GetType() == RTYPE_Buffer || resource->GetType() == RTYPE_AccelerationStructure)
         {
-            GeneralAllocator.Free(resource->GetIndex(SRV_CBV));
-            GeneralAllocator.Free(resource->GetIndex(UAV));
+            auto srvCbvIndex = resource->GetIndex(SRV_CBV);
+            if(srvCbvIndex != -1)
+            {
+                GeneralAllocator.Free(srvCbvIndex);
+            }
+            
+            auto uavIndex = resource->GetIndex(UAV);
+            if(uavIndex != -1)
+            {
+                GeneralAllocator.Free(uavIndex);
+            }
         }
         else if(resource->GetType() == RTYPE_RenderTarget)
         {
-            RenderTargetAllocator.Free(resource->GetIndex(RTV_DSV));
-            GeneralAllocator.Free(resource->GetIndex(SRV_CBV));
-            GeneralAllocator.Free(resource->GetIndex(UAV));
+            auto rtvIndex = resource->GetIndex(RTV_DSV);
+            if(rtvIndex != -1)
+            {
+                RenderTargetAllocator.Free(rtvIndex);
+            }
+            
+            auto srvCbvIndex = resource->GetIndex(SRV_CBV);
+            if(srvCbvIndex != -1)
+            {
+                GeneralAllocator.Free(srvCbvIndex);
+            }
+            
+            auto uavIndex = resource->GetIndex(UAV);
+            if(uavIndex != -1)
+            {
+                GeneralAllocator.Free(uavIndex);
+            }
         }
         else
         {
@@ -1027,6 +1083,8 @@ namespace Waldem
 
     void DX12Renderer::Present()
     {
+        auto mainViewport = ViewportManager::GetMainViewport();
+        
         HRESULT h = SwapChain->Present(0, 0);
 
         if(FAILED(h))
@@ -1035,7 +1093,7 @@ namespace Waldem
             DX12Helper::PrintDeviceRemovedReason(Device);
         }
 
-        MainViewport.FrameBuffer->Advance();
+        mainViewport->FrameBuffer->Advance();
 
         for (auto resource : ResourcesToDestroy)
         {
@@ -1461,6 +1519,21 @@ namespace Waldem
             
             //create rtv
             Device->CreateRenderTargetView(Resource, nullptr, rtvHandle);
+
+            //create uav
+            uint uavIndex = GeneralAllocator.Allocate();
+            renderTarget->SetIndex(uavIndex, UAV);
+        
+            D3D12_CPU_DESCRIPTOR_HANDLE uavHandle = GeneralResourcesHeap->GetCPUDescriptorHandleForHeapStart();
+            uavHandle.ptr += uavIndex * descriptorSize;
+
+            D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+            uavDesc.Format = (DXGI_FORMAT)format;
+            uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+            uavDesc.Texture2D.MipSlice = 0;
+            uavDesc.Texture2D.PlaneSlice = 0;
+
+            Device->CreateUnorderedAccessView(Resource, nullptr, &uavDesc, uavHandle);
         }
 
         //create srv

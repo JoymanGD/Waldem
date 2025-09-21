@@ -32,8 +32,6 @@ namespace Waldem
     public:
         HierarchyWidget() {}
 
-        WString GetName() override { return "Hierarchy"; }
-        
         void Initialize(InputManager* inputManager) override
         {
             inputManager->SubscribeToKeyEvent(KEY_DELETE, [&](bool isPressed)

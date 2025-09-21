@@ -7,14 +7,14 @@
 
 namespace Waldem
 {
-    class WALDEM_API SpatialAudioSystem : public ISystem
+    class WALDEM_API SpatialAudioSystem : public ICoreSystem
     {
     private:
         float PAN_SIMPLIFICATION = 0.8f;
     public:
         SpatialAudioSystem() {}
         
-        void Initialize(InputManager* inputManager) override
+        void Initialize() override
         {
             ECS::World.observer<AudioSource>().event(flecs::OnSet).each([&](AudioSource& audioSource)
             {

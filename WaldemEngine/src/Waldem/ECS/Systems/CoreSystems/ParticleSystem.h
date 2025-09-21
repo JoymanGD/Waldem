@@ -1,6 +1,7 @@
 #pragma once
 #include <FlecsUtils.h>
 
+#include "Waldem/Time.h"
 #include "Waldem/ECS/ECS.h"
 #include "Waldem/ECS/IdManager.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
@@ -38,7 +39,7 @@ namespace Waldem
         float  Age;
     };
     
-    class WALDEM_API ParticleSystem : public ISystem
+    class WALDEM_API ParticleSystem : public ICoreSystem
     {
         //Post process pass
         Pipeline* ParticleSystemPipeline = nullptr;
@@ -66,7 +67,7 @@ namespace Waldem
     public:
         ParticleSystem() {}
         
-        void Initialize(InputManager* inputManager) override
+        void Initialize() override
         {
             TargetRT = Renderer::GetRenderTarget("TargetRT");
             DepthRT = Renderer::GetRenderTarget("DepthRT");
@@ -202,25 +203,32 @@ namespace Waldem
             {
                 if(IndirectCommands.Num() > 0)
                 {
-                    RootConstants.ParticlesBufferID = ParticlesBuffer.GetIndex(SRV_CBV);
-                    RootConstants.WorldTransformsBufferID = WorldTransformsBuffer.GetIndex(SRV_CBV);
-                    RootConstants.SceneBufferID = SceneDataBuffer->GetIndex(SRV_CBV);
-                    auto cameraEntity = ECS::World.entity("EditorCamera");
-                    auto camera = cameraEntity.get<Camera>();
-                    SceneData.View = camera->ViewMatrix;
-                    SceneData.Projection = camera->ProjectionMatrix;
-                    Renderer::UploadBuffer(SceneDataBuffer, &SceneData, sizeof(ParticleSystemSceneData));
-                    Renderer::ResourceBarrier(TargetRT, RENDER_TARGET);
-                    Renderer::ResourceBarrier(DepthRT, DEPTH_WRITE);
-                    Renderer::SetPipeline(ParticleSystemGraphicPipeline);
-                    Renderer::PushConstants(&RootConstants, sizeof(ParticleSystemRootConstants));
-                    Renderer::BindRenderTargets({ TargetRT });
-                    Renderer::BindDepthStencil(DepthRT);
-                    Renderer::SetVertexBuffers(VertexBuffer.GetBuffer(), 1);
-                    Renderer::SetIndexBuffer(IndexBuffer.GetBuffer());
-                    Renderer::DrawIndirect(IndirectCommands.Num(), IndirectBuffer);
-                    Renderer::ResourceBarrier(TargetRT, ALL_SHADER_RESOURCE);
-                    Renderer::ResourceBarrier(DepthRT, ALL_SHADER_RESOURCE);
+                    auto viewport = Renderer::GetCurrentViewport();
+
+                    ECS::Entity linkedCamera;
+                    
+                    if(viewport->TryGetLinkedCamera(linkedCamera))
+                    {
+                        RootConstants.ParticlesBufferID = ParticlesBuffer.GetIndex(SRV_CBV);
+                        RootConstants.WorldTransformsBufferID = WorldTransformsBuffer.GetIndex(SRV_CBV);
+                        RootConstants.SceneBufferID = SceneDataBuffer->GetIndex(SRV_CBV);
+                        auto camera = linkedCamera.get<Camera>();
+                        SceneData.View = camera->ViewMatrix;
+                        SceneData.Projection = camera->ProjectionMatrix;
+                        Renderer::UploadBuffer(SceneDataBuffer, &SceneData, sizeof(ParticleSystemSceneData));
+                        Renderer::ResourceBarrier(TargetRT, RENDER_TARGET);
+                        Renderer::ResourceBarrier(DepthRT, DEPTH_WRITE);
+                        Renderer::SetPipeline(ParticleSystemGraphicPipeline);
+                        Renderer::PushConstants(&RootConstants, sizeof(ParticleSystemRootConstants));
+                        Renderer::BindRenderTargets({ TargetRT });
+                        Renderer::BindDepthStencil(DepthRT);
+                        Renderer::SetVertexBuffers(VertexBuffer.GetBuffer(), 1);
+                        Renderer::SetIndexBuffer(IndexBuffer.GetBuffer());
+                        Renderer::DrawIndirect(IndirectCommands.Num(), IndirectBuffer);
+                        Renderer::ResourceBarrier(TargetRT, ALL_SHADER_RESOURCE);
+                        Renderer::ResourceBarrier(DepthRT, ALL_SHADER_RESOURCE);
+                    }
+                
                 }
             });
         }

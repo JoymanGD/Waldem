@@ -14,6 +14,12 @@
 #include "Components/Sprite.h"
 #include "Components/Transform.h"
 #include "glm/gtc/type_ptr.hpp"
+#include "Systems/CoreSystems/AnimationSystem.h"
+#include "Systems/CoreSystems/HybridRenderingSystem.h"
+#include "Systems/CoreSystems/ParticleSystem.h"
+#include "Systems/CoreSystems/PostProcessSystem.h"
+#include "Systems/CoreSystems/ScreenQuadSystem.h"
+#include "Systems/CoreSystems/SpatialAudioSystem.h"
 #include "Waldem/Editor/AssetReference.h"
 
 namespace Waldem
@@ -23,9 +29,20 @@ namespace Waldem
         void Core::Initialize()
         {
             World = flecs::world();
+
+            flecs::OnFixedUpdate = World.entity("OnFixedUpdate");
+            flecs::OnDraw = World.entity("OnDraw");
+            flecs::OnGUI = World.entity("OnGUI");
+            
+            UpdatePipeline = World.pipeline().with(flecs::System).with(flecs::OnUpdate).build();
+            FixedUpdatePipeline = World.pipeline().with(flecs::System).with(flecs::OnFixedUpdate).build();
+            DrawPipeline = World.pipeline().with(flecs::System).with(flecs::OnDraw).build();
+            GUIPipeline = World.pipeline().with(flecs::System).with(flecs::OnGUI).build();
+
             RegisterTypes();
             RegisterComponents();
 
+            //TODO: move to a separate system file
             World.observer<SceneEntity>().event(flecs::OnRemove).each([&](SceneEntity& sceneEntity)
             {
                 HierarchySlots.Free((int)sceneEntity.HierarchySlot);
@@ -48,8 +65,27 @@ namespace Waldem
                     }
                 }
             });
+            
+            // Systems.Add(OceanSimulationSystem());
+            // Systems.Add(PhysicsIntegrationSystem());
+            // Systems.Add(PhysicsUpdateSystem());
+            // Systems.Add(CollisionSystem());
+            Systems.Add(new SpatialAudioSystem());
+            Systems.Add(new AnimationSystem());
+            Systems.Add(new HybridRenderingSystem());
+            Systems.Add(new ParticleSystem());
+            Systems.Add(new PostProcessSystem());
+            Systems.Add(new ScreenQuadSystem());
         }
-        
+
+        void Core::InitializeSystems()
+        {
+            for (auto system : Systems)
+            {
+                system->Initialize();
+            }
+        }
+
         void Core::RegisterTypes()
         {
             World.component<SceneEntity>("SceneEntity")
@@ -161,6 +197,7 @@ namespace Waldem
         void Core::RegisterComponents()
         {
             Transform::RegisterComponent(World);
+            Camera::RegisterComponent(World);
             RigidBody::RegisterComponent(World);
             AudioSource::RegisterComponent(World);
             MeshComponent::RegisterComponent(World);
@@ -173,9 +210,9 @@ namespace Waldem
             PlayerController::RegisterComponent(World);
         }
 
-        flecs::entity CreateEntity(const WString& name, bool enabled)
+        Entity CreateEntity(const WString& name, bool enabled)
         {
-            flecs::entity entity = World.entity(name);
+            Entity entity = World.entity(name);
 
             if(enabled)
             {
@@ -189,11 +226,11 @@ namespace Waldem
             return entity;
         }
 
-        flecs::entity CreateSceneEntity(const WString& name, bool enabled, bool visibleInHierarchy)
+        Entity CreateSceneEntity(const WString& name, bool enabled, bool visibleInHierarchy)
         {
             auto slot = HierarchySlots.Allocate();
             
-            flecs::entity entity = World.entity().set<SceneEntity>({
+            Entity entity = World.entity().set<SceneEntity>({
                 .ParentId = 0,
                 .HierarchySlot = (float)slot,
                 .VisibleInHierarchy = visibleInHierarchy,
@@ -216,7 +253,7 @@ namespace Waldem
             return entity;
         }
 
-        flecs::entity CloneSceneEntity(flecs::entity entity)
+        Entity CloneSceneEntity(Entity entity)
         {
             auto newSlot = HierarchySlots.Allocate();
             

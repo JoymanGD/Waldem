@@ -1,8 +1,7 @@
 #pragma once
 #include "Waldem/ECS/Systems/System.h"
-#include "Waldem/ECS/Components/MeshComponent.h"
-#include "Waldem/ECS/Components/Light.h"
 #include "Waldem/Renderer/Shader.h"
+#include "Waldem/Renderer/Viewport/Viewport.h"
 #include "Waldem/Renderer/Model/Quad.h"
 
 namespace Waldem
@@ -12,7 +11,7 @@ namespace Waldem
         uint TargetRT;
     };
     
-    class WALDEM_API ScreenQuadSystem : public ISystem
+    class WALDEM_API ScreenQuadSystem : public ICoreSystem
     {
         RenderTarget* TargetRT = nullptr;
         Pipeline* QuadDrawPipeline = nullptr;
@@ -23,7 +22,7 @@ namespace Waldem
     public:
         ScreenQuadSystem() {}
         
-        void Initialize(InputManager* inputManager) override
+        void Initialize() override
         {
             WArray<InputLayoutDesc> inputElementDescs = {
                 { "POSITION", 0, TextureFormat::R32G32B32_FLOAT, 0, 0, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
@@ -43,15 +42,22 @@ namespace Waldem
                                                             WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
                                                             inputElementDescs);
 
-            ECS::World.system<>("ScreenQuadSystem").kind(flecs::OnDraw).each([&]
+            ECS::World.system("ScreenQuadSystem").kind(flecs::OnDraw).each([&]
             {
-                RootConstants.TargetRT = TargetRT->GetIndex(SRV_CBV);
-                auto viewport = Renderer::GetEditorViewport();
-                Renderer::BindRenderTargets(viewport->FrameBuffer->GetCurrentRenderTarget());
-                Renderer::BindDepthStencil(nullptr);
-                Renderer::SetPipeline(QuadDrawPipeline);
-                Renderer::PushConstants(&RootConstants, sizeof(ScreenQuadRootConstants));
-                Renderer::Draw(&FullscreenQuad);
+                auto viewport = Renderer::GetCurrentViewport();
+                
+                ECS::Entity linkedCamera;
+                
+                if(viewport->TryGetLinkedCamera(linkedCamera))
+                {
+                    RootConstants.TargetRT = viewport->GetGBufferRenderTarget(Deferred)->GetIndex(SRV_CBV);
+
+                    Renderer::BindRenderTargets(viewport->FrameBuffer->GetCurrentRenderTarget());
+                    Renderer::BindDepthStencil(nullptr);
+                    Renderer::SetPipeline(QuadDrawPipeline);
+                    Renderer::PushConstants(&RootConstants, sizeof(ScreenQuadRootConstants));
+                    Renderer::Draw(&FullscreenQuad);
+                }
             });
         }
     };

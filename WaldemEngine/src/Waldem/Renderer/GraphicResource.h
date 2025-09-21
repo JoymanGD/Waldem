@@ -39,7 +39,7 @@ namespace Waldem
     public:
         uint64 GetGPUAddress() const { return GPUAddress; }
 
-        uint GetIndex(ResourceHeapType heapType) { return GPUIndexMap[heapType]; }
+        uint GetIndex(ResourceHeapType heapType) { return GPUIndexMap.Contains(heapType) ? GPUIndexMap[heapType] : -1; }
         
         GraphicResourceType GetType() const { return Type; }
 

@@ -8,7 +8,7 @@
 #include "DX12GraphicPipeline.h"
 #include "DX12PixelShader.h"
 #include "DX12RayTracingPipeline.h"
-#include "Waldem/Renderer/Viewport.h"
+#include "Waldem/Renderer/Viewport/Viewport.h"
 #include "Waldem/Renderer/Model/Line.h"
 #include "Waldem/Utils/FileUtils.h"
 

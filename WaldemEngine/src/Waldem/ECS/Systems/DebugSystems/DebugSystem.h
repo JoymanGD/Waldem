@@ -219,18 +219,20 @@ namespace Waldem
             
             Point3 numThreads = Renderer::GetNumThreadsPerGroup(DebugRenderTargetsComputeShader);
             GroupCount = Point3((resolution.x + numThreads.x - 1) / numThreads.x, (resolution.y + numThreads.y - 1) / numThreads.y, 1);
-        }
 
-        void Update(float deltaTime) override
-        {
-            if(DisplayDebugRTs)
+            
+
+            ECS::World.system("LineRenderingSystem").kind(flecs::OnDraw).run([&](flecs::iter& it)
             {
-                Renderer::ResourceBarrier(TargetRT, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
-                Renderer::SetPipeline(DebugRenderTargetsPipeline);
-                Renderer::PushConstants(&ConstantBufferData, sizeof(DebugSystemConstantBuffer));
-                Renderer::Compute(GroupCount);
-                Renderer::ResourceBarrier(TargetRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
-            }
+                if(DisplayDebugRTs)
+                {
+                    Renderer::ResourceBarrier(TargetRT, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
+                    Renderer::SetPipeline(DebugRenderTargetsPipeline);
+                    Renderer::PushConstants(&ConstantBufferData, sizeof(DebugSystemConstantBuffer));
+                    Renderer::Compute(GroupCount);
+                    Renderer::ResourceBarrier(TargetRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
+                }
+            });
         }
     };
 }

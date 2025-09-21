@@ -1,16 +1,14 @@
 #pragma once
 
-#include "Waldem/Input/InputManager.h"
-
 namespace Waldem
 {
-    class WALDEM_API ISystem
+    class WALDEM_API ICoreSystem
     {
     protected:
         bool IsInitialized = false;
     public:
-        ISystem() {}
-        virtual void Initialize(InputManager* inputManager) {}
+        ICoreSystem() {}
+        virtual void Initialize() {}
         virtual void Deinitialize() {}
         virtual void OnResize(Vector2 size) {}
     };

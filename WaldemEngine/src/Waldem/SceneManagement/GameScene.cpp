@@ -19,34 +19,14 @@ void Waldem::GameScene::Initialize()
 
 void Waldem::GameScene::Draw(float deltaTime)
 {
-    for (ISystem* system : DrawSystems)
-    {
-        system->Update(deltaTime);
-    }
-}
-
-void Waldem::GameScene::Update(float deltaTime)
-{
-    for (ISystem* system : UpdateSystems)
-    {
-        system->Update(deltaTime);
-    }
 }
 
 void Waldem::GameScene::FixedUpdate(float fixedDeltaTime)
 {
-    for (ISystem* system : PhysicsSystems)
-    {
-        system->Update(fixedDeltaTime);
-    }
 }
 
 void Waldem::GameScene::DrawUI(float deltaTime)
 {
-    for (ISystem* system : Widgets)
-    {
-        system->Update(deltaTime);
-    }
 }
 
 void Waldem::GameScene::Serialize(Path& outPath)

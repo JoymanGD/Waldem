@@ -13,21 +13,32 @@ namespace Waldem
         {
         case RendererAPI::None:
             break;
-        case RendererAPI::DirectX: 
+        case RendererAPI::DirectX:
             PlatformRenderer = (IRenderer*)new DX12Renderer();
             break;
         case RendererAPI::Vulkan:
             throw std::runtime_error("Vulkan is not supported yet!");
         }
 
-        PlatformRenderer->Initialize(window);
-
         Instance = this;
+
+        PlatformRenderer->Initialize(window);
+            
+        Vector2 size = { 1920, 1080 };
+        CreateRenderTarget("TargetRT", size.x, size.y, TextureFormat::R8G8B8A8_UNORM);
+        CreateRenderTarget("WorldPositionRT", size.x, size.y, TextureFormat::R32G32B32A32_FLOAT);
+        CreateRenderTarget("NormalRT", size.x, size.y, TextureFormat::R16G16B16A16_FLOAT);
+        CreateRenderTarget("ColorRT", size.x, size.y, TextureFormat::R8G8B8A8_UNORM);
+        CreateRenderTarget("ORMRT", size.x, size.y, TextureFormat::R32G32B32A32_FLOAT);
+        CreateRenderTarget("MeshIDRT", size.x, size.y, TextureFormat::R32_SINT);
+        CreateRenderTarget("DepthRT", size.x, size.y, TextureFormat::D32_FLOAT);
+        CreateRenderTarget("RadianceRT", size.x, size.y, TextureFormat::R32G32B32A32_FLOAT);
+        CreateRenderTarget("ReflectionRT", size.x, size.y, TextureFormat::R32G32B32A32_FLOAT);
     }
 
-    void Renderer::Begin()
+    void Renderer::Begin(SViewport* viewport)
     {
-        Instance->PlatformRenderer->Begin();
+        Instance->PlatformRenderer->Begin(viewport);
     }
 
     void Renderer::End()
@@ -192,33 +203,24 @@ namespace Waldem
 
     RenderTarget* Renderer::ResizeRenderTarget(WString name, int width, int height)
     {
-        auto& renderTarget = RenderTargets[name];
+        auto renderTarget = RenderTargets[name];
 
-        if(renderTarget)
-        {
-            auto format = renderTarget->GetFormat();
-            
-            Destroy(renderTarget);
-            
-            InitializeRenderTarget(name, width, height, format, renderTarget);
-        }
+        ResizeRenderTarget(renderTarget, width, height);
 
         return renderTarget;
     }
 
-    SViewport* Renderer::GetEditorViewport()
+    void Renderer::ResizeRenderTarget(RenderTarget* renderTarget, int width, int height)
     {
-        return Instance->PlatformRenderer->GetEditorViewport();
-    }
-
-    SViewport* Renderer::GetGameViewport()
-    {
-        return Instance->PlatformRenderer->GetGameViewport();
-    }
-
-    SViewport* Renderer::GetMainViewport()
-    {
-        return Instance->PlatformRenderer->GetMainViewport();
+        if(renderTarget)
+        {
+            auto format = renderTarget->GetFormat();
+            auto name = renderTarget->GetName();
+            
+            DestroyImmediate(renderTarget);
+            
+            InitializeRenderTarget(name, width, height, format, renderTarget);
+        }
     }
 
     AccelerationStructure* Renderer::CreateBLAS(WString name, WArray<RayTracingGeometry>& geometries)
@@ -339,5 +341,10 @@ namespace Waldem
     void* Renderer::GetPlatformResource(GraphicResource* resource)
     {
         return Instance->PlatformRenderer->GetPlatformResource(resource);
+    }
+
+    SViewport* Renderer::GetCurrentViewport()
+    {
+        return Instance->PlatformRenderer->GetCurrentViewport();
     }
 }

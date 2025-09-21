@@ -51,10 +51,6 @@ namespace Waldem
 
 		//ECS
 		ECS::Core ECS;
-		flecs::entity UpdatePipeline;
-		flecs::entity FixedUpdatePipeline;
-		flecs::entity DrawPipeline;
-		flecs::entity GUIPipeline;
 	};
 
 	//to be defined in CLIENT

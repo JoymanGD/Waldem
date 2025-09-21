@@ -67,6 +67,21 @@ namespace Waldem
             Depth = depth;
         }
 
+        void Resize(Vector2 size)
+        {
+            for (int i = 0; i < Size; ++i)
+            {
+                auto name = RenderTargets[i]->GetName();
+                Renderer::DestroyImmediate(RenderTargets[i]);
+                RenderTargets[i] = Renderer::CreateRenderTarget(name, size.x, size.y, TextureFormat::R8G8B8A8_UNORM);
+            }
+            
+            auto name = Depth->GetName();
+
+            Renderer::DestroyImmediate(Depth);
+            Depth = Renderer::CreateRenderTarget(name, size.x, size.y, TextureFormat::D32_FLOAT);
+        }
+
         void Destroy()
         {
             for (int i = 0; i < Size; ++i)

@@ -8,6 +8,7 @@
 #include "Waldem/ECS/Components/Transform.h"
 #include "Waldem/ECS/Components/Camera.h"
 #include "Waldem/ECS/Components/Light.h"
+#include "Waldem/Renderer/Viewport/ViewportManager.h"
 
 namespace Waldem
 {
@@ -100,17 +101,24 @@ namespace Waldem
         
         void InitializeCameras()
         {
-            ECS::World.query<Camera, Transform>("InitializeCamerasSystem").each([&](flecs::entity entity, Camera& camera, Transform& transform)
+            ECS::World.query("InitializeCamerasSystem").each([&]
             {
-                camera.SetViewMatrix(&transform);
+                ECS::Entity linkedCamera;
+                
+                if(ViewportManager::GetEditorViewport()->TryGetLinkedCamera(linkedCamera))
+                {
+                    auto camera = linkedCamera.get_mut<Camera>();
+                    auto transform = linkedCamera.get_mut<Transform>();
+                    camera->SetViewMatrix(transform);
 
-                entity.modified<Transform>();
+                    linkedCamera.modified<Transform>();
+                }
             });
         }
 
         void UpdateLastMousePosition()
         {
-            ECS::World.system<>("UpdateLastMousePositionSystem").kind(flecs::OnUpdate).each([&]
+            ECS::World.system("UpdateLastMousePositionSystem").kind(flecs::OnUpdate).each([&]
             {
                 LastMousePos.x = MousePos.x;
                 LastMousePos.y = MousePos.y;
@@ -167,35 +175,47 @@ namespace Waldem
         
         void UpdateCameraControl()
         {
-            ECS::World.system<Camera, Transform>("UpdateCameraControlSystem").kind(flecs::OnUpdate).each([&](flecs::entity entity, Camera& camera, Transform& transform)
+            ECS::World.system("UpdateCameraControlSystem").kind(flecs::OnUpdate).each([&]
             {
-                if (IsUnderControl)
+                ECS::Entity linkedCamera;
+                if(ViewportManager::GetEditorViewport()->TryGetLinkedCamera(linkedCamera))
                 {
-                    float deltaX = (MousePos.x - LastMousePos.x) * Time::DeltaTime;
-                    float deltaY = (MousePos.y - LastMousePos.y) * Time::DeltaTime;
-
-                    transform.Rotate(deltaY * camera.RotationSpeed, deltaX * camera.RotationSpeed, 0);
-
-                    if(DeltaPos != Vector3(0, 0, 0))
-                    {
-                        transform.Move(normalize(DeltaPos) * Time::DeltaTime * camera.MovementSpeed * camera.SpeedModificator, Local);
-                    }
-                
-                    camera.SetViewMatrix(&transform);
+                    auto camera = linkedCamera.get_mut<Camera>();
+                    auto transform = linkedCamera.get_mut<Transform>();
                     
-                    entity.modified<Camera>();
+                    if (IsUnderControl)
+                    {
+                        float deltaX = (MousePos.x - LastMousePos.x) * Time::DeltaTime;
+                        float deltaY = (MousePos.y - LastMousePos.y) * Time::DeltaTime;
+
+                        transform->Rotate(deltaY * camera->RotationSpeed, deltaX * camera->RotationSpeed, 0.f);
+
+                        if(DeltaPos != Vector3(0, 0, 0))
+                        {
+                            transform->Move(normalize(DeltaPos) * Time::DeltaTime * camera->MovementSpeed * camera->SpeedModificator, Local);
+                        }
+                    
+                        camera->SetViewMatrix(transform);
+                        
+                        linkedCamera.modified<Camera>();
+                    }
                 }
             });
 
-            ECS::World.system<Camera>("UpdateCameraSpeedControlSystem").kind(flecs::OnUpdate).each([&](flecs::entity entity, Camera& camera)
+            ECS::World.system("UpdateCameraSpeedControlSystem").kind(flecs::OnUpdate).each([&]
             {
-                if(DeltaScroll != 0.f)
+                ECS::Entity linkedCamera;
+                if(ViewportManager::GetEditorViewport()->TryGetLinkedCamera(linkedCamera))
                 {
-                    camera.SpeedModificator += DeltaScroll * camera.SpeedParams.ModificationStep;
-                    camera.SpeedModificator = std::clamp(camera.SpeedModificator, camera.SpeedParams.MinSpeedModificator, camera.SpeedParams.MaxSpeedModificator);
-                    entity.modified<Camera>();
-                    
-                    DeltaScroll = 0;
+                    if(DeltaScroll != 0.f)
+                    {
+                        auto camera = linkedCamera.get_mut<Camera>();
+                        camera->SpeedModificator += DeltaScroll * camera->SpeedParams.ModificationStep;
+                        camera->SpeedModificator = std::clamp(camera->SpeedModificator, camera->SpeedParams.MinSpeedModificator, camera->SpeedParams.MaxSpeedModificator);
+                        linkedCamera.modified<Camera>();
+                        
+                        DeltaScroll = 0;
+                    }
                 }
             });
         }

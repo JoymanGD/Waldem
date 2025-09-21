@@ -109,6 +109,9 @@ namespace Waldem
                 {
                 case SDL_WINDOWEVENT_SIZE_CHANGED:
                     {
+                        if(SDL_GetWindowID(NativeWindow) != sdlEvent->window.windowID)
+                            break;
+                        
                         int newWidth = sdlEvent->window.data1;
                         int newHeight = sdlEvent->window.data2;
 
@@ -123,6 +126,9 @@ namespace Waldem
                     }
                 case SDL_WINDOWEVENT_MOVED:
                     {
+                        if(SDL_GetWindowID(NativeWindow) != sdlEvent->window.windowID)
+                            break;
+                        
                         int newX = sdlEvent->window.data1;
                         int newY = sdlEvent->window.data2;
 

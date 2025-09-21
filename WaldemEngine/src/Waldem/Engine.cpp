@@ -23,44 +23,39 @@ namespace Waldem
 
 	void Engine::Initialize()
 	{
+		WD_CORE_ASSERT(!Instance, "Application already exists!")
+		Instance = this;
+		
 		PlatformInitializer::Initialize();
 
 		AudioManager = Audio();
 
 		MonoRuntime = Mono();
 		// MonoRuntime.Initialize();
-		
-		WD_CORE_ASSERT(!Instance, "Application already exists!")
-		Instance = this;
 
-		ECS.Initialize();
-		
+		//Window
 		Window = CWindow::Create();
 		Window->SetEventCallback(BIND_EVENT_FN(Engine::OnEvent));
 
-		flecs::OnFixedUpdate = ECS::World.entity("OnFixedUpdate");
-		flecs::OnDraw = ECS::World.entity("OnDraw");
-		flecs::OnGUI = ECS::World.entity("OnGUI");
-
-		UpdatePipeline = ECS::World.pipeline().with(flecs::System).with(flecs::OnUpdate).build();
-		FixedUpdatePipeline = ECS::World.pipeline().with(flecs::System).with(flecs::OnFixedUpdate).build();
-		DrawPipeline = ECS::World.pipeline().with(flecs::System).with(flecs::OnDraw).build();
-		GUIPipeline = ECS::World.pipeline().with(flecs::System).with(flecs::OnGUI).build();
-
+		//Renderer
 		CurrentRenderer = {};
 		CurrentRenderer.Initialize(Window);
+
+		ECS.Initialize();
+
+		//Layers
 		Editor = new EditorLayer(Window);
 		PushOverlay(Editor);
 		
-		// Game = new GameLayer(Window, &CoreECSManager, &ResourceManager);
-		// PushLayer(Game);
+		Game = new GameLayer(Window);
+		PushLayer(Game);
+
+		ECS.InitializeSystems();
 		
 		// Debug = new DebugLayer(Window, &CoreECSManager, &ResourceManager);
 		// PushLayer(Debug);
 
 		InitializeLayers();
-		
-		// OpenScene(new RenderingTestScene());
 	}
 
 	void Engine::InitializeLayers()
@@ -70,7 +65,7 @@ namespace Waldem
 #endif
 		
 #ifdef WD_GAME
-		Game->Initialize(&sceneData);
+		Game->Initialize();
 #endif
 		
 		// Debug->Initialize(&sceneData);
@@ -154,24 +149,27 @@ namespace Waldem
 
 			while (accumulatedTime >= Time::FixedDeltaTime)
 			{
-				ECS::World.run_pipeline(FixedUpdatePipeline, Time::FixedDeltaTime);
+				ECS::RunFixedUpdatePipeline(Time::FixedDeltaTime);
 
 				accumulatedTime -= Time::FixedDeltaTime;
 			}
 
-			ECS::World.run_pipeline(UpdatePipeline, Time::DeltaTime);
-			
-			Renderer::Begin();
-			ECS::World.run_pipeline(DrawPipeline, Time::DeltaTime);
-			Renderer::End();
+			ECS::RunUpdatePipeline(Time::DeltaTime);
+
+			ViewportManager::ForEach([](SViewport* viewport)
+			{
+				Renderer::Begin(viewport);
+				ECS::RunDrawPipeline(Time::DeltaTime);
+				Renderer::End();
+			});
 
 			Renderer::BeginUI();
-			ECS::World.run_pipeline(GUIPipeline, Time::DeltaTime);
+			ECS::RunGUIPipeline(Time::DeltaTime);
 			Renderer::EndUI();
 
 			Renderer::Present();
 
-			CurrentRenderer.GetMainViewport()->ApplyPendingResize();
+			ViewportManager::GetMainViewport()->ApplyPendingResize();
 
 			float FPS = CalculateAverageFPS(Time::DeltaTime);
 			Window->SetTitle(std::to_string(FPS).substr(0, 4));
@@ -190,7 +188,7 @@ namespace Waldem
 	bool Engine::OnWindowResize(WindowResizeEvent& e)
 	{
 		auto size = Point2(e.GetWidth(), e.GetHeight());
-		CurrentRenderer.GetMainViewport()->RequestResize(size);
+		ViewportManager::GetMainViewport()->RequestResize(size);
 
 		return true;
 	}
