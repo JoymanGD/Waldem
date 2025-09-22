@@ -22,7 +22,11 @@ namespace Waldem
 
 			ECS::World.observer<Camera>().without<EditorComponent>().event(flecs::OnAdd).each([&](flecs::entity entity, Camera& camera)
 			{
-				ViewportManager::GetGameViewport()->LinkCamera(entity);
+				auto viewport = ViewportManager::GetGameViewport();
+				viewport->LinkCamera(entity);
+				
+				camera.UpdateProjectionMatrix(camera.FieldOfView, viewport->Size.x / (float)viewport->Size.y, camera.NearPlane, camera.FarPlane);
+				entity.modified<Camera>(); 
 			});
 
 			ViewportManager::GetGameViewport()->SubscribeOnResize([this](Vector2 size)

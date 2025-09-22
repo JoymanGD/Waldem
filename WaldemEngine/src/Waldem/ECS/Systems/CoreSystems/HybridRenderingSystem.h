@@ -632,7 +632,7 @@ namespace Waldem
                     GBufferSceneData.ProjectionMatrix = cameraComponent->ProjectionMatrix;
                     GBufferSceneData.ViewMatrix = inverse(transformComponent->Matrix);
                     GBufferSceneData.WorldMatrix = transformComponent->Matrix;
-                    GBufferSceneData.InverseProjectionMatrix = glm::inverse(cameraComponent->ProjectionMatrix);
+                    GBufferSceneData.InverseProjectionMatrix = inverse(cameraComponent->ProjectionMatrix);
                     
                     Renderer::UploadBuffer(GBufferSceneDataBuffer, &GBufferSceneData, sizeof(SGBufferSceneData));
 
