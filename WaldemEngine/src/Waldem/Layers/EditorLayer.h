@@ -258,7 +258,10 @@ namespace Waldem
                 ImGui::DockBuilderDockWindow("Entities", dock_left);
                 ImGui::DockBuilderDockWindow("Details", dock_details);
                 ImGui::DockBuilderDockWindow("Content", dock_bottom);
-                ImGui::DockBuilderDockWindow("Viewport", dock_center);
+                ImGuiID dock_editor, dock_game;
+                ImGui::DockBuilderSplitNode(dock_center, ImGuiDir_Left, 0.5f, &dock_editor, &dock_game);
+                ImGui::DockBuilderDockWindow("Editor", dock_editor);
+                ImGui::DockBuilderDockWindow("Game", dock_game);
                 // (Optional) nothing docked to center, can leave it empty or use a viewport/game window
 
                 ImGui::DockBuilderFinish(dockspace_id);
