@@ -1,9 +1,9 @@
 #pragma once
 #include "Waldem/ECS/Systems/System.h"
-#include "Waldem/Engine.h"
 #include "Waldem/Input/KeyCodes.h"
 #include "Waldem/ECS/Components/Transform.h"
 #include "Waldem/ECS/Components/PlayerController.h"
+#include "glm/glm.hpp"
 
 namespace Waldem
 {
@@ -48,13 +48,13 @@ namespace Waldem
                     Vector3 right = cameraTransform->GetRightVector();
                     right.y = 0;
                     right = normalize(right);
-                    auto worldDir = normalize(forward * DeltaPos.z + right * DeltaPos.x);
+                    Vector3 worldDir = normalize(forward * DeltaPos.z + right * DeltaPos.x);
                     transform.Move(worldDir * Time::DeltaTime * playerController.MovementSpeed);
                     entity.modified<Transform>();
 
                     if(playerController.RotateTowardMovementDirection)
                     {
-                        auto lookAtDir = lerp(transform.GetForwardVector(), worldDir, playerController.RotationSpeed);
+                        Vector3 lookAtDir = mix(transform.GetForwardVector(), worldDir, playerController.RotationSpeed);
                         transform.LookAt(transform.Position + lookAtDir);
                     }
                 }

@@ -28,22 +28,6 @@ namespace Waldem
 				camera.UpdateProjectionMatrix(camera.FieldOfView, viewport->Size.x / (float)viewport->Size.y, camera.NearPlane, camera.FarPlane);
 				entity.modified<Camera>(); 
 			});
-
-			ViewportManager::GetGameViewport()->SubscribeOnResize([this](Vector2 size)
-			{
-				OnResize(size);
-			});
-		}
-
-		void OnResize(Vector2 size)
-		{
-			ECS::Entity linkedCamera;
-			if(ViewportManager::GetGameViewport()->TryGetLinkedCamera(linkedCamera))
-			{
-				auto camera = linkedCamera.get_mut<Camera>();
-				camera->UpdateProjectionMatrix(camera->FieldOfView, size.x/size.y, camera->NearPlane, camera->FarPlane);
-				linkedCamera.modified<Camera>(); 
-			}
 		}
 
 		void Initialize() override
