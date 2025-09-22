@@ -20,6 +20,7 @@
 #include "Systems/CoreSystems/PostProcessSystem.h"
 #include "Systems/CoreSystems/ScreenQuadSystem.h"
 #include "Systems/CoreSystems/SpatialAudioSystem.h"
+#include "Systems/EditorSystems/WorldGridRenderingSystem.h"
 #include "Waldem/Editor/AssetReference.h"
 
 namespace Waldem
@@ -73,6 +74,7 @@ namespace Waldem
             Systems.Add(new SpatialAudioSystem());
             Systems.Add(new AnimationSystem());
             Systems.Add(new HybridRenderingSystem());
+            Systems.Add(new WorldGridRenderingSystem());
             Systems.Add(new ParticleSystem());
             Systems.Add(new PostProcessSystem());
             Systems.Add(new ScreenQuadSystem());

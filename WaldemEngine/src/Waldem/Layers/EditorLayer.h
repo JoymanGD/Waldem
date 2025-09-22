@@ -6,7 +6,6 @@
 #include "Waldem/AssetsManagement/ContentManager.h"
 #include "Waldem/ECS/Components/AudioListener.h"
 #include "Waldem/ECS/Systems/EditorSystems/EditorControlSystem.h"
-#include "Waldem/ECS/Systems/EditorSystems/EditorGuizmoSystem.h"
 #include "Waldem/ECS/Systems/GameSystems/FreeLookCameraSystem.h"
 #include "Waldem/ECS/Components/Camera.h"
 #include "Waldem/ECS/Systems/CoreSystems/OceanSimulationSystem.h"
@@ -18,9 +17,12 @@
 #include "Waldem/ECS/ECS.h"
 #include "Waldem/ECS/Systems/CoreSystems/AnimationSystem.h"
 #include "Waldem/ECS/Systems/CoreSystems/HybridRenderingSystem.h"
+#include "Waldem/ECS/Systems/EditorSystems/WorldGridRenderingSystem.h"
 #include "Waldem/Editor/Widgets/ContentBrowserWidget.h"
+#include "Waldem/Editor/Widgets/EditorViewportWidget.h"
 #include "Waldem/Editor/Widgets/ViewportWidget.h"
 #include "Waldem/Editor/Widgets/EntityDetailsWidgetContainer.h"
+#include "Waldem/Editor/Widgets/GameViewportWidget.h"
 #include "Waldem/Editor/Widgets/HierarchyWidget.h"
 #include "Waldem/Editor/Widgets/MenuBarWidget.h"
 
@@ -55,22 +57,16 @@ namespace Waldem
             skyEntity.add<Sky>();
 
             Widgets.Add(new MenuBarWidget());
-            Widgets.Add(new ViewportWidget(ViewportManager::GetEditorViewport()));
-            Widgets.Add(new ViewportWidget(ViewportManager::GetGameViewport()));
+            Widgets.Add(new EditorViewportWidget());
+            Widgets.Add(new GameViewportWidget());
             Widgets.Add(new HierarchyWidget());
             Widgets.Add(new EntityDetailsWidgetContainer());
             Widgets.Add(new ContentBrowserWidget());
             
             //do it after all entities set up
-            UpdateSystems.Add(new EditorGuizmoSystem());
             UpdateSystems.Add(new EditorControlSystem());
 
             Window = window;
-
-            ViewportManager::GetEditorViewport()->SubscribeOnResize([this](Vector2 size)
-            {
-                OnResize(size);
-            });
 
             ECS::World.system("WidgetDrawing").kind(flecs::OnGUI).each([&]
             {
@@ -81,17 +77,6 @@ namespace Waldem
                     widget->OnDraw(Time::DeltaTime);
                 }
             });
-        }
-
-        void OnResize(Vector2 size)
-        {
-            ECS::Entity linkedCamera;
-            if(ViewportManager::GetEditorViewport()->TryGetLinkedCamera(linkedCamera))
-            {
-                auto camera = linkedCamera.get_mut<Camera>();
-                camera->UpdateProjectionMatrix(camera->FieldOfView, size.x/size.y, camera->NearPlane, camera->FarPlane);
-                linkedCamera.modified<Camera>(); 
-            }
         }
         
         void OnEvent(Event& event) override

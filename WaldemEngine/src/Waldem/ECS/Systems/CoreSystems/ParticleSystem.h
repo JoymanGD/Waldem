@@ -48,8 +48,6 @@ namespace Waldem
         ParticleSystemRootConstants RootConstants;
         Pipeline* ParticleSystemGraphicPipeline = nullptr;
         PixelShader* ParticleSystemPixelShader = nullptr;
-        RenderTarget* TargetRT = nullptr;
-        RenderTarget* DepthRT = nullptr;
         ResizableBuffer IndirectBuffer;
         WArray<IndirectCommand> IndirectCommands;
         ResizableBuffer VertexBuffer;
@@ -69,9 +67,6 @@ namespace Waldem
         
         void Initialize() override
         {
-            TargetRT = Renderer::GetRenderTarget("TargetRT");
-            DepthRT = Renderer::GetRenderTarget("DepthRT");
-            
             ParticleSystemComputeShader = Renderer::LoadComputeShader("ParticleSystem");
             ParticleSystemPipeline = Renderer::CreateComputePipeline("ParticleSystemPipeline", ParticleSystemComputeShader);
             NumThreads = Renderer::GetNumThreadsPerGroup(ParticleSystemComputeShader);
@@ -82,7 +77,7 @@ namespace Waldem
             depthDesc.DepthFunc = WD_COMPARISON_FUNC_LESS_EQUAL;
             ParticleSystemGraphicPipeline = Renderer::CreateGraphicPipeline("ParticleSystemGraphicPipeline",
                                                             ParticleSystemPixelShader,
-                                                            { TargetRT->GetFormat() },
+                                                            { SGBuffer::GetFormat(Deferred) },
                                                             TextureFormat::D32_FLOAT,
                                                             DEFAULT_RASTERIZER_DESC,
                                                             depthDesc,
@@ -209,26 +204,29 @@ namespace Waldem
                     
                     if(viewport->TryGetLinkedCamera(linkedCamera))
                     {
+                        auto gbuffer = viewport->GetGBuffer();
+                        auto deferred = gbuffer->GetRenderTarget(Deferred);
+                        auto depth = gbuffer->GetRenderTarget(Depth);
                         RootConstants.ParticlesBufferID = ParticlesBuffer.GetIndex(SRV_CBV);
                         RootConstants.WorldTransformsBufferID = WorldTransformsBuffer.GetIndex(SRV_CBV);
                         RootConstants.SceneBufferID = SceneDataBuffer->GetIndex(SRV_CBV);
                         auto camera = linkedCamera.get<Camera>();
-                        SceneData.View = camera->ViewMatrix;
+                        auto transform = linkedCamera.get<Transform>();
+                        SceneData.View = inverse(transform->Matrix);
                         SceneData.Projection = camera->ProjectionMatrix;
                         Renderer::UploadBuffer(SceneDataBuffer, &SceneData, sizeof(ParticleSystemSceneData));
-                        Renderer::ResourceBarrier(TargetRT, RENDER_TARGET);
-                        Renderer::ResourceBarrier(DepthRT, DEPTH_WRITE);
+                        Renderer::ResourceBarrier(deferred, RENDER_TARGET);
+                        Renderer::ResourceBarrier(depth, DEPTH_WRITE);
                         Renderer::SetPipeline(ParticleSystemGraphicPipeline);
                         Renderer::PushConstants(&RootConstants, sizeof(ParticleSystemRootConstants));
-                        Renderer::BindRenderTargets({ TargetRT });
-                        Renderer::BindDepthStencil(DepthRT);
+                        Renderer::BindRenderTargets({ deferred });
+                        Renderer::BindDepthStencil(depth);
                         Renderer::SetVertexBuffers(VertexBuffer.GetBuffer(), 1);
                         Renderer::SetIndexBuffer(IndexBuffer.GetBuffer());
                         Renderer::DrawIndirect(IndirectCommands.Num(), IndirectBuffer);
-                        Renderer::ResourceBarrier(TargetRT, ALL_SHADER_RESOURCE);
-                        Renderer::ResourceBarrier(DepthRT, ALL_SHADER_RESOURCE);
+                        Renderer::ResourceBarrier(deferred, ALL_SHADER_RESOURCE);
+                        Renderer::ResourceBarrier(depth, ALL_SHADER_RESOURCE);
                     }
-                
                 }
             });
         }

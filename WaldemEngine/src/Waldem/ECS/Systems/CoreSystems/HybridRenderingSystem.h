@@ -64,14 +64,11 @@ namespace Waldem
     struct DeferredRootConstants
     {
         Point2 MousePos;
-        uint AlbedoRT;
         uint MeshIDRT;
         uint RadianceRT;
         uint DeferredRT;
         uint SkyColorRT;
-        uint DepthRTID; 
         uint HoveredMeshes;
-        uint SceneDataBuffer;
     };
 
     struct SkySceneData
@@ -226,7 +223,6 @@ namespace Waldem
             //Deferred
             HoveredMeshesBuffer = Renderer::CreateBuffer("HoveredMeshes", StorageBuffer, sizeof(int), sizeof(int));
             DeferredRootConstants.HoveredMeshes = HoveredMeshesBuffer->GetIndex(UAV);
-            DeferredRootConstants.SceneDataBuffer = SceneDataBuffer->GetIndex(SRV_CBV);
 
             DeferredRenderingComputeShader = Renderer::LoadComputeShader("DeferredRendering");
             DeferredRenderingPipeline = Renderer::CreateComputePipeline("DeferredLightingPipeline", DeferredRenderingComputeShader);
@@ -731,12 +727,10 @@ namespace Waldem
                     gbuffer->Clear({Deferred});
                     gbuffer->Barrier(Deferred, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
                     
-                    DeferredRootConstants.AlbedoRT = gbuffer->GetRenderTarget(Color)->GetIndex(SRV_CBV);
                     DeferredRootConstants.MeshIDRT = gbuffer->GetRenderTarget(MeshID)->GetIndex(SRV_CBV);
                     DeferredRootConstants.RadianceRT = gbuffer->GetRenderTarget(Radiance)->GetIndex(SRV_CBV);
                     DeferredRootConstants.DeferredRT = deferredRT->GetIndex(SRV_CBV);
                     DeferredRootConstants.SkyColorRT = gbuffer->GetRenderTarget(SkyColor)->GetIndex(SRV_CBV);
-                    DeferredRootConstants.DepthRTID = gbuffer->GetRenderTarget(Depth)->GetIndex(SRV_CBV);
                     Renderer::SetPipeline(DeferredRenderingPipeline);
                     auto mousePos = Input::GetMousePos();
                     Point2 relativeMousePos = viewport->TransformMousePosition(mousePos);

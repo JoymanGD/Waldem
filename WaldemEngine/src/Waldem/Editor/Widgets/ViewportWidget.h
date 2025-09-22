@@ -19,8 +19,6 @@ namespace Waldem
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
             if (ImGui::Begin(Viewport->Name, nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus))
             {
-                ImGuizmo::SetDrawlist(ImGui::GetCurrentWindow()->DrawList);
-                
                 ImVec2 viewportPos = ImGui::GetCursorScreenPos();
                 ImVec2 viewportSize = ImGui::GetContentRegionAvail();
 
