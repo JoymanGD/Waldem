@@ -99,6 +99,10 @@ namespace Waldem
                 .member<float>("HierarchySlot")
                 .member<bool>("VisibleInHierarchy");
             
+            World.component<Vector2>("Vector2")
+                .member<float>("x")
+                .member<float>("y");
+            
             World.component<Vector3>("Vector3")
                 .member<float>("x")
                 .member<float>("y")
@@ -213,6 +217,7 @@ namespace Waldem
             Selected::RegisterComponent(World);
             ParticleSystemComponent::RegisterComponent(World);
             PlayerController::RegisterComponent(World);
+            BloomPostProcess::RegisterComponent(World);
         }
 
         Entity CreateEntity(const WString& name, bool enabled)
