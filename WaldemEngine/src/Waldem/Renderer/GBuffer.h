@@ -157,7 +157,7 @@ namespace Waldem
                 case GBufferRenderTarget::Normal: return TextureFormat::R16G16B16A16_FLOAT;
                 case GBufferRenderTarget::Color: return TextureFormat::R8G8B8A8_UNORM;
                 case GBufferRenderTarget::ORM: return TextureFormat::R32G32B32A32_FLOAT;
-                case GBufferRenderTarget::MeshID: return TextureFormat::R32_SINT;
+                case GBufferRenderTarget::MeshID: return TextureFormat::R16G16_SINT;
                 case GBufferRenderTarget::Depth: return TextureFormat::D32_FLOAT;
                 case GBufferRenderTarget::Radiance: return TextureFormat::R32G32B32A32_FLOAT;
                 case GBufferRenderTarget::Reflection: return TextureFormat::R32G32B32A32_FLOAT;
@@ -169,7 +169,7 @@ namespace Waldem
 
         static WArray<TextureFormat> GetFormats()
         {
-            return { TextureFormat::R8G8B8A8_UNORM, TextureFormat::R32G32B32A32_FLOAT, TextureFormat::R16G16B16A16_FLOAT, TextureFormat::R8G8B8A8_UNORM, TextureFormat::R32G32B32A32_FLOAT, TextureFormat::R32_SINT, TextureFormat::D32_FLOAT, TextureFormat::R32G32B32A32_FLOAT, TextureFormat::R32G32B32A32_FLOAT, TextureFormat::R8G8B8A8_UNORM, TextureFormat::R8G8B8A8_UNORM };
+            return { TextureFormat::R8G8B8A8_UNORM, TextureFormat::R32G32B32A32_FLOAT, TextureFormat::R16G16B16A16_FLOAT, TextureFormat::R8G8B8A8_UNORM, TextureFormat::R32G32B32A32_FLOAT, TextureFormat::R16G16_SINT, TextureFormat::D32_FLOAT, TextureFormat::R32G32B32A32_FLOAT, TextureFormat::R32G32B32A32_FLOAT, TextureFormat::R8G8B8A8_UNORM, TextureFormat::R8G8B8A8_UNORM };
         }
     };
 }

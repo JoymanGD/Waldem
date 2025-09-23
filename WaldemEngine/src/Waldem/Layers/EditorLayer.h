@@ -16,6 +16,7 @@
 #include "Waldem/Utils/FileUtils.h"
 #include "Waldem/ECS/ECS.h"
 #include "Waldem/ECS/Systems/CoreSystems/AnimationSystem.h"
+#include "Waldem/ECS/Systems/CoreSystems/EntitySelectionSystem.h"
 #include "Waldem/ECS/Systems/CoreSystems/HybridRenderingSystem.h"
 #include "Waldem/ECS/Systems/EditorSystems/WorldGridRenderingSystem.h"
 #include "Waldem/Editor/Widgets/ContentBrowserWidget.h"
@@ -65,6 +66,7 @@ namespace Waldem
             
             //do it after all entities set up
             UpdateSystems.Add(new EditorControlSystem());
+            DrawSystems.Add(new EntitySelectionSystem());
 
             Window = window;
 

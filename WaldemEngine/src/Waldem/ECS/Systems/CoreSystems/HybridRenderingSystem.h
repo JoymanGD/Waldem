@@ -53,6 +53,7 @@ namespace Waldem
         uint ReflectionRT;
         uint LightsBuffer;
         uint LightTransformsBuffer;
+        uint LightsIndicesBuffer;
         uint SceneDataBuffer; 
         uint TLAS;
         uint VertexBuffer;
@@ -63,12 +64,10 @@ namespace Waldem
     
     struct DeferredRootConstants
     {
-        Point2 MousePos;
         uint MeshIDRT;
         uint RadianceRT;
         uint DeferredRT;
         uint SkyColorRT;
-        uint HoveredMeshes;
     };
 
     struct SkySceneData
@@ -124,6 +123,8 @@ namespace Waldem
         SRayTracingSceneData RayTracingSceneData;
         ResizableBuffer LightsBuffer;
         ResizableBuffer LightTransformsBuffer;
+        ResizableBuffer LightsIndicesBuffer;
+        WArray<int> LightsIndices;
         Buffer* RayTracingSceneDataBuffer = nullptr;
         RayTracingRootConstants RayTracingRootConstants;
         WArray<Matrix4> LightTransforms;
@@ -133,7 +134,6 @@ namespace Waldem
         ComputeShader* DeferredRenderingComputeShader = nullptr;
         Point3 GroupCount;
         DeferredRootConstants DeferredRootConstants;
-        Buffer* HoveredMeshesBuffer = nullptr;
 
         //Sprite rendering
         WArray<Vertex> SpriteVertices;
@@ -217,13 +217,11 @@ namespace Waldem
             RTPipeline = Renderer::CreateRayTracingPipeline("RayTracingPipeline", RTShader);
             LightsBuffer = ResizableBuffer("LightsBuffer", StorageBuffer, sizeof(LightData), 40);
             LightTransformsBuffer = ResizableBuffer("LightTransformsBuffer", StorageBuffer, sizeof(Matrix4), 40);
+            LightsIndicesBuffer = ResizableBuffer("LightsIndicesBuffer", StorageBuffer, sizeof(int), 40);
             RayTracingSceneDataBuffer = Renderer::CreateBuffer("SceneDataBuffer", StorageBuffer, sizeof(SRayTracingSceneData), sizeof(SRayTracingSceneData), &RayTracingSceneData);
             Renderer::RenderData.TLAS = ResizableAccelerationStructure("RayTracingTLAS", 50);
             
             //Deferred
-            HoveredMeshesBuffer = Renderer::CreateBuffer("HoveredMeshes", StorageBuffer, sizeof(int), sizeof(int));
-            DeferredRootConstants.HoveredMeshes = HoveredMeshesBuffer->GetIndex(UAV);
-
             DeferredRenderingComputeShader = Renderer::LoadComputeShader("DeferredRendering");
             DeferredRenderingPipeline = Renderer::CreateComputePipeline("DeferredLightingPipeline", DeferredRenderingComputeShader);
             
@@ -236,7 +234,7 @@ namespace Waldem
                 {
                     BFCIndirectCommands.Add(IndirectCommand());
                     BFCIndirectBuffer.UpdateOrAdd(nullptr, sizeof(IndirectCommand), bfcDrawId * sizeof(IndirectCommand));
-                }                
+                }
                 
                 WorldTransformsBuffer.UpdateOrAdd(&transform.Matrix, sizeof(Matrix4), globalDrawId * sizeof(Matrix4));
 
@@ -524,10 +522,12 @@ namespace Waldem
             
             ECS::World.observer<Light, Transform>().event(flecs::OnAdd).each([&](flecs::entity entity, Light& light, Transform& transform)
             {
-                IdManager::AddId(entity, LightIdType);
+                auto lightId = IdManager::AddId(entity, LightIdType);
 
-                LightsBuffer.AddData(&light.Data, sizeof(LightData));
-                LightTransformsBuffer.AddData(&transform.Matrix, sizeof(Matrix4));
+                LightsBuffer.UpdateOrAdd(&light.Data, sizeof(LightData), sizeof(LightData) * lightId);
+                LightTransformsBuffer.UpdateOrAdd(&transform.Matrix, sizeof(Matrix4), sizeof(Matrix4) * lightId);
+                LightsIndices.Add(lightId);
+                LightsIndicesBuffer.UpdateOrAdd(LightsIndices.GetData(), LightsIndices.GetSize(), 0);
                 
                 RayTracingSceneData.NumLights++;
             });
@@ -550,6 +550,8 @@ namespace Waldem
                 {
                     LightTransformsBuffer.RemoveData(sizeof(Matrix4), sizeof(Matrix4) * lightId);
                     LightsBuffer.RemoveData(sizeof(LightData), sizeof(LightData) * lightId);
+                    LightsIndices.Remove(lightId);
+                    LightsIndicesBuffer.UpdateData(LightsIndices.GetData(), LightsIndices.GetSize(), 0);
                     RayTracingSceneData.NumLights--;
 
                     IdManager::RemoveId(entity, LightIdType);
@@ -697,6 +699,7 @@ namespace Waldem
                     RayTracingRootConstants.ReflectionRT = gbuffer->GetRenderTarget(Reflection)->GetIndex(SRV_CBV);
                     RayTracingRootConstants.LightsBuffer = LightsBuffer.GetIndex(SRV_CBV);
                     RayTracingRootConstants.LightTransformsBuffer = LightTransformsBuffer.GetIndex(SRV_CBV);
+                    RayTracingRootConstants.LightsIndicesBuffer = LightsIndicesBuffer.GetIndex(SRV_CBV);
                     RayTracingRootConstants.SceneDataBuffer = RayTracingSceneDataBuffer->GetIndex(SRV_CBV);
                     RayTracingRootConstants.TLAS = Renderer::RenderData.TLAS.GetIndex(SRV_CBV);
                     RayTracingRootConstants.VertexBuffer = Renderer::RenderData.VertexBuffer.GetIndex(SRV_CBV);
@@ -732,9 +735,6 @@ namespace Waldem
                     DeferredRootConstants.DeferredRT = deferredRT->GetIndex(SRV_CBV);
                     DeferredRootConstants.SkyColorRT = gbuffer->GetRenderTarget(SkyColor)->GetIndex(SRV_CBV);
                     Renderer::SetPipeline(DeferredRenderingPipeline);
-                    auto mousePos = Input::GetMousePos();
-                    Point2 relativeMousePos = viewport->TransformMousePosition(mousePos);
-                    DeferredRootConstants.MousePos = relativeMousePos;
                     Renderer::PushConstants(&DeferredRootConstants, sizeof(DeferredRootConstants));
                     
                     Vector2 resolution = Vector2(deferredRT->GetWidth(), deferredRT->GetHeight());
@@ -742,9 +742,6 @@ namespace Waldem
                     GroupCount = Point3((resolution.x + numThreads.x - 1) / numThreads.x, (resolution.y + numThreads.y - 1) / numThreads.y, 1);
                     
                     Renderer::Compute(GroupCount);
-                    int hoveredEntityId = {};
-                    Renderer::DownloadBuffer(HoveredMeshesBuffer, &hoveredEntityId, sizeof(int));
-                    Editor::HoveredEntityID = hoveredEntityId - 1;
                     viewport->GetGBuffer()->Barrier(Deferred, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
                 }
             });

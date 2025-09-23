@@ -27,7 +27,7 @@ namespace Waldem
             importer = &AudioImporter;
         }
 
-        assets.AddRange(importer->Import(from, to));
+        assets.AddRange(importer->ImportTo(from, to));
 
         importer = nullptr;
 

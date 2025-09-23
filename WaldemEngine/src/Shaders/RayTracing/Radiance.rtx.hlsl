@@ -39,6 +39,7 @@ cbuffer RootConstants : register(b0)
     uint ReflectionRTID;
     uint LightsBufferID;
     uint LightTransformsBufferID;
+    uint LightsIndicesBufferID;
     uint SceneDataBufferID; 
     uint TLASID;
     uint VertexBufferId;
@@ -62,14 +63,16 @@ float3 GetRadiance(Payload payload, float3 worldPosition, float3 normal, float4 
     
     StructuredBuffer<Light> Lights = ResourceDescriptorHeap[LightsBufferID];
     StructuredBuffer<float4x4> LightTransforms = ResourceDescriptorHeap[LightTransformsBufferID];
+    StructuredBuffer<int> LightIndices = ResourceDescriptorHeap[LightsIndicesBufferID];
     RaytracingAccelerationStructure TLAS = ResourceDescriptorHeap[TLASID];
     
     //shadow ray
     for (int i = 0; i < sceneData.NumLights; i++)
     {
         payload.Missed = false;
-        Light light = Lights[i];
-        matrix lightTransform = LightTransforms[i];
+        int lightIndex = LightIndices[i];
+        Light light = Lights[lightIndex];
+        matrix lightTransform = LightTransforms[lightIndex];
         float3 lightDirection;
 
         //fix for zero color

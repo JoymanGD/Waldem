@@ -5,6 +5,7 @@
 #include "Widget.h"
 #include "glm/gtc/type_ptr.hpp"
 #include "Waldem/ECS/Components/Selected.h"
+#include "Waldem/Editor/Editor.h"
 #include "Waldem/Renderer/Viewport/Viewport.h"
 #include "Waldem/Renderer/Viewport/ViewportManager.h"
 
@@ -77,7 +78,7 @@ namespace Waldem
 
                     flecs::entity outEntity;
 
-                    if(IdManager::GetEntityById(Editor::HoveredEntityID, GlobalDrawIdType, outEntity))
+                    if(IdManager::GetEntityById(Editor::HoveredEntityID, (IdType)Editor::HoveredEntityType, outEntity))
                     {
                         if(outEntity.is_valid() && outEntity.is_alive())
                         {

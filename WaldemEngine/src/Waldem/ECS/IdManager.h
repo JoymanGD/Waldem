@@ -14,70 +14,82 @@ namespace Waldem
         NoCullingDrawIdType,
         RTXInstanceIdType,
         ParticleSystemIdType,
+        GizmoDrawIdType
     };
     
     class WALDEM_API IdManager
     {
     private:
-        inline static WMap<flecs::entity, WMap<IdType, int>> EntityIdMap;
+        inline static WMap<uint64, WMap<IdType, int>> EntityIdMap;
         inline static FreeList LightIdFreeList;
         inline static FreeList GlobalDrawIdFreeList;
         inline static FreeList BackFaceCullingDrawIdFreeList;
         inline static FreeList NoCullingDrawIdFreeList;
         inline static FreeList RTXInstanceIdFreeList;
         inline static FreeList ParticleSystemIdFreeList;
+        inline static FreeList EditorIconDrawIdFreeList;
         
     public:
         static int AddId(flecs::entity entity, IdType idType)
         {
             int id = -1;
 
+            if(EntityIdMap.Contains(entity.id()) && EntityIdMap[entity.id()].Contains(idType))
+            {
+                WD_CORE_ERROR("Entity already has an ID assigned of type {}", (int)idType);
+            }
+
             switch (idType)
             {
-            case LightIdType:
+                case LightIdType:
                 {
                     id = LightIdFreeList.Allocate();
                     break;
                 }
-            case GlobalDrawIdType:
+                case GlobalDrawIdType:
                 {
                     id = GlobalDrawIdFreeList.Allocate();
                     break;
                 }
-            case BackFaceCullingDrawIdType:
+                case BackFaceCullingDrawIdType:
                 {
                     id = BackFaceCullingDrawIdFreeList.Allocate();
                     break;
                 }
-            case NoCullingDrawIdType:
+                case NoCullingDrawIdType:
                 {
                     id = NoCullingDrawIdFreeList.Allocate();
                     break;
                 }
-            case RTXInstanceIdType:
+                case RTXInstanceIdType:
                 {
                     id = RTXInstanceIdFreeList.Allocate();
                     break;
                 }
-            case ParticleSystemIdType:
+                case ParticleSystemIdType:
                 {
                     id = ParticleSystemIdFreeList.Allocate();
                     break;
                 }
+                case GizmoDrawIdType:
+                {
+                    id = EditorIconDrawIdFreeList.Allocate();
+                    break;
+                }
             }
             
-            EntityIdMap[entity][idType] = id;
+            EntityIdMap[entity.id()][idType] = id;
 
             return id;
         }
 
         static bool GetId(flecs::entity entity, IdType idType, int& id)
         {
-            if(EntityIdMap.Contains(entity))
+            if(EntityIdMap.Contains(entity.id()))
             {
-                if(EntityIdMap[entity].Contains(idType))
+                if(EntityIdMap[entity.id()].Contains(idType))
                 {
-                    id = EntityIdMap[entity][idType];
+                    id = EntityIdMap[entity.id()][idType];
                     return true;
                 }
                 
@@ -89,53 +101,58 @@ namespace Waldem
 
         static void RemoveId(flecs::entity entity, IdType idType)
         {
-            if(EntityIdMap.Contains(entity))
+            if(EntityIdMap.Contains(entity.id()))
             {
                 int id = -1;
                 
-                if(EntityIdMap[entity].Contains(idType))
+                if(EntityIdMap[entity.id()].Contains(idType))
                 {
-                    id = EntityIdMap[entity][idType];
-                    EntityIdMap[entity].Remove(idType);
+                    id = EntityIdMap[entity.id()][idType];
+                    EntityIdMap[entity.id()].Remove(idType);
                 }
 
-                if(EntityIdMap[entity].IsEmpty())
+                if(EntityIdMap[entity.id()].IsEmpty())
                 {
-                    EntityIdMap.Remove(entity);
+                    EntityIdMap.Remove(entity.id());
                 }
 
                 if(id >= 0)
                 {
                     switch (idType)
                     {
-                    case LightIdType:
+                        case LightIdType:
                         {
                             LightIdFreeList.Free(id);
                             break;
                         }
-                    case GlobalDrawIdType:
+                        case GlobalDrawIdType:
                         {
                             GlobalDrawIdFreeList.Free(id);
                             break;
                         }
-                    case BackFaceCullingDrawIdType:
+                        case BackFaceCullingDrawIdType:
                         {
                             BackFaceCullingDrawIdFreeList.Free(id);
                             break;
                         }
-                    case NoCullingDrawIdType:
+                        case NoCullingDrawIdType:
                         {
                             NoCullingDrawIdFreeList.Free(id);
                             break;
                         }
-                    case RTXInstanceIdType:
+                        case RTXInstanceIdType:
                         {
                             RTXInstanceIdFreeList.Free(id);
                             break;
                         }
-                    case ParticleSystemIdType:
+                        case ParticleSystemIdType:
                         {
                             ParticleSystemIdFreeList.Free(id);
+                            break;
+                        }
+                        case GizmoDrawIdType:
+                        {
+                            EditorIconDrawIdFreeList.Free(id);
                             break;
                         }
                     }
@@ -147,12 +164,12 @@ namespace Waldem
         {
             for (const auto& pair : EntityIdMap)
             {
-                const flecs::entity& entity = pair.key;
+                const uint64& entityId = pair.key;
                 const WMap<IdType, int>& ids = pair.value;
 
                 if (ids.Contains(idType) && ids[idType] == id)
                 {
-                    outEntity = entity;
+                    outEntity = ECS::World.entity(entityId);
                     return true;
                 }
             }
@@ -169,6 +186,7 @@ namespace Waldem
             NoCullingDrawIdFreeList.Clear();
             RTXInstanceIdFreeList.Clear();
             ParticleSystemIdFreeList.Clear();
+            EditorIconDrawIdFreeList.Clear();
         }
     };
 }
