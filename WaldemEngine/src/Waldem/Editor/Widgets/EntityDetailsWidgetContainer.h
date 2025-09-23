@@ -63,7 +63,7 @@ namespace Waldem
                             {
                                 if (ImGui::Selectable(compName, false))
                                 {
-									entity.add(comp);
+                                	entity.add(comp);
                                 	
 									ImGui::CloseCurrentPopup();
                                 }

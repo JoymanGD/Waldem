@@ -8,6 +8,6 @@ namespace Waldem
     public:
         virtual ~IImporter() = default;
         
-        virtual WArray<Asset*> Import(const Path& from, Path& to, bool relative = true) = 0;
+        virtual WArray<Asset*> ImportTo(const Path& from, const Path& to, bool relative = true) = 0;
     };
 }

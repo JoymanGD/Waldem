@@ -12,6 +12,6 @@ namespace Waldem
     public:
         virtual ~CImageImporter() override = default;
 
-        WArray<Asset*> Import(const Path& from, Path& to, bool relative = true) override;
+        WArray<Asset*> ImportTo(const Path& from, const Path& to, bool relative = true) override;
     };
 }

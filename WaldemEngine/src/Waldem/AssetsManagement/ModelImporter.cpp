@@ -124,7 +124,7 @@ namespace Waldem
         return new Material(materialName, diffuseRef, normalRef, metalRoughnessRef, albedo, roughness, metallic);
     }
 
-    WArray<Asset*> CModelImporter::Import(const Path& from, Path& to, bool relative)
+    WArray<Asset*> CModelImporter::ImportTo(const Path& from, const Path& to, bool relative)
     {
         WArray<Asset*> assets;
         

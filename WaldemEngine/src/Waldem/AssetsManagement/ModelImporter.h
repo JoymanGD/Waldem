@@ -55,7 +55,7 @@ namespace Waldem
         CModelImporter() = default;
         ~CModelImporter() override = default;
 
-        WArray<Asset*> Import(const Path& from, Path& to, bool relative = true) override;
+        WArray<Asset*> ImportTo(const Path& from, const Path& to, bool relative = true) override;
 
     protected:
         const aiScene* ImportInternal(const Path& path, ModelImportFlags importFlags = ModelImportFlags::None, bool relative = true);

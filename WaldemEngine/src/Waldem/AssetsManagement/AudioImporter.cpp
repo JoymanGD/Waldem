@@ -32,7 +32,7 @@ namespace Waldem
         return path;
     }
 
-    WArray<Asset*> CAudioImporter::Import(const Path& from, Path& to, bool relative)
+    WArray<Asset*> CAudioImporter::ImportTo(const Path& from, const Path& to, bool relative)
     {
         WArray<Asset*> assets;
         

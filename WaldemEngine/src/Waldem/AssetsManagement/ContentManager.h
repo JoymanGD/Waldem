@@ -14,7 +14,7 @@ namespace Waldem
     {
     public:
         static bool ImportTo(const Path& from, Path& to);
-        
+
         template <class T>
         static T* LoadAsset(const Path& inPath)
         {

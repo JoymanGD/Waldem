@@ -22,7 +22,7 @@ struct PS_OUTPUT
     float4 NormalRT : SV_TARGET1;
     float4 ColorRT : SV_TARGET2;
     float4 ORM : SV_TARGET3;
-    int MeshIDRT : SV_TARGET4;
+    int2 MeshIDRT : SV_TARGET4;
 };
 
 SamplerState myStaticSampler : register(s0);
@@ -79,6 +79,7 @@ PS_OUTPUT main(PS_INPUT input)
     output.NormalRT = normalize(mul(worldTransforms[MeshId], normal));
     output.WorldPositionRT = input.WorldPosition;
     output.ORM = orm;
-    output.MeshIDRT = MeshId+1;
+    output.MeshIDRT.r = 1;
+    output.MeshIDRT.g = MeshId+1;
     return output;
 }
