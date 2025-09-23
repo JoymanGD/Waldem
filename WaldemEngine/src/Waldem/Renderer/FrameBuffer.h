@@ -38,7 +38,7 @@ namespace Waldem
             for (int i = 0; i < Size; ++i)
             {
                 postfix = "_FrameBuffer_" + std::to_string(i);
-                RenderTargets[i] = Renderer::CreateRenderTarget(name + postfix, resolution.x, resolution.y, TextureFormat::R16G16B16A16_FLOAT);
+                RenderTargets[i] = Renderer::CreateRenderTarget(name + postfix, resolution.x, resolution.y, TextureFormat::R8G8B8A8_UNORM);
             }
 
             Depth = Renderer::CreateRenderTarget(name + "_Depth", resolution.x, resolution.y, TextureFormat::D32_FLOAT);
@@ -73,7 +73,7 @@ namespace Waldem
             {
                 auto name = RenderTargets[i]->GetName();
                 Renderer::DestroyImmediate(RenderTargets[i]);
-                RenderTargets[i] = Renderer::CreateRenderTarget(name, size.x, size.y, TextureFormat::R16G16B16A16_FLOAT);
+                RenderTargets[i] = Renderer::CreateRenderTarget(name, size.x, size.y, TextureFormat::R8G8B8A8_UNORM);
             }
             
             auto name = Depth->GetName();
