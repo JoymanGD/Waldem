@@ -18,7 +18,8 @@ namespace Waldem
         Radiance = 7,
         Reflection = 8,
         SkyColor = 9,
-        PostProcess = 10
+        Ping = 10,
+        Pong = 11,
     };
 
     struct SGBuffer
@@ -33,7 +34,8 @@ namespace Waldem
         RenderTarget* RadianceRT = nullptr;
         RenderTarget* ReflectionRT = nullptr;
         RenderTarget* SkyColorRT = nullptr;
-        RenderTarget* PostProcessRT = nullptr;
+        RenderTarget* PingRT = nullptr;
+        RenderTarget* PongRT = nullptr;
 
         SGBuffer(Vector2 size)
         {
@@ -47,7 +49,8 @@ namespace Waldem
             RadianceRT = Renderer::CreateRenderTarget("RadianceRT", size.x, size.y, GetFormat(GBufferRenderTarget::Radiance));
             ReflectionRT = Renderer::CreateRenderTarget("ReflectionRT", size.x, size.y, GetFormat(GBufferRenderTarget::Reflection));
             SkyColorRT = Renderer::CreateRenderTarget("SkyColorRT", size.x, size.y, GetFormat(GBufferRenderTarget::SkyColor));
-            PostProcessRT = Renderer::CreateRenderTarget("PostProcessRT", size.x, size.y, GetFormat(GBufferRenderTarget::PostProcess));
+            PingRT = Renderer::CreateRenderTarget("PingRT", size.x, size.y, GetFormat(GBufferRenderTarget::Ping));
+            PongRT = Renderer::CreateRenderTarget("PongRT", size.x, size.y, GetFormat(GBufferRenderTarget::Pong));
         }
 
         RenderTarget* GetRenderTarget(GBufferRenderTarget rt)
@@ -74,8 +77,10 @@ namespace Waldem
                 return ReflectionRT;
             case GBufferRenderTarget::SkyColor:
                 return SkyColorRT;
-            case GBufferRenderTarget::PostProcess:
-                return PostProcessRT;
+            case GBufferRenderTarget::Ping:
+                return PingRT;
+            case GBufferRenderTarget::Pong:
+                return PongRT;
             default: return nullptr;
             }
         }
@@ -92,7 +97,8 @@ namespace Waldem
             Renderer::ResizeRenderTarget(RadianceRT, size.x, size.y);
             Renderer::ResizeRenderTarget(ReflectionRT, size.x, size.y);
             Renderer::ResizeRenderTarget(SkyColorRT, size.x, size.y);
-            Renderer::ResizeRenderTarget(PostProcessRT, size.x, size.y);
+            Renderer::ResizeRenderTarget(PingRT, size.x, size.y);
+            Renderer::ResizeRenderTarget(PongRT, size.x, size.y);
         }
 
         void Clear()
@@ -108,7 +114,8 @@ namespace Waldem
                 GBufferRenderTarget::Radiance,
                 GBufferRenderTarget::Reflection,
                 GBufferRenderTarget::SkyColor,
-                GBufferRenderTarget::PostProcess
+                GBufferRenderTarget::Ping,
+                GBufferRenderTarget::Pong
             };
             Clear(rts);
         }
@@ -152,7 +159,7 @@ namespace Waldem
         {
             switch (rt)
             {
-                case GBufferRenderTarget::Deferred: return TextureFormat::R8G8B8A8_UNORM;
+                case GBufferRenderTarget::Deferred: return TextureFormat::R16G16B16A16_FLOAT;
                 case GBufferRenderTarget::WorldPosition: return TextureFormat::R32G32B32A32_FLOAT;
                 case GBufferRenderTarget::Normal: return TextureFormat::R16G16B16A16_FLOAT;
                 case GBufferRenderTarget::Color: return TextureFormat::R8G8B8A8_UNORM;
@@ -162,14 +169,15 @@ namespace Waldem
                 case GBufferRenderTarget::Radiance: return TextureFormat::R32G32B32A32_FLOAT;
                 case GBufferRenderTarget::Reflection: return TextureFormat::R32G32B32A32_FLOAT;
                 case GBufferRenderTarget::SkyColor: return TextureFormat::R8G8B8A8_UNORM;
-                case GBufferRenderTarget::PostProcess: return TextureFormat::R8G8B8A8_UNORM;
+                case GBufferRenderTarget::Ping: return TextureFormat::R16G16B16A16_FLOAT;
+                case GBufferRenderTarget::Pong: return TextureFormat::R16G16B16A16_FLOAT;
                 default: return TextureFormat::UNKNOWN;
             }
         }
 
         static WArray<TextureFormat> GetFormats()
         {
-            return { TextureFormat::R8G8B8A8_UNORM, TextureFormat::R32G32B32A32_FLOAT, TextureFormat::R16G16B16A16_FLOAT, TextureFormat::R8G8B8A8_UNORM, TextureFormat::R32G32B32A32_FLOAT, TextureFormat::R16G16_SINT, TextureFormat::D32_FLOAT, TextureFormat::R32G32B32A32_FLOAT, TextureFormat::R32G32B32A32_FLOAT, TextureFormat::R8G8B8A8_UNORM, TextureFormat::R8G8B8A8_UNORM };
+            return { TextureFormat::R16G16B16A16_FLOAT, TextureFormat::R32G32B32A32_FLOAT, TextureFormat::R16G16B16A16_FLOAT, TextureFormat::R8G8B8A8_UNORM, TextureFormat::R32G32B32A32_FLOAT, TextureFormat::R16G16_SINT, TextureFormat::D32_FLOAT, TextureFormat::R32G32B32A32_FLOAT, TextureFormat::R32G32B32A32_FLOAT, TextureFormat::R8G8B8A8_UNORM, TextureFormat::R16G16B16A16_FLOAT, TextureFormat::R16G16B16A16_FLOAT };
         }
     };
 }

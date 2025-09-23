@@ -1,59 +1,76 @@
-SamplerState myStaticSampler : register(s0);
-
-Texture2D DeferredRT : register(t0);
-RWTexture2D<float4> PostProcess : register(u0);
-
-cbuffer MyConstantBuffer : register(b0)
+struct BloomPostProcess
 {
-    float2 Resolution;
+    float BrightThreshold;
+    float BloomIntensity;
 };
 
-cbuffer BloomParams : register(b1)
+cbuffer RootConstants : register(b0)
 {
-    float BrightThreshold;  // Brightness threshold
-    float BloomIntensity;   // Intensity of the bloom effect
-    float2 TexelSize;       // Size of one pixel in texture coordinates
-};
-
-float4 BloomEffect(float2 uv)
-{
-    // 1. Bright Pass: Extract bright regions
-    float4 color = DeferredRT.SampleLevel(myStaticSampler, uv, 0);
-    float brightness = max(max(color.r, color.g), color.b);
-    float4 brightColor = brightness > BrightThreshold ? color : float4(0, 0, 0, 0);
-
-    // 2. Gaussian Blur (dual filtering)
-    float4 blurredColor = float4(0, 0, 0, 0);
-    float weights[10] = { 0.227, 0.194, 0.121, 0.054, 0.016, 0.009, 0.004, 0.002, 0.001, 0.0005 };
-    // float weights[5] = { 0.227, 0.194, 0.121, 0.054, 0.016 };
-
-    // Horizontal and Vertical blur in one pass
-    for (int i = 0; i < 10; ++i)
-    {
-        float2 offsetH = float2(TexelSize.x * (float)i, 0);
-        float2 offsetV = float2(0, TexelSize.y * (float)i);
-
-        blurredColor += DeferredRT.SampleLevel(myStaticSampler, uv + offsetH, 0) * weights[i];
-        blurredColor += DeferredRT.SampleLevel(myStaticSampler, uv - offsetH, 0) * weights[i];
-        blurredColor += DeferredRT.SampleLevel(myStaticSampler, uv + offsetV, 0) * weights[i];
-        blurredColor += DeferredRT.SampleLevel(myStaticSampler, uv - offsetV, 0) * weights[i];
-    }
-    
-    float4 bloom = brightColor * blurredColor * BloomIntensity;
-
-    return bloom;
+    uint SrcRTID;
+    uint DstRTID;
+    uint BloomParamsBuffer;
+    uint BlurDirection;
 }
 
-[numthreads(8, 8, 1)]
+// Bright-pass extraction
+float4 BrightPass(int2 tid, Texture2D src, float threshold)
+{
+    float4 c = src.Load(uint3(tid, 0));
+    float brightness = max(max(c.r, c.g), c.b);
+    return (brightness > threshold) ? c : float4(0,0,0,0);
+}
+
+// Separable blur (horizontal or vertical)
+float4 BlurPass(int2 tid, Texture2D src, uint dir)
+{
+    float weights[10] = {
+        0.227, 0.194, 0.121, 0.054, 0.016,
+        0.009, 0.004, 0.002, 0.001, 0.0005
+    };
+
+    float4 blurred = float4(0,0,0,0);
+
+    for (int i = 0; i < 10; ++i)
+    {
+        int2 offset = (dir == 1) ? int2(i, 0) : int2(0, i);
+
+        float4 c0 = src.Load(uint3(tid + offset, 0));
+        float4 c1 = (i > 0) ? src.Load(uint3(tid - offset, 0)) : float4(0,0,0,0);
+
+        blurred += (c0 + c1) * weights[i];
+    }
+    return blurred;
+}
+
+[numthreads(8,8,1)]
 void main(uint2 tid : SV_DispatchThreadID)
 {
-    float2 UV = (float2)tid / Resolution;
-    
-    // Compute the bloom effect
-    float4 bloom = BloomEffect(UV);
-    // Combine bloom with the original scene
-    float4 originalColor = DeferredRT.SampleLevel(myStaticSampler, UV, 0);
-    float4 finalColor = originalColor + bloom;
-    //Writing the result to the render target
-    PostProcess[tid] = finalColor;
+    Texture2D src = ResourceDescriptorHeap[SrcRTID];
+    RWTexture2D<float4> dst = ResourceDescriptorHeap[DstRTID];
+    StructuredBuffer<BloomPostProcess> bloomParamsBuffer = ResourceDescriptorHeap[BloomParamsBuffer];
+    BloomPostProcess bloomParams = bloomParamsBuffer[0];
+
+    float4 result = float4(0,0,0,1);
+
+    if (BlurDirection == 0) // bright-pass
+    {
+        result = BrightPass(tid, src, bloomParams.BrightThreshold);
+    }
+    else if (BlurDirection == 1) // horizontal blur
+    {
+        result = BlurPass(tid, src, 1);
+    }
+    else if (BlurDirection == 2) // vertical blur
+    {
+        result = BlurPass(tid, src, 2) * bloomParams.BloomIntensity;
+    }
+    else if (BlurDirection == 3) // final composite
+    {
+        float4 original = dst.Load(uint3(tid, 0));
+        float4 bloom = src.Load(uint3(tid, 0));
+        result = original + bloom;
+        result.a = 1.0;
+    }
+
+    dst[tid] = result;
 }
