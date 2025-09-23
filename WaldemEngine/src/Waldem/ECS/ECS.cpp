@@ -77,9 +77,9 @@ namespace Waldem
             Systems.Add(new AnimationSystem());
             Systems.Add(new HybridRenderingSystem());
             Systems.Add(new WorldGridRenderingSystem());
-            Systems.Add(new GizmosRenderingSystem());
             Systems.Add(new ParticleSystem());
             Systems.Add(new PostProcessSystem());
+            Systems.Add(new GizmosRenderingSystem());
             Systems.Add(new ScreenQuadSystem());
         }
 
@@ -217,7 +217,7 @@ namespace Waldem
             Selected::RegisterComponent(World);
             ParticleSystemComponent::RegisterComponent(World);
             PlayerController::RegisterComponent(World);
-            BloomPostProcess::RegisterComponent(World);
+            PostProcessComponent::RegisterComponent(World);
         }
 
         Entity CreateEntity(const WString& name, bool enabled)

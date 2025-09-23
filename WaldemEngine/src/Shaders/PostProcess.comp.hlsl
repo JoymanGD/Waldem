@@ -1,15 +1,17 @@
-struct BloomPostProcess
+struct PostProcess
 {
     float BrightThreshold;
     float BloomIntensity;
+    float Exposure;
+    float Saturation;
 };
 
 cbuffer RootConstants : register(b0)
 {
     uint SrcRTID;
     uint DstRTID;
-    uint BloomParamsBuffer;
-    uint BlurDirection;
+    uint PostProcessParamsBuffer;
+    uint Stage;
 }
 
 // Bright-pass extraction
@@ -42,34 +44,67 @@ float4 BlurPass(int2 tid, Texture2D src, uint dir)
     return blurred;
 }
 
+float3 TonemapACES(float3 x)
+{
+    const float a = 2.51;
+    const float b = 0.03;
+    const float c = 2.43;
+    const float d = 0.59;
+    const float e = 0.14;
+    return saturate((x*(a*x+b))/(x*(c*x+d)+e));
+}
+
+float3 AdjustSaturation(float3 color, float saturation)
+{
+    float gray = dot(color, float3(0.299, 0.587, 0.114)); // luminance
+    return lerp(gray.xxx, color, saturation);
+}
+
 [numthreads(8,8,1)]
 void main(uint2 tid : SV_DispatchThreadID)
 {
     Texture2D src = ResourceDescriptorHeap[SrcRTID];
     RWTexture2D<float4> dst = ResourceDescriptorHeap[DstRTID];
-    StructuredBuffer<BloomPostProcess> bloomParamsBuffer = ResourceDescriptorHeap[BloomParamsBuffer];
-    BloomPostProcess bloomParams = bloomParamsBuffer[0];
+    StructuredBuffer<PostProcess> postProcessParamsBuffer = ResourceDescriptorHeap[PostProcessParamsBuffer];
+    PostProcess postProcessParams = postProcessParamsBuffer[0];
 
     float4 result = float4(0,0,0,1);
 
-    if (BlurDirection == 0) // bright-pass
+    if (Stage == 0) // copy
     {
-        result = BrightPass(tid, src, bloomParams.BrightThreshold);
+        result = src.Load(uint3(tid, 0));
     }
-    else if (BlurDirection == 1) // horizontal blur
+    else if (Stage == 1) // bright-pass
+    {
+        result = BrightPass(tid, src, postProcessParams.BrightThreshold);
+    }
+    else if (Stage == 2) // horizontal blur
     {
         result = BlurPass(tid, src, 1);
     }
-    else if (BlurDirection == 2) // vertical blur
+    else if (Stage == 3) // vertical blur
     {
-        result = BlurPass(tid, src, 2) * bloomParams.BloomIntensity;
+        result = BlurPass(tid, src, 2);
     }
-    else if (BlurDirection == 3) // final composite
+    else if (Stage == 4) // final composite
     {
-        float4 original = dst.Load(uint3(tid, 0));
         float4 bloom = src.Load(uint3(tid, 0));
-        result = original + bloom;
+        float4 scene = dst.Load(uint3(tid, 0));
+        result = scene + bloom * postProcessParams.BloomIntensity;
         result.a = 1.0;
+    }
+    else if (Stage == 5) // tonemap
+    {
+        float3 hdr = src.Load(uint3(tid, 0)).rgb;
+
+        hdr *= postProcessParams.Exposure;
+
+        float3 ldr = TonemapACES(hdr);
+
+        ldr = pow(ldr, 1.0/2.2); // gamma correction
+        ldr = AdjustSaturation(ldr, postProcessParams.Saturation); // e.g. boost by 20%
+
+        result = float4(ldr, 1.0);
     }
 
     dst[tid] = result;
