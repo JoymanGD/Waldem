@@ -55,28 +55,21 @@ namespace Waldem
                 
                 if(viewport->TryGetLinkedCamera(linkedCamera))
                 {
-                    viewport->GetGBuffer()->Clear({ PostProcess, Ping, Pong });
+                    viewport->GetGBuffer()->Clear({ Ping, Pong });
                     
                     auto deferredRT = viewport->GetGBufferRenderTarget(Deferred);
-                    auto postProcessRT = viewport->GetGBufferRenderTarget(PostProcess);
                     auto pingRT = viewport->GetGBufferRenderTarget(Ping);
                     auto pongRT = viewport->GetGBufferRenderTarget(Pong);
                     
-                    Vector2 resolution = Vector2(postProcessRT->GetWidth(), postProcessRT->GetHeight());
+                    Vector2 resolution = Vector2(deferredRT->GetWidth(), deferredRT->GetHeight());
                     Point3 numThreads = Renderer::GetNumThreadsPerGroup(PostProcessComputeShader);
                     auto groupCount = Point3((resolution.x + numThreads.x - 1) / numThreads.x, (resolution.y + numThreads.y - 1) / numThreads.y, 1);
                     
                     Renderer::ResourceBarrier(pingRT, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
                     Renderer::ResourceBarrier(pongRT, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
                     Renderer::ResourceBarrier(deferredRT, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
-                    Renderer::ResourceBarrier(postProcessRT, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
                     Renderer::SetPipeline(PostProcessPipeline);
                     RootConstants.SrcRT = deferredRT->GetIndex(SRV_CBV);
-                    RootConstants.DstRT = postProcessRT->GetIndex(SRV_CBV);
-                    RootConstants.Stage = 0; // Copy
-                    Renderer::PushConstants(&RootConstants, sizeof(PostProcessRootConstants));
-                    Renderer::Compute(groupCount);
-                    RootConstants.SrcRT = postProcessRT->GetIndex(SRV_CBV);
                     RootConstants.DstRT = pingRT->GetIndex(SRV_CBV);
                     RootConstants.Stage = 1; // Bright pass
                     Renderer::PushConstants(&RootConstants, sizeof(PostProcessRootConstants));
@@ -92,18 +85,17 @@ namespace Waldem
                     Renderer::PushConstants(&RootConstants, sizeof(PostProcessRootConstants));
                     Renderer::Compute(groupCount);
                     RootConstants.SrcRT = pingRT->GetIndex(SRV_CBV);
-                    RootConstants.DstRT = postProcessRT->GetIndex(SRV_CBV);
+                    RootConstants.DstRT = deferredRT->GetIndex(SRV_CBV);
                     RootConstants.Stage = 4; // Composite
                     Renderer::PushConstants(&RootConstants, sizeof(PostProcessRootConstants));
                     Renderer::Compute(groupCount);
-                    RootConstants.SrcRT = postProcessRT->GetIndex(SRV_CBV);
+                    RootConstants.SrcRT = deferredRT->GetIndex(SRV_CBV);
                     RootConstants.DstRT = deferredRT->GetIndex(SRV_CBV);
                     RootConstants.Stage = 5; // Tonemapping
                     Renderer::PushConstants(&RootConstants, sizeof(PostProcessRootConstants));
                     Renderer::Compute(groupCount);
                     Renderer::ResourceBarrier(pingRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
                     Renderer::ResourceBarrier(pongRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
-                    Renderer::ResourceBarrier(postProcessRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
                     Renderer::ResourceBarrier(deferredRT, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
                 }
             });

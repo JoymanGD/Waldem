@@ -171,7 +171,7 @@ namespace Waldem
             SkyPixelShader = Renderer::LoadPixelShader("Sky");
             SkyPipeline = Renderer::CreateGraphicPipeline("SkyPipeline",
                                                             SkyPixelShader,
-                                                            { TextureFormat::R8G8B8A8_UNORM },
+                                                            { SGBuffer::GetFormat(SkyColor) },
                                                             TextureFormat::UNKNOWN,
                                                             DEFAULT_RASTERIZER_DESC,
                                                             DEFAULT_DEPTH_STENCIL_DESC,
