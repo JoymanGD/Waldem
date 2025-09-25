@@ -1,7 +1,5 @@
 WALDEM ENGINE
 
-![image](https://github.com/JoymanGD/Waldem/blob/master/img.png?raw=true)
-
 Architecture:
 * ECS
 * Cross Render API (DirectX)
