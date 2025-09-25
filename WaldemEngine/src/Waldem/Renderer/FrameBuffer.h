@@ -71,15 +71,10 @@ namespace Waldem
         {
             for (int i = 0; i < Size; ++i)
             {
-                auto name = RenderTargets[i]->GetName();
-                Renderer::DestroyImmediate(RenderTargets[i]);
-                RenderTargets[i] = Renderer::CreateRenderTarget(name, size.x, size.y, TextureFormat::R8G8B8A8_UNORM);
+                Renderer::ResizeRenderTarget(RenderTargets[i], size.x, size.y);
             }
             
-            auto name = Depth->GetName();
-
-            Renderer::DestroyImmediate(Depth);
-            Depth = Renderer::CreateRenderTarget(name, size.x, size.y, TextureFormat::D32_FLOAT);
+            Renderer::ResizeRenderTarget(Depth, size.x, size.y);
         }
 
         void Destroy()

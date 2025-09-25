@@ -44,9 +44,11 @@ namespace Waldem
 		ECS.Initialize();
 
 		//Layers
+	#ifdef WD_EDITOR
 		Editor = new EditorLayer(Window);
 		PushOverlay(Editor);
-		
+	#endif
+
 		Game = new GameLayer(Window);
 		PushLayer(Game);
 
@@ -60,13 +62,11 @@ namespace Waldem
 
 	void Engine::InitializeLayers()
 	{
-#ifdef WD_EDITOR
+	#ifdef WD_EDITOR
 		Editor->Initialize();
-#endif
+	#endif
 		
-#ifdef WD_GAME
 		Game->Initialize();
-#endif
 		
 		// Debug->Initialize(&sceneData);
 	}
@@ -155,7 +155,7 @@ namespace Waldem
 			}
 
 			ECS::RunUpdatePipeline(Time::DeltaTime);
-
+			
 			ViewportManager::ForEach([](SViewport* viewport)
 			{
 				Renderer::Begin(viewport);

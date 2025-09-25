@@ -42,6 +42,7 @@ namespace Waldem
     public:
         EditorLayer(CWindow* window) : Layer("EditorLayer", window)
         {
+            ViewportManager::CreateViewport(Editor, "Editor", Vector2(0, 0), Vector2(1920, 1080), Vector2(0, 1), 1);
             InputManager = {};
             
             Vector2 size = { 1920, 1080 };

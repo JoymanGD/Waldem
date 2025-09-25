@@ -201,26 +201,9 @@ namespace Waldem
         Instance->PlatformRenderer->InitializeRenderTarget(name, width, height, format, renderTarget);
     }
 
-    RenderTarget* Renderer::ResizeRenderTarget(WString name, int width, int height)
+    void Renderer::ResizeRenderTarget(RenderTarget*& renderTarget, int width, int height)
     {
-        auto renderTarget = RenderTargets[name];
-
-        ResizeRenderTarget(renderTarget, width, height);
-
-        return renderTarget;
-    }
-
-    void Renderer::ResizeRenderTarget(RenderTarget* renderTarget, int width, int height)
-    {
-        if(renderTarget)
-        {
-            auto format = renderTarget->GetFormat();
-            auto name = renderTarget->GetName();
-            
-            DestroyImmediate(renderTarget);
-            
-            InitializeRenderTarget(name, width, height, format, renderTarget);
-        }
+        Instance->PlatformRenderer->ResizeRenderTarget(renderTarget, width, height);
     }
 
     AccelerationStructure* Renderer::CreateBLAS(WString name, WArray<RayTracingGeometry>& geometries)

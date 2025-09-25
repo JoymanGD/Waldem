@@ -56,6 +56,7 @@ namespace Waldem
         virtual Texture3D* CreateTexture3D(WString name, int width, int height, int depth, TextureFormat format, uint8_t* data = nullptr) = 0;
         virtual RenderTarget* CreateRenderTarget(WString name, int width, int height, TextureFormat format) = 0;
         virtual void InitializeRenderTarget(WString name, int width, int height, TextureFormat format, RenderTarget*& renderTarget) = 0;
+        virtual void ResizeRenderTarget(RenderTarget*& renderTarget, int width, int height) = 0;
         virtual AccelerationStructure* CreateBLAS(WString name, WArray<RayTracingGeometry>& geometries) = 0;
         virtual AccelerationStructure* CreateTLAS(WString name, Buffer* instanceBuffer, uint numInstances) = 0;
         virtual void InitializeTLAS(WString name, Buffer* instanceBuffer, uint numInstances, AccelerationStructure*& tlas) = 0;
@@ -122,8 +123,7 @@ namespace Waldem
         static Texture3D* CreateTexture3D(WString name, int width, int height, int depth, TextureFormat format, uint8_t* data = nullptr);
         static RenderTarget* CreateRenderTarget(WString name, int width, int height, TextureFormat format);
         static void InitializeRenderTarget(WString name, int width, int height, TextureFormat format, RenderTarget*& renderTarget);
-        static RenderTarget* ResizeRenderTarget(WString name, int width, int height);
-        static void ResizeRenderTarget(RenderTarget* renderTarget, int width, int height);
+        static void ResizeRenderTarget(RenderTarget*& renderTarget, int width, int height);
         static RenderTarget* GetRenderTarget(WString name) { return RenderTargets[name]; }
         static AccelerationStructure* CreateBLAS(WString name, WArray<RayTracingGeometry>& geometries);
         static AccelerationStructure* CreateTLAS(WString name, Buffer* instanceBuffer, uint numInstances);
