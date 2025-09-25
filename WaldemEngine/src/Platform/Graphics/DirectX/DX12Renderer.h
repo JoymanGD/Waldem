@@ -58,6 +58,7 @@ namespace Waldem
         Texture3D* CreateTexture3D(WString name, int width, int height, int depth, TextureFormat format, uint8_t* data = nullptr) override;
         RenderTarget* CreateRenderTarget(WString name, int width, int height, TextureFormat format) override;
         void InitializeRenderTarget(WString name, int width, int height, TextureFormat format, RenderTarget*& renderTarget) override;
+        void ResizeRenderTarget(RenderTarget*& renderTarget, int width, int height) override;
         Buffer* CreateBuffer(WString name, BufferType type, uint32_t size, uint32_t stride, void* data, size_t dataSize) override;
         void InitializeBuffer(WString name, BufferType type, uint32_t size, uint32_t stride, Buffer*& buffer, void* data, size_t dataSize) override;
         AccelerationStructure* CreateBLAS(WString name, WArray<RayTracingGeometry>& geometries) override;
@@ -86,8 +87,6 @@ namespace Waldem
         RenderTarget* CreateRenderTarget(WString name, int width, int height, TextureFormat format, ID3D12DescriptorHeap* externalHeap, uint slot);
         RenderTarget* CreateRenderTarget(WString name, int width, int height, TextureFormat format, ID3D12Resource* resource);
         void SetRenderTargets();
-        void ResizeEditorViewport(Vector2 size);
-        void ResizeGameViewport(Vector2 size);
 
         CWindow* CurrentWindow = nullptr;
 
@@ -115,9 +114,6 @@ namespace Waldem
         UINT64 SecondaryWaitFenceValue = 0;
 
         WArray<ID3D12Resource*> ResourcesToDestroy;
-
-        //ImGui
-        ID3D12DescriptorHeap* ImGuiHeap = nullptr;
 
         //bindless
         WMap<GraphicResource*, ID3D12Resource*> ResourceMap;

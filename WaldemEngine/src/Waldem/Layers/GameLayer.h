@@ -13,6 +13,7 @@ namespace Waldem
 	public:
 		GameLayer(CWindow* window) : Layer("GameLayer", window)
 		{
+			ViewportManager::CreateViewport(Game, "Game", Vector2(0, 0), Vector2(1920, 1080), Vector2(0, 1), 1);
 			InputManager = {};
 
 			UpdateSystems.Add(new PlayerControllerSystem());

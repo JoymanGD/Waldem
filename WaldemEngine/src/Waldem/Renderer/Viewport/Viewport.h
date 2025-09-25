@@ -118,6 +118,7 @@ namespace Waldem
 
             if(GBuffer)
             {
+                FrameBuffer->Resize(size);
                 GBuffer->Resize(size);
             }
             
