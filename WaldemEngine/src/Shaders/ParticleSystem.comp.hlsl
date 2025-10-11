@@ -2,18 +2,14 @@ cbuffer RootConstants : register(b0)
 {
     uint WorldTransformsBufferID;
     uint SceneDataBufferID;
-    uint ParticlesBufferID;
-    uint ParticleSystemDataBufferID;
     float DeltaTime;
-};
-
-struct ParticleSystemData
-{
+    uint ParticleBuffersIndicesBufferID;
     float4 Color;
     float3 Size;
-    uint ParticlesCount;
+    uint ParticlesAmount;
     float3 Acceleration;
     float Lifetime;
+    uint BufferId;
 };
 
 struct Particle
@@ -22,9 +18,9 @@ struct Particle
     float3 BasePosition;
     float Padding1;
     float3 Position;
-    float  Lifetime;
+    float Lifetime;
     float3 Velocity;
-    float  Age;
+    float Age;
 };
 
 float rand(uint seed)
@@ -36,13 +32,12 @@ float rand(uint seed)
 [numthreads(32, 1, 1)]
 void main(uint3 tid : SV_DispatchThreadID)
 {
-    RWStructuredBuffer<Particle> particles = ResourceDescriptorHeap[ParticlesBufferID];
-    StructuredBuffer<ParticleSystemData> particleSystemDataBuffer = ResourceDescriptorHeap[ParticleSystemDataBufferID];
-    ParticleSystemData psData = particleSystemDataBuffer[0];
+    RWStructuredBuffer<Particle> particles = ResourceDescriptorHeap[BufferId];
 
     uint id = tid.x;
-    if (id >= psData.ParticlesCount) return;
-
+    
+    if (id >= ParticlesAmount) return;
+    
     Particle p = particles[id];
 
     p.Age += DeltaTime;
@@ -55,18 +50,18 @@ void main(uint3 tid : SV_DispatchThreadID)
             abs(rand(id * 97)) * 2.0f,
             (rand(id * 31) - 0.5f) * 2.0f
         );
-        p.Lifetime = psData.Lifetime * (0.5f + rand(id * 7));
+        p.Lifetime = Lifetime * (0.5f + rand(id * 7));
         p.Age = 0.0f;
     }
     else
     {
-        p.Velocity += psData.Acceleration * DeltaTime;
+        p.Velocity += Acceleration * DeltaTime;
         p.BasePosition += p.Velocity * DeltaTime;
     }
 
     p.Position = p.BasePosition;
 
-    p.Color = psData.Color;
+    p.Color = Color;
 
     particles[id] = p;
 }

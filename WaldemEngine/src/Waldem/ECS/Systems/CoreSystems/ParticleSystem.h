@@ -8,6 +8,7 @@
 #include "Waldem/Renderer/Renderer.h"
 #include "Waldem/Renderer/ResizableBuffer.h"
 #include "Waldem/Renderer/Shader.h"
+#include "Waldem/Types/RangeFreeList.h"
 
 namespace Waldem
 {
@@ -21,9 +22,14 @@ namespace Waldem
     {
         uint WorldTransformsBufferID;
         uint SceneBufferID;
-        uint ParticlesBufferID;
-        uint ParticlesSystemDataBufferID;
         float DeltaTime;
+        uint ParticleBuffersIndicesBufferID;
+        Vector4 Color;
+        Vector3 Size;
+        uint ParticlesAmount;
+        Vector3 Acceleration;
+        float Lifetime;
+        uint BufferId;
     };
 
     struct Particle
@@ -32,9 +38,9 @@ namespace Waldem
         Vector3 BasePosition;
         float Padding1;
         Vector3 Position;
-        float  Lifetime;
+        float Lifetime;
         Vector3 Velocity;
-        float  Age;
+        float Age;
     };
     
     class WALDEM_API ParticleSystem : public ICoreSystem
@@ -51,14 +57,12 @@ namespace Waldem
         ResizableBuffer VertexBuffer;
         ResizableBuffer IndexBuffer;
         ResizableBuffer WorldTransformsBuffer;
-        ResizableBuffer ParticlesPositionsBuffer;
         WArray<Vertex> Vertices;
         WArray<uint> Indices;
-        WArray<Particle> Particles;
-        ResizableBuffer ParticlesBuffer;
+        WMap<uint, ResizableBuffer> ParticleBuffersMap;
         ParticleSystemSceneData SceneData;
         Buffer* SceneDataBuffer = nullptr;
-        Buffer* ParticlesSystemDataBuffer = nullptr;
+        ResizableBuffer ParticleBuffersIndicesBuffer;
         
     public:
         ParticleSystem() {}
@@ -85,11 +89,10 @@ namespace Waldem
 
             VertexBuffer = ResizableBuffer("ParticleVertexBuffer", BufferType::VertexBuffer, sizeof(Vertex), sizeof(Vertex));
             IndexBuffer = ResizableBuffer("ParticleIndexBuffer", BufferType::IndexBuffer, sizeof(uint), sizeof(uint));
-            ParticlesBuffer = ResizableBuffer("ParticlesBuffer", BufferType::StorageBuffer, sizeof(Particle), 1000);
             WorldTransformsBuffer = ResizableBuffer("ParticlesTransformsBuffer", BufferType::StorageBuffer, sizeof(Matrix4), 1000);
             IndirectBuffer = ResizableBuffer("ParticleIndirectBuffer", BufferType::IndirectBuffer, sizeof(IndirectCommand), 1000);
             SceneDataBuffer = Renderer::CreateBuffer("ParticleSceneDataBuffer", BufferType::StorageBuffer, sizeof(ParticleSystemSceneData), sizeof(ParticleSystemSceneData), &SceneData);
-            ParticlesSystemDataBuffer = Renderer::CreateBuffer("ParticlesSystemDataBuffer", BufferType::StorageBuffer, sizeof(ParticleSystemComponent), sizeof(ParticleSystemComponent), nullptr);
+            ParticleBuffersIndicesBuffer = ResizableBuffer("ParticleBuffersIndicesBuffer", BufferType::StorageBuffer, sizeof(uint), 20);
             
             Vertices =
             {
@@ -112,6 +115,9 @@ namespace Waldem
                     IndirectBuffer.UpdateOrAdd(nullptr, sizeof(IndirectCommand), particleSystemId * sizeof(IndirectCommand));
                 }
                 
+                ParticleBuffersMap[(uint)particleSystemId] = ResizableBuffer(WString("ParticlesBuffer_") + std::to_string(particleSystemId), BufferType::StorageBuffer, sizeof(Particle), 1000 * sizeof(Particle));
+                auto index = ParticleBuffersMap[(uint)particleSystemId].GetIndex(SRV_CBV);
+                ParticleBuffersIndicesBuffer.UpdateOrAdd(&index, sizeof(uint), particleSystemId * sizeof(uint));
                 WorldTransformsBuffer.UpdateOrAdd(&transform.Matrix, sizeof(Matrix4), particleSystemId * sizeof(Matrix4));
             });
 
@@ -137,7 +143,17 @@ namespace Waldem
                         IndirectBuffer.UpdateData(&command, sizeof(IndirectCommand), sizeof(IndirectCommand) * particleSystemId);
                     }
 
-                    ParticlesBuffer.UpdateOrAdd(nullptr, sizeof(Particle) * particleSystem.ParticlesAmount, sizeof(Particle) * particleSystemId);
+                    auto& buffer = ParticleBuffersMap[(uint)particleSystemId];
+                    if(particleSystem.BufferId != buffer.GetIndex(SRV_CBV))
+                    {
+                        particleSystem.BufferId = buffer.GetIndex(SRV_CBV);
+                    }
+
+                    if(buffer.Size != sizeof(Particle) * particleSystem.ParticlesAmount)
+                    {
+                        //TODO: change to resize
+                        buffer.UpdateOrAdd(nullptr, sizeof(Particle) * particleSystem.ParticlesAmount, 0);
+                    }
                 }
             });
 
@@ -159,6 +175,10 @@ namespace Waldem
                         WorldTransformsBuffer.RemoveData(sizeof(Matrix4), particleSystemId * sizeof(Matrix4));
                     }
 
+                    Renderer::Destroy(ParticleBuffersMap[(uint)particleSystemId]);
+                    ParticleBuffersMap.Remove((uint)particleSystemId);
+                    ParticleBuffersIndicesBuffer.RemoveData(sizeof(uint), particleSystemId * sizeof(uint));
+
                     IdManager::RemoveId(entity, GlobalDrawIdType);
                 }
             });
@@ -178,16 +198,23 @@ namespace Waldem
 
             ECS::World.system<ParticleSystemComponent, Transform>().kind<ECS::OnDraw>().each([&](flecs::entity entity, ParticleSystemComponent& particleSystem, Transform& transform)
             {
-                RootConstants.ParticlesBufferID = ParticlesBuffer.GetIndex(UAV);
-                RootConstants.WorldTransformsBufferID = WorldTransformsBuffer.GetIndex(SRV_CBV);
-                RootConstants.ParticlesSystemDataBufferID = ParticlesSystemDataBuffer->GetIndex(SRV_CBV);
-                RootConstants.DeltaTime = Time::DeltaTime;
-                Renderer::UploadBuffer(ParticlesSystemDataBuffer, &particleSystem, sizeof(ParticleSystemComponent));
-                Renderer::SetPipeline(ParticleSystemPipeline);
-                Renderer::PushConstants(&RootConstants, sizeof(ParticleSystemRootConstants));
-                Point3 GroupCount = Point3((particleSystem.ParticlesAmount + NumThreads.x - 1) / NumThreads.x, 1, 1);
-                Renderer::Compute(GroupCount);
-                Renderer::UAVBarrier(ParticlesBuffer);
+                int particleSystemId;
+
+                if(IdManager::GetId(entity, ParticleSystemIdType, particleSystemId))
+                {
+                    RootConstants.WorldTransformsBufferID = WorldTransformsBuffer.GetIndex(SRV_CBV);
+                    RootConstants.DeltaTime = Time::DeltaTime;
+                    RootConstants.Color = particleSystem.Color;
+                    RootConstants.Size = particleSystem.Size;
+                    RootConstants.ParticlesAmount = particleSystem.ParticlesAmount;
+                    RootConstants.Acceleration = particleSystem.Acceleration;
+                    RootConstants.Lifetime = particleSystem.Lifetime;
+                    RootConstants.BufferId = particleSystem.BufferId;
+                    Renderer::SetPipeline(ParticleSystemPipeline);
+                    Renderer::PushConstants(&RootConstants, sizeof(ParticleSystemRootConstants));
+                    Point3 GroupCount = Point3((particleSystem.ParticlesAmount + NumThreads.x - 1) / NumThreads.x, 1, 1);
+                    Renderer::Compute(GroupCount);
+                }
             });
             
             ECS::World.system().kind<ECS::OnDraw>().each([&]
@@ -203,7 +230,7 @@ namespace Waldem
                         auto gbuffer = viewport->GetGBuffer();
                         auto deferred = gbuffer->GetRenderTarget(Deferred);
                         auto depth = gbuffer->GetRenderTarget(Depth);
-                        RootConstants.ParticlesBufferID = ParticlesBuffer.GetIndex(SRV_CBV);
+                        RootConstants.ParticleBuffersIndicesBufferID = ParticleBuffersIndicesBuffer.GetIndex(SRV_CBV);
                         RootConstants.WorldTransformsBufferID = WorldTransformsBuffer.GetIndex(SRV_CBV);
                         RootConstants.SceneBufferID = SceneDataBuffer->GetIndex(SRV_CBV);
                         auto& camera = linkedCamera.get<Camera>();

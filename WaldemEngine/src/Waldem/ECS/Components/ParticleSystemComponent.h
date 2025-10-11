@@ -18,5 +18,6 @@ namespace Waldem
         uint ParticlesAmount = 1;
         Vector3 Acceleration = Vector3(0, -9.81f, 0);
         float Lifetime = 5.0f;
+        uint BufferId = -1;
     };
 }

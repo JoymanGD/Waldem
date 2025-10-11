@@ -78,10 +78,8 @@ namespace Waldem
             Systems.Add(new SpatialAudioSystem());
             Systems.Add(new AnimationSystem());
             Systems.Add(new HybridRenderingSystem());
-            // Systems.Add(new WorldGridRenderingSystem());
             Systems.Add(new ParticleSystem());
             Systems.Add(new PostProcessSystem());
-            // Systems.Add(new GizmosRenderingSystem());
             Systems.Add(new ScreenQuadSystem());
 
             InitializeSystems();

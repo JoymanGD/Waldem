@@ -2,9 +2,14 @@ cbuffer RootConstants : register(b0)
 {
     uint WorldTransformsBufferID;
     uint SceneDataBufferID;
-    uint ParticlesBufferID;
-    uint ParticleSystemDataBufferID;
     float DeltaTime;
+    uint ParticleBuffersIndicesBufferID;
+    float4 Color;
+    float3 Size;
+    uint ParticlesAmount;
+    float3 Acceleration;
+    float Lifetime;
+    uint BufferId;
 };
 
 cbuffer IndirectRootConstants : register(b1)
@@ -51,11 +56,13 @@ VSOutput main(VSInput vin, uint instanceID : SV_InstanceID)
 {
     VSOutput vout;
 
-    StructuredBuffer<Particle> particles       = ResourceDescriptorHeap[ParticlesBufferID];
     StructuredBuffer<float4x4> worldTransforms = ResourceDescriptorHeap[WorldTransformsBufferID];
-    StructuredBuffer<SceneData> sceneDataBuffer= ResourceDescriptorHeap[SceneDataBufferID];
+    StructuredBuffer<SceneData> sceneDataBuffer = ResourceDescriptorHeap[SceneDataBufferID];
+    StructuredBuffer<uint> particleBuffersIndicesBufferID = ResourceDescriptorHeap[ParticleBuffersIndicesBufferID];
     SceneData sceneData = sceneDataBuffer[0];
 
+    uint particleBufferID = particleBuffersIndicesBufferID[MeshId];
+    StructuredBuffer<Particle> particles = ResourceDescriptorHeap[particleBufferID];
     Particle p = particles[instanceID];
     float4x4 worldTransform = worldTransforms[MeshId];
 

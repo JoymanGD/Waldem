@@ -184,6 +184,11 @@ namespace Waldem
                 RemoveIcon(e);
             });
 
+            ECS::World.observer<ParticleSystemComponent>().event(flecs::OnRemove).each([&](flecs::entity e, ParticleSystemComponent&)
+            {
+                RemoveIcon(e);
+            });
+
             ECS::World.observer<Transform>().event(flecs::OnSet).each([&](flecs::entity e, Transform& t)
             {
                 int drawId;
