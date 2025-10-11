@@ -1,6 +1,6 @@
 WALDEM ENGINE
 
-![image](https://github.com/JoymanGD/Waldem/blob/master/img.png?raw=true)
+![alt text](https://raw.githubusercontent.com/JoymanGD/Waldem/refs/heads/master/img.png "Waldem Engine screenshot")
 
 Architecture:
 * ECS
