@@ -4,9 +4,6 @@
 
 namespace Waldem
 {
-	std::shared_ptr<spdlog::logger> Log::CoreLogger;
-	std::shared_ptr<spdlog::logger> Log::ClientLogger;
-
 	void Log::Init()
 	{
 		spdlog::set_pattern("%^[%T] %n: %v%$");

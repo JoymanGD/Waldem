@@ -7,6 +7,7 @@ namespace Waldem
     class WALDEM_API Input
     {
     public:
+        static void Initialize();
         inline static bool IsKeyPressed(int keycode) { return Instance->IsKeyPressedImpl(keycode); }
         inline static bool IsMouseButtonPressed(int button) { return Instance->IsMouseButtonPressedImpl(button); }
         inline static Point2 GetMousePos() { return Instance->GetMousePosImpl(); }
@@ -22,6 +23,6 @@ namespace Waldem
         virtual int GetMouseXImpl() = 0;
         virtual int GetMouseYImpl() = 0;
         virtual Point2 GetMouseDeltaImpl() = 0;
-        static Input* Instance;
+        inline static Input* Instance;
     };
 }

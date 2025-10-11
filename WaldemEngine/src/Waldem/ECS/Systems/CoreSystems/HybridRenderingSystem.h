@@ -1,9 +1,7 @@
 #pragma once
 #include "Waldem/ECS/IdManager.h"
 #include "Waldem/Input/Input.h"
-#include "Waldem/ECS/Systems/System.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
-#include "Waldem/Editor/Editor.h"
 #include "Waldem/ECS/Components/Light.h"
 #include "Waldem/Renderer/Shader.h"
 #include "Waldem/Renderer/Model/Quad.h"
@@ -14,7 +12,6 @@
 #include "Waldem/Renderer/ResizableAccelerationStructure.h"
 #include "Waldem/Renderer/ResizableBuffer.h"
 #include "Waldem/Renderer/Viewport/Viewport.h"
-#include "Waldem/Renderer/Viewport/ViewportManager.h"
 
 #define MAX_INDIRECT_COMMANDS 500
 
@@ -314,10 +311,10 @@ namespace Waldem
 
                             DrawCommandsBuffer.UpdateData(&meshComponent.DrawCommand, sizeof(DrawCommand), globalDrawId * sizeof(DrawCommand));
                             
-                            auto transform = entity.get<Transform>();
+                            auto& transform = entity.get<Transform>();
 
                             Renderer::Wait();
-                            Renderer::RenderData.TLAS.SetData(globalDrawId, meshComponent.MeshRef.Mesh->Name, Renderer::RenderData.VertexBuffer, Renderer::RenderData.IndexBuffer, meshComponent.DrawCommand, vertexCount, *transform);
+                            Renderer::RenderData.TLAS.SetData(globalDrawId, meshComponent.MeshRef.Mesh->Name, Renderer::RenderData.VertexBuffer, Renderer::RenderData.IndexBuffer, meshComponent.DrawCommand, vertexCount, transform);
                         }
 
                     }
@@ -355,9 +352,7 @@ namespace Waldem
 
                         Renderer::RenderData.TLAS.RemoveData(globalDrawId);
                         
-                        auto transform = entity.get<Transform>();
-                        
-                        if(transform)
+                        if(entity.has<Transform>())
                         {
                             WorldTransformsBuffer.RemoveData(sizeof(Matrix4), globalDrawId * sizeof(Matrix4));
                         }
@@ -449,7 +444,7 @@ namespace Waldem
                         WString spriteName = "Sprite_";
                         spriteName += sprite.TextureRef.Texture->GetName(); 
 
-                        Renderer::RenderData.TLAS.SetData(globalDrawId, spriteName, Renderer::RenderData.VertexBuffer, Renderer::RenderData.IndexBuffer, sprite.DrawCommand, SpriteVertices.Num(), *transform);
+                        Renderer::RenderData.TLAS.SetData(globalDrawId, spriteName, Renderer::RenderData.VertexBuffer, Renderer::RenderData.IndexBuffer, sprite.DrawCommand, SpriteVertices.Num(), transform);
                     }
                 }
             });
@@ -484,9 +479,7 @@ namespace Waldem
 
                         Renderer::RenderData.TLAS.RemoveData(globalDrawId);
                         
-                        auto transform = entity.get<Transform>();
-                        
-                        if(transform)
+                        if(entity.has<Transform>())
                         {
                             WorldTransformsBuffer.RemoveData(sizeof(Matrix4), globalDrawId * sizeof(Matrix4));
                         }
@@ -566,14 +559,14 @@ namespace Waldem
                 SkyPassSceneData.SunDirection = Vector4(skybox.SunDirection, 1.0f);
             });
 
-            ECS::World.system("SkyColorClearingSystem").kind(flecs::OnDraw).each([&]
+            ECS::World.system("SkyColorClearingSystem").kind<ECS::OnDraw>().each([&]
             {
                 auto viewport = Renderer::GetCurrentViewport();
                 
                 viewport->GetGBuffer()->Clear({SkyColor});
             });
             
-            ECS::World.system<Sky>("SkyRenderingSystem").kind(flecs::OnDraw).each([&](Sky& skybox)
+            ECS::World.system<Sky>("SkyRenderingSystem").kind<ECS::OnDraw>().each([&](Sky& skybox)
             {
                 auto viewport = Renderer::GetCurrentViewport();
                 
@@ -582,17 +575,17 @@ namespace Waldem
                 if(viewport->TryGetLinkedCamera(linkedCamera))
                 {
                     auto skyColor = viewport->GetGBufferRenderTarget(SkyColor);
-                    auto cameraComponent = linkedCamera.get<Camera>();
-                    auto transformComponent = linkedCamera.get<Transform>();
+                    auto& cameraComponent = linkedCamera.get<Camera>();
+                    auto& transformComponent = linkedCamera.get<Transform>();
 
-                    SkyPassSceneData.InverseProjection = inverse(cameraComponent->ProjectionMatrix);
-                    SkyPassSceneData.InverseView = transformComponent->Matrix;
-                    SkyPassSceneData.ViewProjection = cameraComponent->ProjectionMatrix * inverse(transformComponent->Matrix);
+                    SkyPassSceneData.InverseProjection = inverse(cameraComponent.ProjectionMatrix);
+                    SkyPassSceneData.InverseView = transformComponent.Matrix;
+                    SkyPassSceneData.ViewProjection = cameraComponent.ProjectionMatrix * inverse(transformComponent.Matrix);
                     SkyPassSceneData.SkyZenithColor = Vector4(skybox.SkyZenithColor, 1.0f);
                     SkyPassSceneData.SkyHorizonColor = Vector4(skybox.SkyHorizonColor, 1.0f);
                     SkyPassSceneData.GroundColor = Vector4(skybox.GroundColor, 1.0f);
                     SkyPassSceneData.SunDirection = Vector4(skybox.SunDirection, 1.0f);
-                    SkyPassSceneData.CameraPosition = Vector4(transformComponent->Position, 1.0f);
+                    SkyPassSceneData.CameraPosition = Vector4(transformComponent.Position, 1.0f);
                     
                     Renderer::UploadBuffer(SceneDataBuffer, &SkyPassSceneData, sizeof(SkySceneData));
                     Renderer::ResourceBarrier(skyColor, ALL_SHADER_RESOURCE, RENDER_TARGET);
@@ -605,13 +598,13 @@ namespace Waldem
                 }
             });
             
-            ECS::World.system("GBufferClearSystem").kind(flecs::OnDraw).run([&](flecs::iter& it)
+            ECS::World.system("GBufferClearSystem").kind<ECS::OnDraw>().run([&](flecs::iter& it)
             {
                 SViewport* viewport = Renderer::GetCurrentViewport();
                 viewport->GetGBuffer()->Clear({WorldPosition, Normal, Color, ORM, MeshID, Depth});
             });
             
-            ECS::World.system("GBufferSystem").kind(flecs::OnDraw).run([&](flecs::iter& it)
+            ECS::World.system("GBufferSystem").kind<ECS::OnDraw>().run([&](flecs::iter& it)
             {
                 if(BFCIndirectCommands.Num() <= 0 && NCIndirectCommands.Num() <= 0)
                 {
@@ -624,13 +617,13 @@ namespace Waldem
                 
                 if(viewport->TryGetLinkedCamera(linkedCamera))
                 {
-                    auto cameraComponent = linkedCamera.get<Camera>();
-                    auto transformComponent = linkedCamera.get<Transform>();
+                    auto& cameraComponent = linkedCamera.get<Camera>();
+                    auto& transformComponent = linkedCamera.get<Transform>();
                     
-                    GBufferSceneData.ProjectionMatrix = cameraComponent->ProjectionMatrix;
-                    GBufferSceneData.ViewMatrix = inverse(transformComponent->Matrix);
-                    GBufferSceneData.WorldMatrix = transformComponent->Matrix;
-                    GBufferSceneData.InverseProjectionMatrix = inverse(cameraComponent->ProjectionMatrix);
+                    GBufferSceneData.ProjectionMatrix = cameraComponent.ProjectionMatrix;
+                    GBufferSceneData.ViewMatrix = inverse(transformComponent.Matrix);
+                    GBufferSceneData.WorldMatrix = transformComponent.Matrix;
+                    GBufferSceneData.InverseProjectionMatrix = inverse(cameraComponent.ProjectionMatrix);
                     
                     Renderer::UploadBuffer(GBufferSceneDataBuffer, &GBufferSceneData, sizeof(SGBufferSceneData));
 
@@ -672,7 +665,7 @@ namespace Waldem
                 }
             });
 
-            ECS::World.system("RayTracingSystem").kind(flecs::OnDraw).each([&]
+            ECS::World.system("RayTracingSystem").kind<ECS::OnDraw>().each([&]
             {
                 auto viewport = Renderer::GetCurrentViewport();
                 
@@ -683,12 +676,12 @@ namespace Waldem
                     auto gbuffer = viewport->GetGBuffer();
                     auto radianceRT = gbuffer->GetRenderTarget(Radiance);
 
-                    auto cameraComponent = linkedCamera.get<Camera>();
-                    auto transformComponent = linkedCamera.get<Transform>();
+                    auto& cameraComponent = linkedCamera.get<Camera>();
+                    auto& transformComponent = linkedCamera.get<Transform>();
 
-                    RayTracingSceneData.CameraPosition = transformComponent->Position;
-                    RayTracingSceneData.InvViewMatrix = transformComponent->Matrix;
-                    RayTracingSceneData.InvProjectionMatrix = inverse(cameraComponent->ProjectionMatrix);
+                    RayTracingSceneData.CameraPosition = transformComponent.Position;
+                    RayTracingSceneData.InvViewMatrix = transformComponent.Matrix;
+                    RayTracingSceneData.InvProjectionMatrix = inverse(cameraComponent.ProjectionMatrix);
                     Renderer::UploadBuffer(RayTracingSceneDataBuffer, &RayTracingSceneData, sizeof(SRayTracingSceneData));
 
                     RayTracingRootConstants.WorldPositionRT = gbuffer->GetRenderTarget(WorldPosition)->GetIndex(SRV_CBV);
@@ -716,7 +709,7 @@ namespace Waldem
                 }
             });
 
-            ECS::World.system("DeferredRenderingSystem").kind(flecs::OnDraw).run([&](flecs::iter& it)
+            ECS::World.system("DeferredRenderingSystem").kind<ECS::OnDraw>().run([&](flecs::iter& it)
             {
                 auto viewport = Renderer::GetCurrentViewport();
                 

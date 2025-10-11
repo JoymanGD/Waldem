@@ -2,10 +2,8 @@
 
 #include "Core.h"
 #include "Window.h"
+#include "Audio/Audio.h"
 #include "ECS/ECS.h"
-#include "Layers/DebugLayer.h"
-#include "Layers/EditorLayer.h"
-#include "Layers/GameLayer.h"
 #include "Renderer/Renderer.h"
 #include "Scripting/Mono.h"
 #include "Waldem/Layers/LayerStack.h"
@@ -19,13 +17,12 @@ namespace Waldem
 	public:
 		Engine();
 		void Initialize();
-		void InitializeLayers();
 		virtual ~Engine();
 		void Run();
 		void OnEvent(Event& e);
 		void PushLayer(Layer* layer);
 		void PushOverlay(Layer* overlay);
-		CWindow& GetWindow() { return *Window; }
+		CWindow* GetWindow() { return Window; }
 
 		//Singleton
 		static Engine* Instance;
@@ -34,7 +31,7 @@ namespace Waldem
 		bool OnWindowResize(WindowResizeEvent& e);
 		float CalculateAverageFPS(float deltaTime);
 
-		CWindow* Window;
+		CWindow* Window = nullptr;
 		Renderer CurrentRenderer;
 		Audio AudioManager;
 		Mono MonoRuntime;
@@ -43,11 +40,6 @@ namespace Waldem
 		std::vector<float> FrameTimes;
 		int FrameCount = 0;
 		const int MaxFrames = 100;
-
-		//Layers
-		EditorLayer* Editor;
-		DebugLayer* Debug;
-		GameLayer* Game;
 
 		//ECS
 		ECS::Core ECS;

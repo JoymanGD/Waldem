@@ -16,7 +16,6 @@
 #include "ImGuizmo.h"
 #include "backends/imgui_impl_dx12.h"
 #include "backends/imgui_impl_sdl2.h"
-#include "Waldem/Editor/Editor.h"
 #include "Waldem/Editor/UIStyles.h"
 #include "Waldem/Renderer/Model/Quad.h"
 #include "Waldem/Renderer/Viewport/ViewportManager.h"
@@ -574,9 +573,9 @@ namespace Waldem
         }
         mainFrameBuffer->SetDepth(CreateRenderTarget("MainViewport_Depth", size.x, size.y, TextureFormat::D32_FLOAT));
         
-        auto mainViewport = ViewportManager::CreateViewport(Main, "Main", Vector2(0, 0), size, Vector2(0, 1), mainFrameBuffer, false, false);
+        auto mainViewport = ViewportManager::CreateViewport(MainViewport, "Main", Vector2(0, 0), size, Vector2(0, 1), mainFrameBuffer, true, false);
 
-        mainViewport->SubscribeOnResize([this, mainViewport](Point2 size)
+        mainViewport->SetResizeFunction([this, mainViewport](Point2 size)
         {
             if (size.x > 0 && size.y > 0)
             {
@@ -584,6 +583,7 @@ namespace Waldem
                 
                 // Release old RTVs
                 mainViewport->FrameBuffer->Destroy();
+                mainViewport->GetGBuffer()->Resize(size);
 
                 // Resize swapchain buffers
                 DXGI_SWAP_CHAIN_DESC desc = {};
@@ -736,8 +736,8 @@ namespace Waldem
         DefaultRenderPassState.RenderTargetsDirty = true;
         DefaultRenderPassState.DepthStencilDirty = true;
 
-        ResourceBarrier(color, ALL_SHADER_RESOURCE, RENDER_TARGET);
-        ResourceBarrier(depth, ALL_SHADER_RESOURCE, DEPTH_WRITE);
+        ResourceBarrier(color, RENDER_TARGET);
+        ResourceBarrier(depth, DEPTH_WRITE);
         
         WorldCommandList.first->SetGeneralDescriptorHeaps(GeneralResourcesHeap, GeneralSamplerHeap);
         WorldCommandList.first->SetRootSignature(GeneralRootSignature);
@@ -755,7 +755,7 @@ namespace Waldem
         }
     }
 
-    void DX12Renderer::End()
+    void DX12Renderer::End(ResourceStates colorState)
     {
         auto& worldCmd = WorldCommandList.first; 
         
@@ -766,8 +766,8 @@ namespace Waldem
             WorldCommandList.second = false;
         }
 
-        ResourceBarrier(CurrentViewport->FrameBuffer->GetCurrentRenderTarget(), RENDER_TARGET, ALL_SHADER_RESOURCE);
-        ResourceBarrier(CurrentViewport->FrameBuffer->GetDepth(), DEPTH_WRITE, ALL_SHADER_RESOURCE);
+        ResourceBarrier(CurrentViewport->FrameBuffer->GetCurrentRenderTarget(), colorState);
+        ResourceBarrier(CurrentViewport->FrameBuffer->GetDepth(), ALL_SHADER_RESOURCE);
         
         worldCmd->Close();
 
@@ -810,9 +810,6 @@ namespace Waldem
         auto mainViewport = ViewportManager::GetMainViewport();
         
         auto& worldCmd = WorldCommandList.first;
-
-        ViewportManager::GetEditorViewport()->ApplyPendingResize();
-        ViewportManager::GetGameViewport()->ApplyPendingResize();
 
         ImGui::Render();
         ImDrawData* drawData = ImGui::GetDrawData();
@@ -1048,7 +1045,6 @@ namespace Waldem
     void DX12Renderer::Present()
     {
         auto mainViewport = ViewportManager::GetMainViewport();
-        
         HRESULT h = SwapChain->Present(0, 0);
 
         if(FAILED(h))
@@ -1662,6 +1658,9 @@ namespace Waldem
         renderTarget->SetCurrentState((ResourceStates)D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
 
         newResource->SetName(DX12Helper::WFromMB(renderTarget->GetName().C_Str()));
+
+        renderTarget->SetWidth(width);
+        renderTarget->SetHeight(height);
     }
 
     AccelerationStructure* DX12Renderer::CreateBLAS(WString name, WArray<RayTracingGeometry>& geometries)

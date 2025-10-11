@@ -3,7 +3,7 @@
 namespace Waldem
 {
     template<typename T1, typename T2>
-    struct WALDEM_API WPair
+    struct WPair
     {
         T1 key;
         T2 value;

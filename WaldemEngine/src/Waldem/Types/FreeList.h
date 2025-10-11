@@ -3,7 +3,7 @@
 
 namespace Waldem
 {
-    class WALDEM_API FreeList
+    class FreeList
     {
     public:
         FreeList() : NextIndex(0) {}

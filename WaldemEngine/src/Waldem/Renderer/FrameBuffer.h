@@ -13,110 +13,24 @@ namespace Waldem
         SFrameBuffer(const SFrameBuffer&) = delete;
         SFrameBuffer& operator=(const SFrameBuffer&) = delete;
         
-        SFrameBuffer(WArray<RenderTarget*>& renderTargets, RenderTarget* depth)
-        {
-            Size = renderTargets.Num();
-            
-            RenderTargets.Resize(Size);
-            
-            for (int i = 0; i < Size; ++i)
-            {
-                RenderTargets[i] = renderTargets[i];
-            }
+        SFrameBuffer(WArray<RenderTarget*>& renderTargets, RenderTarget* depth);
+        SFrameBuffer(WString name, int size, Vector2 resolution);
 
-            Depth = std::move(depth);
-        }
-        
-        SFrameBuffer(WString name, int size, Vector2 resolution)
-        {
-            Size = size;
-            
-            WString postfix = "";
-            
-            RenderTargets.Resize(Size);
-            
-            for (int i = 0; i < Size; ++i)
-            {
-                postfix = "_FrameBuffer_" + std::to_string(i);
-                RenderTargets[i] = Renderer::CreateRenderTarget(name + postfix, resolution.x, resolution.y, TextureFormat::R8G8B8A8_UNORM);
-            }
+        void Advance();
 
-            Depth = Renderer::CreateRenderTarget(name + "_Depth", resolution.x, resolution.y, TextureFormat::D32_FLOAT);
-        }
+        void AddRenderTarget(RenderTarget* renderTarget);
 
-        void Advance()
-        {
-            ++(*this);
-        }
+        void SetDepth(RenderTarget* depth);
 
-        void AddRenderTarget(RenderTarget* renderTarget)
-        {
-            RenderTargets.Add(renderTarget);
-            
-            ++Size; 
-        }
+        void Resize(Vector2 size);
 
-        void SetDepth(RenderTarget* depth)
-        {
-            if (Depth)
-            {
-                Renderer::Destroy(Depth);
-                Depth = nullptr;
-            }
-            
-            Depth = depth;
-        }
+        void Destroy();
 
-        void Resize(Vector2 size)
-        {
-            for (int i = 0; i < Size; ++i)
-            {
-                Renderer::ResizeRenderTarget(RenderTargets[i], size.x, size.y);
-            }
-            
-            Renderer::ResizeRenderTarget(Depth, size.x, size.y);
-        }
+        RenderTarget* GetRenderTarget(uint index) const;
 
-        void Destroy()
-        {
-            for (int i = 0; i < Size; ++i)
-            {
-                Renderer::DestroyImmediate(RenderTargets[i]);
-            }
+        RenderTarget* GetCurrentRenderTarget() const;
 
-            RenderTargets.Clear();
-
-            Renderer::DestroyImmediate(Depth);
-            Depth = nullptr;
-
-            Size = 0;
-            Counter = 0;
-        }
-
-        RenderTarget* GetRenderTarget(uint index) const
-        {
-            if (index >= RenderTargets.Num())
-            {
-                return nullptr;
-            }
-            
-            return RenderTargets[index];
-        }
-
-        RenderTarget* GetCurrentRenderTarget() const
-        {
-            if (Counter < 0 || Counter >= RenderTargets.Num())
-            {
-                return nullptr;
-            }
-            
-            return RenderTargets[Counter];
-        }
-
-        RenderTarget* GetDepth() const
-        {
-            return Depth;
-        }
+        RenderTarget* GetDepth() const;
 
         // Prefix increment: ++FrameBuffer
         SFrameBuffer& operator++()

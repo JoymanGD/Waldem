@@ -41,9 +41,9 @@ namespace Waldem
         Instance->PlatformRenderer->Begin(viewport);
     }
 
-    void Renderer::End()
+    void Renderer::End(ResourceStates colorState)
     {
-        Instance->PlatformRenderer->End();
+        Instance->PlatformRenderer->End(colorState);
     }
 
     void Renderer::Present()

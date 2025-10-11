@@ -14,6 +14,7 @@ namespace Waldem
         virtual ~Layer() = default;
         virtual void Begin() {}
         virtual void End() {}
+        virtual void Draw() {}
         virtual void OnAttach() {}
         virtual void OnDetach() {}
         virtual void OnEvent(Event& event) {}

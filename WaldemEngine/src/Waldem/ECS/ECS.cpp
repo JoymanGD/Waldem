@@ -15,33 +15,35 @@
 #include "Components/Transform.h"
 #include "glm/gtc/type_ptr.hpp"
 #include "Systems/CoreSystems/AnimationSystem.h"
-#include "Systems/CoreSystems/EntitySelectionSystem.h"
 #include "Systems/CoreSystems/HybridRenderingSystem.h"
 #include "Systems/CoreSystems/ParticleSystem.h"
 #include "Systems/CoreSystems/PostProcessSystem.h"
 #include "Systems/CoreSystems/ScreenQuadSystem.h"
 #include "Systems/CoreSystems/SpatialAudioSystem.h"
-#include "Systems/EditorSystems/GizmosRenderingSystem.h"
-#include "Systems/EditorSystems/WorldGridRenderingSystem.h"
 #include "Waldem/Editor/AssetReference.h"
 
 namespace Waldem
 {
     namespace ECS
     {
+        WALDEM_API flecs::world World{};
+        WALDEM_API EntityT UpdatePipeline{};
+        WALDEM_API EntityT FixedUpdatePipeline{};
+        WALDEM_API EntityT DrawPipeline{};
+        WALDEM_API EntityT GUIPipeline{};
+        WALDEM_API WMap<WString, Entity> RegisteredComponents{};
+        WALDEM_API FreeList HierarchySlots{};
+        
         void Core::Initialize()
         {
             World = flecs::world();
-
-            flecs::OnFixedUpdate = World.entity("OnFixedUpdate");
-            flecs::OnDraw = World.entity("OnDraw");
-            flecs::OnGUI = World.entity("OnGUI");
-            
             UpdatePipeline = World.pipeline().with(flecs::System).with(flecs::OnUpdate).build();
-            FixedUpdatePipeline = World.pipeline().with(flecs::System).with(flecs::OnFixedUpdate).build();
-            DrawPipeline = World.pipeline().with(flecs::System).with(flecs::OnDraw).build();
-            GUIPipeline = World.pipeline().with(flecs::System).with(flecs::OnGUI).build();
-
+            FixedUpdatePipeline = World.pipeline().with(flecs::System).with<OnFixedUpdate>().build();
+            DrawPipeline = World.pipeline().with(flecs::System).with<OnDraw>().build();
+            GUIPipeline = World.pipeline().with(flecs::System).with<OnGUI>().build();
+            RegisteredComponents = {};
+            HierarchySlots = {};
+            
             RegisterTypes();
             RegisterComponents();
 
@@ -76,11 +78,13 @@ namespace Waldem
             Systems.Add(new SpatialAudioSystem());
             Systems.Add(new AnimationSystem());
             Systems.Add(new HybridRenderingSystem());
-            Systems.Add(new WorldGridRenderingSystem());
+            // Systems.Add(new WorldGridRenderingSystem());
             Systems.Add(new ParticleSystem());
             Systems.Add(new PostProcessSystem());
-            Systems.Add(new GizmosRenderingSystem());
+            // Systems.Add(new GizmosRenderingSystem());
             Systems.Add(new ScreenQuadSystem());
+
+            InitializeSystems();
         }
 
         void Core::InitializeSystems()
@@ -267,13 +271,13 @@ namespace Waldem
         {
             auto newSlot = HierarchySlots.Allocate();
             
-            auto sceneEntityComponent = entity.get<SceneEntity>();
+            auto& sceneEntityComponent = entity.get<SceneEntity>();
             
             auto clone = entity.clone().set<SceneEntity>(
             {
-                .ParentId = sceneEntityComponent->ParentId,
+                .ParentId = sceneEntityComponent.ParentId,
                 .HierarchySlot = (float)newSlot,
-                .VisibleInHierarchy = sceneEntityComponent->VisibleInHierarchy,
+                .VisibleInHierarchy = sceneEntityComponent.VisibleInHierarchy,
             });
 
             auto entityName = entity.name();

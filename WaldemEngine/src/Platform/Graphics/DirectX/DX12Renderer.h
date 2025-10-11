@@ -38,7 +38,7 @@ namespace Waldem
         void Compute(Point3 groupCount) override;
         void TraceRays(Pipeline* rayTracingPipeline, Point3 numRays) override;
         void Begin(SViewport* viewport) override;
-        void End() override;
+        void End(ResourceStates colorState) override;
         void Present() override; 
         PixelShader* LoadPixelShader(const Path& shaderName, WString entryPoint) override;
         ComputeShader* LoadComputeShader(const Path& shaderName, WString entryPoint) override;

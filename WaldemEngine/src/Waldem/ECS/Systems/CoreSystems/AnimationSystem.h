@@ -1,6 +1,4 @@
 #pragma once
-#include <FlecsUtils.h>
-
 #include "Waldem/ECS/ECS.h"
 #include "Waldem/ECS/IdManager.h"
 #include "Waldem/ECS/Components/AnimationListener.h"
@@ -37,7 +35,7 @@ namespace Waldem
             AnimationPipeline = Renderer::CreateComputePipeline("AnimationPipeline", AnimationComputeShader);
             NumThreads = Renderer::GetNumThreadsPerGroup(AnimationComputeShader);
             
-            ECS::World.system<MeshComponent, Transform, AnimationListener>().kind(flecs::OnDraw).each([&](flecs::entity entity, MeshComponent& meshComponent, Transform& transform, AnimationListener)
+            ECS::World.system<MeshComponent, Transform, AnimationListener>().kind<ECS::OnDraw>().each([&](flecs::entity entity, MeshComponent& meshComponent, Transform& transform, AnimationListener)
             {
                 if(!meshComponent.MeshRef.IsValid())
                 {

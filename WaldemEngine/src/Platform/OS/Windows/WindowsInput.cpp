@@ -8,7 +8,10 @@
 
 namespace Waldem
 {
-    Input* Input::Instance = new WindowsInput();
+    void Input::Initialize()
+    {
+        Instance = new WindowsInput();
+    }
     
     bool WindowsInput::IsKeyPressedImpl(int keycode)
     {

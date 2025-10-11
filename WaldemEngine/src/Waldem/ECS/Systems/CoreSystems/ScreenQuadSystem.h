@@ -42,7 +42,7 @@ namespace Waldem
                                                             WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
                                                             inputElementDescs);
 
-            ECS::World.system("ScreenQuadSystem").kind(flecs::OnDraw).each([&]
+            ECS::World.system("ScreenQuadSystem").kind<ECS::OnDraw>().each([&]
             {
                 auto viewport = Renderer::GetCurrentViewport();
                 

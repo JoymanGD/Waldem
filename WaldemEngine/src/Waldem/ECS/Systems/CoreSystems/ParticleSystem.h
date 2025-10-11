@@ -1,6 +1,4 @@
 #pragma once
-#include <FlecsUtils.h>
-
 #include "Waldem/Time.h"
 #include "Waldem/ECS/ECS.h"
 #include "Waldem/ECS/IdManager.h"
@@ -156,9 +154,7 @@ namespace Waldem
                     command.DrawId = -1;
                     command.DrawIndexed = { 0, 0, 0, 0, 0 };
                     
-                    auto transform = entity.get<Transform>();
-                    
-                    if(transform)
+                    if(entity.has<Transform>())
                     {
                         WorldTransformsBuffer.RemoveData(sizeof(Matrix4), particleSystemId * sizeof(Matrix4));
                     }
@@ -180,7 +176,7 @@ namespace Waldem
                 }
             });
 
-            ECS::World.system<ParticleSystemComponent, Transform>().kind(flecs::OnDraw).each([&](flecs::entity entity, ParticleSystemComponent& particleSystem, Transform& transform)
+            ECS::World.system<ParticleSystemComponent, Transform>().kind<ECS::OnDraw>().each([&](flecs::entity entity, ParticleSystemComponent& particleSystem, Transform& transform)
             {
                 RootConstants.ParticlesBufferID = ParticlesBuffer.GetIndex(UAV);
                 RootConstants.WorldTransformsBufferID = WorldTransformsBuffer.GetIndex(SRV_CBV);
@@ -194,7 +190,7 @@ namespace Waldem
                 Renderer::UAVBarrier(ParticlesBuffer);
             });
             
-            ECS::World.system().kind(flecs::OnDraw).each([&]
+            ECS::World.system().kind<ECS::OnDraw>().each([&]
             {
                 if(IndirectCommands.Num() > 0)
                 {
@@ -210,10 +206,10 @@ namespace Waldem
                         RootConstants.ParticlesBufferID = ParticlesBuffer.GetIndex(SRV_CBV);
                         RootConstants.WorldTransformsBufferID = WorldTransformsBuffer.GetIndex(SRV_CBV);
                         RootConstants.SceneBufferID = SceneDataBuffer->GetIndex(SRV_CBV);
-                        auto camera = linkedCamera.get<Camera>();
-                        auto transform = linkedCamera.get<Transform>();
-                        SceneData.View = inverse(transform->Matrix);
-                        SceneData.Projection = camera->ProjectionMatrix;
+                        auto& camera = linkedCamera.get<Camera>();
+                        auto& transform = linkedCamera.get<Transform>();
+                        SceneData.View = inverse(transform.Matrix);
+                        SceneData.Projection = camera.ProjectionMatrix;
                         Renderer::UploadBuffer(SceneDataBuffer, &SceneData, sizeof(ParticleSystemSceneData));
                         Renderer::ResourceBarrier(deferred, RENDER_TARGET);
                         Renderer::ResourceBarrier(depth, DEPTH_WRITE);

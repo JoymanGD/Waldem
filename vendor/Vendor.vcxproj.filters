@@ -7,9 +7,6 @@
     <Filter Include="flecs">
       <UniqueIdentifier>{52B7710F-BECB-99C0-874D-3D20F32096F1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="flecs\distr">
-      <UniqueIdentifier>{2701B61E-93B6-2E14-1CAB-28EB885F2518}</UniqueIdentifier>
-    </Filter>
     <Filter Include="glm">
       <UniqueIdentifier>{6577880B-D180-887C-5AFC-9E7CC604947C}</UniqueIdentifier>
     </Filter>
@@ -90,8 +87,8 @@
     <ClInclude Include="ImGuizmo\ImZoomSlider.h">
       <Filter>ImGuizmo</Filter>
     </ClInclude>
-    <ClInclude Include="flecs\distr\flecs.h">
-      <Filter>flecs\distr</Filter>
+    <ClInclude Include="flecs\flecs.h">
+      <Filter>flecs</Filter>
     </ClInclude>
     <ClInclude Include="glm\glm\common.hpp">
       <Filter>glm\glm</Filter>
@@ -1688,8 +1685,8 @@
     <ClCompile Include="ImGuizmo\ImSequencer.cpp">
       <Filter>ImGuizmo</Filter>
     </ClCompile>
-    <ClCompile Include="flecs\distr\flecs.c">
-      <Filter>flecs\distr</Filter>
+    <ClCompile Include="flecs\flecs.c">
+      <Filter>flecs</Filter>
     </ClCompile>
     <ClCompile Include="imgui\backends\imgui_impl_dx12.cpp">
       <Filter>imgui\backends</Filter>

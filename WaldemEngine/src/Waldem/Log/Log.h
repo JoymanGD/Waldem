@@ -14,8 +14,8 @@ namespace Waldem
 		inline static std::shared_ptr<spdlog::logger>& GetClientLogger() { return ClientLogger; }
 
 	private:
-		static std::shared_ptr<spdlog::logger> CoreLogger;
-		static std::shared_ptr<spdlog::logger> ClientLogger;
+		inline static std::shared_ptr<spdlog::logger> CoreLogger;
+		inline static std::shared_ptr<spdlog::logger> ClientLogger;
 	};
 }
 

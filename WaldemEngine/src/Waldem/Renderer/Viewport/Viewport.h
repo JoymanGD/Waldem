@@ -19,10 +19,10 @@ namespace Waldem
     
     enum ViewportType : uint
     {
-        Main = 0,
-        Editor = 1,
-        Game = 2,
-        Custom = 3
+        MainViewport = 0,
+        EditorViewport = 1,
+        GameViewport = 2,
+        CustomViewport = 3
     };
 
     class WALDEM_API SViewport
@@ -37,6 +37,7 @@ namespace Waldem
         bool IsMouseOver = false;
     private:
         WArray<ResizeCallback> ResizeCallbacks;
+        ResizeCallback ResizeFunction;
         bool PendingResize = false;
         Vector2 PendingResizeTarget;
         SGBuffer* GBuffer = nullptr;
@@ -44,112 +45,35 @@ namespace Waldem
 
     public:
         SViewport() = default;
+        SViewport(ViewportType type, WString name, Point2 position, Point2 size, Point2 depthRange, int frameBufferSize, bool gbuffer = true);
+        SViewport(ViewportType type, WString name, Point2 position, Point2 size, Point2 depthRange, SFrameBuffer* frameBuffer, bool gbuffer = true);
+
+        void SetViewport(Point2 position, Point2 size, Point2 depthRange);
+
+        ECS::Entity GetLinkedCamera() const;
+
+        bool TryGetLinkedCamera(ECS::Entity& outCamera);
+
+        void LinkCamera(ECS::Entity camera);
+
+        void UnlinkCamera();
+
+        void RequestResize(Point2 size);
+
+        void ApplyPendingResize();
         
-        SViewport(ViewportType type, WString name, Point2 position, Point2 size, Point2 depthRange, int frameBufferSize, bool gbuffer = true) : Type(type), Name(name), Position(position), Size(size), DepthRange(depthRange)
-        {
-            FrameBuffer = new SFrameBuffer(name, frameBufferSize, size);
+        void Resize(Point2 size);
 
-            if(gbuffer)
-            {
-                GBuffer = new SGBuffer(size);
-            }
-        }
+        void Move(Point2 position);
+
+        void SetResizeFunction(const ResizeCallback& callback);
+
+        void SubscribeOnResize(const ResizeCallback& callback);
+
+        Point2 TransformMousePosition(Point2 mousePos);
+
+        SGBuffer* GetGBuffer();
         
-        SViewport(ViewportType type, WString name, Point2 position, Point2 size, Point2 depthRange, SFrameBuffer* frameBuffer, bool gbuffer = true) : Type(type), Name(name), Position(position), Size(size), DepthRange(depthRange)
-        {
-            FrameBuffer = frameBuffer;
-
-            if(gbuffer)
-            {
-                GBuffer = new SGBuffer(size);
-            }
-        }
-
-        void SetViewport(Point2 position, Point2 size, Point2 depthRange)
-        {
-            Position = position;
-            Size = size;
-            DepthRange = depthRange;
-        }
-
-        ECS::Entity GetLinkedCamera() const
-        {
-            return LinkedCamera;
-        }
-
-        bool TryGetLinkedCamera(ECS::Entity& outCamera)
-        {
-            if (LinkedCamera.is_valid())
-            {
-                outCamera = LinkedCamera;
-                return true;
-            }
-            return false;
-        }
-
-        void LinkCamera(ECS::Entity camera)
-        {
-            LinkedCamera = camera;
-        }
-
-        void UnlinkCamera()
-        {
-            LinkedCamera = {};
-        }
-
-        void RequestResize(Point2 size)
-        {
-            PendingResize = true;
-            PendingResizeTarget = size;
-        }
-
-        void ApplyPendingResize()
-        {
-            if (PendingResize)
-            {
-                Resize(PendingResizeTarget);
-                PendingResize = false;
-            }
-        }
-        
-        void Resize(Point2 size)
-        {
-            Size = size;
-
-            if(GBuffer)
-            {
-                FrameBuffer->Resize(size);
-                GBuffer->Resize(size);
-            }
-            
-            for (auto& callback : ResizeCallbacks)
-            {
-                callback(size);
-            }
-        }
-
-        void Move(Point2 position)
-        {
-            Position = position;
-        }
-
-        void SubscribeOnResize(const ResizeCallback& callback)
-        {
-            ResizeCallbacks.Add(callback);
-        }
-
-        Point2 TransformMousePosition(Point2 mousePos)
-        {
-            Point2 transformedPos = mousePos - Position;
-
-            return transformedPos;
-        }
-
-        SGBuffer* GetGBuffer() { return GBuffer; }
-        
-        RenderTarget* GetGBufferRenderTarget(GBufferRenderTarget rt)
-        {
-            return GBuffer ? GBuffer->GetRenderTarget(rt) : nullptr;
-        }
+        RenderTarget* GetGBufferRenderTarget(GBufferRenderTarget rt);
     };
 }

@@ -2,16 +2,20 @@
 
 #ifdef WD_PLATFORM_WINDOWS
 	#if WD_DYNAMIC_LINK
-		#ifdef WD_BUILD_DLL
-			#define WALDEM_API __declspec(dllexport)
+		#ifdef WD_HEADER_ONLY
+			#define WALDEM_API
 		#else
-			#define WALDEM_API __declspec(dllimport)
+			#ifdef WD_BUILD_DLL
+				#define WALDEM_API __declspec(dllexport)
+			#else
+				#define WALDEM_API __declspec(dllimport)
+			#endif
 		#endif
 	#else
 		#define WALDEM_API
 	#endif
 #else
-	#error Waldem only support Windows!
+	#error Waldem only supports Windows!
 #endif
 
 #ifdef WD_DEBUG

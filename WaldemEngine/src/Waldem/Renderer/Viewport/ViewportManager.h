@@ -8,6 +8,9 @@ namespace Waldem
     private:
         inline static WArray<SViewport*> Viewports;
         inline static WArray<SViewport*> IterableViewports;
+        inline static SViewport* GameViewportRef = nullptr;
+        inline static SViewport* EditorViewportRef = nullptr;
+        inline static SViewport* MainViewportRef = nullptr;
         
     public:
         ViewportManager() = default;
@@ -20,6 +23,21 @@ namespace Waldem
             if(iterable)
             {
                 IterableViewports.Add(viewport);
+            }
+
+            switch (type)
+            {
+            case MainViewport:
+                MainViewportRef = viewport;
+                break;
+            case EditorViewport:
+                EditorViewportRef = viewport;
+                break;
+            case GameViewport:
+                GameViewportRef = viewport;
+                break;
+            case CustomViewport:
+                break;
             }
 
             return viewport;
@@ -35,6 +53,21 @@ namespace Waldem
                 IterableViewports.Add(viewport);
             }
 
+            switch (type)
+            {
+            case MainViewport:
+                MainViewportRef = viewport;
+                break;
+            case EditorViewport:
+                EditorViewportRef = viewport;
+                break;
+            case GameViewport:
+                GameViewportRef = viewport;
+                break;
+            case CustomViewport:
+                break;
+            }
+
             return viewport;
         }
 
@@ -45,54 +78,22 @@ namespace Waldem
 
         static SViewport* GetMainViewport()
         {
-            for(auto& viewport : Viewports)
-            {
-                if(viewport->Type == Main)
-                {
-                    return viewport;
-                }
-            }
-
-            return nullptr;
+            return MainViewportRef;
         }
 
         static SViewport* GetEditorViewport()
         {
-            for(auto& viewport : Viewports)
-            {
-                if(viewport->Type == Editor)
-                {
-                    return viewport;
-                }
-            }
-
-            return nullptr;
+            return EditorViewportRef;
         }
 
         static SViewport* GetGameViewport()
         {
-            for(auto& viewport : Viewports)
-            {
-                if(viewport->Type == Game)
-                {
-                    return viewport;
-                }
-            }
-
-            return nullptr;
+            return GameViewportRef ? GameViewportRef : MainViewportRef;
         }
 
         static SViewport* GetCurrentViewport()
         {
             return Renderer::GetCurrentViewport();
-        }
-
-        static void ForEach(const std::function<void(SViewport*)>& func)
-        {
-            for(auto& viewport : IterableViewports)
-            {
-                func(viewport);
-            }
         }
     };
 }

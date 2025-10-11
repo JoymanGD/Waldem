@@ -5,7 +5,7 @@
 namespace Waldem
 {
     template<typename T1, typename T2>
-    struct WALDEM_API WMap
+    struct WMap
     {
     private:
         WArray<WPair<T1, T2>> Data;

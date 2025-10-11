@@ -11,15 +11,21 @@ namespace Waldem
 {
     namespace ECS
     {
-        using Entity = flecs::entity;
+        struct OnFixedUpdate {};
+        struct OnDraw {};
+        struct OnGUI {};
         
-        inline flecs::world World;
-        inline Entity UpdatePipeline;
-        inline Entity FixedUpdatePipeline;
-        inline Entity DrawPipeline;
-        inline Entity GUIPipeline;
-        inline WMap<WString, Entity> RegisteredComponents;
-        inline FreeList HierarchySlots; 
+        using Entity = flecs::entity;
+        using EntityT = flecs::entity_t;
+        using Id = flecs::id;
+        
+        extern WALDEM_API flecs::world World;
+        extern WALDEM_API EntityT UpdatePipeline;
+        extern WALDEM_API EntityT FixedUpdatePipeline;
+        extern WALDEM_API EntityT DrawPipeline; 
+        extern WALDEM_API EntityT GUIPipeline;
+        extern WALDEM_API WMap<WString, Entity> RegisteredComponents;
+        extern WALDEM_API FreeList HierarchySlots;
 
         inline void RunUpdatePipeline(float deltaTime)
         {
@@ -112,9 +118,9 @@ namespace Waldem
             }
         }
         
-        Entity CreateEntity(const WString& name = "", bool enabled = true);
-        Entity CreateSceneEntity(const WString& name, bool enabled = true, bool visibleInHierarchy = true);
-        Entity CloneSceneEntity(Entity entity);
+        Entity WALDEM_API CreateEntity(const WString& name = "", bool enabled = true);
+        Entity WALDEM_API CreateSceneEntity(const WString& name, bool enabled = true, bool visibleInHierarchy = true);
+        Entity WALDEM_API CloneSceneEntity(Entity entity);
 
         class Core
         {

@@ -47,7 +47,7 @@ namespace Waldem
     class Texture2D;
     class TextureDesc;
 
-    class ImageUtils
+    class WALDEM_API ImageUtils
     {
     public:
         static bool TryLoadTexture(const Path& path, Texture2D*& outTexture, bool relative = true);

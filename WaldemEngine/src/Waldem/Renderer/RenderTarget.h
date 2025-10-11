@@ -1,4 +1,5 @@
 #pragma once
+#include "Waldem/Renderer/GraphicResource.h"
 
 namespace Waldem
 {
@@ -16,6 +17,8 @@ namespace Waldem
         const WString& GetName() { return Name; }
         int GetWidth() { return Width; }
         int GetHeight() { return Height; }
+        void SetWidth(int width) { Width = width; }
+        void SetHeight(int height) { Height = height; }
         TextureFormat GetFormat() { return Format; }
     };
 }

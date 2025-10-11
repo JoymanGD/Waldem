@@ -4,7 +4,7 @@ cbuffer RootConstants : register(b0)
 {
     uint SceneDataID;
     uint DepthRTID;
-    uint DeferredRTID;
+    uint TargetRTID;
 };
 
 struct SceneData
@@ -113,13 +113,13 @@ float3 DrawGrid(uint2 tid, float2 screenSize, SceneData sceneData, Texture2D<flo
 void main(uint2 tid : SV_DispatchThreadID)
 {
     Texture2D<float> depthRT = ResourceDescriptorHeap[DepthRTID];
-    RWTexture2D<float4> deferred = ResourceDescriptorHeap[DeferredRTID];
-    float4 deferredColor = deferred.Load(int3(tid,0));
+    RWTexture2D<float4> targetRT = ResourceDescriptorHeap[TargetRTID];
+    float4 deferredColor = targetRT.Load(int3(tid,0));
     StructuredBuffer<SceneData> sceneDataBuffer = ResourceDescriptorHeap[SceneDataID];
     SceneData sceneData = sceneDataBuffer[0];
 
     float2 screenSize;
-    deferred.GetDimensions(screenSize.x, screenSize.y);
+    targetRT.GetDimensions(screenSize.x, screenSize.y);
     
-    deferred[tid] = float4(DrawGrid(tid, screenSize, sceneData, depthRT, deferredColor.rgb), 1.0f);
+    targetRT[tid] = float4(DrawGrid(tid, screenSize, sceneData, depthRT, deferredColor.rgb), 1.0f);
 }

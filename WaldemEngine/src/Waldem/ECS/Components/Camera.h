@@ -130,6 +130,7 @@ namespace Waldem
 
         void UpdateProjectionMatrix(float fov, float aspectRatio, float nearClip, float farClip);
         void SetViewMatrix(Transform* transform) { ViewMatrix = transform->Inverse(); ViewProjectionMatrix = ProjectionMatrix * ViewMatrix; }
+        void SetViewMatrix(Transform& transform) { ViewMatrix = transform.Inverse(); ViewProjectionMatrix = ProjectionMatrix * ViewMatrix; }
         void SetViewMatrix(Matrix4 matrix) { ViewMatrix = matrix; ViewProjectionMatrix = ProjectionMatrix * ViewMatrix; }
         WArray<FrustumPlane> ExtractFrustumPlanes() { return Frustrum.GetPlanes(ViewProjectionMatrix); }
         

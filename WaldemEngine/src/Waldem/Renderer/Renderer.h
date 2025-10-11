@@ -30,7 +30,7 @@ namespace Waldem
         virtual ~IRenderer() = default;
         virtual void Initialize(CWindow* window) = 0;
         virtual void Begin(SViewport* viewport) = 0; 
-        virtual void End() = 0;
+        virtual void End(ResourceStates colorState) = 0;
         virtual void Present() = 0;
         virtual void Draw(CMesh* mesh) = 0;
         virtual void DrawIndirect(uint numCommands, Buffer* indirectBuffer) = 0;
@@ -86,7 +86,7 @@ namespace Waldem
         virtual SViewport* GetCurrentViewport() = 0;
     };
 
-    class Renderer
+    class WALDEM_API Renderer
     {
     public:
         Renderer() = default;
@@ -94,7 +94,7 @@ namespace Waldem
         void Initialize(CWindow* window);
 
         static void Begin(SViewport* viewport);
-        static void End();
+        static void End(ResourceStates colorState = ALL_SHADER_RESOURCE);
         static void Present();
 
         static void Draw(CMesh* mesh);

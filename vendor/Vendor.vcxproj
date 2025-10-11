@@ -53,20 +53,20 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>..\bin\Debug\Vendor\</OutDir>
-    <IntDir>..\bin-int\Debug\Vendor\</IntDir>
+    <OutDir>..\Build\Debug\Vendor\</OutDir>
+    <IntDir>..\Intermediate\Debug\Vendor\</IntDir>
     <TargetName>Vendor</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>..\bin\Release\Vendor\</OutDir>
-    <IntDir>..\bin-int\Release\Vendor\</IntDir>
+    <OutDir>..\Build\Release\Vendor\</OutDir>
+    <IntDir>..\Intermediate\Release\Vendor\</IntDir>
     <TargetName>Vendor</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
-    <OutDir>..\bin\Dist\Vendor\</OutDir>
-    <IntDir>..\bin-int\Dist\Vendor\</IntDir>
+    <OutDir>..\Build\Dist\Vendor\</OutDir>
+    <IntDir>..\Intermediate\Dist\Vendor\</IntDir>
     <TargetName>Vendor</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
@@ -74,11 +74,11 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>WD_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>spdlog\include;assimp\include;stb\include;SDL\include;glm;imgui;ImGuizmo;ECS\include;dxc\inc;mono\include;flecs\include;rapidjson\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;_WINSOCKAPI_;WD_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>SDL\include;spdlog\include;glm;imgui;ImGuizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -95,14 +95,14 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>WD_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>spdlog\include;assimp\include;stb\include;SDL\include;glm;imgui;ImGuizmo;ECS\include;dxc\inc;mono\include;flecs\include;rapidjson\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;_WINSOCKAPI_;WD_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>SDL\include;spdlog\include;glm;imgui;ImGuizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -120,14 +120,14 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>WD_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>spdlog\include;assimp\include;stb\include;SDL\include;glm;imgui;ImGuizmo;ECS\include;dxc\inc;mono\include;flecs\include;rapidjson\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;_WINSOCKAPI_;WD_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>SDL\include;spdlog\include;glm;imgui;ImGuizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -148,7 +148,7 @@
     <ClInclude Include="ImGuizmo\ImGuizmo.h" />
     <ClInclude Include="ImGuizmo\ImSequencer.h" />
     <ClInclude Include="ImGuizmo\ImZoomSlider.h" />
-    <ClInclude Include="flecs\distr\flecs.h" />
+    <ClInclude Include="flecs\flecs.h" />
     <ClInclude Include="glm\glm\common.hpp" />
     <ClInclude Include="glm\glm\detail\_features.hpp" />
     <ClInclude Include="glm\glm\detail\_fixes.hpp" />
@@ -692,7 +692,7 @@
     <ClCompile Include="ImGuizmo\ImSequencer.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="flecs\distr\flecs.c" />
+    <ClCompile Include="flecs\flecs.c" />
     <ClCompile Include="imgui\backends\imgui_impl_dx12.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>

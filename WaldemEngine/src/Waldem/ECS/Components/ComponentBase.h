@@ -1,5 +1,4 @@
 #pragma once
-#include <flecs.h>
 #include "Waldem/ECS/ECS.h"
 #include <typeinfo>
 #include "Waldem/ECS/Components/EditorComponent.h"

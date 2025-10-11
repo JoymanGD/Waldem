@@ -49,7 +49,7 @@ namespace Waldem
         return static_cast<ModelImportFlags>(static_cast<int>(a) | static_cast<int>(b));
     }
     
-    class CModelImporter : public IImporter
+    class WALDEM_API CModelImporter : public IImporter
     {
     public:
         CModelImporter() = default;

@@ -1,6 +1,4 @@
 #pragma once
-#include <FlecsUtils.h>
-
 #include "Waldem/ECS/Components/ColliderComponent.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/ECS/Components/Camera.h"
@@ -56,13 +54,13 @@ namespace Waldem
                                                             WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
                                                             DEFAULT_INPUT_LAYOUT_DESC);
 
-            ECS::World.system("CollisionRenderingSystem").kind(flecs::OnDraw).run([&](flecs::iter& it)
+            ECS::World.system("CollisionRenderingSystem").kind<ECS::OnDraw>().run([&](flecs::iter& it)
             {
                 if(IsInitialized)
                 {
                     if(auto editorCamera = ECS::World.lookup("EditorCamera"))
                     {
-                        ViewProjection = editorCamera.get<Camera>()->ViewProjectionMatrix;
+                        ViewProjection = editorCamera.get<Camera>().ViewProjectionMatrix;
                     }
                             
                     Renderer::BindDepthStencil(DepthRT);

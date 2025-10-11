@@ -6,7 +6,7 @@ namespace Waldem
 {
     class AudioClip;
 
-    class CAudioImporter : public IImporter
+    class WALDEM_API CAudioImporter : public IImporter
     {
     public:
         ~CAudioImporter() override = default;

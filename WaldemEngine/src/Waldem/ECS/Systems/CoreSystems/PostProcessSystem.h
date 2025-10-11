@@ -1,6 +1,4 @@
 #pragma once
-#include <FlecsUtils.h>
-
 #include "Waldem/ECS/ECS.h"
 #include "Waldem/ECS/Components/PostProcessComponent.h"
 #include "Waldem/Renderer/GBuffer.h"
@@ -47,7 +45,7 @@ namespace Waldem
                 Renderer::UploadBuffer(PostProcessParamsBuffer, &bloom, sizeof(PostProcessComponent));
             });
             
-            ECS::World.system<PostProcessComponent>("BloomPostProcessSystem").kind(flecs::OnDraw).each([&](ECS::Entity entity, PostProcessComponent&)
+            ECS::World.system<PostProcessComponent>("BloomPostProcessSystem").kind<ECS::OnDraw>().each([&](ECS::Entity entity, PostProcessComponent&)
             {
                 auto viewport = Renderer::GetCurrentViewport();
                 

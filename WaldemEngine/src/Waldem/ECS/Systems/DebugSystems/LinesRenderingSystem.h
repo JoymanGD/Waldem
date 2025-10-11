@@ -1,6 +1,4 @@
 #pragma once
-#include <FlecsUtils.h>
-
 #include "Waldem/ECS/Components/ColliderComponent.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/ECS/Components/EditorCamera.h"
@@ -51,13 +49,13 @@ namespace Waldem
                 Lines.AddRange(((CMesh*)meshComponent.MeshRef.Mesh)->BBox.GetTransformed(transform).GetLines(color));
             });
 
-            ECS::World.system("LineRenderingSystem").kind(flecs::OnDraw).run([&](flecs::iter& it)
+            ECS::World.system("LineRenderingSystem").kind<ECS::OnDraw>().run([&](flecs::iter& it)
             {
                 if(IsInitialized)
                 {
                     if(auto editorCamera = ECS::World.lookup("EditorCamera"))
                     {
-                        ViewProjection = editorCamera.get<Camera>()->ViewProjectionMatrix;
+                        ViewProjection = editorCamera.get<Camera>().ViewProjectionMatrix;
                     }
                     
                     Renderer::UploadBuffer(LMesh.VertexBuffer, Lines.GetData(), sizeof(Line) * Lines.Num());

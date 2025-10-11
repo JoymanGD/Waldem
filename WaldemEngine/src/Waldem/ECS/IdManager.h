@@ -1,6 +1,4 @@
 #pragma once
-#include <flecs.h>
-
 #include "Waldem/Types/FreeList.h"
 #include "Waldem/Types/WMap.h"
 

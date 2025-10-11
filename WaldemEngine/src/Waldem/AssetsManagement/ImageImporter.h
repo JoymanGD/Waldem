@@ -7,7 +7,7 @@ namespace Waldem
     class TextureDesc;
     class Texture2D;
 
-    class CImageImporter : public IImporter
+    class WALDEM_API CImageImporter : public IImporter
     {
     public:
         virtual ~CImageImporter() override = default;

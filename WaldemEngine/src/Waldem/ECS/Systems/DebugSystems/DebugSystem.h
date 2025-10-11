@@ -51,8 +51,9 @@ namespace Waldem
 
             if(editorCamera)
             {
-                if (const Camera* camera = editorCamera.get<Camera>())
+                if (editorCamera.has<Camera>())
                 {
+                    const Camera& camera = editorCamera.get<Camera>();
                     Vector3 ndcCorners[8] =
                     {
                         {-1.0f, -1.0f, 0}, //near-top-left
@@ -66,7 +67,7 @@ namespace Waldem
                     };
 
                     // Transform NDC corners to world space
-                    CachedViewProjMatrix = camera->ProjectionMatrix * camera->ViewMatrix;
+                    CachedViewProjMatrix = camera.ProjectionMatrix * camera.ViewMatrix;
                     auto invViewProjMatrix = inverse(CachedViewProjMatrix);
                     
                     for (int i = 0; i < 8; ++i)
@@ -222,7 +223,7 @@ namespace Waldem
 
             
 
-            ECS::World.system("LineRenderingSystem").kind(flecs::OnDraw).run([&](flecs::iter& it)
+            ECS::World.system("LineRenderingSystem").kind<ECS::OnDraw>().run([&](flecs::iter& it)
             {
                 if(DisplayDebugRTs)
                 {

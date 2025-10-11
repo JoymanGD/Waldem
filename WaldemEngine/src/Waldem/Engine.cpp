@@ -8,9 +8,11 @@
 #include <mono/metadata/assembly.h>
 #include "Time.h"
 #include "Audio/Audio.h"
-#include "FlecsUtils.h"
 #include "PlatformInitializer.h"
 #include "ECS/ECS.h"
+#include "Input/Input.h"
+#include "Renderer/Viewport/ViewportManager.h"
+#include "SceneManagement/SceneManager.h"
 
 namespace Waldem
 {
@@ -28,6 +30,8 @@ namespace Waldem
 		
 		PlatformInitializer::Initialize();
 
+		Input::Initialize();
+
 		AudioManager = Audio();
 
 		MonoRuntime = Mono();
@@ -42,33 +46,8 @@ namespace Waldem
 		CurrentRenderer.Initialize(Window);
 
 		ECS.Initialize();
-
-		//Layers
-	#ifdef WD_EDITOR
-		Editor = new EditorLayer(Window);
-		PushOverlay(Editor);
-	#endif
-
-		Game = new GameLayer(Window);
-		PushLayer(Game);
-
-		ECS.InitializeSystems();
-		
 		// Debug = new DebugLayer(Window, &CoreECSManager, &ResourceManager);
 		// PushLayer(Debug);
-
-		InitializeLayers();
-	}
-
-	void Engine::InitializeLayers()
-	{
-	#ifdef WD_EDITOR
-		Editor->Initialize();
-	#endif
-		
-		Game->Initialize();
-		
-		// Debug->Initialize(&sceneData);
 	}
 
 	Engine::~Engine()
@@ -155,17 +134,11 @@ namespace Waldem
 			}
 
 			ECS::RunUpdatePipeline(Time::DeltaTime);
-			
-			ViewportManager::ForEach([](SViewport* viewport)
-			{
-				Renderer::Begin(viewport);
-				ECS::RunDrawPipeline(Time::DeltaTime);
-				Renderer::End();
-			});
 
-			Renderer::BeginUI();
-			ECS::RunGUIPipeline(Time::DeltaTime);
-			Renderer::EndUI();
+			for (auto layer : LayerStack)
+			{
+				layer->Draw();
+			}
 
 			Renderer::Present();
 
