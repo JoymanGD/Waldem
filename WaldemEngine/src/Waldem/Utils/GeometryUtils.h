@@ -50,9 +50,9 @@ namespace Waldem
     class WALDEM_API GeometryUtils
     {
     public:
-        static Vector3 Support(const ColliderComponent* colliderA, const ColliderComponent* colliderB, Transform* worldTransformA, Transform* worldTransformB, const Vector3& dir)
+        static Vector3 Support(const ColliderComponent& colliderA, const ColliderComponent& colliderB, Transform& worldTransformA, Transform& worldTransformB, const Vector3& dir)
         {
-            return colliderA->FindFurthestPoint(dir, worldTransformA) - colliderB->FindFurthestPoint(-dir, worldTransformB);
+            return colliderA.FindFurthestPoint(dir, worldTransformA) - colliderB.FindFurthestPoint(-dir, worldTransformB);
         }
 
         static bool SameDirection(const Vector3& a, const Vector3& b)

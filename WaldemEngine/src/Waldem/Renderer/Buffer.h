@@ -21,7 +21,7 @@ namespace Waldem
 
         void AddSize(size_t size) { Size += size; }
         size_t GetCapacity() { return Capacity; }
-        uint32_t GetCount() { return Size / Stride; }
+        uint32_t GetCount() { return Capacity / Stride; }
         uint32_t GetStride() { return Stride; }
         BufferType GetType() { return Type; }
         WString GetName() { return Name; }

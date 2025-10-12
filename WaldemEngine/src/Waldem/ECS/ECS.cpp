@@ -15,8 +15,11 @@
 #include "Components/Transform.h"
 #include "glm/gtc/type_ptr.hpp"
 #include "Systems/CoreSystems/AnimationSystem.h"
+#include "Systems/CoreSystems/CollisionSystem.h"
 #include "Systems/CoreSystems/HybridRenderingSystem.h"
 #include "Systems/CoreSystems/ParticleSystem.h"
+#include "Systems/CoreSystems/PhysicsIntegrationSystem.h"
+#include "Systems/CoreSystems/PhysicsUpdateSystem.h"
 #include "Systems/CoreSystems/PostProcessSystem.h"
 #include "Systems/CoreSystems/ScreenQuadSystem.h"
 #include "Systems/CoreSystems/SpatialAudioSystem.h"
@@ -72,9 +75,9 @@ namespace Waldem
             });
             
             // Systems.Add(OceanSimulationSystem());
-            // Systems.Add(PhysicsIntegrationSystem());
-            // Systems.Add(PhysicsUpdateSystem());
-            // Systems.Add(CollisionSystem());
+            Systems.Add(new PhysicsIntegrationSystem());
+            Systems.Add(new PhysicsUpdateSystem());
+            Systems.Add(new CollisionSystem());
             Systems.Add(new SpatialAudioSystem());
             Systems.Add(new AnimationSystem());
             Systems.Add(new HybridRenderingSystem());
@@ -170,6 +173,10 @@ namespace Waldem
                     }
                     return nullptr;
                 });
+
+            World.component<AABB>("AABB")
+                .member<Vector3>("Min")
+                .member<Vector3>("Max");
             
             World.component<WString>()
                 .opaque(flecs::String)
@@ -182,12 +189,6 @@ namespace Waldem
                 {
                     *data = value;
                 });
-
-            World.component<LightType>()
-                .constant("Directional", LightType::Directional)
-                .constant("Point", LightType::Point)
-                .constant("Spot", LightType::Spot)
-                .constant("Area", LightType::Area);
             
             World.component<AssetReference>()
                 .opaque(flecs::String)
@@ -195,7 +196,6 @@ namespace Waldem
                 {
                     WString refStr = data->Reference.string();
                     const char* cstr = refStr.C_Str();
-                    s->member("Reference");
                     s->value(flecs::String, &cstr);
                     return 0;
                 })
@@ -220,6 +220,8 @@ namespace Waldem
             ParticleSystemComponent::RegisterComponent(World);
             PlayerController::RegisterComponent(World);
             PostProcessComponent::RegisterComponent(World);
+            ColliderComponent::RegisterComponent(World);
+            AABB::RegisterComponent(World);
         }
 
         Entity CreateEntity(const WString& name, bool enabled)

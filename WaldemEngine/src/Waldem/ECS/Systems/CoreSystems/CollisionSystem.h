@@ -14,43 +14,37 @@
 
 namespace Waldem
 {
-    struct PhysicsFrameData
+    struct PhysicObjectData
     {
-        WArray<AABB> BoundingBoxes;
-        WArray<Transform*> Transforms;
-        WArray<ColliderComponent*> Colliders;
-        WArray<RigidBody*> RigidBodies;
-        WArray<WString> Names;
+        WString Name;
+        AABB BoundingBox;
+    };
 
-        void Clear()
-        {
-            BoundingBoxes.Clear();
-            Transforms.Clear();
-            Colliders.Clear();
-            RigidBodies.Clear();
-            Names.Clear();
-        }
+    struct Collision
+    {
+        CollisionPair Colliders;
+        Contact ContactData;
     };
     
-    class WALDEM_API CollisionSystem : public ISystem
+    class WALDEM_API CollisionSystem : public ICoreSystem
     {
-        BVHNode* RootNode;
+        BVHNode* RootNode = nullptr;
         int MaxIterations = 50;
         WArray<PersistentContact> ContactCache;
-        PhysicsFrameData FrameData;
+        WMap<ECS::Entity, AABB> EntityPhysicObjectsMap;
         
-        BVHNode* BuildBVH(WArray<AABB>& objects, WArray<WString>& names, int start, int end)
+        BVHNode* BuildBVH(int start, int end)
         {
             BVHNode* node = new BVHNode();
             int objectCount = end - start;
 
-            AABB box = objects[start];
+            AABB box = EntityPhysicObjectsMap[start].value;
             for (int i = start + 1; i < end; i++)
             {
-                box.Expand(objects[i]);
+                box.Expand(EntityPhysicObjectsMap[i].value);
             }
             node->Box = box;
-            node->DebugName = names[start];
+            node->DebugName = WString(EntityPhysicObjectsMap[start].key.name().c_str());
 
             if (objectCount == 1)
             {
@@ -65,28 +59,28 @@ namespace Waldem
             if (size.z > size.x && size.z > size.y) axis = 2;
 
             int mid = start + objectCount / 2;
-            std::nth_element(objects.begin() + start, objects.begin() + mid, objects.begin() + end,
-                [axis](const AABB& a, const AABB& b)
-                {
-                    return a.Min[axis] < b.Min[axis];
-                });
+            std::nth_element(EntityPhysicObjectsMap.begin() + start, EntityPhysicObjectsMap.begin() + mid, EntityPhysicObjectsMap.begin() + end,
+            [axis](const WPair<ECS::Entity, AABB>& a, const WPair<ECS::Entity, AABB>& b)
+            {
+                return a.value.Min[axis] < b.value.Min[axis];
+            });
 
-            node->Left = BuildBVH(objects, names, start, mid);
-            node->Right = BuildBVH(objects, names, mid, end);
+            node->Left = BuildBVH(start, mid);
+            node->Right = BuildBVH(mid, end);
 
             return node;
         }
 
-        void UpdateBVH(BVHNode* node, WArray<AABB>& objects)
+        void UpdateBVH(BVHNode* node)
         {
             if (node->IsLeaf()) 
             {
-                node->Box = objects[node->ObjectIndex];
+                node->Box = EntityPhysicObjectsMap[node->ObjectIndex].value;
                 return;
             }
 
-            if (node->Left) UpdateBVH(node->Left, objects);
-            if (node->Right) UpdateBVH(node->Right, objects);
+            if (node->Left) UpdateBVH(node->Left);
+            if (node->Right) UpdateBVH(node->Right);
 
             node->Box = node->Left ? node->Left->Box : AABB();
             if (node->Right) node->Box.Expand(node->Right->Box);
@@ -134,7 +128,7 @@ namespace Waldem
             }
         }
 
-        Contact EPA(const Simplex& simplex, const ColliderComponent* colliderA, const ColliderComponent* colliderB, Transform* worldTransformA, Transform* worldTransformB)
+        Contact EPA(const Simplex& simplex, const ColliderComponent& colliderA, const ColliderComponent& colliderB, Transform& worldTransformA, Transform& worldTransformB)
         {
             Contact contact;
             contact.HasCollision = false;
@@ -184,8 +178,8 @@ namespace Waldem
                 finalFaceIdx = (int)minFace;
         
                 // get support from colliders
-                Vector3 supportA = colliderA->FindFurthestPoint(minNormal, worldTransformA);
-                Vector3 supportB = colliderB->FindFurthestPoint(-minNormal, worldTransformB);
+                Vector3 supportA = colliderA.FindFurthestPoint(minNormal, worldTransformA);
+                Vector3 supportB = colliderB.FindFurthestPoint(-minNormal, worldTransformB);
                 Vector3 support  = supportA - supportB;
         
                 float sDistance = dot(minNormal, support);
@@ -296,13 +290,13 @@ namespace Waldem
             return contact;
         }
 
-        Contact GJK(const ColliderComponent* colliderA, const ColliderComponent* colliderB, Transform* worldTransformA, Transform* worldTransformB)
+        Contact GJK(const ColliderComponent& colliderA, const ColliderComponent& colliderB, Transform& worldTransformA, Transform& worldTransformB)
         {
             Contact contact;
         
             Vector3 initialDir = Vector3(1, 0, 0);
             
-            SimplexVertex support = SimplexVertex(colliderA->FindFurthestPoint(initialDir, worldTransformA), colliderB->FindFurthestPoint(-initialDir, worldTransformB));
+            SimplexVertex support = SimplexVertex(colliderA.FindFurthestPoint(initialDir, worldTransformA), colliderB.FindFurthestPoint(-initialDir, worldTransformB));
         
             Simplex points;
             points.Add(support);
@@ -319,7 +313,7 @@ namespace Waldem
                     return contact;
                 }
                 
-                support = SimplexVertex(colliderA->FindFurthestPoint(direction, worldTransformA), colliderB->FindFurthestPoint(-direction, worldTransformB));
+                support = SimplexVertex(colliderA.FindFurthestPoint(direction, worldTransformA), colliderB.FindFurthestPoint(-direction, worldTransformB));
         
                 if(dot(support.Point, direction) <= 0)
                 {
@@ -340,12 +334,12 @@ namespace Waldem
             }
         }
 
-        void ResolveCollision(Transform* transformA, Transform* transformB, RigidBody* rigidBodyA, RigidBody* rigidBodyB, const Contact& contact)
+        void ResolveCollision(Transform& transformA, Transform& transformB, RigidBody& rigidBodyA, RigidBody& rigidBodyB, const Contact& contact)
         {
             if (!contact.HasCollision)
                 return;
 
-            float totalMass = rigidBodyA->InvMass + rigidBodyB->InvMass;
+            float totalMass = rigidBodyA.InvMass + rigidBodyB.InvMass;
             
             if (totalMass == 0)
             {
@@ -360,21 +354,21 @@ namespace Waldem
 
                 Vector3 correction = contact.Normal * correctionMagnitude;
 
-                if (!rigidBodyA->IsKinematic)
-                    transformA->Translate(-(correction * (rigidBodyA->InvMass / totalMass)));
+                if (!rigidBodyA.IsKinematic)
+                    transformA.Translate(-(correction * (rigidBodyA.InvMass / totalMass)));
 
-                if (!rigidBodyB->IsKinematic)
-                    transformB->Translate(correction * (rigidBodyB->InvMass / totalMass));
+                if (!rigidBodyB.IsKinematic)
+                    transformB.Translate(correction * (rigidBodyB.InvMass / totalMass));
             }
 
-            Vector3 ra = contact.ContactPointA - transformA->Position;
-            Vector3 rb = contact.ContactPointB - transformB->Position;
+            Vector3 ra = contact.ContactPointA - transformA.Position;
+            Vector3 rb = contact.ContactPointB - transformB.Position;
 
-            Vector3 angVelocityA = cross(rigidBodyA->AngularVelocity, ra);
-            Vector3 angVelocityB = cross(rigidBodyB->AngularVelocity, rb);
+            Vector3 angVelocityA = cross(rigidBodyA.AngularVelocity, ra);
+            Vector3 angVelocityB = cross(rigidBodyB.AngularVelocity, rb);
             
-            Vector3 fullVelocityA = rigidBodyA->Velocity + angVelocityA;
-            Vector3 fullVelocityB = rigidBodyB->Velocity + angVelocityB;
+            Vector3 fullVelocityA = rigidBodyA.Velocity + angVelocityA;
+            Vector3 fullVelocityB = rigidBodyB.Velocity + angVelocityB;
             Vector3 relativeVelocity = fullVelocityB - fullVelocityA;
             
             float contactVelocity = dot(relativeVelocity, contact.Normal);
@@ -384,13 +378,13 @@ namespace Waldem
                 return;
             }
 
-            auto invTensorA = Matrix3(transformA->Matrix) * rigidBodyA->InvInertiaTensor * transpose(Matrix3(transformA->Matrix));
-            auto invTensorB = Matrix3(transformB->Matrix) * rigidBodyB->InvInertiaTensor * transpose(Matrix3(transformB->Matrix));
+            auto invTensorA = Matrix3(transformA.Matrix) * rigidBodyA.InvInertiaTensor * transpose(Matrix3(transformA.Matrix));
+            auto invTensorB = Matrix3(transformB.Matrix) * rigidBodyB.InvInertiaTensor * transpose(Matrix3(transformB.Matrix));
             
             Vector3 raInertia = invTensorA * cross(ra, contact.Normal);
             Vector3 rbInertia = invTensorB * cross(rb, contact.Normal);
 
-            float invMassSum = rigidBodyA->InvMass + rigidBodyB->InvMass + dot(contact.Normal, cross(raInertia, ra)) + dot(contact.Normal, cross(rbInertia, rb));
+            float invMassSum = rigidBodyA.InvMass + rigidBodyB.InvMass + dot(contact.Normal, cross(raInertia, ra)) + dot(contact.Normal, cross(rbInertia, rb));
             float restitution = 0.4f; // 0.5f for now
             float j = -(1.0f + restitution) * contactVelocity;
             j /= invMassSum;
@@ -402,39 +396,32 @@ namespace Waldem
             if (length(impulse) < 0.001f)
                 return;
 
-            if(!rigidBodyA->IsKinematic)
+            if(!rigidBodyA.IsKinematic)
             {
-                rigidBodyA->Velocity -= impulse * rigidBodyA->InvMass;
-                rigidBodyA->AngularVelocity -= invTensorA * cross(ra, impulse);
+                rigidBodyA.Velocity -= impulse * rigidBodyA.InvMass;
+                rigidBodyA.AngularVelocity -= invTensorA * cross(ra, impulse);
             }
 
-            if(!rigidBodyB->IsKinematic)
+            if(!rigidBodyB.IsKinematic)
             {
-                rigidBodyB->Velocity += impulse * rigidBodyB->InvMass;
-                rigidBodyB->AngularVelocity += invTensorB * cross(rb, impulse);
+                rigidBodyB.Velocity += impulse * rigidBodyB.InvMass;
+                rigidBodyB.AngularVelocity += invTensorB * cross(rb, impulse);
             }
         }
 
-        void NarrowPhaseCollision(WArray<CollisionPair>& collisions, WArray<ColliderComponent*>& colliders, WArray<RigidBody*>& rigidBodies, WArray<Transform*>& transforms)
+        void NarrowPhaseCollision(WArray<CollisionPair>& collisionPairs, WArray<Collision>& outCollisions)
         {
             for (auto& contact : ContactCache)
             {
                 contact.WasUpdatedThisFrame = false;
             }
             
-            for (auto collision : collisions)
+            for (auto& collisionPair : collisionPairs)
             {
-                ColliderComponent* collider1 = colliders[collision.first];
-                ColliderComponent* collider2 = colliders[collision.second];
-                Transform* worldTransformA = transforms[collision.first];
-                Transform* worldTransformB = transforms[collision.second];
-                RigidBody* rigidBodyA = rigidBodies[collision.first];
-                RigidBody* rigidBodyB = rigidBodies[collision.second];
-
-                if(rigidBodyA->IsKinematic && rigidBodyB->IsKinematic)
-                {
-                    continue;
-                }
+                ColliderComponent& collider1 = EntityPhysicObjectsMap[collisionPair.first].key.get_mut<ColliderComponent>();
+                ColliderComponent& collider2 = EntityPhysicObjectsMap[collisionPair.second].key.get_mut<ColliderComponent>();
+                Transform& worldTransformA = EntityPhysicObjectsMap[collisionPair.first].key.get_mut<Transform>();
+                Transform& worldTransformB = EntityPhysicObjectsMap[collisionPair.second].key.get_mut<Transform>();
 
             	Contact contact = GJK(collider1, collider2, worldTransformA, worldTransformB);
                 // if (contact.HasCollision)
@@ -449,51 +436,7 @@ namespace Waldem
 
                 if(contact.HasCollision)
                 {
-                    WD_CORE_INFO("Normal: [{0},{1},{2}], Penetration: {3}", contact.Normal.x, contact.Normal.y, contact.Normal.z, contact.PenetrationDepth);
-
-                    if(contact.PenetrationDepth < 0.01f)
-                    {
-                        continue;
-                    }
-                    
-                    int idA = collision.first;
-                    int idB = collision.second;
-                    if (idA > idB) std::swap(idA, idB);
-
-                    // Try to find existing cached contact
-                    PersistentContact* cached = nullptr;
-                    for (auto& entry : ContactCache)
-                    {
-                        if (entry.ColliderA == idA && entry.ColliderB == idB)
-                        {
-                            cached = &entry;
-                            break;
-                        }
-                    }
-
-                    if (cached)
-                    {
-                        // Blend penetration depth & normal slightly
-                        cached->ContactData.Normal = normalize(mix(cached->ContactData.Normal, contact.Normal, 0.25f));
-                        cached->ContactData.PenetrationDepth = (cached->ContactData.PenetrationDepth + contact.PenetrationDepth) * 0.5f;
-                        cached->ContactData.ContactPointA = contact.ContactPointA;
-                        cached->ContactData.ContactPointB = contact.ContactPointB;
-                        
-                        ResolveCollision(worldTransformA, worldTransformB, rigidBodyA, rigidBodyB, cached->ContactData);
-                        cached->WasUpdatedThisFrame = true;
-                    }
-                    else
-                    {
-                        PersistentContact newEntry;
-                        newEntry.ContactData = contact;
-                        newEntry.ColliderA = idA;
-                        newEntry.ColliderB = idB;
-                        newEntry.WasUpdatedThisFrame = true;
-
-                        ContactCache.Add(newEntry);
-
-                        ResolveCollision(worldTransformA, worldTransformB, rigidBodyA, rigidBodyB, contact);
-                    }
+                    outCollisions.Add({collisionPair, contact});
                 }
             }
 
@@ -502,6 +445,76 @@ namespace Waldem
                 if (!ContactCache[i].WasUpdatedThisFrame)
                 {
                     ContactCache.RemoveAt(i);
+                }
+            }
+        }
+
+        void ResolveCollisions(WArray<Collision>& collisions)
+        {
+            for (auto& collision : collisions)
+            {
+                auto& entityA = EntityPhysicObjectsMap[collision.Colliders.first].key;
+                auto& entityB = EntityPhysicObjectsMap[collision.Colliders.second].key;
+
+                if(!entityA.has<Transform>() || !entityA.has<RigidBody>() || !entityB.has<Transform>() || !entityB.has<RigidBody>())
+                {
+                    continue;
+                }
+                
+                Transform& worldTransformA = entityA.get_mut<Transform>();
+                Transform& worldTransformB = entityB.get_mut<Transform>();
+                RigidBody& rigidBodyA = entityA.get_mut<RigidBody>();
+                RigidBody& rigidBodyB = entityB.get_mut<RigidBody>();
+                
+                WD_CORE_INFO("Normal: [{0},{1},{2}], Penetration: {3}", collision.ContactData.Normal.x, collision.ContactData.Normal.y, collision.ContactData.Normal.z, collision.ContactData.PenetrationDepth);
+
+                if(rigidBodyA.IsKinematic && rigidBodyB.IsKinematic)
+                {
+                    continue;
+                }
+
+                if(collision.ContactData.PenetrationDepth < 0.01f)
+                {
+                    continue;
+                }
+                
+                int idA = collision.Colliders.first;
+                int idB = collision.Colliders.second;
+                if (idA > idB) std::swap(idA, idB);
+
+                // Try to find existing cached collision.ContactData
+                PersistentContact* cached = nullptr;
+                for (auto& entry : ContactCache)
+                {
+                    if (entry.ColliderA == idA && entry.ColliderB == idB)
+                    {
+                        cached = &entry;
+                        break;
+                    }
+                }
+
+                if (cached)
+                {
+                    // Blend penetration depth & normal slightly
+                    cached->ContactData.Normal = normalize(mix(cached->ContactData.Normal, collision.ContactData.Normal, 0.25f));
+                    cached->ContactData.PenetrationDepth = (cached->ContactData.PenetrationDepth + collision.ContactData.PenetrationDepth) * 0.5f;
+                    cached->ContactData.ContactPointA = collision.ContactData.ContactPointA;
+                    cached->ContactData.ContactPointB = collision.ContactData.ContactPointB;
+                    
+                    ResolveCollision(worldTransformA, worldTransformB, rigidBodyA, rigidBodyB, cached->ContactData);
+                    cached->WasUpdatedThisFrame = true;
+                }
+                else
+                {
+                    PersistentContact newEntry;
+                    newEntry.ContactData = collision.ContactData;
+                    newEntry.ColliderA = idA;
+                    newEntry.ColliderB = idB;
+                    newEntry.WasUpdatedThisFrame = true;
+
+                    ContactCache.Add(newEntry);
+
+                    ResolveCollision(worldTransformA, worldTransformB, rigidBodyA, rigidBodyB, collision.ContactData);
                 }
             }
         }
@@ -517,43 +530,54 @@ namespace Waldem
     public:
         CollisionSystem() {}
         
-        void Initialize(InputManager* inputManager) override
+        void Initialize() override
         {
-            ECS::World.system<Transform, ColliderComponent, RigidBody, const MeshComponent>().kind(flecs::OnUpdate).each([&](flecs::entity e, Transform& transform, ColliderComponent& collider, RigidBody& rigidBody, const MeshComponent& meshComponent)
+            ECS::World.observer<Transform, ColliderComponent>().event(flecs::OnAdd).each([&](ECS::Entity e, Transform& transform, ColliderComponent& collider)
             {
-                if (collider.Type == WD_COLLIDER_TYPE_MESH)
+                if(!EntityPhysicObjectsMap.Contains(e))
                 {
-                    UpdateMeshVertices(*(CMesh*)meshComponent.MeshRef.Mesh, collider, transform);
+                    EntityPhysicObjectsMap[e] = AABB();
                 }
 
-                AABB transformedBox = ((CMesh*)meshComponent.MeshRef.Mesh)->BBox.GetTransformed(transform);
-                collider.IsColliding = false;
-
-                FrameData.BoundingBoxes.Add(transformedBox);
-                FrameData.Colliders.Add(&collider);
-                FrameData.RigidBodies.Add(&rigidBody);
-                FrameData.Transforms.Add(&transform);
-
-                //TODO: cache indices returned by Add function to some object data stored in some ObjectDatas array
-            });
-
-            ECS::World.system<>().kind(flecs::OnUpdate).each([&](flecs::entity)
-            {
-                if (FrameData.BoundingBoxes.IsEmpty())
-                {
-                    return;
-                }
-
-                UpdateBVH(RootNode, FrameData.BoundingBoxes);
-
-                WArray<CollisionPair> collisions;
-                BroadPhaseCollision(RootNode, RootNode, collisions);
-                NarrowPhaseCollision(collisions, FrameData.Colliders, FrameData.RigidBodies, FrameData.Transforms);
-
-                FrameData.Clear(); // very important!
+                RootNode = BuildBVH(0, EntityPhysicObjectsMap.Num());
             });
             
-            RootNode = BuildBVH(FrameData.BoundingBoxes, FrameData.Names, 0, FrameData.BoundingBoxes.Num());
+            ECS::World.observer<Transform, RigidBody>().event(flecs::OnAdd).each([&](ECS::Entity e, Transform&, RigidBody& rigidBody)
+            {
+                if(!EntityPhysicObjectsMap.Contains(e))
+                {
+                    EntityPhysicObjectsMap[e] = AABB();
+                }
+            });
+            
+            ECS::World.observer<Transform, ColliderComponent>().event(flecs::OnSet).each([&](ECS::Entity e, Transform& transform, ColliderComponent& collider)
+            {
+                EntityPhysicObjectsMap[e] = AABB().GetTransformed(transform);
+            });
+            
+            ECS::World.system().kind<ECS::OnFixedUpdate>().each([&]
+            {
+                WArray<CollisionPair> broadphaseCollisionPairs;
+                
+                if (EntityPhysicObjectsMap.Num() > 1)
+                {
+                    UpdateBVH(RootNode);
+
+                    BroadPhaseCollision(RootNode->Left, RootNode->Right, broadphaseCollisionPairs);
+                }
+
+                WArray<Collision> collisions;
+                
+                if(!broadphaseCollisionPairs.IsEmpty())
+                {
+                    NarrowPhaseCollision(broadphaseCollisionPairs, collisions);
+                }
+
+                if(!collisions.IsEmpty())
+                {
+                    ResolveCollisions(collisions);
+                }
+            });
             
             IsInitialized = true;
         }

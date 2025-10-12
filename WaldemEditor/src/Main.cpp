@@ -3,6 +3,7 @@
 
 #include "EditorLayer.h"
 #include "Waldem/Engine.h"
+#include "Waldem/Layers/DebugLayer.h"
 #include "Waldem/Log/Log.h"
 
 #ifdef WD_PLATFORM_WINDOWS

@@ -31,7 +31,10 @@ namespace Waldem
             {
                 if (ImGui::BeginMenu("File"))
                 {
-                    if (ImGui::MenuItem("New scene")) {}
+                    if (ImGui::MenuItem("New scene"))
+                    {
+                        SceneManager::NewScene();
+                    }
                     if (ImGui::MenuItem("Open scene", "Ctrl+O"))
                     {
                         if(OpenFile(CurrentScenePath))

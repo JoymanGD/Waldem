@@ -7,11 +7,10 @@ namespace Waldem
 {
     enum ColliderType
     {
-        WD_COLLIDER_TYPE_NONE = 0,
-        WD_COLLIDER_TYPE_SPHERE = 1,
-        WD_COLLIDER_TYPE_BOX = 2,
-        WD_COLLIDER_TYPE_CAPSULE = 3,
-        WD_COLLIDER_TYPE_MESH = 4
+        Sphere,
+        Box,
+        Capsule,
+        Mesh
     };
 
     struct BoxColliderData
@@ -52,15 +51,17 @@ namespace Waldem
     
     struct WALDEM_API ColliderComponent
     {
-        ColliderType Type = WD_COLLIDER_TYPE_BOX;
+        COMPONENT(ColliderComponent)
+            FIELD(ColliderType, Type)
+        END_COMPONENT()
+        
+        ColliderType Type = Box;
         SphereColliderData SphereData;
         CapsuleColliderData CapsuleData;
         MeshColliderData MeshData;
         BoxColliderData BoxData;
         bool IsColliding = false;
 
-        ColliderComponent() = default;
-        
         ColliderComponent(ColliderType type, SphereColliderData data)
             : Type(type), SphereData(data) {}
         
@@ -73,24 +74,24 @@ namespace Waldem
         ColliderComponent(ColliderType type, BoxColliderData data)
             : Type(type), BoxData(data) {}
 
-        Vector3 FindFurthestPoint(Vector3 dir, Transform* worldTransform) const
+        Vector3 FindFurthestPoint(Vector3 dir, Transform& worldTransform) const
         {
             switch (Type)
             {
-                case WD_COLLIDER_TYPE_SPHERE:
+                case Sphere:
                 {
-                    return worldTransform->Position + normalize(dir) * SphereData.Radius;
+                    return worldTransform.Position + normalize(dir) * SphereData.Radius;
                 }
-                case WD_COLLIDER_TYPE_CAPSULE:
+                case Capsule:
                 {
-                    Vector3 top = worldTransform->Matrix * Vector4(0, CapsuleData.Height * 0.5f, 0, 1);
-                    Vector3 bottom = worldTransform->Matrix * Vector4(0, -CapsuleData.Height * 0.5f, 0, 1);
+                    Vector3 top = worldTransform.Matrix * Vector4(0, CapsuleData.Height * 0.5f, 0, 1);
+                    Vector3 bottom = worldTransform.Matrix * Vector4(0, -CapsuleData.Height * 0.5f, 0, 1);
                     Vector3 furthestEnd = (dot(top, dir) > dot(bottom, dir)) ? top : bottom;
                     return furthestEnd + normalize(dir) * CapsuleData.Radius;
                 }
-                case WD_COLLIDER_TYPE_BOX:
+                case Box:
                 {
-                    Vector3 transformedSize = worldTransform->Matrix * Vector4(BoxData.Size, 1.0f);
+                    Vector3 transformedSize = worldTransform.Matrix * Vector4(BoxData.Size, 1.0f);
                         
                     Vector3 localFurthest = Vector3(
                         (dir.x >= 0.0f) ? transformedSize.x : -transformedSize.x,
@@ -99,7 +100,7 @@ namespace Waldem
                     );
                     return localFurthest;
                 }
-                case WD_COLLIDER_TYPE_MESH:
+                case Mesh:
                 {
                     Vector3 maxPoint = Vector3(0.0f);
                     float maxDistance = -FLT_MAX;
@@ -125,11 +126,9 @@ namespace Waldem
         {
             switch (Type)
             {
-            case WD_COLLIDER_TYPE_NONE:
-                break;
-            case WD_COLLIDER_TYPE_SPHERE:
+            case Sphere:
                 return (2.0f / 5.0f) * mass * SphereData.Radius * SphereData.Radius;
-            case WD_COLLIDER_TYPE_BOX:
+            case Box:
                 {
                     float x2 = BoxData.Size.x * BoxData.Size.x;
                     float y2 = BoxData.Size.y * BoxData.Size.y;
@@ -140,7 +139,7 @@ namespace Waldem
                         0, 0, x2 + y2
                     );
                 }
-            case WD_COLLIDER_TYPE_CAPSULE:
+            case Capsule:
                 {
                     float radius2 = CapsuleData.Radius * CapsuleData.Radius;
                     float height2 = CapsuleData.Height * CapsuleData.Height;
@@ -155,7 +154,7 @@ namespace Waldem
                         0, 0, Izz
                     );
                 }
-            case WD_COLLIDER_TYPE_MESH:
+            case Mesh:
                 {
                     return PhysicsUtils::ComputeMeshInertiaTensor(MeshData.Vertices, MeshData.Indices, mass);
                 }

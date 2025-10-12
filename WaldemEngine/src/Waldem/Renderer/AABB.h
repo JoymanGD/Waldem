@@ -7,8 +7,15 @@ namespace Waldem
 {
     struct AABB
     {
-        Vector3 Min;
-        Vector3 Max;
+        COMPONENT(AABB)
+            FIELD(Vector3, Min)
+            FIELD(Vector3, Max)
+        END_COMPONENT()
+        
+        Vector3 Min = Vector3(-0.5f, -0.5f, -0.5f);
+        Vector3 Max = Vector3(0.5f, 0.5f, 0.5f);
+
+        AABB(const Vector3& min, const Vector3& max) : Min(min), Max(max) {}
 
         AABB GetTransformed(const Matrix4& transform)
         {

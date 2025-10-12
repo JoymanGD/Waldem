@@ -8,6 +8,13 @@ namespace Waldem
     public:
         static GameScene* GetCurrentScene() { return CurrentScene; }
 
+        static void NewScene()
+        {
+            UnloadScene();
+            CurrentScene = new GameScene();
+            CurrentScene->Initialize();
+        }
+
         static void UnloadScene()
         {
             WArray<flecs::entity> to_remove;

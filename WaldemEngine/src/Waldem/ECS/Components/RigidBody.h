@@ -27,7 +27,7 @@ namespace Waldem
         Vector3 Velocity = Vector3(0);
         Vector3 AngularVelocity = Vector3(0);
         float Mass = 1.0f;
-        float InvMass = 0.0f;
+        float InvMass = 1.0f;
         float LinearDamping = 0.9f;
         float AngularDamping = 0.9f;
         Matrix3 InertiaTensor = Matrix3(0);

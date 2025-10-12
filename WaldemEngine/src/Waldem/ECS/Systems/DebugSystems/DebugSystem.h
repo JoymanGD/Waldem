@@ -221,8 +221,6 @@ namespace Waldem
             Point3 numThreads = Renderer::GetNumThreadsPerGroup(DebugRenderTargetsComputeShader);
             GroupCount = Point3((resolution.x + numThreads.x - 1) / numThreads.x, (resolution.y + numThreads.y - 1) / numThreads.y, 1);
 
-            
-
             ECS::World.system("LineRenderingSystem").kind<ECS::OnDraw>().run([&](flecs::iter& it)
             {
                 if(DisplayDebugRTs)

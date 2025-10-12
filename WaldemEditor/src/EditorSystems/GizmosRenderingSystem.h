@@ -161,7 +161,7 @@ namespace Waldem
 
             ECS::World.observer<Light, Transform>().event(flecs::OnAdd).each([&](flecs::entity e, Light&, Transform& t)
             {
-                AddIcon(e, t, GizmoPointLight);
+                AddIcon(e, t, GizmoSun);
             });
 
             ECS::World.observer<ParticleSystemComponent, Transform>().event(flecs::OnAdd).each([&](flecs::entity e, ParticleSystemComponent&, Transform& t)

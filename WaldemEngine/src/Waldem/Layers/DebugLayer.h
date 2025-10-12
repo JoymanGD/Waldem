@@ -1,9 +1,8 @@
 #pragma once
 
 #include "Waldem/ECS/Systems/System.h"
-#include "Waldem/ECS/Systems/DebugSystems/CollisionRenderingSystem.h"
+#include "Waldem/ECS/Systems/DebugSystems/BoundingBoxRenderingSystem.h"
 #include "Waldem/ECS/Systems/DebugSystems/DebugSystem.h"
-#include "Waldem/ECS/Systems/DebugSystems/LinesRenderingSystem.h"
 #include "Waldem/Input/InputManager.h"
 #include "Waldem/Layers/Layer.h"
 
@@ -31,9 +30,10 @@ namespace Waldem
             Renderer::CreateRenderTarget("DebugRT_8", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
             Renderer::CreateRenderTarget("DebugRT_9", debugRTResolution.x, debugRTResolution.y, TextureFormat::R32G32B32A32_FLOAT);
             
-            UpdateSystems.Add(new DebugSystem());
-            // UpdateSystems.Add((ISystem*)new LinesRenderingSystem(CurrentECSManager));
-            UpdateSystems.Add(new CollisionRenderingSystem());
+            // UpdateSystems.Add(new DebugSystem());
+            // UpdateSystems.Add(new LinesRenderingSystem());
+            // UpdateSystems.Add(new CollisionRenderingSystem());
+            UpdateSystems.Add(new BoundingBoxRenderingSystem());
 
             InputManager.SubscribeToKeyEvent(WD_KeyCode::F1, [&](bool isPressed)
             {
@@ -52,22 +52,6 @@ namespace Waldem
             }
 
 			Initialized = true;
-        }
-        
-        void Begin() override
-        {
-        }
-        
-        void End() override
-        {
-        }
-        
-        void OnAttach() override
-        {
-        }
-        
-        void OnDetach() override
-        {
         }
         
         void OnEvent(Event& event) override

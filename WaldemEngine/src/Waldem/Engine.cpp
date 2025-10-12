@@ -11,6 +11,7 @@
 #include "PlatformInitializer.h"
 #include "ECS/ECS.h"
 #include "Input/Input.h"
+#include "Layers/DebugLayer.h"
 #include "Renderer/Viewport/ViewportManager.h"
 #include "SceneManagement/SceneManager.h"
 
@@ -46,8 +47,10 @@ namespace Waldem
 		CurrentRenderer.Initialize(Window);
 
 		ECS.Initialize();
-		// Debug = new DebugLayer(Window, &CoreECSManager, &ResourceManager);
-		// PushLayer(Debug);
+    
+		auto degugLayer = new DebugLayer(Window);
+		degugLayer->Initialize();
+		PushLayer(degugLayer);
 	}
 
 	Engine::~Engine()

@@ -5,14 +5,14 @@
 
 namespace Waldem
 {
-    class WALDEM_API PhysicsIntegrationSystem : public ISystem
+    class WALDEM_API PhysicsIntegrationSystem : public ICoreSystem
     {
     public:
         Vector3 Gravity = Vector3(0, -9.81f, 0);
         
         PhysicsIntegrationSystem() {}
         
-        void Initialize(InputManager* inputManager) override
+        void Initialize() override
         {
             ECS::World.system<Transform, RigidBody>().kind(flecs::OnUpdate).each([&](Transform& transform, RigidBody& rigidBody)
             {
