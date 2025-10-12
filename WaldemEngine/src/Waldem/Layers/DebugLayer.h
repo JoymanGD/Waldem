@@ -2,6 +2,7 @@
 
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/ECS/Systems/DebugSystems/BoundingBoxRenderingSystem.h"
+#include "Waldem/ECS/Systems/DebugSystems/CollisionRenderingSystem.h"
 #include "Waldem/ECS/Systems/DebugSystems/DebugSystem.h"
 #include "Waldem/Input/InputManager.h"
 #include "Waldem/Layers/Layer.h"
@@ -32,7 +33,7 @@ namespace Waldem
             
             // UpdateSystems.Add(new DebugSystem());
             // UpdateSystems.Add(new LinesRenderingSystem());
-            // UpdateSystems.Add(new CollisionRenderingSystem());
+            UpdateSystems.Add(new CollisionRenderingSystem());
             UpdateSystems.Add(new BoundingBoxRenderingSystem());
 
             InputManager.SubscribeToKeyEvent(WD_KeyCode::F1, [&](bool isPressed)

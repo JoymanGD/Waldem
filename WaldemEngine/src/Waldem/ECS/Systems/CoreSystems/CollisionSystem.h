@@ -14,12 +14,6 @@
 
 namespace Waldem
 {
-    struct PhysicObjectData
-    {
-        WString Name;
-        AABB BoundingBox;
-    };
-
     struct Collision
     {
         CollisionPair Colliders;
@@ -31,20 +25,22 @@ namespace Waldem
         BVHNode* RootNode = nullptr;
         int MaxIterations = 50;
         WArray<PersistentContact> ContactCache;
-        WMap<ECS::Entity, AABB> EntityPhysicObjectsMap;
+        WArray<ECS::Entity> Entities;
         
         BVHNode* BuildBVH(int start, int end)
         {
             BVHNode* node = new BVHNode();
             int objectCount = end - start;
 
-            AABB box = EntityPhysicObjectsMap[start].value;
+            auto& transform = Entities[start].get_mut<Transform>();
+            AABB box = Entities[start].get_mut<AABB>().GetTransformed(transform);
             for (int i = start + 1; i < end; i++)
             {
-                box.Expand(EntityPhysicObjectsMap[i].value);
+                auto& secondTransform = Entities[i].get_mut<Transform>();
+                box.Expand(Entities[i].get_mut<AABB>().GetTransformed(secondTransform));
             }
             node->Box = box;
-            node->DebugName = WString(EntityPhysicObjectsMap[start].key.name().c_str());
+            node->DebugName = WString(Entities[start].name().c_str());
 
             if (objectCount == 1)
             {
@@ -59,10 +55,10 @@ namespace Waldem
             if (size.z > size.x && size.z > size.y) axis = 2;
 
             int mid = start + objectCount / 2;
-            std::nth_element(EntityPhysicObjectsMap.begin() + start, EntityPhysicObjectsMap.begin() + mid, EntityPhysicObjectsMap.begin() + end,
-            [axis](const WPair<ECS::Entity, AABB>& a, const WPair<ECS::Entity, AABB>& b)
+            std::nth_element(Entities.begin() + start, Entities.begin() + mid, Entities.begin() + end,
+            [axis](const ECS::Entity& a, const ECS::Entity& b)
             {
-                return a.value.Min[axis] < b.value.Min[axis];
+                return a.get_mut<AABB>().Min[axis] < b.get_mut<AABB>().Min[axis];
             });
 
             node->Left = BuildBVH(start, mid);
@@ -75,7 +71,8 @@ namespace Waldem
         {
             if (node->IsLeaf()) 
             {
-                node->Box = EntityPhysicObjectsMap[node->ObjectIndex].value;
+                auto& transform = Entities[node->ObjectIndex].get_mut<Transform>();
+                node->Box = Entities[node->ObjectIndex].get_mut<AABB>().GetTransformed(transform);
                 return;
             }
 
@@ -346,19 +343,15 @@ namespace Waldem
                 return; // two static objects ?		
             }
 
-            const float slop = 0.01f;
-            const float percent = 0.2f; 
-            if (contact.PenetrationDepth > slop + 0.001f)
+            if (contact.PenetrationDepth > 0)
             {
-                float correctionMagnitude = (contact.PenetrationDepth - slop) * percent;
-
-                Vector3 correction = contact.Normal * correctionMagnitude;
+                Vector3 correction = contact.Normal * contact.PenetrationDepth;
 
                 if (!rigidBodyA.IsKinematic)
-                    transformA.Translate(-(correction * (rigidBodyA.InvMass / totalMass)));
+                    transformA.Translate(-correction * (rigidBodyB.IsKinematic ? 1.f : 0.5f));
 
                 if (!rigidBodyB.IsKinematic)
-                    transformB.Translate(correction * (rigidBodyB.InvMass / totalMass));
+                    transformB.Translate(correction * (rigidBodyA.IsKinematic ? 1.f : 0.5f));
             }
 
             Vector3 ra = contact.ContactPointA - transformA.Position;
@@ -418,10 +411,10 @@ namespace Waldem
             
             for (auto& collisionPair : collisionPairs)
             {
-                ColliderComponent& collider1 = EntityPhysicObjectsMap[collisionPair.first].key.get_mut<ColliderComponent>();
-                ColliderComponent& collider2 = EntityPhysicObjectsMap[collisionPair.second].key.get_mut<ColliderComponent>();
-                Transform& worldTransformA = EntityPhysicObjectsMap[collisionPair.first].key.get_mut<Transform>();
-                Transform& worldTransformB = EntityPhysicObjectsMap[collisionPair.second].key.get_mut<Transform>();
+                ColliderComponent& collider1 = Entities[collisionPair.first].get_mut<ColliderComponent>();
+                ColliderComponent& collider2 = Entities[collisionPair.second].get_mut<ColliderComponent>();
+                Transform& worldTransformA = Entities[collisionPair.first].get_mut<Transform>();
+                Transform& worldTransformB = Entities[collisionPair.second].get_mut<Transform>();
 
             	Contact contact = GJK(collider1, collider2, worldTransformA, worldTransformB);
                 // if (contact.HasCollision)
@@ -433,9 +426,10 @@ namespace Waldem
                 //
                 //     ResolveCollision(worldTransformA, worldTransformB, rigidBodyA, rigidBodyB, contact);
                 // }
-
+                
                 if(contact.HasCollision)
                 {
+                    collider1.IsColliding = collider2.IsColliding = true;
                     outCollisions.Add({collisionPair, contact});
                 }
             }
@@ -453,8 +447,8 @@ namespace Waldem
         {
             for (auto& collision : collisions)
             {
-                auto& entityA = EntityPhysicObjectsMap[collision.Colliders.first].key;
-                auto& entityB = EntityPhysicObjectsMap[collision.Colliders.second].key;
+                auto& entityA = Entities[collision.Colliders.first];
+                auto& entityB = Entities[collision.Colliders.second];
 
                 if(!entityA.has<Transform>() || !entityA.has<RigidBody>() || !entityB.has<Transform>() || !entityB.has<RigidBody>())
                 {
@@ -466,8 +460,6 @@ namespace Waldem
                 RigidBody& rigidBodyA = entityA.get_mut<RigidBody>();
                 RigidBody& rigidBodyB = entityB.get_mut<RigidBody>();
                 
-                WD_CORE_INFO("Normal: [{0},{1},{2}], Penetration: {3}", collision.ContactData.Normal.x, collision.ContactData.Normal.y, collision.ContactData.Normal.z, collision.ContactData.PenetrationDepth);
-
                 if(rigidBodyA.IsKinematic && rigidBodyB.IsKinematic)
                 {
                     continue;
@@ -532,38 +524,40 @@ namespace Waldem
         
         void Initialize() override
         {
-            ECS::World.observer<Transform, ColliderComponent>().event(flecs::OnAdd).each([&](ECS::Entity e, Transform& transform, ColliderComponent& collider)
+            ECS::World.observer<Transform, ColliderComponent, AABB>().event(flecs::OnAdd).each([&](ECS::Entity e, Transform& transform, ColliderComponent& collider, AABB& bbox)
             {
-                if(!EntityPhysicObjectsMap.Contains(e))
-                {
-                    EntityPhysicObjectsMap[e] = AABB();
-                }
+                Entities.Add(e);
+                
+                RootNode = BuildBVH(0, Entities.Num());
+            });
+            
+            ECS::World.observer<ColliderComponent>().event(flecs::OnRemove).each([&](ECS::Entity e, ColliderComponent& collider)
+            {
+                Entities.Remove(e);
 
-                RootNode = BuildBVH(0, EntityPhysicObjectsMap.Num());
-            });
-            
-            ECS::World.observer<Transform, RigidBody>().event(flecs::OnAdd).each([&](ECS::Entity e, Transform&, RigidBody& rigidBody)
-            {
-                if(!EntityPhysicObjectsMap.Contains(e))
+                if(Entities.Num() > 0)
                 {
-                    EntityPhysicObjectsMap[e] = AABB();
+                    RootNode = BuildBVH(0, Entities.Num());
                 }
             });
             
-            ECS::World.observer<Transform, ColliderComponent>().event(flecs::OnSet).each([&](ECS::Entity e, Transform& transform, ColliderComponent& collider)
+            ECS::World.system<ColliderComponent>().kind<ECS::OnFixedUpdate>().each([&](ColliderComponent& collider)
             {
-                EntityPhysicObjectsMap[e] = AABB().GetTransformed(transform);
+                collider.IsColliding = false;
             });
             
             ECS::World.system().kind<ECS::OnFixedUpdate>().each([&]
             {
                 WArray<CollisionPair> broadphaseCollisionPairs;
                 
-                if (EntityPhysicObjectsMap.Num() > 1)
+                if(RootNode)
                 {
-                    UpdateBVH(RootNode);
+                    if (Entities.Num() > 0)
+                    {
+                        UpdateBVH(RootNode);
 
-                    BroadPhaseCollision(RootNode->Left, RootNode->Right, broadphaseCollisionPairs);
+                        BroadPhaseCollision(RootNode, RootNode, broadphaseCollisionPairs);
+                    }
                 }
 
                 WArray<Collision> collisions;

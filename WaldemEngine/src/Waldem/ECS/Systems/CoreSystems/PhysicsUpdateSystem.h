@@ -15,13 +15,13 @@ namespace Waldem
         
         void Initialize() override
         {
-            ECS::World.system<Transform, RigidBody>().kind(flecs::OnUpdate).each([&](Transform& transform, RigidBody& rigidBody)
+            ECS::World.system<Transform, RigidBody>().kind<ECS::OnFixedUpdate>().each([&](ECS::Entity entity, Transform& transform, RigidBody& rigidBody)
             {
                 if(rigidBody.InvMass <= 0.0f) return;
                 
                 if(rigidBody.IsKinematic) return;
 
-                auto deltaTime = Time::DeltaTime;
+                auto deltaTime = Time::FixedDeltaTime;
                 
                 transform.Translate(rigidBody.Velocity * deltaTime);
                 
@@ -32,6 +32,8 @@ namespace Waldem
                     Quaternion deltaQuat = angleAxis(angle, axis);
                     transform.Rotate(normalize(deltaQuat));
                 }
+                                
+                entity.modified<Transform>();
                 
                 rigidBody.Reset();
             });

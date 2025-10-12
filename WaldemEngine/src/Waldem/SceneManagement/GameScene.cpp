@@ -7,7 +7,7 @@
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/istreamwrapper.h"
-#include "Waldem/ECS/Components/Selected.h"
+#include "rapidjson/prettywriter.h"
 
 Waldem::GameScene::~GameScene()
 {
@@ -32,8 +32,9 @@ void Waldem::GameScene::DrawUI(float deltaTime)
 void Waldem::GameScene::Serialize(Path& outPath)
 {
     rapidjson::StringBuffer buffer;
-    rapidjson::Writer writer(buffer);
+    rapidjson::PrettyWriter writer(buffer);
 
+    writer.SetIndent(' ', 2);
     writer.StartArray();
 
     auto query = ECS::World.query_builder<SceneEntity>().build();
@@ -84,7 +85,7 @@ void Waldem::GameScene::Deserialize(Path& inPath)
 
         // Convert entity JSON back into a string
         rapidjson::StringBuffer buffer;
-        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+        rapidjson::Writer writer(buffer);
         entVal.Accept(writer);
 
         // Create a new entity from JSON

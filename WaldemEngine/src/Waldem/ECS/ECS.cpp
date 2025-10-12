@@ -173,10 +173,6 @@ namespace Waldem
                     }
                     return nullptr;
                 });
-
-            World.component<AABB>("AABB")
-                .member<Vector3>("Min")
-                .member<Vector3>("Max");
             
             World.component<WString>()
                 .opaque(flecs::String)

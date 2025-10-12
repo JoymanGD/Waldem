@@ -97,6 +97,22 @@ namespace Waldem
             return lines;
         }
 
+        WArray<Vector3> GetCorners()
+        {
+            WArray<Vector3> corners;
+            
+            corners.Add(Vector3(Min.x, Min.y, Min.z));
+            corners.Add(Vector3(Max.x, Min.y, Min.z));
+            corners.Add(Vector3(Min.x, Max.y, Min.z));
+            corners.Add(Vector3(Max.x, Max.y, Min.z));
+            corners.Add(Vector3(Min.x, Min.y, Max.z));
+            corners.Add(Vector3(Max.x, Min.y, Max.z));
+            corners.Add(Vector3(Min.x, Max.y, Max.z));
+            corners.Add(Vector3(Max.x, Max.y, Max.z));
+            
+            return corners;
+        }
+
         void Expand(const AABB& other)
         {
             Min.x = glm::min(Min.x, other.Min.x);

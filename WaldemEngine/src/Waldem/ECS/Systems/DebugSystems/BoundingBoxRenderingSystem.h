@@ -2,6 +2,7 @@
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/ECS/Components/Transform.h"
 #include "Waldem/ECS/Components/Camera.h"
+#include "Waldem/ECS/Components/ColliderComponent.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
 #include "Waldem/Renderer/Shader.h"
 #include "Waldem/Renderer/Model/BoxMesh.h"
@@ -65,6 +66,7 @@ namespace Waldem
                 if(BoxMeshes.Contains(entity))
                 {
                     Vector4 color = Vector4(0.0f, 1.0f, 0.0f, 1.0f);
+                    
                     auto boxLines = bbox.GetTransformed(transform).GetLines(color);
                     
                     Renderer::UploadBuffer(BoxMeshes[entity].VertexBuffer, boxLines.GetData(), boxLines.GetSize());
