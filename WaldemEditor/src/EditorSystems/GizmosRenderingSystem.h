@@ -298,12 +298,12 @@ namespace Waldem
                 rc.WorldTransforms = WorldTransformsBuffer.GetIndex(SRV_CBV);
                 rc.MaterialAttributes = MaterialBuffer.GetIndex(SRV_CBV);
                 rc.SceneDataBuffer = SceneDataBuffer->GetIndex(SRV_CBV);
-                rc.MeshIDRTID = meshIdRT->GetIndex(SRV_CBV);
+                rc.MeshIDRTID = meshIdRT->GetIndex(UAV);
                 Renderer::PushConstants(&rc, sizeof(GizmoRootConstants));
 
-                gbuffer->Barriers({ Deferred, MeshID }, ALL_SHADER_RESOURCE, RENDER_TARGET);
+                gbuffer->Barrier(MeshID, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
                 Renderer::DrawIndirect(IndirectCommands.Num(), IndirectBuffer);
-                gbuffer->Barriers({ Deferred, MeshID }, RENDER_TARGET, ALL_SHADER_RESOURCE);
+                gbuffer->Barrier(MeshID, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
             }
         }
     };
