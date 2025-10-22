@@ -64,19 +64,19 @@ namespace Waldem
                     
                     auto targetRT = viewport->FrameBuffer->GetCurrentRenderTarget();
                     
-                    RootConstants.TargetRTID = targetRT->GetIndex(SRV_CBV);
+                    RootConstants.TargetRTID = targetRT->GetIndex(UAV);
                     RootConstants.DepthRTID = gbuffer->GetRenderTarget(Depth)->GetIndex(SRV_CBV);
                     Renderer::SetPipeline(WorldGridRenderingPipeline);
                     Renderer::PushConstants(&RootConstants, sizeof(SRootConstants));
                     
-                    gbuffer->Barrier(Deferred, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
+                    Renderer::ResourceBarrier(targetRT, RENDER_TARGET, UNORDERED_ACCESS);
                     
                     Vector2 resolution = Vector2(targetRT->GetWidth(), targetRT->GetHeight());
                     Point3 numThreads = Renderer::GetNumThreadsPerGroup(WorldGridRenderingComputeShader);
                     GroupCount = Point3((resolution.x + numThreads.x - 1) / numThreads.x, (resolution.y + numThreads.y - 1) / numThreads.y, 1);
                     Renderer::Compute(GroupCount);
                     
-                    gbuffer->Barrier(Deferred, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
+                    Renderer::ResourceBarrier(targetRT, UNORDERED_ACCESS, RENDER_TARGET);
                 }
             });
         }

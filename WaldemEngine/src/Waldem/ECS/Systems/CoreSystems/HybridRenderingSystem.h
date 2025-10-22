@@ -725,7 +725,7 @@ namespace Waldem
                     
                     DeferredRootConstants.MeshIDRT = gbuffer->GetRenderTarget(MeshID)->GetIndex(SRV_CBV);
                     DeferredRootConstants.RadianceRT = gbuffer->GetRenderTarget(Radiance)->GetIndex(SRV_CBV);
-                    DeferredRootConstants.DeferredRT = deferredRT->GetIndex(SRV_CBV);
+                    DeferredRootConstants.DeferredRT = deferredRT->GetIndex(UAV);
                     DeferredRootConstants.SkyColorRT = gbuffer->GetRenderTarget(SkyColor)->GetIndex(SRV_CBV);
                     Renderer::SetPipeline(DeferredRenderingPipeline);
                     Renderer::PushConstants(&DeferredRootConstants, sizeof(DeferredRootConstants));

@@ -28,8 +28,6 @@ namespace Waldem
     {
         Matrix4 ViewMatrix;
         Matrix4 ProjectionMatrix;
-        Matrix4 WorldMatrix;
-        Matrix4 InverseProjectionMatrix;
     };
 
     enum GizmoType : uint
@@ -287,8 +285,6 @@ namespace Waldem
 
                 SceneData.ProjectionMatrix = camera.ProjectionMatrix;
                 SceneData.ViewMatrix = inverse(transform.Matrix);
-                SceneData.WorldMatrix = transform.Matrix;
-                SceneData.InverseProjectionMatrix = inverse(camera.ProjectionMatrix);
                 Renderer::UploadBuffer(SceneDataBuffer, &SceneData, sizeof(GizmoSceneData));
 
                 Renderer::SetPipeline(PipelineState);

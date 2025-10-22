@@ -3,6 +3,7 @@ cbuffer RootConstants : register(b0)
     uint WorldTransformsBufferID;
     uint MaterialAttributesBufferID;
     uint SceneDataBufferID;
+    uint MeshIDRTID;
 };
 cbuffer IndirectRootConstants : register(b1)
 {

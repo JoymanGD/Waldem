@@ -10,7 +10,7 @@ namespace Waldem
     ResizableAccelerationStructure::ResizableAccelerationStructure(const WString& name, uint thresholdNum) : ThresholdNum(thresholdNum)
     {
         InstanceBuffer = new ResizableBuffer(name + "_InstanceBuffer", StorageBuffer, sizeof(RayTracingInstance), thresholdNum);
-        TLAS = Renderer::CreateTLAS(name, InstanceBuffer->GetBuffer(), Num());
+        TLAS = Renderer::CreateTLAS(name, InstanceBuffer->GetBuffer(), thresholdNum);
 
         WArray DummyVertexData
         {
