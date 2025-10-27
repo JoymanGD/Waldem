@@ -1,4 +1,4 @@
-WALDEM ENGINE
+WALDEM ENGINE - custom engine written in C++
 
 ![alt text](https://raw.githubusercontent.com/JoymanGD/Waldem/refs/heads/master/img.png "Waldem Engine screenshot")
 
