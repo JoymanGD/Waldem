@@ -23,9 +23,8 @@ namespace Waldem
         Vector3 LocalScale = { 1, 1, 1 };
         FIELD(Hidden)
         Quaternion RotationQuat = { 1, 0, 0, 0 };
-        FIELD()
-        Matrix4 Matrix = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
         
+        Matrix4 Matrix = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
         Vector3 LastRotation = { 0, 0, 0 };
         Vector3 LastPosition = { 0, 0, 0 };
         Vector3 LastScale = { 0, 0, 0 };
