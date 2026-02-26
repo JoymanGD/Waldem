@@ -1,6 +1,0 @@
-#define MAX_TEXTURES 1024
-#define MAX_BUFFERS 128
-
-#define PI 3.14159265359
-#define M_1_PI_F float(0.318309886183790)
-#define MIN_FLOAT_VALUE 1e-6f

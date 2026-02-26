@@ -2,7 +2,7 @@ workspace "Waldem"
     architecture "x64"
     startproject "WaldemEditor"
 
-    configurations { "Debug", "Release", "Dist" }
+    configurations { "Debug", "Release" }
 
     filter "system:windows"
         defines { "WIN32_LEAN_AND_MEAN", "_WINSOCKAPI_" }
@@ -12,20 +12,26 @@ local rootDir = os.getcwd()
 local contentPath = path.getabsolute(path.join(rootDir, "Content"))
 
 -----------------------------------
+-- Global Source Folder
+-----------------------------------
+SourceDir = "Source"
+
+-----------------------------------
 -- Include paths
 -----------------------------------
 IncludeDir = {}
-IncludeDir["ImGui"] = "Vendor/imgui"
-IncludeDir["ImGuizmo"] = "Vendor/ImGuizmo"
-IncludeDir["glm"] = "Vendor/glm"
-IncludeDir["SDL"] = "Vendor/SDL/include"
-IncludeDir["SPDLog"] = "Vendor/spdlog/include"
-IncludeDir["Assimp"] = "Vendor/assimp/include"
-IncludeDir["stb"] = "Vendor/stb/include"
-IncludeDir["dxc"] = "Vendor/dxc/inc"
-IncludeDir["mono"] = "Vendor/mono/include"
-IncludeDir["flecs"] = "Vendor/flecs"
+IncludeDir["ImGui"]     = "Vendor/imgui"
+IncludeDir["ImGuizmo"]  = "Vendor/ImGuizmo"
+IncludeDir["glm"]       = "Vendor/glm"
+IncludeDir["SDL"]       = "Vendor/SDL/include"
+IncludeDir["SPDLog"]    = "Vendor/spdlog/include"
+IncludeDir["Assimp"]    = "Vendor/assimp/include"
+IncludeDir["stb"]       = "Vendor/stb/include"
+IncludeDir["dxc"]       = "Vendor/dxc/inc"
+IncludeDir["mono"]      = "Vendor/mono/include"
+IncludeDir["flecs"]     = "Vendor/flecs"
 IncludeDir["rapidjson"] = "Vendor/rapidjson/include"
+IncludeDir["Generated"] = "Intermediate/Generated"
 
 -----------------------------------
 -- Shader filters
@@ -53,21 +59,20 @@ filter {}
 -----------------------------------
 function SetupPostBuild(prjName)
     postbuildcommands {
-        -- Remove old stuff
         "if exist %{cfg.targetdir}\\Shaders (rmdir /s /q %{cfg.targetdir}\\Shaders)",
         "if exist %{cfg.targetdir}\\Content (rmdir /s /q %{cfg.targetdir}\\Content)",
         "if exist %{cfg.targetdir}\\mono (rmdir /s /q %{cfg.targetdir}\\mono)",
+
         "echo Copying files...",
 
-        -- Copy shaders
-        'xcopy /E /I /Y "%{wks.location}WaldemEngine\\src\\Shaders\\*.hlsl" "%{cfg.targetdir}\\Shaders\\"',
-        'xcopy /E /I /Y "%{wks.location}' .. prjName .. '\\src\\Shaders\\*.hlsl" "%{cfg.targetdir}\\Shaders\\"',
+        -- Shaders
+        'xcopy /E /I /Y "%{wks.location}Source\\WaldemEngine\\Shaders\\*.hlsl" "%{cfg.targetdir}\\Shaders\\"',
+        'xcopy /E /I /Y "%{wks.location}Source\\' .. prjName .. '\\Shaders\\*.hlsl" "%{cfg.targetdir}\\Shaders\\"',
 
-        -- Copy content
+        -- Content
         'xcopy /E /I /Y "%{wks.location}Content\\*" "%{cfg.targetdir}\\Content\\"',
-        'xcopy /E /I /Y "%{wks.location}' .. prjName .. '\\Content\\*" "%{cfg.targetdir}\\Content\\"',
 
-        -- Copy DLLs
+        -- DLLs
         'xcopy /Y "%{wks.location}Build\\%{cfg.buildcfg}\\WaldemEngine\\WaldemEngine.dll" "%{cfg.targetdir}\\"',
         'xcopy /Y "%{wks.location}Vendor\\SDL\\lib\\SDL2.dll" "%{cfg.targetdir}\\"',
         'xcopy /Y "%{wks.location}Vendor\\mono\\bin\\mono-2.0-sgen.dll" "%{cfg.targetdir}\\"',
@@ -79,7 +84,7 @@ function SetupPostBuild(prjName)
 end
 
 -----------------------------------
--- Common Helpers
+-- Common C++ Settings
 -----------------------------------
 function SetupCommonProject()
     language "C++"
@@ -88,7 +93,7 @@ function SetupCommonProject()
 
     includedirs
     {
-        "WaldemEngine/src",
+        SourceDir .. "/WaldemEngine",
         "%{IncludeDir.SPDLog}",
         "%{IncludeDir.Assimp}",
         "%{IncludeDir.stb}",
@@ -99,7 +104,8 @@ function SetupCommonProject()
         "%{IncludeDir.dxc}",
         "%{IncludeDir.mono}",
         "%{IncludeDir.flecs}",
-        "%{IncludeDir.rapidjson}"
+        "%{IncludeDir.rapidjson}",
+        "%{IncludeDir.Generated}",
     }
 
     libdirs
@@ -107,7 +113,7 @@ function SetupCommonProject()
         "Vendor/assimp/lib",
         "Vendor/SDL/lib",
         "Vendor/dxc/lib",
-        "Vendor/mono/lib"
+        "Vendor/mono/lib",
     }
 
     links
@@ -119,7 +125,7 @@ function SetupCommonProject()
         "d3d12",
         "dxgi",
         "d3dcompiler",
-        "mono-2.0-sgen.lib"
+        "mono-2.0-sgen.lib",
     }
 
     defines { 'CONTENT_PATH=L"' .. contentPath .. '"' }
@@ -138,28 +144,38 @@ function SetupCommonProject()
         runtime "Release"
         optimize "on"
 
-    filter "configurations:Dist"
-        defines { "WD_DIST" }
-        runtime "Release"
-        optimize "on"
-
     filter {}
 end
 
------------------------------------
--- WaldemEngine (main DLL)
------------------------------------
-project "WaldemEngine"
-    location "WaldemEngine"
-    kind "SharedLib"
+------------------------------------
+-- WaldemHeaderTool
+------------------------------------
+project "WaldemHeaderTool"
+    location (SourceDir .. "/WaldemHeaderTool")
+    kind "ConsoleApp"
+    cppdialect "C++20"
 
     targetdir ("Build/" .. outputdir .. "/%{prj.name}")
     objdir ("Intermediate/" .. outputdir .. "/%{prj.name}")
-    
+
+    files { SourceDir .. "/WaldemHeaderTool/**.cpp" }
+
+-----------------------------------
+-- WaldemEngine (DLL)
+-----------------------------------
+project "WaldemEngine"
+    location (SourceDir .. "/WaldemEngine")
+    kind "SharedLib"
+
+    links { "WaldemHeaderTool" }
+
+    targetdir ("Build/" .. outputdir .. "/%{prj.name}")
+    objdir ("Intermediate/" .. outputdir .. "/%{prj.name}")
+
     SetupCommonProject()
 
     pchheader "wdpch.h"
-    pchsource "WaldemEngine/src/wdpch.cpp"
+    pchsource (SourceDir .. "/WaldemEngine/wdpch.cpp")
 
     defines
     {
@@ -171,10 +187,10 @@ project "WaldemEngine"
 
     files
     {
-        "%{prj.name}/src/**.h",
-        "%{prj.name}/src/**.cpp",
-        "%{prj.name}/src/**.glsl",
-        "%{prj.name}/src/**.hlsl",
+        SourceDir .. "/WaldemEngine/**.h",
+        SourceDir .. "/WaldemEngine/**.cpp",
+        "Intermediate/Generated/**.generated.h",
+
         "Vendor/flecs/flecs.c",
         "Vendor/flecs/flecs.h",
         "Vendor/imgui/**.h",
@@ -185,6 +201,12 @@ project "WaldemEngine"
         "Vendor/ImGuizmo/**.cpp"
     }
 
+    prebuildcommands {
+        "\"%{wks.location}Build\\%{cfg.buildcfg}\\WaldemHeaderTool\\WaldemHeaderTool.exe\" " ..
+        "\"%{wks.location}Source\\WaldemEngine\" " ..
+        "\"%{wks.location}Intermediate\\Generated\""
+    }
+
     filter "files:Vendor/**.cpp"
         flags { "NoPCH" }
 
@@ -192,32 +214,25 @@ project "WaldemEngine"
         compileas "C"
         flags { "NoPCH" }
 
-    filter "system:windows"
-        defines { "SDL_MAIN_HANDLED" }
-
 -----------------------------------
--- WaldemEditor (EXE)
+-- WaldemEditor
 -----------------------------------
 project "WaldemEditor"
-    location "WaldemEditor"
+    location (SourceDir .. "/WaldemEditor")
     kind "ConsoleApp"
 
     targetdir ("Build/" .. outputdir .. "/%{prj.name}")
     objdir ("Intermediate/" .. outputdir .. "/%{prj.name}")
-
+    debugdir ("Build/" .. outputdir .. "/%{prj.name}")
+    
     SetupCommonProject()
 
     files
     {
-        "%{prj.name}/src/**.h",
-        "%{prj.name}/src/**.cpp",
+        SourceDir .. "/WaldemEditor/**.h",
+        SourceDir .. "/WaldemEditor/**.cpp",
     }
 
-    removefiles
-    {
-        "Vendor/imgui/misc/fonts/binary_to_compressed_c.cpp"
-    }
-    
     defines
     {
         "WD_DYNAMIC_LINK",
@@ -228,28 +243,24 @@ project "WaldemEditor"
     SetupPostBuild("WaldemEditor")
 
 -----------------------------------
--- Sandbox (EXE)
+-- Sandbox
 -----------------------------------
 project "Sandbox"
-    location "Sandbox"
+    location (SourceDir .. "/Sandbox")
     kind "ConsoleApp"
 
     targetdir ("Build/" .. outputdir .. "/%{prj.name}")
     objdir ("Intermediate/" .. outputdir .. "/%{prj.name}")
+    debugdir ("Build/" .. outputdir .. "/%{prj.name}")
 
     SetupCommonProject()
 
     files
     {
-        "%{prj.name}/src/**.h",
-        "%{prj.name}/src/**.cpp",
+        SourceDir .. "/Sandbox/**.h",
+        SourceDir .. "/Sandbox/**.cpp",
     }
 
-    removefiles
-    {
-        "Vendor/imgui/misc/fonts/binary_to_compressed_c.cpp"
-    }
-    
     defines
     {
         "WD_DYNAMIC_LINK",
@@ -263,10 +274,11 @@ project "Sandbox"
 -- ScriptEngine (C#)
 -----------------------------------
 project "ScriptEngine"
-    location "ScriptEngine"
+    location (SourceDir .. "/ScriptEngine")
     kind "SharedLib"
     language "C#"
 
-    targetdir ("Build/" .. outputdir .. "/WaldemEditor")
+    targetdir ("Build/" .. outputdir .. "/%{prj.name}")
+    objdir ("Intermediate/" .. outputdir .. "/%{prj.name}")
 
-    files { "%{prj.name}/**.cs" }
+    files { SourceDir .. "/ScriptEngine/**.cs" }

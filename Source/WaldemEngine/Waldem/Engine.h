@@ -1,0 +1,50 @@
+#pragma once
+
+#include "Core.h"
+#include "Window.h"
+#include "Audio/Audio.h"
+#include "ECS/ECS.h"
+#include "Renderer/Renderer.h"
+#include "Scripting/Mono.h"
+#include "Waldem/Layers/LayerStack.h"
+#include "Waldem/Events/Event.h"
+#include "Waldem/Events/ApplicationEvent.h"
+
+namespace Waldem
+{
+	class WALDEM_API Engine
+	{
+	public:
+		Engine();
+		void Initialize();
+		virtual ~Engine();
+		void Run();
+		void OnEvent(Event& e);
+		void PushLayer(Layer* layer);
+		void PushOverlay(Layer* overlay);
+		CWindow* GetWindow() { return Window; }
+
+		//Singleton
+		static Engine* Instance;
+	private:
+		bool OnWindowClose(WindowCloseEvent& e);
+		bool OnWindowResize(WindowResizeEvent& e);
+		float CalculateAverageFPS(float deltaTime);
+
+		CWindow* Window = nullptr;
+		Renderer CurrentRenderer;
+		Audio AudioManager;
+		Mono MonoRuntime;
+		bool IsRunning = true;
+		LayerStack LayerStack;
+		std::vector<float> FrameTimes;
+		int FrameCount = 0;
+		const int MaxFrames = 100;
+
+		//ECS
+		ECS::Core ECS;
+	};
+
+	//to be defined in CLIENT
+	Engine* CreateApplication();
+}
