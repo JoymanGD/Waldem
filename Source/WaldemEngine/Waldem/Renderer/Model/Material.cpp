@@ -22,19 +22,31 @@ namespace Waldem
 		inData >> Metallic;
 		inData >> Roughness;
 
-		if(DiffuseRef.Reference != "Empty")
+		if(!DiffuseRef.Reference.empty() && DiffuseRef.Reference != "Empty")
 		{
 			DiffuseRef.LoadAsset();
 		}
+        else
+        {
+            DiffuseRef.Texture = nullptr;
+        }
 
-		if(NormalRef.Reference != "Empty")
+		if(!NormalRef.Reference.empty() && NormalRef.Reference != "Empty")
 		{
 			NormalRef.LoadAsset();
 		}
+        else
+        {
+            NormalRef.Texture = nullptr;
+        }
 
-		if(MetalRoughnessRef.Reference != "Empty")
+		if(!MetalRoughnessRef.Reference.empty() && MetalRoughnessRef.Reference != "Empty")
 		{
 			MetalRoughnessRef.LoadAsset();
 		}
+        else
+        {
+            MetalRoughnessRef.Texture = nullptr;
+        }
 	}
 }

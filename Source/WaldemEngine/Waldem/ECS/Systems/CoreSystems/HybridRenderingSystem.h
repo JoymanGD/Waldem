@@ -296,16 +296,19 @@ namespace Waldem
                             materialAttribute.Albedo = meshComponent.MeshRef.Mesh->MaterialRef.Mat->Albedo;
                             materialAttribute.Metallic = meshComponent.MeshRef.Mesh->MaterialRef.Mat->Metallic;
                             materialAttribute.Roughness = meshComponent.MeshRef.Mesh->MaterialRef.Mat->Roughness;
+                            materialAttribute.DiffuseTextureID = -1;
+                            materialAttribute.NormalTextureID = -1;
+                            materialAttribute.ORMTextureID = -1;
                             
                             if(meshComponent.MeshRef.Mesh->MaterialRef.Mat->HasDiffuseTexture())
                             {
                                 materialAttribute.DiffuseTextureID = meshComponent.MeshRef.Mesh->MaterialRef.Mat->GetDiffuseTexture()->GetIndex(SRV_CBV);
-                                
-                                if(meshComponent.MeshRef.Mesh->MaterialRef.Mat->HasNormalTexture())
-                                    materialAttribute.NormalTextureID = meshComponent.MeshRef.Mesh->MaterialRef.Mat->GetNormalTexture()->GetIndex(SRV_CBV);
-                                if(meshComponent.MeshRef.Mesh->MaterialRef.Mat->HasORMTexture())
-                                    materialAttribute.ORMTextureID = meshComponent.MeshRef.Mesh->MaterialRef.Mat->GetORMTexture()->GetIndex(SRV_CBV);
                             }
+
+                            if(meshComponent.MeshRef.Mesh->MaterialRef.Mat->HasNormalTexture())
+                                materialAttribute.NormalTextureID = meshComponent.MeshRef.Mesh->MaterialRef.Mat->GetNormalTexture()->GetIndex(SRV_CBV);
+                            if(meshComponent.MeshRef.Mesh->MaterialRef.Mat->HasORMTexture())
+                                materialAttribute.ORMTextureID = meshComponent.MeshRef.Mesh->MaterialRef.Mat->GetORMTexture()->GetIndex(SRV_CBV);
 
                             MaterialAttributesBuffer.UpdateData(&materialAttribute, sizeof(MaterialShaderAttribute), globalDrawId * sizeof(MaterialShaderAttribute));
 

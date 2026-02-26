@@ -21,9 +21,15 @@ namespace Waldem
         float CellSize = 100.0f;
         float Padding = 16.0f;
         std::unordered_map<std::string, Texture2D*> TextureThumbnails;
+        inline static std::optional<Path> SharedSelectedAssetPath = std::nullopt;
         
     public:
         ContentBrowserWidget() {}
+
+        static const std::optional<Path>& GetSelectedAssetPath()
+        {
+            return SharedSelectedAssetPath;
+        }
 
         void Initialize(InputManager* inputManager) override
         {
@@ -241,6 +247,7 @@ namespace Waldem
             if (ImGui::IsItemClicked())
             {
                 SelectedAssetListPath = entry.path(); // Works for both files and folders
+                SharedSelectedAssetPath = entry.path();
             }
 
             // --- Highlight selected item ---
@@ -408,6 +415,7 @@ namespace Waldem
                 !ImGui::IsAnyItemHovered())
             {
                 SelectedAssetListPath.reset(); // Deselect
+                SharedSelectedAssetPath.reset();
             }
         }
 

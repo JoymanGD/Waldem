@@ -23,6 +23,7 @@
 #include "Widgets/GameViewportWidget.h"
 #include "Widgets/HierarchyWidget.h"
 #include "Widgets/MenuBarWidget.h"
+#include "Widgets/MaterialInspectorWidget.h"
 #include "Widgets/Widget.h"
 #include "Commands/EditorCommands.h"
 #include "EditorShortcuts.h"
@@ -68,6 +69,7 @@ namespace Waldem
             Widgets.Add(new GameViewportWidget());
             Widgets.Add(new HierarchyWidget());
             Widgets.Add(new EntityDetailsWidget());
+            Widgets.Add(new MaterialInspectorWidget());
             Widgets.Add(new ContentBrowserWidget());
             
             //do it after all entities set up
@@ -254,6 +256,7 @@ namespace Waldem
                 // Dock windows
                 ImGui::DockBuilderDockWindow("Entities", dock_left);
                 ImGui::DockBuilderDockWindow("Details", dock_details);
+                ImGui::DockBuilderDockWindow("Material Inspector", dock_details);
                 ImGui::DockBuilderDockWindow("Content", dock_bottom);
 
                 // 👉 Instead of splitting the center, dock both as tabs

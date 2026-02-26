@@ -18,7 +18,7 @@ namespace Waldem
         float Roughness = 1.0f;
     };
     
-    class Material : public Asset
+    class WALDEM_API Material : public Asset
     {
     public:
         Material() = default;
@@ -32,6 +32,10 @@ namespace Waldem
         bool HasDiffuseTexture() { return DiffuseRef.IsValid(); }
         bool HasNormalTexture() { return NormalRef.IsValid(); }
         bool HasORMTexture() { return MetalRoughnessRef.IsValid(); }
+
+        Path& GetDiffuseReference() { return DiffuseRef.Reference; }
+        Path& GetNormalReference() { return NormalRef.Reference; }
+        Path& GetORMReference() { return MetalRoughnessRef.Reference; }
         
         void Serialize(WDataBuffer& outData) override;
         
