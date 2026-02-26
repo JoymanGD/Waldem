@@ -47,6 +47,7 @@ void GenerateComponent(const Component& comp, const fs::path& outputDir)
 
     out << "// Auto-generated. Do not modify.\n";
     out << "#pragma once\n\n";
+    out << "#include \"Waldem/ECS/ECS.h\"\n\n";
     out << "namespace Waldem\n{\n\n";
 
     out << "    inline void RegisterComponent_" << comp.Name << "(flecs::world& world)\n";
@@ -92,7 +93,15 @@ void GenerateComponent(const Component& comp, const fs::path& outputDir)
     if (comp.HiddenComponent)
         out << "            .add<HiddenComponent>()\n";
 
-    out << "        ;\n";
+    out << "        ;\n\n";
+
+    // 🔥 THIS IS THE IMPORTANT PART
+    // Only register non-hidden components in editor list
+    if (!comp.HiddenComponent)
+    {
+        out << "        ECS::RegisteredComponents.Add(WString(component.name().c_str()), component);\n";
+    }
+
     out << "    }\n\n";
 
     out << "    struct AutoRegister_" << comp.Name << "\n";
@@ -229,8 +238,8 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    fs::path inputDir  = argv[1];
-    fs::path outputDir = argv[2];
+    fs::path inputDir  = fs::path(argv[1]).lexically_normal();
+    fs::path outputDir = fs::path(argv[2]).lexically_normal();
 
     for (auto& entry : fs::recursive_directory_iterator(inputDir))
     {
