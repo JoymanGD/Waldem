@@ -170,6 +170,14 @@ void ProcessComponents(const std::string& content, const fs::path& outputDir)
         while (std::getline(bodyStream, line))
         {
             line = Trim(line);
+
+            // Remove inline comments
+            size_t commentPos = line.find("//");
+            if (commentPos != std::string::npos)
+            {
+                line = Trim(line.substr(0, commentPos));
+            }
+            
             if (line.empty())
                 continue;
 
@@ -197,9 +205,6 @@ void ProcessComponents(const std::string& content, const fs::path& outputDir)
                 continue;
 
             expectField = false;
-
-            if (line.find('(') != std::string::npos)
-                continue;
 
             std::regex fieldRegex(
                 R"(^([\w:<>]+)\s+(\w+)\s*(=.*)?;)");

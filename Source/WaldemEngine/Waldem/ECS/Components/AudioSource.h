@@ -8,6 +8,8 @@ namespace Waldem
     COMPONENT()
     struct WALDEM_API AudioSource
     {
+        FIELD(Type=AssetReference)
+        AudioClipReference ClipRef;
         FIELD()
         float Range = 5.0f;
         FIELD()
@@ -18,8 +20,6 @@ namespace Waldem
         bool Spatial = true;
         FIELD()
         bool PlayOnStart = false;
-        FIELD(Type=AssetReference)
-        AudioClipReference ClipRef;
         
         AudioSource() {}
 

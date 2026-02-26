@@ -148,3 +148,4 @@ namespace Waldem
         }
     };
 }
+#include "AABB.generated.h"
