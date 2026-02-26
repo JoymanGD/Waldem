@@ -95,8 +95,6 @@ void GenerateComponent(const Component& comp, const fs::path& outputDir)
 
     out << "        ;\n\n";
 
-    // 🔥 THIS IS THE IMPORTANT PART
-    // Only register non-hidden components in editor list
     if (!comp.HiddenComponent)
     {
         out << "        ECS::RegisteredComponents.Add(WString(component.name().c_str()), component);\n";
@@ -171,7 +169,6 @@ void ProcessComponents(const std::string& content, const fs::path& outputDir)
         {
             line = Trim(line);
 
-            // Remove inline comments
             size_t commentPos = line.find("//");
             if (commentPos != std::string::npos)
             {

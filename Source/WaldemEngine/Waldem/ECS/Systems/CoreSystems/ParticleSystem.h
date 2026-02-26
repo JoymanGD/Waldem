@@ -112,10 +112,30 @@ namespace Waldem
                 if(particleSystemId >= IndirectCommands.Num())
                 {
                     IndirectCommands.Add(IndirectIndexedCommand());
-                    IndirectBuffer.UpdateOrAdd(nullptr, sizeof(IndirectIndexedCommand), particleSystemId * sizeof(IndirectIndexedCommand));
+                    
+                    auto& command = IndirectCommands[particleSystemId];
+                    command.DrawId = particleSystemId;
+                    command.Command = {
+                        (uint)Indices.Num(),
+                        particleSystem.ParticlesAmount,
+                        0,
+                        0,
+                        (uint)particleSystemId
+                    };
+
+                    IndirectBuffer.UpdateData(&command, sizeof(IndirectIndexedCommand), sizeof(IndirectIndexedCommand) * particleSystemId);
                 }
+
+                auto buffer = ResizableBuffer(WString("ParticlesBuffer_") + std::to_string(particleSystemId), BufferType::StorageBuffer, sizeof(Particle), 1000);
+                particleSystem.BufferId = buffer.GetIndex(UAV);
+
+                if(buffer.Size != sizeof(Particle) * particleSystem.ParticlesAmount)
+                {
+                    buffer.UpdateOrAdd(nullptr, sizeof(Particle) * particleSystem.ParticlesAmount, 0);
+                }
+
+                ParticleBuffersMap[(uint)particleSystemId] = buffer;
                 
-                ParticleBuffersMap[(uint)particleSystemId] = ResizableBuffer(WString("ParticlesBuffer_") + std::to_string(particleSystemId), BufferType::StorageBuffer, sizeof(Particle), 1000 * sizeof(Particle));
                 auto index = ParticleBuffersMap[(uint)particleSystemId].GetIndex(SRV_CBV);
                 ParticleBuffersIndicesBuffer.UpdateOrAdd(&index, sizeof(uint), particleSystemId * sizeof(uint));
                 WorldTransformsBuffer.UpdateOrAdd(&transform.Matrix, sizeof(Matrix4), particleSystemId * sizeof(Matrix4));
@@ -217,7 +237,7 @@ namespace Waldem
                 }
             });
             
-            ECS::World.system().kind<ECS::OnDraw>().each([&]
+            ECS::World.system("ParticlesRenderingSystem").kind<ECS::OnDraw>().run([&](flecs::iter& it)
             {
                 if(IndirectCommands.Num() > 0)
                 {
