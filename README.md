@@ -1,7 +1,6 @@
 WALDEM ENGINE - custom engine written in C++
 
-![alt text](https://raw.githubusercontent.com/JoymanGD/Waldem/refs/heads/master/img.png "Waldem Engine screenshot")
-
+![alt text](img.png "Waldem Engine screenshot")
 Architecture:
 * ECS
 * Cross Render API (DirectX)
