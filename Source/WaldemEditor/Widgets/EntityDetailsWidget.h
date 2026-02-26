@@ -6,6 +6,7 @@
 #include "Waldem/Editor/AssetReference/AudioClipReference.h"
 #include "Waldem/Extensions/ImGUIExtension.h"
 #include "Waldem/Input/InputManager.h"
+#include "Commands/EditorCommands.h"
 
 namespace Waldem
 {
@@ -13,6 +14,22 @@ namespace Waldem
     {
     private:
         ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
+
+        void PushComponentStateCommand(flecs::entity entity, flecs::id id, const ComponentValueBlob& before, const void* afterPtr, bool allowMerge = true)
+        {
+            ComponentValueBlob after(id.raw_id(), afterPtr);
+            if(!before.IsValid() || !after.IsValid())
+            {
+                return;
+            }
+
+            if(before.Equals(after))
+            {
+                return;
+            }
+
+            EditorCommandHistory::Get().Execute(std::make_unique<SetComponentDataCommand>(entity.id(), id.raw_id(), before, after, allowMerge));
+        }
 
     public:
         EntityDetailsWidget() {}
@@ -28,10 +45,15 @@ namespace Waldem
                 ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus))
             {
                 auto selectedEntities = ECS::World.query<Selected>();
-                bool multiSelection = selectedEntities.count() > 1;
-
-                ECS::World.defer_begin();
+                WArray<ECS::Entity> selected;
                 selectedEntities.each([&](ECS::Entity entity, Selected)
+                {
+                    selected.Add(entity);
+                });
+
+                bool multiSelection = selected.Num() > 1;
+
+                for (auto entity : selected)
                 {
                     if (!multiSelection)
                         DrawComponents(entity);
@@ -56,15 +78,14 @@ namespace Waldem
                             {
                                 if (ImGui::Selectable(compName, false))
                                 {
-                                    entity.add(comp);
+                                    EditorCommandHistory::Get().Execute(std::make_unique<AddComponentCommand>(entity.id(), comp.id()));
                                     ImGui::CloseCurrentPopup();
                                 }
                             }
                         }
                         ImGui::EndPopup();
                     }
-                });
-                ECS::World.defer_end();
+                }
             }
             ImGui::End();
         }
@@ -127,33 +148,39 @@ namespace Waldem
                             case EcsOpF32:
                             {
                                 float v = *(float*)innerPtr;
+                                ComponentValueBlob before(id.raw_id(), base);
                                 ImGui::SetNextItemWidth(60.f);
                                 if (ImGui::DragFloat(innerId.c_str(), &v, 0.1f))
                                 {
                                     *(float*)innerPtr = v;
                                     entity.modified(id);
+                                    PushComponentStateCommand(entity, id, before, base);
                                 }
                                 break;
                             }
                             case EcsOpF64:
                             {
                                 double v = *(double*)innerPtr;
+                                ComponentValueBlob before(id.raw_id(), base);
                                 ImGui::SetNextItemWidth(60.f);
                                 if (ImGui::DragScalar(innerId.c_str(), ImGuiDataType_Double, &v, 0.1f))
                                 {
                                     *(double*)innerPtr = v;
                                     entity.modified(id);
+                                    PushComponentStateCommand(entity, id, before, base);
                                 }
                                 break;
                             }
                             case EcsOpI32:
                             {
                                 int32_t v = *(int32_t*)innerPtr;
+                                ComponentValueBlob before(id.raw_id(), base);
                                 ImGui::SetNextItemWidth(60.f);
                                 if (ImGui::DragInt(innerId.c_str(), &v))
                                 {
                                     *(int32_t*)innerPtr = v;
                                     entity.modified(id);
+                                    PushComponentStateCommand(entity, id, before, base);
                                 }
                                 break;
                             }
@@ -187,6 +214,7 @@ namespace Waldem
                     {
                         int currentValue = 0;
                         memcpy(&currentValue, ptr, sizeof(int));
+                        ComponentValueBlob before(id.raw_id(), base);
 
                         std::vector<const char*> names;
                         if (op->is.constants)
@@ -207,6 +235,7 @@ namespace Waldem
                             {
                                 memcpy(ptr, &currentValue, sizeof(int));
                                 entity.modified(id);
+                                PushComponentStateCommand(entity, id, before, base);
                             }
                         }
                         else
@@ -219,10 +248,12 @@ namespace Waldem
                     case EcsOpBool:
                     {
                         bool value = *(bool*)ptr;
+                        ComponentValueBlob before(id.raw_id(), base);
                         if (ImGui::Checkbox(uniqueId.c_str(), &value))
                         {
                             *(bool*)ptr = value;
                             entity.modified(id);
+                            PushComponentStateCommand(entity, id, before, base);
                         }
                         break;
                     }
@@ -230,11 +261,13 @@ namespace Waldem
                     case EcsOpI32:
                     {
                         int32_t val = *(int32_t*)ptr;
+                        ComponentValueBlob before(id.raw_id(), base);
                         ImGui::SetNextItemWidth(200.f);
                         if (ImGui::DragInt(uniqueId.c_str(), &val))
                         {
                             *(int32_t*)ptr = val;
                             entity.modified(id);
+                            PushComponentStateCommand(entity, id, before, base);
                         }
                         break;
                     }
@@ -242,11 +275,13 @@ namespace Waldem
                     case EcsOpU32:
                     {
                         uint32_t val = *(uint32_t*)ptr;
+                        ComponentValueBlob before(id.raw_id(), base);
                         ImGui::SetNextItemWidth(200.f);
                         if (ImGui::DragScalar(uniqueId.c_str(), ImGuiDataType_U32, &val, 1.0f))
                         {
                             *(uint32_t*)ptr = val;
                             entity.modified(id);
+                            PushComponentStateCommand(entity, id, before, base);
                         }
                         break;
                     }
@@ -254,11 +289,13 @@ namespace Waldem
                     case EcsOpF32:
                     {
                         float val = *(float*)ptr;
+                        ComponentValueBlob before(id.raw_id(), base);
                         ImGui::SetNextItemWidth(200.f);
                         if (ImGui::DragFloat(uniqueId.c_str(), &val, 0.1f))
                         {
                             *(float*)ptr = val;
                             entity.modified(id);
+                            PushComponentStateCommand(entity, id, before, base);
                         }
                         break;
                     }
@@ -266,11 +303,13 @@ namespace Waldem
                     case EcsOpF64:
                     {
                         double val = *(double*)ptr;
+                        ComponentValueBlob before(id.raw_id(), base);
                         ImGui::SetNextItemWidth(200.f);
                         if (ImGui::DragScalar(uniqueId.c_str(), ImGuiDataType_Double, &val, 0.1f))
                         {
                             *(double*)ptr = val;
                             entity.modified(id);
+                            PushComponentStateCommand(entity, id, before, base);
                         }
                         break;
                     }
@@ -282,9 +321,11 @@ namespace Waldem
                         {
                             AssetReference* assetRef = (AssetReference*)((uint8_t*)base + op->offset);
                             WString assetTypeString = AssetTypeToString(assetRef->GetType());
-                            ImGui::AssetInputSlot(assetRef->Reference, assetTypeString.C_Str(), [entity, id]()
+                            ComponentValueBlob before(id.raw_id(), base);
+                            ImGui::AssetInputSlot(assetRef->Reference, assetTypeString.C_Str(), [this, entity, id, base, before]()
                             {
                                 entity.modified(id);
+                                PushComponentStateCommand(entity, id, before, base, false);
                             });
 
                             if (assetRef->GetType() == AssetType::Audio)
@@ -313,6 +354,7 @@ namespace Waldem
 
         void DrawComponents(flecs::entity& entity)
         {
+            std::vector<flecs::id> componentIds;
             entity.each([&](flecs::id id)
             {
                 if (!id.is_entity())
@@ -326,26 +368,44 @@ namespace Waldem
                 if (comp.has<HiddenComponent>())
                     return;
 
+                componentIds.push_back(id);
+            });
+
+            for (auto id : componentIds)
+            {
+                if(!entity.is_alive() || !entity.has(id))
+                {
+                    continue;
+                }
+
+                flecs::entity comp = id.entity();
+
                 void* ptr = entity.get_mut(id);
                 if (!ptr)
-                    return;
+                    continue;
 
                 const char* componentName = comp.name().c_str();
+                bool removeComponent = false;
+                ImGui::PushID((int)id.raw_id());
 
                 if (ImGui::BeginChild(componentName, ImVec2(0, 0), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Border))
                 {
                     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6, 4));
                     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8, 6));
+                    ImGui::BeginTable("##ComponentHeader", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_NoPadInnerX);
+                    ImGui::TableSetupColumn("##Name", ImGuiTableColumnFlags_WidthStretch);
+                    ImGui::TableSetupColumn("##Action", ImGuiTableColumnFlags_WidthFixed, 24.0f);
+                    ImGui::TableNextRow();
+                    ImGui::TableSetColumnIndex(0);
                     ImGui::TextUnformatted(componentName);
+                    ImGui::TableSetColumnIndex(1);
+                    ImGui::ArrowButton("##ComponentOptionsButton", ImGuiDir_Down);
+                    ImGui::EndTable();
 
-                    ImGui::SameLine(ImGui::GetWindowWidth() - 60);
-                    if (ImGui::SmallButton("..."))
-                        ImGui::OpenPopup((std::string(componentName) + "_options").c_str());
-
-                    if (ImGui::BeginPopup((std::string(componentName) + "_options").c_str()))
+                    if (ImGui::BeginPopupContextItem("##ComponentOptionsPopup", ImGuiPopupFlags_MouseButtonLeft))
                     {
                         if (ImGui::MenuItem("Remove"))
-                            entity.remove(id);
+                            removeComponent = true;
                         ImGui::EndPopup();
                     }
 
@@ -374,7 +434,14 @@ namespace Waldem
                 ImGui::Spacing();
                 ImGui::Separator();
                 ImGui::Spacing();
-            });
+
+                if(removeComponent)
+                {
+                    EditorCommandHistory::Get().Execute(std::make_unique<RemoveComponentCommand>(entity, id.raw_id()));
+                }
+
+                ImGui::PopID();
+            }
         }
     };
 }

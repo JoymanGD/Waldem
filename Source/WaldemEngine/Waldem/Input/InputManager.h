@@ -11,6 +11,7 @@ namespace Waldem
     using MouseMoveEventHandler = std::function<void(Vector2)>;
     using MouseScrollEventHandler = std::function<void(Vector2)>;
     using ShortcutHandler = std::function<void()>;
+    using DynamicShortcutProvider = std::function<Shortcut()>;
     
     class WALDEM_API InputManager
     {
@@ -39,8 +40,13 @@ namespace Waldem
         {
             ShortcutHandlers[shortcut].Add(handler);
         }
+
+        void SubscribeToDynamicShortcut(DynamicShortcutProvider provider, ShortcutHandler handler)
+        {
+            DynamicShortcutHandlers.Add({provider, handler});
+        }
         
-        bool Broadcast(Event& event)
+        bool Broadcast(Event& event, bool blockShortcuts = false)
         {
             bool handled = false;
             
@@ -53,12 +59,24 @@ namespace Waldem
                     KeyEvent& keyEvent = static_cast<KeyEvent&>(event);
                     PressedKeys.insert(keyEvent.GetKeyCode());
 
-                    for (auto& [shortcut, handlers] : ShortcutHandlers)
+                    if(!blockShortcuts)
                     {
-                        if (shortcut.Matches(PressedKeys))
+                        for (auto& [shortcut, handlers] : ShortcutHandlers)
                         {
-                            for (auto& handler : handlers)
-                                handler();
+                            if (shortcut.Matches(PressedKeys))
+                            {
+                                for (auto& handler : handlers)
+                                    handler();
+                            }
+                        }
+
+                        for (auto& entry : DynamicShortcutHandlers)
+                        {
+                            Shortcut shortcut = entry.Provider();
+                            if (shortcut.Matches(PressedKeys))
+                            {
+                                entry.Handler();
+                            }
                         }
                     }
 
@@ -127,6 +145,12 @@ namespace Waldem
         std::unordered_map<int, WArray<KeyEventHandler>> KeyEventHandlers;
         std::unordered_map<int, WArray<MouseButtonEventHandler>> MouseButtonEventHandlers;
         std::unordered_map<Shortcut, WArray<ShortcutHandler>, ShortcutHash> ShortcutHandlers;
+        struct DynamicShortcutEntry
+        {
+            DynamicShortcutProvider Provider;
+            ShortcutHandler Handler;
+        };
+        WArray<DynamicShortcutEntry> DynamicShortcutHandlers;
         WArray<MouseMoveEventHandler> MouseMoveEventHandlers;
         WArray<MouseScrollEventHandler> MouseScrollEventHandlers;
         

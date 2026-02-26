@@ -35,63 +35,69 @@ namespace Waldem
             });
         }
 
-        void RenderFolderTree(const Path& path)
+        void RenderFolderTreeNode(const Path& path)
         {
-            ImGui::BeginChild("FolderTreeRegion", ImVec2(0, 0), false, ImGuiWindowFlags_NoScrollbar);
-
             for (const auto& entry : std::filesystem::directory_iterator(path))
             {
-                if (entry.is_directory())
+                if (!entry.is_directory())
                 {
-                    const std::string folderName = entry.path().filename().string() + "/";
+                    continue;
+                }
 
-                    // Base flags
-                    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | 
-                                               ImGuiTreeNodeFlags_OpenOnDoubleClick | 
-                                               ImGuiTreeNodeFlags_SpanAvailWidth;
+                const std::string folderName = entry.path().filename().string() + "/";
+                ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow |
+                                           ImGuiTreeNodeFlags_OpenOnDoubleClick |
+                                           ImGuiTreeNodeFlags_SpanAvailWidth;
 
-                    if (SelectedFolderTreePath.has_value() && SelectedFolderTreePath.value() == entry.path())
-                        flags |= ImGuiTreeNodeFlags_Selected;
+                if (SelectedFolderTreePath.has_value() && SelectedFolderTreePath.value() == entry.path())
+                {
+                    flags |= ImGuiTreeNodeFlags_Selected;
+                }
 
-                    // Check if this folder has subdirectories
-                    bool hasChildren = false;
-                    for (const auto& sub : std::filesystem::directory_iterator(entry.path()))
+                bool hasChildren = false;
+                for (const auto& sub : std::filesystem::directory_iterator(entry.path()))
+                {
+                    if (sub.is_directory()) { hasChildren = true; break; }
+                }
+
+                if (!hasChildren)
+                {
+                    flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+                }
+
+                bool isOpen = ImGui::TreeNodeEx(folderName.c_str(), flags);
+
+                if (ImGui::IsItemClicked())
+                {
+                    SelectedFolderTreePath = entry.path();
+                    CurrentPath = entry.path();
+                }
+
+                if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup))
+                {
+                    HoveredDropTargetFolder = entry.path();
+                }
+
+                if (ImGui::BeginPopupContextItem())
+                {
+                    if (ImGui::MenuItem("Delete"))
                     {
-                        if (sub.is_directory()) { hasChildren = true; break; }
+                        std::filesystem::remove_all(entry.path());
                     }
-                    if (!hasChildren)
-                        flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+                    ImGui::EndPopup();
+                }
 
-                    bool isOpen = ImGui::TreeNodeEx(folderName.c_str(), flags);
-
-                    if (ImGui::IsItemClicked())
-                    {
-                        SelectedFolderTreePath = entry.path();
-                        CurrentPath = entry.path();
-                    }
-
-                    if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup))
-                    {
-                        HoveredDropTargetFolder = entry.path();
-                    }
-
-                    // Context menu for folders
-                    if (ImGui::BeginPopupContextItem())
-                    {
-                        if (ImGui::MenuItem("Delete"))
-                        {
-                            std::filesystem::remove_all(entry.path());
-                        }
-                        ImGui::EndPopup();
-                    }
-
-                    if (isOpen && hasChildren)
-                    {
-                        RenderFolderTree(entry.path()); // Recursive call for subfolders
-                        ImGui::TreePop();
-                    }
+                if (isOpen && hasChildren)
+                {
+                    RenderFolderTreeNode(entry.path());
+                    ImGui::TreePop();
                 }
             }
+        }
+
+        void RenderFolderTree(const Path& path)
+        {
+            RenderFolderTreeNode(path);
 
             // Reset selection if clicking on empty space
             if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) && 
@@ -101,8 +107,6 @@ namespace Waldem
                 SelectedFolderTreePath.reset();
                 CurrentPath = CONTENT_PATH;
             }
-
-            ImGui::EndChild();
         }
 
 
@@ -360,16 +364,22 @@ namespace Waldem
                 ImGui::Separator();
 
                 //folders tree
-                ImGui::BeginChild("FoldersTree", ImVec2(200, 0), true, ImGuiWindowFlags_HorizontalScrollbar);
+                ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(4.0f, 4.0f));
+                ImGui::BeginChild("FoldersTree", ImVec2(240, 0), true, ImGuiWindowFlags_None);
+                ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4.0f, 2.0f));
                 RenderFolderTree(CONTENT_PATH);
+                ImGui::PopStyleVar();
                 ImGui::EndChild();
+                ImGui::PopStyleVar();
 
                 ImGui::SameLine();
 
                 //assets list
-                ImGui::BeginChild("AssetList", ImVec2(0, 0), true, ImGuiWindowFlags_HorizontalScrollbar);
+                ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.0f, 6.0f));
+                ImGui::BeginChild("AssetList", ImVec2(0, 0), true, ImGuiWindowFlags_None);
                 RenderAssetsList();
                 ImGui::EndChild();
+                ImGui::PopStyleVar();
             }
             ImGui::End();
         }

@@ -8,12 +8,7 @@ namespace Waldem
 
         bool Matches(const std::unordered_set<int>& pressed) const
         {
-            for (int key : Keys)
-            {
-                if (pressed.find(key) == pressed.end())
-                    return false;
-            }
-            return true;
+            return Keys == pressed;
         }
 
         bool operator==(const Shortcut& other) const noexcept

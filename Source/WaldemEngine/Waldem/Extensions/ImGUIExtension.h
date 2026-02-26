@@ -4,7 +4,7 @@
 
 namespace ImGui
 {
-    inline bool SelectableInput(std::string& str_id, std::string& str, bool selected, ImGuiSelectableFlags flags)
+    inline bool SelectableInput(std::string& str_id, std::string& str, bool selected, ImGuiSelectableFlags flags, bool forceEdit = false)
     {
         using namespace ImGui;
         ImGuiContext& g = *GImGui;
@@ -18,7 +18,16 @@ namespace ImGui
 
         ImGuiID id = window->GetID("##Input");
         bool temp_input_is_active = TempInputIsActive(id);
-        bool temp_input_start = ret ? IsMouseDoubleClicked(0) : false;
+        bool temp_input_start = forceEdit || (ret ? IsMouseDoubleClicked(0) : false);
+
+        // Programmatic activation (e.g. F2 rename): request keyboard nav activation
+        // in input-preferred mode so TempInputText can initialize correctly.
+        if (forceEdit && !temp_input_is_active)
+        {
+            g.NavActivateId = id;
+            g.NavActivateFlags = ImGuiActivateFlags_PreferInput;
+            temp_input_start = true;
+        }
 
         if (temp_input_is_active || temp_input_start)
         {

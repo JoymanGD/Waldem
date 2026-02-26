@@ -24,6 +24,8 @@
 #include "Widgets/HierarchyWidget.h"
 #include "Widgets/MenuBarWidget.h"
 #include "Widgets/Widget.h"
+#include "Commands/EditorCommands.h"
+#include "EditorShortcuts.h"
 
 namespace Waldem
 {
@@ -43,6 +45,7 @@ namespace Waldem
             ViewportManager::CreateViewport(EditorViewport, "Editor", Vector2(0, 0), Vector2(1920, 1080), Vector2(0, 1), 1);
 			ViewportManager::CreateViewport(GameViewport, "Game", Vector2(0, 0), Vector2(1920, 1080), Vector2(0, 1), 1);
             InputManager = {};
+            EditorShortcuts::Load();
             
             Vector2 size = { 1920, 1080 };
             auto cameraEntity = ECS::CreateEntity("EditorCamera");
@@ -108,7 +111,8 @@ namespace Waldem
             case EventType::KeyReleased:
             case EventType::KeyTyped:
                 {
-                    event.Handled = InputManager.Broadcast(event);
+                    bool blockShortcuts = BlockUIEvents && ImGui::GetIO().WantTextInput;
+                    event.Handled = InputManager.Broadcast(event, blockShortcuts);
                     break;
                 }
             case EventType::MouseButtonPressed:
@@ -165,6 +169,8 @@ namespace Waldem
         
         void Deinitialize() override
         {
+            EditorCommandHistory::Get().Clear();
+
             for (ISystem* system : UISystems)
             {
                 system->Deinitialize();

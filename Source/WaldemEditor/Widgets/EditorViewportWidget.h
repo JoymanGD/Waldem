@@ -12,6 +12,8 @@
 #include "Waldem/Input/MouseButtonCodes.h"
 #include "Waldem/Renderer/Viewport/Viewport.h"
 #include "Waldem/Renderer/Viewport/ViewportManager.h"
+#include "Commands/EditorCommands.h"
+#include "../EditorShortcuts.h"
 
 namespace Waldem
 {
@@ -23,6 +25,8 @@ namespace Waldem
         ImGuizmo::MODE CurrentMode = ImGuizmo::WORLD;
         bool CanModifyManipulationSettings = false;
         bool IsVisible = false;
+        bool WasUsingGizmo = false;
+        ComponentValueBlob GizmoBeforeTransform;
         
     public:
         EditorViewportWidget() {}
@@ -36,33 +40,45 @@ namespace Waldem
                 CanModifyManipulationSettings = !isPressed;
             });
 
-            inputManager->SubscribeToKeyEvent(W, [&](bool isPressed)
+            inputManager->SubscribeToDynamicShortcut([]
             {
-                if(isPressed && CanModifyManipulationSettings)
+                return EditorShortcuts::GetShortcut(EditorShortcutAction::GizmoTranslate);
+            }, [&]
+            {
+                if(CanModifyManipulationSettings)
                 {
                     CurrentOperation = ImGuizmo::TRANSLATE;
                 }
             });
 
-            inputManager->SubscribeToKeyEvent(E, [&](bool isPressed)
+            inputManager->SubscribeToDynamicShortcut([]
             {
-                if(isPressed && CanModifyManipulationSettings)
+                return EditorShortcuts::GetShortcut(EditorShortcutAction::GizmoRotate);
+            }, [&]
+            {
+                if(CanModifyManipulationSettings)
                 {
                     CurrentOperation = ImGuizmo::ROTATE;
                 }
             });
 
-            inputManager->SubscribeToKeyEvent(R, [&](bool isPressed)
+            inputManager->SubscribeToDynamicShortcut([]
             {
-                if(isPressed && CanModifyManipulationSettings)
+                return EditorShortcuts::GetShortcut(EditorShortcutAction::GizmoScale);
+            }, [&]
+            {
+                if(CanModifyManipulationSettings)
                 {
                     CurrentOperation = ImGuizmo::SCALE;
                 }
             });
 
-            inputManager->SubscribeToKeyEvent(Q, [&](bool isPressed)
+            inputManager->SubscribeToDynamicShortcut([]
             {
-                if(isPressed && CanModifyManipulationSettings)
+                return EditorShortcuts::GetShortcut(EditorShortcutAction::GizmoToggleMode);
+            }, [&]
+            {
+                if(CanModifyManipulationSettings)
                 {
                     CurrentMode = CurrentMode == ImGuizmo::LOCAL ? ImGuizmo::WORLD : ImGuizmo::LOCAL;
                 }
@@ -110,6 +126,12 @@ namespace Waldem
 
                             if(ImGuizmo::IsUsing())
                             {
+                                if(!WasUsingGizmo)
+                                {
+                                    GizmoBeforeTransform.Capture(ECS::World.id<Transform>(), &transform);
+                                }
+
+                                WasUsingGizmo = true;
                                 transform.DecompileMatrix();
                                 
                                 entity.modified<Transform>();
@@ -130,6 +152,24 @@ namespace Waldem
                                     transform.LastScale = transform.LocalScale;
                                     transform.Update();
                                     entity.modified<Transform>();
+                                }
+
+                                if(WasUsingGizmo)
+                                {
+                                    ComponentValueBlob after(ECS::World.id<Transform>(), &transform);
+                                    if(GizmoBeforeTransform.IsValid() && after.IsValid() && !GizmoBeforeTransform.Equals(after))
+                                    {
+                                        EditorCommandHistory::Get().Execute(std::make_unique<SetComponentDataCommand>(
+                                            entity.id(),
+                                            ECS::World.id<Transform>(),
+                                            GizmoBeforeTransform,
+                                            after,
+                                            false
+                                        ));
+                                    }
+
+                                    WasUsingGizmo = false;
+                                    GizmoBeforeTransform = {};
                                 }
                             }
                         }

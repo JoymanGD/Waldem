@@ -19,6 +19,7 @@
 #include "Waldem/Editor/UIStyles.h"
 #include "Waldem/Renderer/Model/Quad.h"
 #include "Waldem/Renderer/Viewport/ViewportManager.h"
+#include <filesystem>
 
 struct ImGuiIO;
 
@@ -533,6 +534,40 @@ namespace Waldem
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable keyboard controls
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     // Enable docking
         io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;   // Enable multi-viewport
+
+        io.Fonts->Clear();
+        ImFontConfig fontConfig{};
+        fontConfig.OversampleH = 2;
+        fontConfig.OversampleV = 2;
+        fontConfig.RasterizerMultiply = 1.0f;
+        fontConfig.PixelSnapH = false;
+
+        const char* fontCandidates[] =
+        {
+            "Content/Fonts/Inter-Medium.ttf",
+            "Content/Fonts/Roboto-Medium.ttf",
+            "C:/Windows/Fonts/segoeui.ttf",
+            "C:/Windows/Fonts/segoeuib.ttf"
+        };
+
+        ImFont* uiFont = nullptr;
+        for (const char* fontPath : fontCandidates)
+        {
+            if (std::filesystem::exists(fontPath))
+            {
+                uiFont = io.Fonts->AddFontFromFileTTF(fontPath, 17.0f, &fontConfig);
+                if (uiFont)
+                {
+                    break;
+                }
+            }
+        }
+
+        if (!uiFont)
+        {
+            uiFont = io.Fonts->AddFontDefault();
+        }
+        io.FontDefault = uiFont;
 
         SDL_Window* window = static_cast<SDL_Window*>(CWindow::GetNativeWindow());
         ImGui_ImplSDL2_InitForD3D(window);
