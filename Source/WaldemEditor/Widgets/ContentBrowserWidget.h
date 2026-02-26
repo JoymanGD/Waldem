@@ -2,10 +2,15 @@
 #include "imgui.h"
 #include "Widget.h"
 #include "Waldem/AssetsManagement/ContentManager.h"
+#include "Waldem/Renderer/Model/Material.h"
 #include "Waldem/SceneManagement/SceneManager.h"
 #include "Waldem/Renderer/Renderer.h"
 #include "Waldem/Renderer/Texture.h"
+#include "Waldem/Utils/DataUtils.h"
+#include "../EditorShortcuts.h"
 #include <unordered_map>
+#include <fstream>
+#include <cstring>
 
 namespace Waldem
 {
@@ -18,6 +23,12 @@ namespace Waldem
         std::optional<Path> HoveredDropTargetFolder;
         std::optional<Path> SelectedFolderTreePath;
         std::optional<Path> SelectedAssetListPath;
+        std::optional<Path> PendingRenameTarget;
+        bool OpenRenamePopup = false;
+        bool RenameSelectedAssetRequested = false;
+        char RenameBuffer[256] = "";
+        bool RenameTargetIsFile = false;
+        std::string RenameTargetExtension = "";
         float CellSize = 100.0f;
         float Padding = 16.0f;
         std::unordered_map<std::string, Texture2D*> TextureThumbnails;
@@ -31,8 +42,227 @@ namespace Waldem
             return SharedSelectedAssetPath;
         }
 
+        Path MakeUniqueAssetPath(const Path& folder, const std::string& baseName, const std::string& extension)
+        {
+            Path candidate = folder / (baseName + extension);
+            int suffix = 1;
+
+            while (std::filesystem::exists(candidate))
+            {
+                candidate = folder / (baseName + "_" + std::to_string(suffix) + extension);
+                ++suffix;
+            }
+
+            return candidate;
+        }
+
+        bool CreateMaterialAsset(const Path& folder)
+        {
+            Path targetFolder = folder;
+            if (targetFolder.empty())
+            {
+                targetFolder = CurrentPath;
+            }
+
+            std::error_code ec;
+            std::filesystem::create_directories(targetFolder, ec);
+
+            Path materialPath = MakeUniqueAssetPath(targetFolder, "NewMaterial", ".mat");
+            std::string materialName = materialPath.stem().string();
+
+            Material material(materialName.c_str(), TextureReference("Empty"), TextureReference("Empty"), TextureReference("Empty"));
+            WDataBuffer outData;
+            material.Serialize(outData);
+
+            uint64 hash = HashFromData(outData.GetData(), outData.GetSize());
+            outData.Prepend(&hash, sizeof(uint64));
+
+            std::ofstream outFile(materialPath.c_str(), std::ios::binary | std::ios::trunc);
+            if (!outFile.is_open())
+            {
+                return false;
+            }
+
+            outFile.write((const char*)outData.GetData(), outData.GetSize());
+            outFile.close();
+
+            SelectedAssetListPath = materialPath;
+            SharedSelectedAssetPath = materialPath;
+            return true;
+        }
+
+        bool IsPathInside(const Path& path, const Path& potentialParent) const
+        {
+            std::error_code ec;
+            Path canonicalPath = std::filesystem::weakly_canonical(path, ec);
+            if (ec)
+            {
+                canonicalPath = path;
+            }
+
+            ec.clear();
+            Path canonicalParent = std::filesystem::weakly_canonical(potentialParent, ec);
+            if (ec)
+            {
+                canonicalParent = potentialParent;
+            }
+
+            auto pathIt = canonicalPath.begin();
+            auto parentIt = canonicalParent.begin();
+            for (; parentIt != canonicalParent.end(); ++parentIt, ++pathIt)
+            {
+                if (pathIt == canonicalPath.end() || *pathIt != *parentIt)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        void BeginRenamePath(const Path& targetPath)
+        {
+            if (targetPath.empty() || !std::filesystem::exists(targetPath))
+            {
+                return;
+            }
+
+            PendingRenameTarget = targetPath;
+            RenameTargetIsFile = std::filesystem::is_regular_file(targetPath);
+            RenameTargetExtension = RenameTargetIsFile ? targetPath.extension().string() : "";
+
+            std::string initialName = RenameTargetIsFile ? targetPath.stem().string() : targetPath.filename().string();
+            memset(RenameBuffer, 0, sizeof(RenameBuffer));
+            strncpy_s(RenameBuffer, initialName.c_str(), sizeof(RenameBuffer) - 1);
+
+            OpenRenamePopup = true;
+        }
+
+        bool CommitRename()
+        {
+            if (!PendingRenameTarget.has_value())
+            {
+                return false;
+            }
+
+            Path oldPath = PendingRenameTarget.value();
+            if (!std::filesystem::exists(oldPath))
+            {
+                PendingRenameTarget.reset();
+                return false;
+            }
+
+            std::string newName = RenameBuffer;
+            if (newName.empty())
+            {
+                return false;
+            }
+
+            Path newPath = oldPath.parent_path() / newName;
+            if (RenameTargetIsFile)
+            {
+                newPath += RenameTargetExtension;
+            }
+
+            if (newPath == oldPath || std::filesystem::exists(newPath))
+            {
+                return false;
+            }
+
+            std::error_code ec;
+            std::filesystem::rename(oldPath, newPath, ec);
+            if (ec)
+            {
+                return false;
+            }
+
+            if (SelectedAssetListPath.has_value() && SelectedAssetListPath.value() == oldPath)
+            {
+                SelectedAssetListPath = newPath;
+            }
+
+            if (SharedSelectedAssetPath.has_value() && SharedSelectedAssetPath.value() == oldPath)
+            {
+                SharedSelectedAssetPath = newPath;
+            }
+
+            if (SelectedFolderTreePath.has_value() && SelectedFolderTreePath.value() == oldPath)
+            {
+                SelectedFolderTreePath = newPath;
+            }
+
+            if (CurrentPath == oldPath)
+            {
+                CurrentPath = newPath;
+            }
+            else if (!RenameTargetIsFile && IsPathInside(CurrentPath, oldPath))
+            {
+                auto relative = std::filesystem::relative(CurrentPath, oldPath, ec);
+                if (!ec)
+                {
+                    CurrentPath = newPath / relative;
+                }
+            }
+
+            for (auto& pair : TextureThumbnails)
+            {
+                if (pair.second)
+                {
+                    Renderer::Destroy(pair.second);
+                }
+            }
+            TextureThumbnails.clear();
+            PendingRenameTarget.reset();
+            return true;
+        }
+
+        void DrawRenamePopup()
+        {
+            if (OpenRenamePopup)
+            {
+                ImGui::OpenPopup("RenameAssetOrFolderPopup");
+                OpenRenamePopup = false;
+            }
+
+            if (ImGui::BeginPopupModal("RenameAssetOrFolderPopup", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+            {
+                ImGui::TextUnformatted(RenameTargetIsFile ? "Rename Asset" : "Rename Folder");
+                ImGui::Separator();
+                ImGui::InputText("Name", RenameBuffer, IM_ARRAYSIZE(RenameBuffer), ImGuiInputTextFlags_AutoSelectAll);
+                if (RenameTargetIsFile && !RenameTargetExtension.empty())
+                {
+                    ImGui::Text("Extension: %s", RenameTargetExtension.c_str());
+                }
+
+                if (ImGui::Button("Rename"))
+                {
+                    if (CommitRename())
+                    {
+                        ImGui::CloseCurrentPopup();
+                    }
+                }
+
+                ImGui::SameLine();
+                if (ImGui::Button("Cancel"))
+                {
+                    PendingRenameTarget.reset();
+                    ImGui::CloseCurrentPopup();
+                }
+
+                ImGui::EndPopup();
+            }
+        }
+
         void Initialize(InputManager* inputManager) override
         {
+            inputManager->SubscribeToDynamicShortcut([]
+            {
+                return EditorShortcuts::GetShortcut(EditorShortcutAction::RenameEntity);
+            }, [&]
+            {
+                RenameSelectedAssetRequested = true;
+            });
+
             CContentManager::SubscribeToFileDroppedEvent([this](Path path)
             {
                 Path target = HoveredDropTargetFolder.has_value() ? HoveredDropTargetFolder.value() : CurrentPath;
@@ -129,13 +359,26 @@ namespace Waldem
                     HoveredDropTargetFolder = entry.path();
                 }
 
-                if (ImGui::BeginPopupContextItem())
-                {
-                    if (ImGui::MenuItem("Delete"))
+                    if (ImGui::BeginPopupContextItem())
                     {
-                        std::filesystem::remove_all(entry.path());
-                    }
-                    ImGui::EndPopup();
+                        if (ImGui::BeginMenu("Create"))
+                        {
+                            if (ImGui::MenuItem("Material"))
+                            {
+                                CreateMaterialAsset(entry.path());
+                            }
+                            ImGui::EndMenu();
+                        }
+
+                        if (ImGui::MenuItem("Delete"))
+                        {
+                            std::filesystem::remove_all(entry.path());
+                        }
+                        if (ImGui::MenuItem("Rename"))
+                        {
+                            BeginRenamePath(entry.path());
+                        }
+                        ImGui::EndPopup();
                 }
 
                 if (isOpen && hasChildren)
@@ -298,8 +541,19 @@ namespace Waldem
             // Context menu
             if (ImGui::BeginPopupContextItem())
             {
+                if (isFolder && ImGui::BeginMenu("Create"))
+                {
+                    if (ImGui::MenuItem("Material"))
+                    {
+                        CreateMaterialAsset(entry.path());
+                    }
+                    ImGui::EndMenu();
+                }
+
                 if (ImGui::MenuItem("Delete"))
                     std::filesystem::remove_all(entry.path());
+                if (ImGui::MenuItem("Rename"))
+                    BeginRenamePath(entry.path());
                 ImGui::EndPopup();
             }
 
@@ -336,6 +590,19 @@ namespace Waldem
             
             if (ImGui::BeginPopupContextWindow("CreateNewFolderContextWindow"))
             {
+                if (ImGui::BeginMenu("Create"))
+                {
+                    if (ImGui::MenuItem("Material"))
+                    {
+                        CreateMaterialAsset(CurrentPath);
+                    }
+                    if (ImGui::MenuItem("Folder"))
+                    {
+                        openCreateNewFolderPopup = true;
+                    }
+                    ImGui::EndMenu();
+                }
+
                 if (ImGui::MenuItem("Create Folder"))
                 {
                     openCreateNewFolderPopup = true;
@@ -426,6 +693,20 @@ namespace Waldem
                 HoveredDropTargetFolder.reset();
                 
                 //search bar
+                if (ImGui::Button("Create"))
+                {
+                    ImGui::OpenPopup("ContentCreatePopup");
+                }
+                if (ImGui::BeginPopup("ContentCreatePopup"))
+                {
+                    if (ImGui::MenuItem("Material"))
+                    {
+                        CreateMaterialAsset(CurrentPath);
+                    }
+                    ImGui::EndPopup();
+                }
+
+                ImGui::SameLine();
                 ImGui::InputTextWithHint("##Search", "Search...", SearchBuffer, IM_ARRAYSIZE(SearchBuffer));
                 ImGui::Separator();
 
@@ -446,7 +727,24 @@ namespace Waldem
                 RenderAssetsList();
                 ImGui::EndChild();
                 ImGui::PopStyleVar();
+
+                const bool contentFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
+                if (RenameSelectedAssetRequested && contentFocused)
+                {
+                    if (SelectedAssetListPath.has_value())
+                    {
+                        BeginRenamePath(SelectedAssetListPath.value());
+                    }
+                    else if (SelectedFolderTreePath.has_value())
+                    {
+                        BeginRenamePath(SelectedFolderTreePath.value());
+                    }
+                }
+
+                DrawRenamePopup();
             }
+
+            RenameSelectedAssetRequested = false;
             ImGui::End();
         }
     };

@@ -14,11 +14,10 @@ namespace Waldem
         
         void LoadAsset() override
         {
-            if (Mat)
-            {
-                delete Mat;
-                Mat = nullptr;
-            }
+            // Do not delete previous Mat here.
+            // Component snapshots/undo can copy raw pointers, which may leave Mat stale.
+            // Deleting a stale pointer crashes; just replace runtime pointer on load.
+            Mat = nullptr;
 
             if (Reference.empty() || Reference == "Empty")
             {

@@ -146,7 +146,7 @@ namespace Waldem
             "Undo",
             "Redo",
             "Duplicate Entity",
-            "Rename Entity",
+            "Rename Selection",
             "Delete Entity",
             "Gizmo Translate",
             "Gizmo Rotate",

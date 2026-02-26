@@ -111,13 +111,25 @@ namespace Waldem
                 }
 
                 const std::string meshMaterialPath = normalizeMaterialPath(meshComponent.MeshRef.Mesh->MaterialRef.Reference);
-                if (meshMaterialPath != targetMaterialPath)
+                const std::string componentMaterialPath = normalizeMaterialPath(meshComponent.MaterialRef.Reference);
+
+                bool usesTargetMaterial = (meshMaterialPath == targetMaterialPath) || (componentMaterialPath == targetMaterialPath);
+                if (!usesTargetMaterial)
                 {
                     return;
                 }
 
                 // Force material reload from disk for runtime mesh instances.
-                meshComponent.MeshRef.Mesh->MaterialRef.LoadAsset();
+                if (meshMaterialPath == targetMaterialPath)
+                {
+                    meshComponent.MeshRef.Mesh->MaterialRef.LoadAsset();
+                }
+
+                if (componentMaterialPath == targetMaterialPath)
+                {
+                    meshComponent.MaterialRef.LoadAsset();
+                }
+
                 entity.modified<MeshComponent>();
             });
 

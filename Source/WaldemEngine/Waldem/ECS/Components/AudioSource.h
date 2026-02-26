@@ -8,7 +8,7 @@ namespace Waldem
     COMPONENT()
     struct WALDEM_API AudioSource
     {
-        FIELD(Type=AssetReference)
+        FIELD(Type=AudioClipReference)
         AudioClipReference ClipRef;
         FIELD()
         float Range = 5.0f;

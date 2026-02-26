@@ -24,6 +24,10 @@
 #include "Systems/CoreSystems/ScreenQuadSystem.h"
 #include "Systems/CoreSystems/SpatialAudioSystem.h"
 #include "Waldem/Editor/AssetReference.h"
+#include "Waldem/Editor/AssetReference/AudioClipReference.h"
+#include "Waldem/Editor/AssetReference/MeshReference.h"
+#include "Waldem/Editor/AssetReference/TextureReference.h"
+#include "Waldem/Editor/AssetReference/MaterialReference.h"
 #include "Waldem/Utils/ECSUtils.h"
 
 namespace Waldem
@@ -197,6 +201,62 @@ namespace Waldem
                     return 0;
                 })
                 .assign_string([](AssetReference* data, const char *value)
+                {
+                    data->Reference = Path(value);
+                });
+
+            World.component<MeshReference>()
+                .opaque(flecs::String)
+                .serialize([](const flecs::serializer *s, const MeshReference *data)
+                {
+                    WString refStr = data->Reference.string();
+                    const char* cstr = refStr.C_Str();
+                    s->value(flecs::String, &cstr);
+                    return 0;
+                })
+                .assign_string([](MeshReference* data, const char *value)
+                {
+                    data->Reference = Path(value);
+                });
+
+            World.component<MaterialReference>()
+                .opaque(flecs::String)
+                .serialize([](const flecs::serializer *s, const MaterialReference *data)
+                {
+                    WString refStr = data->Reference.string();
+                    const char* cstr = refStr.C_Str();
+                    s->value(flecs::String, &cstr);
+                    return 0;
+                })
+                .assign_string([](MaterialReference* data, const char *value)
+                {
+                    data->Reference = Path(value);
+                });
+
+            World.component<TextureReference>()
+                .opaque(flecs::String)
+                .serialize([](const flecs::serializer *s, const TextureReference *data)
+                {
+                    WString refStr = data->Reference.string();
+                    const char* cstr = refStr.C_Str();
+                    s->value(flecs::String, &cstr);
+                    return 0;
+                })
+                .assign_string([](TextureReference* data, const char *value)
+                {
+                    data->Reference = Path(value);
+                });
+
+            World.component<AudioClipReference>()
+                .opaque(flecs::String)
+                .serialize([](const flecs::serializer *s, const AudioClipReference *data)
+                {
+                    WString refStr = data->Reference.string();
+                    const char* cstr = refStr.C_Str();
+                    s->value(flecs::String, &cstr);
+                    return 0;
+                })
+                .assign_string([](AudioClipReference* data, const char *value)
                 {
                     data->Reference = Path(value);
                 });

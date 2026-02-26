@@ -303,6 +303,18 @@ namespace Waldem
                 entity.add(component);
             }
 
+            const ecs_type_info_t* typeInfo = ecs_get_type_info(ECS::World.c_ptr(), ComponentId);
+            const bool hasComponentData = typeInfo != nullptr && typeInfo->size > 0;
+            if (hasComponentData)
+            {
+                void* addedValue = entity.get_mut(component);
+                if(addedValue == nullptr)
+                {
+                    return;
+                }
+                entity.modified(component);
+            }
+
             void* dst = entity.get_mut(component);
             if(dst == nullptr)
             {
@@ -498,6 +510,20 @@ namespace Waldem
             }
 
             entity.add(component);
+
+            const ecs_type_info_t* typeInfo = ecs_get_type_info(ECS::World.c_ptr(), ComponentId);
+            const bool hasComponentData = typeInfo != nullptr && typeInfo->size > 0;
+            if (!hasComponentData)
+            {
+                return;
+            }
+
+            void* addedValue = entity.get_mut(component);
+            if(addedValue == nullptr)
+            {
+                return;
+            }
+            entity.modified(component);
         }
 
         void Undo() override

@@ -95,13 +95,18 @@ namespace Waldem
                 if (!viewport->TryGetLinkedCamera(linkedCamera))
                     return;
 
-                auto& camera = linkedCamera.get_mut<Camera>();
+                if(!linkedCamera.is_alive() || !linkedCamera.has<Camera>() || !linkedCamera.has<Transform>())
+                {
+                    return;
+                }
+                auto& cameraComponent = linkedCamera.get_mut<Camera>();
+                
                 auto gbuffer = viewport->GetGBuffer();
 
                 gbuffer->Barrier(Depth, ALL_SHADER_RESOURCE, DEPTH_READ);
                 
                 Renderer::SetPipeline(CollidersRenderingPipeline);
-                Renderer::PushConstants(&camera.ViewProjectionMatrix, sizeof(Matrix4));
+                Renderer::PushConstants(&cameraComponent.ViewProjectionMatrix, sizeof(Matrix4));
 
                 for (auto& pair : ColliderMeshes)
                 {

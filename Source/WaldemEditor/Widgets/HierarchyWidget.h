@@ -116,6 +116,8 @@ namespace Waldem
         {
             if (ImGui::Begin("Entities", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus))
             {
+                const bool hierarchyFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
+
                 if (ImGui::Button("+  New Entity", ImVec2(ImGui::GetContentRegionAvail().x, 0.0f)))
                 {
                     auto createCommand = std::make_unique<CreateSceneEntityCommand>("NewEntity");
@@ -140,7 +142,7 @@ namespace Waldem
                         RenameString = originalName;
 
                         bool isSelected = entity.has<Selected>();
-                        bool startRename = RenameSelectedEntity && isSelected;
+                        bool startRename = RenameSelectedEntity && hierarchyFocused && isSelected;
 
                         std::string id = "##Entity_" + std::to_string(i);
                         if (ImGui::SelectableInput(id, RenameString, isSelected, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll, startRename))

@@ -58,6 +58,8 @@ namespace ImGui
 
     inline void AssetInputSlot(Waldem::Path& inPathToAsset, const char* assetType, std::function<void()> onDropCallback = nullptr, const char* label = nullptr)
     {
+        PushID((void*)&inPathToAsset);
+
         if(label)
         {
             PushID(label);
@@ -65,8 +67,22 @@ namespace ImGui
             Text("%s", label);
             SameLine();
         }
-    
-        Button(inPathToAsset.empty() ? "<None>" : inPathToAsset.string().c_str(), ImVec2(200, 0));
+
+        // Keep label storage stable for the full call; avoid passing c_str() from a temporary path string.
+        std::string buttonLabel = "<None>";
+        if (!inPathToAsset.empty())
+        {
+            try
+            {
+                buttonLabel = inPathToAsset.generic_string();
+            }
+            catch (...)
+            {
+                buttonLabel = "<Invalid Path>";
+            }
+        }
+
+        Button(buttonLabel.c_str(), ImVec2(200, 0));
     
         // Accept drag and drop payload
         if (BeginDragDropTarget())
@@ -99,5 +115,7 @@ namespace ImGui
         {
             PopID();
         }
+
+        PopID();
     }
 }

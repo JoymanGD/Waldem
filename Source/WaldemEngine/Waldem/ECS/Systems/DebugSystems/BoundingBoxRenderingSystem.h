@@ -88,6 +88,11 @@ namespace Waldem
                 ECS::Entity linkedCamera;
                 if (viewport->TryGetLinkedCamera(linkedCamera))
                 {
+                    if(!linkedCamera.is_alive() || !linkedCamera.has<Camera>() || !linkedCamera.has<Transform>())
+                    {
+                        return;
+                    }
+
                     auto& camera = linkedCamera.get_mut<Camera>();
                     auto gbuffer = viewport->GetGBuffer();
 

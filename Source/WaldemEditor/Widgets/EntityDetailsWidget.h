@@ -4,6 +4,10 @@
 #include "Waldem/ECS/ECS.h"
 #include "Waldem/ECS/Components/Selected.h"
 #include "Waldem/Editor/AssetReference/AudioClipReference.h"
+#include "Waldem/Editor/AssetReference/TextureReference.h"
+#include "Waldem/Editor/AssetReference/MeshReference.h"
+#include "Waldem/Editor/AssetReference/MaterialReference.h"
+#include "Waldem/ECS/Components/MeshComponent.h"
 #include "Waldem/Extensions/ImGUIExtension.h"
 #include "Waldem/Input/InputManager.h"
 #include "Commands/EditorCommands.h"
@@ -317,18 +321,94 @@ namespace Waldem
                     case EcsOpOpaqueStruct:
                     case EcsOpOpaqueValue:
                     {
-                        if (op->type == ECS::World.id<AssetReference>())
+                        const auto textureRefId = ECS::World.id<TextureReference>();
+                        const auto meshRefId = ECS::World.id<MeshReference>();
+                        const auto materialRefId = ECS::World.id<MaterialReference>();
+                        const auto audioRefId = ECS::World.id<AudioClipReference>();
+                        const auto baseAssetRefId = ECS::World.id<AssetReference>();
+
+                        const bool isAssetReferenceType =
+                            op->type == textureRefId ||
+                            op->type == meshRefId ||
+                            op->type == materialRefId ||
+                            op->type == audioRefId ||
+                            op->type == baseAssetRefId;
+
+                        if (isAssetReferenceType)
                         {
-                            AssetReference* assetRef = (AssetReference*)((uint8_t*)base + op->offset);
-                            WString assetTypeString = AssetTypeToString(assetRef->GetType());
-                            ComponentValueBlob before(id.raw_id(), base);
-                            ImGui::AssetInputSlot(assetRef->Reference, assetTypeString.C_Str(), [this, entity, id, base, before]()
+                            AssetReference* assetRef = (AssetReference*)ptr;
+
+                            AssetType assetType = AssetType::Unknown;
+                            if (op->type == textureRefId) assetType = AssetType::Texture;
+                            else if (op->type == meshRefId) assetType = AssetType::Mesh;
+                            else if (op->type == materialRefId) assetType = AssetType::Material;
+                            else if (op->type == audioRefId) assetType = AssetType::Audio;
+                            else if (op->type == baseAssetRefId && op->name)
                             {
+                                const std::string fieldName = op->name;
+                                if (fieldName.find("Mesh") != std::string::npos) assetType = AssetType::Mesh;
+                                else if (fieldName.find("Material") != std::string::npos) assetType = AssetType::Material;
+                                else if (fieldName.find("Texture") != std::string::npos) assetType = AssetType::Texture;
+                                else if (fieldName.find("Audio") != std::string::npos || fieldName.find("Clip") != std::string::npos) assetType = AssetType::Audio;
+                            }
+
+                            if (assetType == AssetType::Unknown)
+                            {
+                                ImGui::TextUnformatted("<Unsupported asset reference>");
+                                break;
+                            }
+
+                            WString assetTypeString = AssetTypeToString(assetType);
+                            ComponentValueBlob before(id.raw_id(), base);
+                            const bool isMeshRefField =
+                                (op->type == meshRefId) &&
+                                op->name &&
+                                (std::string(op->name) == "MeshRef");
+
+                            ImGui::AssetInputSlot(assetRef->Reference, assetTypeString.C_Str(), [this, entity, id, base, before, isMeshRefField, op, materialRefId]()
+                            {
+                                if (isMeshRefField)
+                                {
+                                    MeshComponent* meshComponent = static_cast<MeshComponent*>(base);
+                                    if (meshComponent)
+                                    {
+                                        const bool meshRefIsEmpty = meshComponent->MeshRef.Reference.empty() || meshComponent->MeshRef.Reference == "Empty";
+                                        if (!meshRefIsEmpty)
+                                        {
+                                            if (!meshComponent->MeshRef.IsValid())
+                                            {
+                                                meshComponent->MeshRef.LoadAsset();
+                                            }
+
+                                            if (meshComponent->MeshRef.IsValid() && meshComponent->MeshRef.Mesh)
+                                            {
+                                                const MaterialReference& defaultMaterialRef = meshComponent->MeshRef.Mesh->MaterialRef;
+                                                const bool materialRefIsEmpty = meshComponent->MaterialRef.Reference.empty() || meshComponent->MaterialRef.Reference == "Empty";
+                                                const bool defaultMaterialIsValidPath = !defaultMaterialRef.Reference.empty() && defaultMaterialRef.Reference != "Empty";
+
+                                                if (materialRefIsEmpty && defaultMaterialIsValidPath)
+                                                {
+                                                    meshComponent->MaterialRef.Reference = defaultMaterialRef.Reference;
+                                                    meshComponent->MaterialRef.Mat = nullptr;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                else if (op && op->type == materialRefId)
+                                {
+                                    MaterialReference* matRef = static_cast<MaterialReference*>(reinterpret_cast<void*>(ECS_OFFSET(base, op->offset)));
+                                    if (matRef)
+                                    {
+                                        matRef->Mat = nullptr;
+                                    }
+                                }
+
                                 entity.modified(id);
                                 PushComponentStateCommand(entity, id, before, base, false);
                             });
 
-                            if (assetRef->GetType() == AssetType::Audio)
+                            if (op->type == audioRefId)
                             {
                                 auto audioClipRef = (AudioClipReference*)assetRef;
 

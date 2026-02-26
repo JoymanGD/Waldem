@@ -269,6 +269,30 @@ namespace Waldem
                         
                         if(meshComponent.MeshRef.IsValid())
                         {
+                            auto isEmptyReference = [](const Path& reference)
+                            {
+                                return reference.empty() || reference == "Empty";
+                            };
+
+                            Material* activeMaterial = meshComponent.MeshRef.Mesh->MaterialRef.Mat;
+                            const bool hasComponentMaterialRef = !isEmptyReference(meshComponent.MaterialRef.Reference);
+                            const bool overridesMeshMaterial =
+                                hasComponentMaterialRef &&
+                                (meshComponent.MaterialRef.Reference != meshComponent.MeshRef.Mesh->MaterialRef.Reference);
+
+                            bool useComponentMaterial = overridesMeshMaterial;
+                            if(useComponentMaterial)
+                            {
+                                // Always reload when a component material reference is set.
+                                // The path can change while Mat still points to previously loaded material.
+                                meshComponent.MaterialRef.LoadAsset();
+
+                                if(meshComponent.MaterialRef.IsValid())
+                                {
+                                    activeMaterial = meshComponent.MaterialRef.Mat;
+                                }
+                            }
+
                             meshComponent.DrawCommand = {
                                 (uint)meshComponent.MeshRef.Mesh->IndexData.Num(),
                                 1,
@@ -293,22 +317,28 @@ namespace Waldem
 
                             auto& materialAttribute = MaterialAttributes[globalDrawId];
 
-                            materialAttribute.Albedo = meshComponent.MeshRef.Mesh->MaterialRef.Mat->Albedo;
-                            materialAttribute.Metallic = meshComponent.MeshRef.Mesh->MaterialRef.Mat->Metallic;
-                            materialAttribute.Roughness = meshComponent.MeshRef.Mesh->MaterialRef.Mat->Roughness;
+                            if(activeMaterial)
+                            {
+                                materialAttribute.Albedo = activeMaterial->Albedo;
+                                materialAttribute.Metallic = activeMaterial->Metallic;
+                                materialAttribute.Roughness = activeMaterial->Roughness;
+                            }
                             materialAttribute.DiffuseTextureID = -1;
                             materialAttribute.NormalTextureID = -1;
                             materialAttribute.ORMTextureID = -1;
                             
-                            if(meshComponent.MeshRef.Mesh->MaterialRef.Mat->HasDiffuseTexture())
+                            if(activeMaterial)
                             {
-                                materialAttribute.DiffuseTextureID = meshComponent.MeshRef.Mesh->MaterialRef.Mat->GetDiffuseTexture()->GetIndex(SRV_CBV);
-                            }
+                                if(activeMaterial->HasDiffuseTexture())
+                                {
+                                    materialAttribute.DiffuseTextureID = activeMaterial->GetDiffuseTexture()->GetIndex(SRV_CBV);
+                                }
 
-                            if(meshComponent.MeshRef.Mesh->MaterialRef.Mat->HasNormalTexture())
-                                materialAttribute.NormalTextureID = meshComponent.MeshRef.Mesh->MaterialRef.Mat->GetNormalTexture()->GetIndex(SRV_CBV);
-                            if(meshComponent.MeshRef.Mesh->MaterialRef.Mat->HasORMTexture())
-                                materialAttribute.ORMTextureID = meshComponent.MeshRef.Mesh->MaterialRef.Mat->GetORMTexture()->GetIndex(SRV_CBV);
+                                if(activeMaterial->HasNormalTexture())
+                                    materialAttribute.NormalTextureID = activeMaterial->GetNormalTexture()->GetIndex(SRV_CBV);
+                                if(activeMaterial->HasORMTexture())
+                                    materialAttribute.ORMTextureID = activeMaterial->GetORMTexture()->GetIndex(SRV_CBV);
+                            }
 
                             MaterialAttributesBuffer.UpdateData(&materialAttribute, sizeof(MaterialShaderAttribute), globalDrawId * sizeof(MaterialShaderAttribute));
 
@@ -578,6 +608,10 @@ namespace Waldem
                 if(viewport->TryGetLinkedCamera(linkedCamera))
                 {
                     auto skyColor = viewport->GetGBufferRenderTarget(SkyColor);
+                    if(!linkedCamera.is_alive() || !linkedCamera.has<Camera>() || !linkedCamera.has<Transform>())
+                    {
+                        return;
+                    }
                     auto& cameraComponent = linkedCamera.get<Camera>();
                     auto& transformComponent = linkedCamera.get<Transform>();
 
@@ -620,6 +654,10 @@ namespace Waldem
                 
                 if(viewport->TryGetLinkedCamera(linkedCamera))
                 {
+                    if(!linkedCamera.is_alive() || !linkedCamera.has<Camera>() || !linkedCamera.has<Transform>())
+                    {
+                        return;
+                    }
                     auto& cameraComponent = linkedCamera.get<Camera>();
                     auto& transformComponent = linkedCamera.get<Transform>();
                     
@@ -679,6 +717,10 @@ namespace Waldem
                     auto gbuffer = viewport->GetGBuffer();
                     auto radianceRT = gbuffer->GetRenderTarget(Radiance);
 
+                    if(!linkedCamera.is_alive() || !linkedCamera.has<Camera>() || !linkedCamera.has<Transform>())
+                    {
+                        return;
+                    }
                     auto& cameraComponent = linkedCamera.get<Camera>();
                     auto& transformComponent = linkedCamera.get<Transform>();
 
