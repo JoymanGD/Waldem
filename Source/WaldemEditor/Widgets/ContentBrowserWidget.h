@@ -3,6 +3,9 @@
 #include "Widget.h"
 #include "Waldem/AssetsManagement/ContentManager.h"
 #include "Waldem/SceneManagement/SceneManager.h"
+#include "Waldem/Renderer/Renderer.h"
+#include "Waldem/Renderer/Texture.h"
+#include <unordered_map>
 
 namespace Waldem
 {
@@ -17,6 +20,7 @@ namespace Waldem
         std::optional<Path> SelectedAssetListPath;
         float CellSize = 100.0f;
         float Padding = 16.0f;
+        std::unordered_map<std::string, Texture2D*> TextureThumbnails;
         
     public:
         ContentBrowserWidget() {}
@@ -33,6 +37,47 @@ namespace Waldem
                     SelectedAssetListPath = target;
                 }
             });
+        }
+
+        void Deinitialize() override
+        {
+            for (auto& pair : TextureThumbnails)
+            {
+                if (pair.second)
+                {
+                    Renderer::Destroy(pair.second);
+                }
+            }
+            TextureThumbnails.clear();
+        }
+
+        Texture2D* GetTextureThumbnail(const Path& assetPath)
+        {
+            std::string key = assetPath.string();
+            auto it = TextureThumbnails.find(key);
+            if (it != TextureThumbnails.end())
+            {
+                return it->second;
+            }
+
+            auto textureDesc = CContentManager::LoadAsset<TextureDesc>(assetPath);
+            if (!textureDesc)
+            {
+                TextureThumbnails[key] = nullptr;
+                return nullptr;
+            }
+
+            Texture2D* thumbnail = Renderer::CreateTexture2D(
+                "Thumbnail_" + textureDesc->Name.ToString(),
+                textureDesc->Width,
+                textureDesc->Height,
+                textureDesc->Format,
+                textureDesc->Data
+            );
+            
+            delete textureDesc;
+            TextureThumbnails[key] = thumbnail;
+            return thumbnail;
         }
 
         void RenderFolderTreeNode(const Path& path)
@@ -167,12 +212,25 @@ namespace Waldem
             }
             else
             {
-                // File rectangle (blue)
+                Texture2D* thumbnail = nullptr;
+                if (extension == ".img")
+                {
+                    thumbnail = GetTextureThumbnail(entry.path());
+                }
+
                 ImVec2 fileMin(rectMin.x + 12, rectMin.y + 8);
                 ImVec2 fileMax(rectMax.x - 12, rectMax.y - 8);
-
-                drawList->AddRectFilled(fileMin, fileMax, IM_COL32(80, 150, 255, 255), 4.0f);
-                drawList->AddRect(fileMin, fileMax, IM_COL32(180, 220, 255, 255), 4.0f);
+                if (thumbnail)
+                {
+                    drawList->AddImage(thumbnail->GetGPUAddress(), fileMin, fileMax);
+                    drawList->AddRect(fileMin, fileMax, IM_COL32(180, 220, 255, 210), 4.0f);
+                }
+                else
+                {
+                    // Fallback file rectangle (blue)
+                    drawList->AddRectFilled(fileMin, fileMax, IM_COL32(80, 150, 255, 255), 4.0f);
+                    drawList->AddRect(fileMin, fileMax, IM_COL32(180, 220, 255, 255), 4.0f);
+                }
             }
 
             if (clicked) {
