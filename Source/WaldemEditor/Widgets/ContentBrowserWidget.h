@@ -7,16 +7,20 @@
 #include "Waldem/Renderer/Renderer.h"
 #include "Waldem/Renderer/Texture.h"
 #include "Waldem/Utils/DataUtils.h"
+#include "Waldem/ECS/Components/SceneEntity.h"
+#include "Waldem/SceneManagement/Prefab.h"
 #include "../EditorShortcuts.h"
 #include <unordered_map>
 #include <fstream>
 #include <cstring>
+#include <cctype>
 
 namespace Waldem
 {
     class ContentBrowserWidget : public IWidget
     {
     private:
+        static constexpr const char* HierarchyDragPayloadType = "WALDEM_HIERARCHY_ENTITY";
         ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
         char SearchBuffer[128] = "";
         Path CurrentPath = CONTENT_PATH;
@@ -54,6 +58,60 @@ namespace Waldem
             }
 
             return candidate;
+        }
+
+        std::string SanitizeAssetName(const std::string& input, const std::string& fallback = "NewPrefab") const
+        {
+            std::string result;
+            result.reserve(input.size());
+
+            for (char c : input)
+            {
+                if (std::isalnum((unsigned char)c) || c == '_' || c == '-')
+                {
+                    result.push_back(c);
+                }
+                else if (c == ' ')
+                {
+                    result.push_back('_');
+                }
+            }
+
+            if (result.empty())
+            {
+                return fallback;
+            }
+
+            return result;
+        }
+
+        bool CreatePrefabAssetFromEntity(flecs::entity_t entityId, const Path& folder)
+        {
+            auto entity = ECS::World.entity(entityId);
+            if(!entity.is_alive() || !entity.has<SceneEntity>())
+            {
+                return false;
+            }
+
+            Path targetFolder = folder.empty() ? CurrentPath : folder;
+            std::error_code ec;
+            std::filesystem::create_directories(targetFolder, ec);
+
+            std::string entityName = entity.name().c_str();
+            if(entityName.empty())
+            {
+                entityName = "NewPrefab";
+            }
+
+            Path prefabPath = MakeUniqueAssetPath(targetFolder, SanitizeAssetName(entityName), ".prefab");
+            if(!Prefab::SaveEntityAsPrefab(entity, prefabPath))
+            {
+                return false;
+            }
+
+            SelectedAssetListPath = prefabPath;
+            SharedSelectedAssetPath = prefabPath;
+            return true;
         }
 
         bool CreateMaterialAsset(const Path& folder)
@@ -527,6 +585,17 @@ namespace Waldem
             }
             
             const std::string itemName = entry.path().filename().string();
+
+            if (ImGui::BeginDragDropTarget())
+            {
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(HierarchyDragPayloadType))
+                {
+                    const auto entityId = *(const flecs::entity_t*)payload->Data;
+                    Path targetFolder = isFolder ? entry.path() : CurrentPath;
+                    CreatePrefabAssetFromEntity(entityId, targetFolder);
+                }
+                ImGui::EndDragDropTarget();
+            }
             
             // Drag and drop
             if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
@@ -683,6 +752,24 @@ namespace Waldem
             {
                 SelectedAssetListPath.reset(); // Deselect
                 SharedSelectedAssetPath.reset();
+            }
+
+            float dropTargetHeight = ImGui::GetContentRegionAvail().y;
+            if(dropTargetHeight < 24.0f)
+            {
+                dropTargetHeight = 24.0f;
+            }
+
+            ImGui::InvisibleButton("##PrefabDropTarget", ImVec2(ImGui::GetContentRegionAvail().x, dropTargetHeight));
+            if (ImGui::BeginDragDropTarget())
+            {
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(HierarchyDragPayloadType))
+                {
+                    const auto entityId = *(const flecs::entity_t*)payload->Data;
+                    Path targetFolder = HoveredDropTargetFolder.has_value() ? HoveredDropTargetFolder.value() : CurrentPath;
+                    CreatePrefabAssetFromEntity(entityId, targetFolder);
+                }
+                ImGui::EndDragDropTarget();
             }
         }
 

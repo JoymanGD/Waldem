@@ -8,6 +8,7 @@
 #include "Waldem/Input/KeyCodes.h"
 #include "Waldem/Types/WMap.h"
 #include "Waldem/Utils/ECSUtils.h"
+#include "Waldem/SceneManagement/Prefab.h"
 #include "Commands/EditorCommands.h"
 #include "../EditorShortcuts.h"
 #include <algorithm>
@@ -20,6 +21,7 @@ namespace Waldem
     class HierarchyWidget : public IWidget
     {
         static constexpr const char* HierarchyDragPayloadType = "WALDEM_HIERARCHY_ENTITY";
+        static constexpr const char* PrefabDragPayloadType = "Prefab";
         std::string RenameString = "";
         bool DeleteSelectedEntity = false;
         bool RenameSelectedEntity = false;
@@ -201,6 +203,27 @@ namespace Waldem
                 int hierarchyDrawIndex = 0;
                 const float hierarchyBaseX = ImGui::GetCursorPosX();
                 constexpr float hierarchyIndentWidth = 20.0f;
+                auto instantiatePrefabFromPayload = [&](const ImGuiPayload* payload, ECS::Entity parentEntity = ECS::Entity{})
+                {
+                    const char* relativePrefabPath = static_cast<const char*>(payload->Data);
+                    if(relativePrefabPath == nullptr || relativePrefabPath[0] == '\0')
+                    {
+                        return;
+                    }
+
+                    Path prefabPath = Path(CONTENT_PATH) / Path(relativePrefabPath);
+                    if(prefabPath.extension() != ".prefab")
+                    {
+                        return;
+                    }
+
+                    auto spawnedRoot = Prefab::InstantiatePrefab(prefabPath, parentEntity);
+                    if(spawnedRoot.is_alive())
+                    {
+                        SelectEntity(spawnedRoot);
+                    }
+                };
+
                 std::function<void(flecs::entity_t, int)> drawEntityRecursive;
                 drawEntityRecursive = [&](flecs::entity_t entityId, int depth)
                 {
@@ -269,6 +292,10 @@ namespace Waldem
                                 ECS::SetParent(draggedEntity, entity, true);
                             }
                         }
+                        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PrefabDragPayloadType))
+                        {
+                            instantiatePrefabFromPayload(payload, entity);
+                        }
                         ImGui::EndDragDropTarget();
                     }
 
@@ -305,6 +332,10 @@ namespace Waldem
                         {
                             ECS::ClearParent(draggedEntity, true);
                         }
+                    }
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PrefabDragPayloadType))
+                    {
+                        instantiatePrefabFromPayload(payload);
                     }
                     ImGui::EndDragDropTarget();
                 }

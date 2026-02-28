@@ -13,6 +13,7 @@ namespace Waldem
         Animation,
         Audio,
         Scene,
+        Prefab,
         Script,
         Unknown
     };

@@ -47,6 +47,8 @@ namespace Waldem
             return curentFolder.append("Audio");
         case AssetType::Scene:
             return curentFolder.append("Scenes");
+        case AssetType::Prefab:
+            return curentFolder.append("Prefabs");
         case AssetType::Script:
             return curentFolder.append("Scripts");
         case AssetType::Unknown:
@@ -70,6 +72,7 @@ namespace Waldem
         case AssetType::Animation: return "Animation";
         case AssetType::Audio:     return "Audio";
         case AssetType::Scene:     return "Scene";
+        case AssetType::Prefab:    return "Prefab";
         case AssetType::Script:    return "Script";
         case AssetType::Unknown:   return "Unknown";
         default:                   return "Invalid";
@@ -86,6 +89,7 @@ namespace Waldem
         case AssetType::Animation: return ".anim";
         case AssetType::Audio:     return ".sound";
         case AssetType::Scene:     return ".scene";
+        case AssetType::Prefab:    return ".prefab";
         case AssetType::Script:    return ".script";
         case AssetType::Unknown:   return "Unknown";
         default:                   return "Invalid";
@@ -100,6 +104,7 @@ namespace Waldem
         if(extension == ".anim") return AssetType::Animation;
         if(extension == ".sound") return AssetType::Audio;
         if(extension == ".scene") return AssetType::Scene;
+        if(extension == ".prefab") return AssetType::Prefab;
         if(extension == ".script") return AssetType::Script;
         
         return AssetType::Unknown;
@@ -113,6 +118,7 @@ namespace Waldem
         if (extension == ".anim") return "Animation";
         if (extension == ".mat") return "Material";
         if (extension == ".scene") return "Scene";
+        if (extension == ".prefab") return "Prefab";
         if (extension == ".script") return "Script";
         
         return "Invalid";
@@ -127,6 +133,7 @@ namespace Waldem
             extension == ".anim" ||
             extension == ".mat" ||
             extension == ".scene" ||
+            extension == ".prefab" ||
             extension == ".script";
     }
 }

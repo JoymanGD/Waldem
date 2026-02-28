@@ -1,0 +1,129 @@
+{
+  "version": 1,
+  "nodes": [
+    {
+      "id": 0,
+      "parent": -1,
+      "local_matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "entity": {
+        "name": "Parent",
+        "tags": [
+          "Waldem.Selected"
+        ],
+        "components": {
+          "SceneEntity": {
+            "ParentId": 0,
+            "HierarchyDepth": 0,
+            "HierarchySlot": 0,
+            "VisibleInHierarchy": true
+          },
+          "Waldem.Transform": {
+            "Position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "Rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "LocalScale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            },
+            "___RotationQuat": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            }
+          },
+          "Waldem.MeshComponent": {
+            "MeshRef": "Meshes\\Floor\\Floor.mesh",
+            "MaterialRef": "Meshes\\Floor\\Scene"
+          }
+        }
+      }
+    },
+    {
+      "id": 1,
+      "parent": 0,
+      "local_matrix": [
+        2.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.03898024559020996,
+        1.9996201992034912,
+        0.0,
+        0.0,
+        -1.9996201992034912,
+        0.03898024559020996,
+        0.0,
+        0.0,
+        1.0902161598205566,
+        0.0,
+        1.0
+      ],
+      "entity": {
+        "parent": "Parent",
+        "name": "Child",
+        "components": {
+          "SceneEntity": {
+            "ParentId": 756,
+            "HierarchyDepth": 1,
+            "HierarchySlot": 1,
+            "VisibleInHierarchy": true
+          },
+          "Waldem.Transform": {
+            "Position": {
+              "x": 0,
+              "y": 1.0902161598,
+              "z": 0
+            },
+            "Rotation": {
+              "x": 88.8831710815,
+              "y": 0,
+              "z": 0
+            },
+            "LocalScale": {
+              "x": 2,
+              "y": 2,
+              "z": 2
+            },
+            "___RotationQuat": {
+              "x": 0.7001820803,
+              "y": 0,
+              "z": 0,
+              "w": 0.7139643431
+            }
+          },
+          "Waldem.MeshComponent": {
+            "MeshRef": "Meshes\\Mage\\Mage_LP.mesh",
+            "MaterialRef": "Meshes\\Mage\\Default"
+          }
+        }
+      }
+    }
+  ]
+}
