@@ -85,6 +85,7 @@ namespace Waldem
         {
         case AssetType::Texture:   return ".img";
         case AssetType::Mesh:      return ".mesh";
+        case AssetType::Model:     return ".model";
         case AssetType::Material:  return ".mat";
         case AssetType::Animation: return ".anim";
         case AssetType::Audio:     return ".sound";
@@ -100,6 +101,7 @@ namespace Waldem
     {
         if(extension == ".img") return AssetType::Texture;
         if(extension == ".mesh") return AssetType::Mesh;
+        if(extension == ".model") return AssetType::Model;
         if(extension == ".mat") return AssetType::Material;
         if(extension == ".anim") return AssetType::Animation;
         if(extension == ".sound") return AssetType::Audio;
@@ -113,6 +115,7 @@ namespace Waldem
     inline WString ExtensionToAssetString(WString extension)
     {
         if (extension == ".mesh") return "Mesh";
+        if (extension == ".model") return "Model";
         if (extension == ".sound") return "Audio";
         if (extension == ".img") return "Texture";
         if (extension == ".anim") return "Animation";
@@ -128,6 +131,7 @@ namespace Waldem
     {
         return 
             extension == ".mesh" ||
+            extension == ".model" ||
             extension == ".sound" ||
             extension == ".img" ||
             extension == ".anim" ||

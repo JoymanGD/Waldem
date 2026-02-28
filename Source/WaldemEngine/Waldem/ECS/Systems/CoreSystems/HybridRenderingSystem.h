@@ -274,6 +274,14 @@ namespace Waldem
                                 return reference.empty() || reference == "Empty";
                             };
 
+                            // Keep component MaterialRef in sync with mesh default when it's not explicitly overridden.
+                            if(isEmptyReference(meshComponent.MaterialRef.Reference) &&
+                               !isEmptyReference(meshComponent.MeshRef.Mesh->MaterialRef.Reference))
+                            {
+                                meshComponent.MaterialRef.Reference = meshComponent.MeshRef.Mesh->MaterialRef.Reference;
+                                meshComponent.MaterialRef.Mat = meshComponent.MeshRef.Mesh->MaterialRef.Mat;
+                            }
+
                             Material* activeMaterial = meshComponent.MeshRef.Mesh->MaterialRef.Mat;
                             const bool hasComponentMaterialRef = !isEmptyReference(meshComponent.MaterialRef.Reference);
                             const bool overridesMeshMaterial =

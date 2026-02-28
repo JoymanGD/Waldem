@@ -174,9 +174,18 @@ namespace Waldem
                     Path& normalRef = LoadedMaterial->GetNormalReference();
                     Path& ormRef = LoadedMaterial->GetORMReference();
 
-                    ImGui::AssetInputSlot(diffuseRef, "Texture", [&]() { Dirty = true; }, "Diffuse");
-                    ImGui::AssetInputSlot(normalRef, "Texture", [&]() { Dirty = true; }, "Normal");
-                    ImGui::AssetInputSlot(ormRef, "Texture", [&]() { Dirty = true; }, "ORM");
+                    auto focusTextureAsset = [](const Path& textureRef)
+                    {
+                        if (textureRef.empty() || textureRef == "Empty")
+                        {
+                            return;
+                        }
+                        ContentBrowserWidget::FocusAssetPath(textureRef);
+                    };
+
+                    ImGui::AssetInputSlot(diffuseRef, "Texture", [&]() { Dirty = true; }, "Diffuse", [&]() { focusTextureAsset(diffuseRef); });
+                    ImGui::AssetInputSlot(normalRef, "Texture", [&]() { Dirty = true; }, "Normal", [&]() { focusTextureAsset(normalRef); });
+                    ImGui::AssetInputSlot(ormRef, "Texture", [&]() { Dirty = true; }, "ORM", [&]() { focusTextureAsset(ormRef); });
 
                     ImGui::Spacing();
                     ImGui::TextUnformatted("Surface");

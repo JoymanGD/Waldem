@@ -1,4 +1,5 @@
 #pragma once
+#include "imgui_internal.h"
 #include "Waldem/ECS/ECS.h"
 #include "Waldem/ECS/Components/SceneEntity.h"
 #include "Widget.h"
@@ -9,6 +10,7 @@
 #include "Waldem/Types/WMap.h"
 #include "Waldem/Utils/ECSUtils.h"
 #include "Waldem/SceneManagement/Prefab.h"
+#include "Waldem/SceneManagement/ModelSpawner.h"
 #include "Commands/EditorCommands.h"
 #include "../EditorShortcuts.h"
 #include <algorithm>
@@ -22,11 +24,13 @@ namespace Waldem
     {
         static constexpr const char* HierarchyDragPayloadType = "WALDEM_HIERARCHY_ENTITY";
         static constexpr const char* PrefabDragPayloadType = "Prefab";
+        static constexpr const char* ModelDragPayloadType = "Model";
         std::string RenameString = "";
         bool DeleteSelectedEntity = false;
         bool RenameSelectedEntity = false;
         ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
         WMap<float, ECS::Entity> HierarchyEntries;
+        std::unordered_map<flecs::entity_t, bool> ExpandedByEntity;
 
         void SelectEntity(flecs::entity& entity)
         {
@@ -203,6 +207,7 @@ namespace Waldem
                 int hierarchyDrawIndex = 0;
                 const float hierarchyBaseX = ImGui::GetCursorPosX();
                 constexpr float hierarchyIndentWidth = 20.0f;
+                constexpr float hierarchyFoldAreaWidth = 14.0f;
                 auto instantiatePrefabFromPayload = [&](const ImGuiPayload* payload, ECS::Entity parentEntity = ECS::Entity{})
                 {
                     const char* relativePrefabPath = static_cast<const char*>(payload->Data);
@@ -224,6 +229,27 @@ namespace Waldem
                     }
                 };
 
+                auto instantiateModelFromPayload = [&](const ImGuiPayload* payload, ECS::Entity parentEntity = ECS::Entity{})
+                {
+                    const char* relativeModelPath = static_cast<const char*>(payload->Data);
+                    if(relativeModelPath == nullptr || relativeModelPath[0] == '\0')
+                    {
+                        return;
+                    }
+
+                    Path modelPath = Path(CONTENT_PATH) / Path(relativeModelPath);
+                    if(modelPath.extension() != ".model")
+                    {
+                        return;
+                    }
+
+                    auto spawnedRoot = ModelSpawner::InstantiateModel(modelPath, parentEntity);
+                    if(spawnedRoot.is_alive())
+                    {
+                        SelectEntity(spawnedRoot);
+                    }
+                };
+
                 std::function<void(flecs::entity_t, int)> drawEntityRecursive;
                 drawEntityRecursive = [&](flecs::entity_t entityId, int depth)
                 {
@@ -239,8 +265,45 @@ namespace Waldem
 
                     bool isSelected = entity.has<Selected>();
                     bool startRename = RenameSelectedEntity && hierarchyFocused && isSelected;
+                    auto childrenIt = childrenByParent.find(entityId);
+                    const bool hasChildren = childrenIt != childrenByParent.end() && !childrenIt->second.empty();
 
-                    ImGui::SetCursorPosX(hierarchyBaseX + (float)depth * hierarchyIndentWidth);
+                    const float rowStartX = hierarchyBaseX + (float)depth * hierarchyIndentWidth;
+                    ImGui::SetCursorPosX(rowStartX + hierarchyFoldAreaWidth + 4.0f);
+
+                    if (hasChildren)
+                    {
+                        auto expandedIt = ExpandedByEntity.find(entityId);
+                        if (expandedIt == ExpandedByEntity.end())
+                        {
+                            expandedIt = ExpandedByEntity.emplace(entityId, true).first;
+                        }
+                        bool& isExpanded = expandedIt->second;
+
+                        const ImVec2 rowStartScreenPos = ImGui::GetCursorScreenPos();
+                        ImGui::SetCursorScreenPos(ImVec2(rowStartScreenPos.x - hierarchyFoldAreaWidth - 4.0f, rowStartScreenPos.y));
+                        ImGui::PushID((int)entityId);
+                        if (ImGui::InvisibleButton("##ExpandCollapse", ImVec2(hierarchyFoldAreaWidth, ImGui::GetFrameHeight())))
+                        {
+                            isExpanded = !isExpanded;
+                        }
+                        const ImVec2 foldMin = ImGui::GetItemRectMin();
+                        const ImVec2 foldMax = ImGui::GetItemRectMax();
+                        const float arrowScale = 0.70f;
+                        const float arrowSize = ImGui::GetFontSize() * arrowScale;
+                        const ImVec2 arrowPos(
+                            foldMin.x + (hierarchyFoldAreaWidth - arrowSize) * 0.5f,
+                            foldMin.y + (ImGui::GetFrameHeight() - arrowSize) * 0.5f
+                        );
+                        ImGui::RenderArrow(
+                            ImGui::GetWindowDrawList(),
+                            arrowPos,
+                            ImGui::GetColorU32(ImGuiCol_Text),
+                            isExpanded ? ImGuiDir_Down : ImGuiDir_Right,
+                            arrowScale);
+                        ImGui::PopID();
+                        ImGui::SetCursorScreenPos(rowStartScreenPos);
+                    }
 
                     std::string id = "##Entity_" + std::to_string((uint64)entity.id()) + "_" + std::to_string(hierarchyDrawIndex++);
                     if (ImGui::SelectableInput(id, RenameString, isSelected, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll, startRename))
@@ -296,11 +359,14 @@ namespace Waldem
                         {
                             instantiatePrefabFromPayload(payload, entity);
                         }
+                        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(ModelDragPayloadType))
+                        {
+                            instantiateModelFromPayload(payload, entity);
+                        }
                         ImGui::EndDragDropTarget();
                     }
 
-                    auto childrenIt = childrenByParent.find(entityId);
-                    if(childrenIt != childrenByParent.end())
+                    if(hasChildren && ExpandedByEntity[entityId])
                     {
                         for (auto childId : childrenIt->second)
                         {
@@ -336,6 +402,10 @@ namespace Waldem
                     if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PrefabDragPayloadType))
                     {
                         instantiatePrefabFromPayload(payload);
+                    }
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(ModelDragPayloadType))
+                    {
+                        instantiateModelFromPayload(payload);
                     }
                     ImGui::EndDragDropTarget();
                 }

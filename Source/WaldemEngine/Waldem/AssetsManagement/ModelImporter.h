@@ -7,6 +7,10 @@ namespace Waldem
 {
     class Texture2D;
     struct CModel;
+    struct ModelImportSettings
+    {
+        float UniformScale = 1.0f;
+    };
 
     enum class ModelImportFlags
     {
@@ -56,12 +60,15 @@ namespace Waldem
         ~CModelImporter() override = default;
 
         WArray<Asset*> ImportTo(const Path& from, const Path& to, bool relative = true) override;
+        void SetImportSettings(const ModelImportSettings& settings) { Settings = settings; }
+        void ResetImportSettings() { Settings = ModelImportSettings{}; }
 
     protected:
         const aiScene* ImportInternal(const Path& path, ModelImportFlags importFlags = ModelImportFlags::None, bool relative = true);
 
     protected:
         Assimp::Importer AssimpImporter;
+        ModelImportSettings Settings;
 
         Texture2D* DummyTexture;
     };

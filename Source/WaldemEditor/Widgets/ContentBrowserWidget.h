@@ -14,6 +14,9 @@
 #include <fstream>
 #include <cstring>
 #include <cctype>
+#include <algorithm>
+#include <future>
+#include <chrono>
 
 namespace Waldem
 {
@@ -30,6 +33,15 @@ namespace Waldem
         std::optional<Path> PendingRenameTarget;
         bool OpenRenamePopup = false;
         bool RenameSelectedAssetRequested = false;
+        bool DeleteSelectedAssetRequested = false;
+        bool OpenModelImportPopup = false;
+        bool ModelImportPending = false;
+        bool ImportTaskRunning = false;
+        Path PendingModelImportSourcePath;
+        Path PendingModelImportTargetPath = CONTENT_PATH;
+        float PendingModelImportScale = 1.0f;
+        Path LastImportTargetPath;
+        std::future<bool> ImportTask;
         char RenameBuffer[256] = "";
         bool RenameTargetIsFile = false;
         std::string RenameTargetExtension = "";
@@ -37,6 +49,8 @@ namespace Waldem
         float Padding = 16.0f;
         std::unordered_map<std::string, Texture2D*> TextureThumbnails;
         inline static std::optional<Path> SharedSelectedAssetPath = std::nullopt;
+        inline static std::optional<Path> SharedFocusAssetPath = std::nullopt;
+        std::optional<Path> PendingScrollToAssetPath = std::nullopt;
         
     public:
         ContentBrowserWidget() {}
@@ -44,6 +58,11 @@ namespace Waldem
         static const std::optional<Path>& GetSelectedAssetPath()
         {
             return SharedSelectedAssetPath;
+        }
+
+        static void FocusAssetPath(const Path& assetPath)
+        {
+            SharedFocusAssetPath = assetPath;
         }
 
         Path MakeUniqueAssetPath(const Path& folder, const std::string& baseName, const std::string& extension)
@@ -147,6 +166,155 @@ namespace Waldem
             SelectedAssetListPath = materialPath;
             SharedSelectedAssetPath = materialPath;
             return true;
+        }
+
+        void StartImportTask(const Path& sourcePath, const Path& targetPath)
+        {
+            if (ImportTaskRunning)
+            {
+                return;
+            }
+
+            Path sourceCopy = sourcePath;
+            Path targetCopy = targetPath;
+            LastImportTargetPath = targetCopy;
+            ImportTaskRunning = true;
+            ImportTask = std::async(std::launch::async, [sourceCopy, targetCopy]() mutable
+            {
+                return CContentManager::ImportTo(sourceCopy, targetCopy);
+            });
+        }
+
+        void StartImportTask(const Path& sourcePath, const Path& targetPath, const ModelImportSettings& settings)
+        {
+            if (ImportTaskRunning)
+            {
+                return;
+            }
+
+            Path sourceCopy = sourcePath;
+            Path targetCopy = targetPath;
+            ModelImportSettings settingsCopy = settings;
+            LastImportTargetPath = targetCopy;
+            ImportTaskRunning = true;
+            ImportTask = std::async(std::launch::async, [sourceCopy, targetCopy, settingsCopy]() mutable
+            {
+                return CContentManager::ImportTo(sourceCopy, targetCopy, settingsCopy);
+            });
+        }
+
+        void PollImportTask()
+        {
+            if (!ImportTaskRunning)
+            {
+                return;
+            }
+
+            if (ImportTask.valid() && ImportTask.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready)
+            {
+                const bool success = ImportTask.get();
+                ImportTaskRunning = false;
+                if (success)
+                {
+                    SelectedAssetListPath = LastImportTargetPath;
+                    SharedSelectedAssetPath = LastImportTargetPath;
+                }
+            }
+        }
+
+        Path ResolveFocusAssetPath(const Path& inPath) const
+        {
+            if (inPath.empty() || inPath == "Empty")
+            {
+                return {};
+            }
+
+            auto makeAbsolute = [](const Path& pathIn)
+            {
+                if (pathIn.is_absolute())
+                {
+                    return pathIn;
+                }
+                return Path(CONTENT_PATH) / pathIn;
+            };
+
+            Path candidate = makeAbsolute(inPath);
+            if (std::filesystem::exists(candidate))
+            {
+                return candidate;
+            }
+
+            if (!candidate.has_extension())
+            {
+                static const char* extensions[] = { ".mesh", ".mat", ".img", ".wav", ".scene", ".prefab", ".model" };
+                for (const auto* extension : extensions)
+                {
+                    Path withExtension = candidate;
+                    withExtension.replace_extension(extension);
+                    if (std::filesystem::exists(withExtension))
+                    {
+                        return withExtension;
+                    }
+                }
+            }
+
+            return {};
+        }
+
+        void ProcessFocusRequest()
+        {
+            if (!SharedFocusAssetPath.has_value())
+            {
+                return;
+            }
+
+            const Path resolvedPath = ResolveFocusAssetPath(SharedFocusAssetPath.value());
+            SharedFocusAssetPath.reset();
+            if (resolvedPath.empty())
+            {
+                return;
+            }
+
+            CurrentPath = resolvedPath.parent_path();
+            SelectedFolderTreePath = CurrentPath;
+            SelectedAssetListPath = resolvedPath;
+            SharedSelectedAssetPath = resolvedPath;
+            PendingScrollToAssetPath = resolvedPath;
+            ImGui::SetWindowFocus("Content");
+        }
+
+        void DeleteSelectedAssetOrFolder()
+        {
+            if (!SelectedAssetListPath.has_value())
+            {
+                return;
+            }
+
+            const Path targetPath = SelectedAssetListPath.value();
+            std::error_code ec;
+            if (std::filesystem::is_directory(targetPath))
+            {
+                std::filesystem::remove_all(targetPath, ec);
+            }
+            else
+            {
+                std::filesystem::remove(targetPath, ec);
+            }
+
+            if (!ec)
+            {
+                SelectedAssetListPath.reset();
+                SharedSelectedAssetPath.reset();
+
+                for (auto& pair : TextureThumbnails)
+                {
+                    if (pair.second)
+                    {
+                        Renderer::Destroy(pair.second);
+                    }
+                }
+                TextureThumbnails.clear();
+            }
         }
 
         bool IsPathInside(const Path& path, const Path& potentialParent) const
@@ -311,6 +479,70 @@ namespace Waldem
             }
         }
 
+        bool IsModelImportSource(const Path& path) const
+        {
+            std::string extension = path.extension().string();
+            std::transform(extension.begin(), extension.end(), extension.begin(), [](unsigned char c){ return std::tolower(c); });
+            return extension == ".fbx" || extension == ".gltf" || extension == ".glb";
+        }
+
+        void QueueModelImport(const Path& sourcePath, const Path& targetPath)
+        {
+            PendingModelImportSourcePath = sourcePath;
+            PendingModelImportTargetPath = targetPath.empty() ? CurrentPath : targetPath;
+            PendingModelImportScale = 1.0f;
+            ModelImportPending = true;
+            OpenModelImportPopup = true;
+        }
+
+        void DrawModelImportPopup()
+        {
+            if (OpenModelImportPopup)
+            {
+                ImGui::OpenPopup("Model Import Settings");
+                OpenModelImportPopup = false;
+            }
+
+            if (!ModelImportPending)
+            {
+                return;
+            }
+
+            if (ImGui::BeginPopupModal("Model Import Settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+            {
+                ImGui::TextUnformatted("Import model");
+                ImGui::Separator();
+                ImGui::Text("Source: %s", PendingModelImportSourcePath.filename().string().c_str());
+                ImGui::InputFloat("Scale", &PendingModelImportScale, 0.01f, 0.1f, "%.3f");
+                if (PendingModelImportScale <= 0.0f)
+                {
+                    PendingModelImportScale = 0.001f;
+                }
+
+                if (ImGui::Button("Import"))
+                {
+                    Path target = PendingModelImportTargetPath;
+                    ModelImportSettings settings{};
+                    settings.UniformScale = PendingModelImportScale;
+                    StartImportTask(PendingModelImportSourcePath, target, settings);
+
+                    ModelImportPending = false;
+                    PendingModelImportSourcePath.clear();
+                    ImGui::CloseCurrentPopup();
+                }
+
+                ImGui::SameLine();
+                if (ImGui::Button("Cancel"))
+                {
+                    ModelImportPending = false;
+                    PendingModelImportSourcePath.clear();
+                    ImGui::CloseCurrentPopup();
+                }
+
+                ImGui::EndPopup();
+            }
+        }
+
         void Initialize(InputManager* inputManager) override
         {
             inputManager->SubscribeToDynamicShortcut([]
@@ -321,14 +553,28 @@ namespace Waldem
                 RenameSelectedAssetRequested = true;
             });
 
+            inputManager->SubscribeToDynamicShortcut([]
+            {
+                return EditorShortcuts::GetShortcut(EditorShortcutAction::DeleteEntity);
+            }, [&]
+            {
+                DeleteSelectedAssetRequested = true;
+            });
+
             CContentManager::SubscribeToFileDroppedEvent([this](Path path)
             {
                 Path target = HoveredDropTargetFolder.has_value() ? HoveredDropTargetFolder.value() : CurrentPath;
                 
                 if(!target.empty())
                 {
-                    CContentManager::ImportTo(path, target);
-                    SelectedAssetListPath = target;
+                    if (IsModelImportSource(path))
+                    {
+                        QueueModelImport(path, target);
+                    }
+                    else
+                    {
+                        StartImportTask(path, target);
+                    }
                 }
             });
         }
@@ -561,6 +807,12 @@ namespace Waldem
                 );
             }
 
+            if (PendingScrollToAssetPath.has_value() && PendingScrollToAssetPath.value() == entry.path())
+            {
+                ImGui::SetScrollHereY(0.5f);
+                PendingScrollToAssetPath.reset();
+            }
+
             // --- Double-click to enter folder or open file ---
             if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
             {
@@ -644,8 +896,9 @@ namespace Waldem
         }
 
         void RenderAssetsList()
-        {            
-            if (CurrentPath != CONTENT_PATH)
+        {
+            const bool showParentEntry = (CurrentPath != CONTENT_PATH);
+            if (showParentEntry)
             {
                 ImGui::Selectable("..");
 
@@ -653,6 +906,11 @@ namespace Waldem
                 {
                     CurrentPath = CurrentPath.parent_path();
                 }
+
+                // Keep parent-navigation row visually separate from the asset grid.
+                ImGui::Spacing();
+                ImGui::Separator();
+                ImGui::Spacing();
             }
 
             static bool openCreateNewFolderPopup = false;
@@ -775,9 +1033,22 @@ namespace Waldem
 
         void OnDraw(float deltaTime) override
         {
+            PollImportTask();
+
             if (ImGui::Begin("Content", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus))
             {
+                ProcessFocusRequest();
                 HoveredDropTargetFolder.reset();
+
+                float importProgress = 0.0f;
+                std::string importLabel;
+                if (CContentManager::GetImportStatus(importProgress, importLabel))
+                {
+                    std::string label = importLabel.empty() ? "Importing..." : ("Importing " + importLabel + "...");
+                    ImGui::TextUnformatted(label.c_str());
+                    ImGui::ProgressBar(importProgress, ImVec2(ImGui::GetContentRegionAvail().x, 0.0f));
+                    ImGui::Separator();
+                }
                 
                 //search bar
                 if (ImGui::Button("Create"))
@@ -828,10 +1099,17 @@ namespace Waldem
                     }
                 }
 
+                if (DeleteSelectedAssetRequested && contentFocused)
+                {
+                    DeleteSelectedAssetOrFolder();
+                }
+
                 DrawRenamePopup();
+                DrawModelImportPopup();
             }
 
             RenameSelectedAssetRequested = false;
+            DeleteSelectedAssetRequested = false;
             ImGui::End();
         }
     };

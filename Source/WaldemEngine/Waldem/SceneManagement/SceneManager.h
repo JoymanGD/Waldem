@@ -1,5 +1,6 @@
 #pragma once
 #include "GameScene.h"
+#include <string>
 
 namespace Waldem
 {
@@ -35,24 +36,57 @@ namespace Waldem
 
         static void LoadScene(Path& path)
         {
-            Path = path;
+            PendingPath = path;
+            LoadProgress = 0.0f;
+            LoadInProgress = true;
             NeedToDeserializeScene = true;
+            LoadStage = 0;
+        }
+
+        static bool GetLoadStatus(float& outProgress, std::string& outLabel)
+        {
+            outProgress = LoadProgress;
+            outLabel = PendingPath.empty() ? "Scene" : PendingPath.filename().string();
+            return LoadInProgress;
         }
 
         static void CheckRequests()
         {
             if(NeedToDeserializeScene)
             {
-                UnloadScene();
-                CurrentScene = new GameScene();
-                CurrentScene->Initialize();
-                CurrentScene->Deserialize(Path);
-                NeedToDeserializeScene = false;
+                if(LoadStage == 0)
+                {
+                    UnloadScene();
+                    LoadProgress = 0.25f;
+                    LoadStage = 1;
+                    return;
+                }
+
+                if(LoadStage == 1)
+                {
+                    CurrentScene = new GameScene();
+                    CurrentScene->Initialize();
+                    LoadProgress = 0.5f;
+                    LoadStage = 2;
+                    return;
+                }
+
+                if(LoadStage == 2)
+                {
+                    CurrentScene->Deserialize(PendingPath);
+                    LoadProgress = 1.0f;
+                    NeedToDeserializeScene = false;
+                    LoadInProgress = false;
+                    LoadStage = 0;
+                }
             }
         }
     private:
         inline static GameScene* CurrentScene = nullptr;
         inline static bool NeedToDeserializeScene = false;
-        inline static Path Path = "";
+        inline static bool LoadInProgress = false;
+        inline static float LoadProgress = 0.0f;
+        inline static int LoadStage = 0;
+        inline static Path PendingPath = "";
     };
 }

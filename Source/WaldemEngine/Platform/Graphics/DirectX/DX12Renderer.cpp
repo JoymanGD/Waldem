@@ -1912,6 +1912,7 @@ namespace Waldem
         Device->GetRaytracingAccelerationStructurePrebuildInfo(&asInputs, &prebuildInfo);
 
         UINT64 requiredScratch = (prebuildInfo.ScratchDataSizeInBytes + 255) & ~255ull;
+        UINT64 requiredResult = (prebuildInfo.ResultDataMaxSizeInBytes + 255) & ~255ull;
 
         if (!tlas->GetScratchBuffer() || tlas->GetScratchBuffer()->GetCapacity() < requiredScratch)
         {
@@ -1947,6 +1948,74 @@ namespace Waldem
             Buffer* scratchBuffer = new Buffer("TLAS_Scratch", BufferType::StorageBuffer, requiredScratch, sizeof(uint32_t));
             scratchBuffer->SetGPUAddress(scratchResource->GetGPUVirtualAddress());
             tlas->SetScratchBuffer(scratchBuffer);
+        }
+
+        ID3D12Resource* tlasResource = ResourceMap[(GraphicResource*)tlas];
+        UINT64 currentResultSize = 0;
+        if (tlasResource)
+        {
+            currentResultSize = tlasResource->GetDesc().Width;
+        }
+
+        if (!tlasResource || currentResultSize < requiredResult)
+        {
+            D3D12_HEAP_PROPERTIES heapProps = {};
+            heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
+            heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+            heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+            heapProps.CreationNodeMask = 1;
+            heapProps.VisibleNodeMask = 1;
+
+            D3D12_RESOURCE_DESC resourceDesc = {};
+            resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+            resourceDesc.Alignment = 0;
+            resourceDesc.Width = requiredResult;
+            resourceDesc.Height = 1;
+            resourceDesc.DepthOrArraySize = 1;
+            resourceDesc.MipLevels = 1;
+            resourceDesc.Format = DXGI_FORMAT_UNKNOWN;
+            resourceDesc.SampleDesc.Count = 1;
+            resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+            resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+
+            ID3D12Resource* newTlasResource = nullptr;
+            HRESULT hr = Device->CreateCommittedResource(
+                &heapProps,
+                D3D12_HEAP_FLAG_NONE,
+                &resourceDesc,
+                D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
+                nullptr,
+                IID_PPV_ARGS(&newTlasResource));
+
+            if (FAILED(hr))
+            {
+                DX12Helper::PrintHResultError(hr);
+                throw std::runtime_error("Failed to resize TLAS resource.");
+            }
+
+            const WString tlasName = tlas->GetName();
+            std::wstring widestr = std::wstring(tlasName.Begin(), tlasName.End());
+            newTlasResource->SetName(widestr.c_str());
+
+            if (tlasResource)
+            {
+                ResourcesToDestroy.Add(tlasResource);
+            }
+
+            ResourceMap[(GraphicResource*)tlas] = newTlasResource;
+            tlas->SetGPUAddress(newTlasResource->GetGPUVirtualAddress());
+
+            D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = GeneralResourcesHeap->GetCPUDescriptorHandleForHeapStart();
+            UINT descriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+            cpuHandle.ptr += tlas->GetIndex(SRV_CBV) * descriptorSize;
+
+            D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+            srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+            srvDesc.ViewDimension = D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE;
+            srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+            srvDesc.RaytracingAccelerationStructure.Location = tlas->GetGPUAddress();
+
+            Device->CreateShaderResourceView(nullptr, &srvDesc, cpuHandle);
         }
 
         D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC asDesc = {};

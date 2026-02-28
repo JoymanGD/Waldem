@@ -11,6 +11,7 @@
 #include "Waldem/Extensions/ImGUIExtension.h"
 #include "Waldem/Input/InputManager.h"
 #include "Commands/EditorCommands.h"
+#include "ContentBrowserWidget.h"
 
 namespace Waldem
 {
@@ -406,6 +407,25 @@ namespace Waldem
 
                                 entity.modified(id);
                                 PushComponentStateCommand(entity, id, before, base, false);
+                            }, nullptr, [assetRef, assetType]()
+                            {
+                                if (assetRef == nullptr)
+                                {
+                                    return;
+                                }
+
+                                Path focusPath = assetRef->Reference;
+                                if (focusPath.empty() || focusPath == "Empty")
+                                {
+                                    return;
+                                }
+
+                                if (!focusPath.has_extension())
+                                {
+                                    focusPath.replace_extension(AssetTypeToExtension(assetType).ToString());
+                                }
+
+                                ContentBrowserWidget::FocusAssetPath(focusPath);
                             });
 
                             if (op->type == audioRefId)

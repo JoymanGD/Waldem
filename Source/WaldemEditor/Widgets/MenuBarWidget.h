@@ -8,6 +8,7 @@
 #include "../EditorShortcuts.h"
 #include <cstdint>
 #include <unordered_map>
+#include <string>
 
 namespace Waldem
 {
@@ -120,6 +121,10 @@ namespace Waldem
         {
             if (ImGui::BeginMainMenuBar())
             {
+                float sceneLoadProgress = 0.0f;
+                std::string sceneLoadLabel;
+                const bool sceneLoading = SceneManager::GetLoadStatus(sceneLoadProgress, sceneLoadLabel);
+
                 if (ImGui::BeginMenu("File"))
                 {
                     if (ImGui::MenuItem("New scene"))
@@ -219,6 +224,15 @@ namespace Waldem
                     }
 					       
                     ImGui::EndMenu();
+                }
+
+                if (sceneLoading)
+                {
+                    ImGui::Separator();
+                    ImGui::Text("Loading scene: %s", sceneLoadLabel.c_str());
+                    ImGui::SameLine();
+                    ImGui::SetNextItemWidth(180.0f);
+                    ImGui::ProgressBar(sceneLoadProgress, ImVec2(180.0f, 0.0f));
                 }
                 ImGui::EndMainMenuBar();
             }

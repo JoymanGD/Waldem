@@ -5,6 +5,9 @@
 #include "Waldem/Events/FileEvent.h" 
 #include "Waldem/Utils/AssetUtils.h"
 #include <fstream>
+#include <atomic>
+#include <mutex>
+#include <string>
 
 namespace Waldem
 {
@@ -14,6 +17,8 @@ namespace Waldem
     {
     public:
         static bool ImportTo(const Path& from, Path& to);
+        static bool ImportTo(const Path& from, Path& to, const ModelImportSettings& modelImportSettings);
+        static bool GetImportStatus(float& outProgress, std::string& outLabel);
 
         template <class T>
         static T* LoadAsset(const Path& inPath)
@@ -75,7 +80,11 @@ namespace Waldem
         inline static CImageImporter ImageImporter;
         inline static CAudioImporter AudioImporter;
         inline static WArray<FileDroppedEventHandler> FileDroppedEventHandlers;
+        inline static std::atomic<bool> ImportInProgress = false;
+        inline static std::atomic<float> ImportProgress = 0.0f;
+        inline static std::mutex ImportLabelMutex;
+        inline static std::string ImportLabel;
         
-        static WArray<Asset*> ImportInternal(const Path& from, Path& to);
+        static WArray<Asset*> ImportInternal(const Path& from, Path& to, const ModelImportSettings* modelImportSettings = nullptr);
     };
 }

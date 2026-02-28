@@ -56,7 +56,12 @@ namespace ImGui
         return ret;
     }
 
-    inline void AssetInputSlot(Waldem::Path& inPathToAsset, const char* assetType, std::function<void()> onDropCallback = nullptr, const char* label = nullptr)
+    inline void AssetInputSlot(
+        Waldem::Path& inPathToAsset,
+        const char* assetType,
+        std::function<void()> onDropCallback = nullptr,
+        const char* label = nullptr,
+        std::function<void()> onClickCallback = nullptr)
     {
         PushID((void*)&inPathToAsset);
 
@@ -83,6 +88,10 @@ namespace ImGui
         }
 
         Button(buttonLabel.c_str(), ImVec2(200, 0));
+        if (onClickCallback && IsItemClicked(ImGuiMouseButton_Left))
+        {
+            onClickCallback();
+        }
     
         // Accept drag and drop payload
         if (BeginDragDropTarget())

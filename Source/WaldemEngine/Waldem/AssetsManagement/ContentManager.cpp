@@ -6,7 +6,7 @@
 
 namespace Waldem
 {
-    WArray<Asset*> CContentManager::ImportInternal(const Path& from, Path& to)
+    WArray<Asset*> CContentManager::ImportInternal(const Path& from, Path& to, const ModelImportSettings* modelImportSettings)
     {
         auto extension = from.extension().string();
 
@@ -21,13 +21,27 @@ namespace Waldem
         else if (extension == ".gltf" || extension == ".glb" || extension == ".fbx")
         {
             importer = &ModelImporter;
+            if(modelImportSettings != nullptr)
+            {
+                ModelImporter.SetImportSettings(*modelImportSettings);
+            }
         }
         else if (extension == ".wav")
         {
             importer = &AudioImporter;
         }
 
+        if(importer == nullptr)
+        {
+            WD_CORE_ERROR("No importer registered for file extension: {0}", extension);
+            return assets;
+        }
+
         assets.AddRange(importer->ImportTo(from, to));
+        if(importer == &ModelImporter)
+        {
+            ModelImporter.ResetImportSettings();
+        }
 
         importer = nullptr;
 
@@ -36,11 +50,34 @@ namespace Waldem
 
     bool CContentManager::ImportTo(const Path& from, Path& to)
     {
-        WArray<Asset*> assets = ImportInternal(from, to);
+        ImportInProgress.store(true);
+        ImportProgress.store(0.0f);
+        {
+            std::lock_guard<std::mutex> lock(ImportLabelMutex);
+            ImportLabel = from.filename().string();
+        }
+
+        auto resetImportState = [&]()
+        {
+            ImportProgress.store(0.0f);
+            ImportInProgress.store(false);
+            std::lock_guard<std::mutex> lock(ImportLabelMutex);
+            ImportLabel.clear();
+        };
+
+        WArray<Asset*> assets = ImportInternal(from, to, nullptr);
         bool multipleAssets = assets.Num() > 1;
 
-        for (auto asset : assets)
+        if(assets.IsEmpty())
         {
+            resetImportState();
+            return false;
+        }
+
+        const float saveStageStart = 0.2f;
+        for (int assetIndex = 0; assetIndex < assets.Num(); ++assetIndex)
+        {
+            auto asset = assets[assetIndex];
             WDataBuffer outData;
             asset->Serialize(outData);
 
@@ -67,11 +104,94 @@ namespace Waldem
             if (!outFile)
             {
                 WD_CORE_ERROR("Failed to import file from {0} to {1}", from.string(), toPath.string());
+                resetImportState();
                 return false;
             }
+
+            const float assetProgress = (float)(assetIndex + 1) / (float)assets.Num();
+            ImportProgress.store(saveStageStart + (1.0f - saveStageStart) * assetProgress);
         }
-        
+
+        resetImportState();
         return true;
+    }
+
+    bool CContentManager::ImportTo(const Path& from, Path& to, const ModelImportSettings& modelImportSettings)
+    {
+        ImportInProgress.store(true);
+        ImportProgress.store(0.0f);
+        {
+            std::lock_guard<std::mutex> lock(ImportLabelMutex);
+            ImportLabel = from.filename().string();
+        }
+
+        auto resetImportState = [&]()
+        {
+            ImportProgress.store(0.0f);
+            ImportInProgress.store(false);
+            std::lock_guard<std::mutex> lock(ImportLabelMutex);
+            ImportLabel.clear();
+        };
+
+        WArray<Asset*> assets = ImportInternal(from, to, &modelImportSettings);
+        bool multipleAssets = assets.Num() > 1;
+
+        if(assets.IsEmpty())
+        {
+            resetImportState();
+            return false;
+        }
+
+        const float saveStageStart = 0.2f;
+        for (int assetIndex = 0; assetIndex < assets.Num(); ++assetIndex)
+        {
+            auto asset = assets[assetIndex];
+            WDataBuffer outData;
+            asset->Serialize(outData);
+
+            //add header
+            uint64 hash = HashFromData(outData.GetData(), outData.GetSize());
+            outData.Prepend(&hash, sizeof(uint64));
+
+            auto extension = AssetTypeToExtension(asset->Type);
+            Path toPath = to;
+            toPath /= asset->Name.ToString();
+            toPath.replace_extension(extension.ToString());
+
+            if(multipleAssets)
+            {
+                auto folder = from.stem();
+                toPath = toPath.parent_path() / folder / toPath.filename();
+                create_directories(toPath.parent_path());
+            }
+            
+            std::ofstream outFile(toPath.c_str(), std::ios::binary);
+            outFile.write(static_cast<const char*>(outData.GetData()), outData.GetSize());
+            outFile.close();
+
+            if (!outFile)
+            {
+                WD_CORE_ERROR("Failed to import file from {0} to {1}", from.string(), toPath.string());
+                resetImportState();
+                return false;
+            }
+
+            const float assetProgress = (float)(assetIndex + 1) / (float)assets.Num();
+            ImportProgress.store(saveStageStart + (1.0f - saveStageStart) * assetProgress);
+        }
+
+        resetImportState();
+        return true;
+    }
+
+    bool CContentManager::GetImportStatus(float& outProgress, std::string& outLabel)
+    {
+        const bool inProgress = ImportInProgress.load();
+        outProgress = ImportProgress.load();
+
+        std::lock_guard<std::mutex> lock(ImportLabelMutex);
+        outLabel = ImportLabel;
+        return inProgress;
     }
 
     template<typename T>
