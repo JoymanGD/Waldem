@@ -8,4 +8,5 @@ struct MaterialAttribute
     float4 Albedo;
     float Metallic;
     float Roughness;
+    int AlphaCut;
 };

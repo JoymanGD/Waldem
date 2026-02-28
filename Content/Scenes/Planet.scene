@@ -1,0 +1,131 @@
+[
+  {
+    "name": "Clouds",
+    "tags": [
+      "Waldem.Selected"
+    ],
+    "components": {
+      "SceneEntity": {
+        "ParentId": 0,
+        "HierarchyDepth": 0,
+        "HierarchySlot": 2,
+        "VisibleInHierarchy": true
+      },
+      "Waldem.Transform": {
+        "Position": {
+          "x": 0,
+          "y": 1.0541495085,
+          "z": 0
+        },
+        "Rotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "LocalScale": {
+          "x": 1.0199999809,
+          "y": 1.0199999809,
+          "z": 1.0199999809
+        },
+        "___RotationQuat": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        }
+      },
+      "Waldem.MeshComponent": {
+        "MeshRef": "Meshes\\Planet\\Sphere.mesh",
+        "MaterialRef": "Meshes\\Planet\\Scene.mat"
+      }
+    }
+  },
+  {
+    "name": "Sphere",
+    "components": {
+      "SceneEntity": {
+        "ParentId": 0,
+        "HierarchyDepth": 0,
+        "HierarchySlot": 0,
+        "VisibleInHierarchy": true
+      },
+      "Waldem.Transform": {
+        "Position": {
+          "x": 0,
+          "y": 1.0541495085,
+          "z": 0
+        },
+        "Rotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "LocalScale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        },
+        "___RotationQuat": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        }
+      },
+      "Waldem.MeshComponent": {
+        "MeshRef": "Meshes\\Planet\\Sphere.mesh",
+        "MaterialRef": "Materials\\Test.mat"
+      }
+    }
+  },
+  {
+    "name": "Sun",
+    "components": {
+      "SceneEntity": {
+        "ParentId": 0,
+        "HierarchyDepth": 0,
+        "HierarchySlot": 1,
+        "VisibleInHierarchy": true
+      },
+      "Waldem.Transform": {
+        "Position": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "Rotation": {
+          "x": 73.5874252319,
+          "y": 0,
+          "z": 0
+        },
+        "LocalScale": {
+          "x": 1,
+          "y": 0.9999998212,
+          "z": 0.9999998212
+        },
+        "___RotationQuat": {
+          "x": 0.5989360809,
+          "y": 0,
+          "z": 0,
+          "w": 0.8007968664
+        }
+      },
+      "Waldem.Light": {
+        "Color": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        },
+        "Intensity": 117.5,
+        "Radius": 10,
+        "InnerCone": 1,
+        "OuterCone": 45,
+        "Softness": 0.001,
+        "AreaWidth": 1,
+        "AreaHeight": 1,
+        "AreaTwoSided": 0,
+        "Type": "Directional"
+      }
+    }
+  }
+]

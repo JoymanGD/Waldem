@@ -43,7 +43,7 @@ PS_OUTPUT main(PS_INPUT input)
         Texture2D<float4> ColorTexture = ResourceDescriptorHeap[NonUniformResourceIndex(matAttr.DiffuseTextureIndex)];
         float4 sampledColor = ColorTexture.Sample(myStaticSampler, input.UV);
         
-        if(sampledColor.a < 0.1f)
+        if(matAttr.AlphaCut && sampledColor.a < 0.1f)
             discard;
         
         color *= sampledColor;

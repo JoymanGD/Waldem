@@ -198,6 +198,11 @@ namespace Waldem
                         Dirty = true;
                     }
 
+                    if(ImGui::Checkbox("AlphaCut", &LoadedMaterial->AlphaCut))
+                    {
+                        Dirty = true;
+                    }
+
                     ImGui::Spacing();
                     if (Dirty)
                     {

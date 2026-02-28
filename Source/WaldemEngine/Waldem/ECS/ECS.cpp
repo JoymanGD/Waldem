@@ -29,6 +29,10 @@
 #include "Waldem/Editor/AssetReference/TextureReference.h"
 #include "Waldem/Editor/AssetReference/MaterialReference.h"
 #include "Waldem/Utils/ECSUtils.h"
+#include <cmath>
+#include <memory>
+#include <unordered_map>
+#include <vector>
 
 namespace Waldem
 {
@@ -41,6 +45,173 @@ namespace Waldem
         WALDEM_API EntityT GUIPipeline{};
         WALDEM_API WMap<WString, Entity> RegisteredComponents{};
         WALDEM_API FreeList HierarchySlots{};
+
+        namespace
+        {
+            std::unordered_map<EntityT, Matrix4> LocalTransformMatrices{};
+            std::unique_ptr<flecs::query<Transform, const Transform>> HierarchyTransformQuery{};
+            bool IsParentingInternalUpdate = false;
+            bool IsTransformHierarchyUpdate = false;
+
+            ecs_entity_t GetParentIdRaw(ecs_entity_t entityId)
+            {
+                if(entityId == 0)
+                {
+                    return 0;
+                }
+
+                return ecs_get_target(World.c_ptr(), entityId, EcsChildOf, 0);
+            }
+
+            Entity GetParentEntityInternal(Entity entity)
+            {
+                const ecs_entity_t parentId = GetParentIdRaw(entity.id());
+                if(parentId == 0)
+                {
+                    return {};
+                }
+
+                return World.entity(parentId);
+            }
+
+            bool IsDescendantOf(ecs_entity_t entityId, ecs_entity_t possibleAncestorId)
+            {
+                if(entityId == 0 || possibleAncestorId == 0)
+                {
+                    return false;
+                }
+
+                ecs_entity_t current = GetParentIdRaw(entityId);
+                while(current != 0)
+                {
+                    if(current == possibleAncestorId)
+                    {
+                        return true;
+                    }
+
+                    current = GetParentIdRaw(current);
+                }
+
+                return false;
+            }
+
+            void CacheLocalMatrixFromWorld(Entity entity)
+            {
+                if(!entity.is_alive() || !entity.has<Transform>())
+                {
+                    return;
+                }
+
+                const auto& transform = entity.get<Transform>();
+                Matrix4 localMatrix = transform.Matrix;
+
+                Entity parent = GetParentEntityInternal(entity);
+                if(parent.is_alive() && parent.has<Transform>())
+                {
+                    localMatrix = inverse(parent.get<Transform>().Matrix) * transform.Matrix;
+                }
+
+                LocalTransformMatrices[entity.id()] = localMatrix;
+            }
+
+            void RefreshHierarchyDepths()
+            {
+                auto query = World.query_builder<SceneEntity>().build();
+
+                const bool previousInternalFlag = IsParentingInternalUpdate;
+                IsParentingInternalUpdate = true;
+                query.each([&](flecs::entity entity, SceneEntity& sceneEntity)
+                {
+                    uint32 depth = 0;
+                    ecs_entity_t parentId = GetParentIdRaw(entity.id());
+                    while(parentId != 0)
+                    {
+                        depth++;
+                        parentId = GetParentIdRaw(parentId);
+                    }
+
+                    const float computedDepth = static_cast<float>(depth);
+                    if(sceneEntity.HierarchyDepth != computedDepth)
+                    {
+                        sceneEntity.HierarchyDepth = computedDepth;
+                        entity.modified<SceneEntity>();
+                    }
+                });
+                IsParentingInternalUpdate = previousInternalFlag;
+            }
+
+            void ApplyParent(Entity child, Entity parent, bool keepWorldTransform)
+            {
+                if(!child.is_alive() || !child.has<SceneEntity>())
+                {
+                    return;
+                }
+
+                if(parent.is_alive() && (!parent.has<SceneEntity>() || parent.id() == child.id() || IsDescendantOf(parent.id(), child.id())))
+                {
+                    return;
+                }
+
+                Matrix4 childWorldMatrix(1.0f);
+                const bool hasTransform = child.has<Transform>();
+                if(hasTransform)
+                {
+                    childWorldMatrix = child.get<Transform>().Matrix;
+                }
+
+                const bool previousInternalFlag = IsParentingInternalUpdate;
+                IsParentingInternalUpdate = true;
+                ecs_remove_pair(World.c_ptr(), child.id(), EcsChildOf, EcsWildcard);
+                if(parent.is_alive())
+                {
+                    ecs_add_pair(World.c_ptr(), child.id(), EcsChildOf, parent.id());
+                }
+
+                auto& sceneEntity = child.get_mut<SceneEntity>();
+                sceneEntity.ParentId = parent.is_alive() ? (uint64)parent.id() : 0;
+                child.modified<SceneEntity>();
+                IsParentingInternalUpdate = previousInternalFlag;
+
+                if(hasTransform)
+                {
+                    Matrix4 localMatrix = childWorldMatrix;
+                    if(parent.is_alive() && parent.has<Transform>())
+                    {
+                        localMatrix = inverse(parent.get<Transform>().Matrix) * childWorldMatrix;
+                    }
+
+                    if(keepWorldTransform)
+                    {
+                        auto& childTransform = child.get_mut<Transform>();
+                        childTransform.Matrix = childWorldMatrix;
+                        childTransform.DecompileMatrix();
+                        LocalTransformMatrices[child.id()] = localMatrix;
+                        child.modified<Transform>();
+                    }
+                    else
+                    {
+                        CacheLocalMatrixFromWorld(child);
+                    }
+                }
+
+                RefreshHierarchyDepths();
+            }
+
+            bool MatricesNear(const Matrix4& lhs, const Matrix4& rhs, float epsilon = 0.00001f)
+            {
+                const float* leftPtr = glm::value_ptr(lhs);
+                const float* rightPtr = glm::value_ptr(rhs);
+                for(int i = 0; i < 16; i++)
+                {
+                    if(fabsf(leftPtr[i] - rightPtr[i]) > epsilon)
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+        }
         
         void Core::Initialize()
         {
@@ -51,17 +222,19 @@ namespace Waldem
             GUIPipeline = World.pipeline().with(flecs::System).with<OnGUI>().build();
             RegisteredComponents = {};
             HierarchySlots = {};
+            LocalTransformMatrices = {};
             
             RegisterTypes();
             RegisterAllComponents();
 
             //TODO: move to a separate system file
-            World.observer<SceneEntity>().event(flecs::OnRemove).each([&](SceneEntity& sceneEntity)
+            World.observer<SceneEntity>().event(flecs::OnRemove).each([&](flecs::entity entity, SceneEntity& sceneEntity)
             {
                 HierarchySlots.Free((int)sceneEntity.HierarchySlot);
+                LocalTransformMatrices.erase(entity.id());
             });
             
-            World.observer<SceneEntity>().event(flecs::OnSet).each([&](SceneEntity& sceneEntity)
+            World.observer<SceneEntity>().event(flecs::OnSet).each([&](flecs::entity entity, SceneEntity& sceneEntity)
             {
                 bool slotIsValid = sceneEntity.HierarchySlot >= 0.f;
                 bool slotIsAllocated = slotIsValid && HierarchySlots.IsAllocated((int)sceneEntity.HierarchySlot);
@@ -77,6 +250,82 @@ namespace Waldem
                         sceneEntity.HierarchySlot = (float)HierarchySlots.Allocate();
                     }
                 }
+
+                if(IsParentingInternalUpdate)
+                {
+                    return;
+                }
+
+                const Entity currentParent = GetParentEntityInternal(entity);
+                const Entity requestedParent = sceneEntity.ParentId == 0 ? Entity{} : World.entity((EntityT)sceneEntity.ParentId);
+
+                if(sceneEntity.ParentId != 0 && !requestedParent.is_alive())
+                {
+                    return;
+                }
+
+                if(requestedParent.is_alive() && (requestedParent.id() == entity.id() || IsDescendantOf(requestedParent.id(), entity.id())))
+                {
+                    ApplyParent(entity, {}, true);
+                    return;
+                }
+
+                const EntityT requestedParentId = requestedParent.is_alive() ? requestedParent.id() : 0;
+                const EntityT currentParentId = currentParent.is_alive() ? currentParent.id() : 0;
+                if(currentParentId != requestedParentId)
+                {
+                    ApplyParent(entity, requestedParent, true);
+                }
+                else if(entity.has<Transform>() && LocalTransformMatrices.find(entity.id()) == LocalTransformMatrices.end())
+                {
+                    CacheLocalMatrixFromWorld(entity);
+                }
+            });
+
+            World.observer<Transform>().event(flecs::OnSet).each([&](flecs::entity entity, Transform&)
+            {
+                if(IsTransformHierarchyUpdate)
+                {
+                    return;
+                }
+
+                CacheLocalMatrixFromWorld(entity);
+            });
+
+            World.observer<Transform>().event(flecs::OnRemove).each([&](flecs::entity entity, Transform&)
+            {
+                LocalTransformMatrices.erase(entity.id());
+            });
+
+            HierarchyTransformQuery = std::make_unique<flecs::query<Transform, const Transform>>(World.query_builder<Transform, const Transform>().term_at(1).parent().cascade().build());
+
+            World.system("HierarchyTransformPropagation").kind(flecs::OnUpdate).run([&](flecs::iter&)
+            {
+                if(!HierarchyTransformQuery)
+                {
+                    return;
+                }
+
+                HierarchyTransformQuery->each([&](flecs::entity entity, Transform& transform, const Transform& parentTransform)
+                {
+                    auto localTransformIt = LocalTransformMatrices.find(entity.id());
+                    Matrix4 localMatrix = localTransformIt == LocalTransformMatrices.end()
+                        ? inverse(parentTransform.Matrix) * transform.Matrix
+                        : localTransformIt->second;
+
+                    const Matrix4 targetWorldMatrix = parentTransform.Matrix * localMatrix;
+                    if(MatricesNear(transform.Matrix, targetWorldMatrix))
+                    {
+                        return;
+                    }
+
+                    const bool previousTransformFlag = IsTransformHierarchyUpdate;
+                    IsTransformHierarchyUpdate = true;
+                    transform.Matrix = targetWorldMatrix;
+                    transform.DecompileMatrix();
+                    entity.modified<Transform>();
+                    IsTransformHierarchyUpdate = previousTransformFlag;
+                });
             });
             
             // Systems.Add(OceanSimulationSystem());
@@ -295,6 +544,7 @@ namespace Waldem
                 .HierarchySlot = (float)slot,
                 .VisibleInHierarchy = visibleInHierarchy,
             }).add<Transform>();
+            CacheLocalMatrixFromWorld(entity);
 
             WString formattedName = name;
             FormatName(formattedName);
@@ -325,6 +575,7 @@ namespace Waldem
                 .HierarchySlot = (float)newSlot,
                 .VisibleInHierarchy = sceneEntityComponent.VisibleInHierarchy,
             });
+            CacheLocalMatrixFromWorld(clone);
 
             auto entityName = entity.name();
             WString cloneEntityName = std::string(entityName.c_str()) + "_Clone";
@@ -334,6 +585,61 @@ namespace Waldem
             clone.set_name(cloneEntityName.C_Str());
             
             return clone;
+        }
+
+        void SetParent(Entity child, Entity parent, bool keepWorldTransform)
+        {
+            ApplyParent(child, parent, keepWorldTransform);
+        }
+
+        void ClearParent(Entity child, bool keepWorldTransform)
+        {
+            ApplyParent(child, {}, keepWorldTransform);
+        }
+
+        Entity GetParent(Entity child)
+        {
+            if(!child.is_alive())
+            {
+                return {};
+            }
+
+            return GetParentEntityInternal(child);
+        }
+
+        void RebuildParentRelations()
+        {
+            auto query = World.query_builder<SceneEntity>().build();
+            std::vector<std::pair<EntityT, EntityT>> parentingRequests;
+
+            query.each([&](flecs::entity entity, const SceneEntity& sceneEntity)
+            {
+                parentingRequests.emplace_back(entity.id(), (EntityT)sceneEntity.ParentId);
+            });
+
+            for(const auto& [childId, parentId] : parentingRequests)
+            {
+                Entity child = World.entity(childId);
+                if(!child.is_alive())
+                {
+                    continue;
+                }
+
+                if(parentId == 0)
+                {
+                    ApplyParent(child, {}, true);
+                    continue;
+                }
+
+                Entity parent = World.entity(parentId);
+                if(!parent.is_alive() || parent.id() == child.id() || IsDescendantOf(parent.id(), child.id()))
+                {
+                    ApplyParent(child, {}, true);
+                    continue;
+                }
+
+                ApplyParent(child, parent, true);
+            }
         }
     }
 }

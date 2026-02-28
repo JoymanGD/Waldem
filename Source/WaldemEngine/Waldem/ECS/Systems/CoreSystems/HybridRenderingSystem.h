@@ -322,6 +322,7 @@ namespace Waldem
                                 materialAttribute.Albedo = activeMaterial->Albedo;
                                 materialAttribute.Metallic = activeMaterial->Metallic;
                                 materialAttribute.Roughness = activeMaterial->Roughness;
+                                materialAttribute.AlphaCut = activeMaterial->AlphaCut ? 1 : 0;
                             }
                             materialAttribute.DiffuseTextureID = -1;
                             materialAttribute.NormalTextureID = -1;
@@ -466,6 +467,7 @@ namespace Waldem
                             auto& materialAttribute = MaterialAttributes[globalDrawId];
 
                             materialAttribute.Albedo = sprite.Color;
+                            materialAttribute.AlphaCut = sprite.AlphaCut ? 1 : 0;
                             materialAttribute.DiffuseTextureID = sprite.TextureRef.Texture->GetIndex(SRV_CBV);
 
                             MaterialAttributesBuffer.UpdateData(&materialAttribute, sizeof(MaterialShaderAttribute), sizeof(MaterialShaderAttribute) * globalDrawId);

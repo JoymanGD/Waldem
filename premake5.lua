@@ -190,6 +190,7 @@ project "WaldemEngine"
         SourceDir .. "/WaldemEngine/**.h",
         SourceDir .. "/WaldemEngine/**.cpp",
         "Intermediate/Generated/**.generated.h",
+        SourceDir .. "/WaldemEngine/Shaders/**.hlsl",
 
         "Vendor/flecs/flecs.c",
         "Vendor/flecs/flecs.h",

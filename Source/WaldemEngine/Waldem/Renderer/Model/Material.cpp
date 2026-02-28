@@ -11,6 +11,7 @@ namespace Waldem
 		outData << Albedo;
 		outData << Metallic;
 		outData << Roughness;
+		outData << AlphaCut;
 	}
 
 	void Material::Deserialize(WDataBuffer& inData)
@@ -21,6 +22,7 @@ namespace Waldem
 		inData >> Albedo;
 		inData >> Metallic;
 		inData >> Roughness;
+		inData >> AlphaCut;
 
 		if(!DiffuseRef.Reference.empty() && DiffuseRef.Reference != "Empty")
 		{

@@ -8,8 +8,10 @@ namespace Waldem
     {
         FIELD()
         Vector4 Color = Vector4(1,1,1,1); // tint
-        FIELD(Type=TextureReference)
+        FIELD()
         TextureReference TextureRef;
+        FIELD()
+        bool AlphaCut;
         
         DrawIndexedCommand DrawCommand;
         

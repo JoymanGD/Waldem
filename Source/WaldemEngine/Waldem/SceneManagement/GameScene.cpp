@@ -102,4 +102,6 @@ void Waldem::GameScene::Deserialize(Path& inPath)
             entity.modified<Transform>();
         }
     }
+
+    ECS::RebuildParentRelations();
 }
