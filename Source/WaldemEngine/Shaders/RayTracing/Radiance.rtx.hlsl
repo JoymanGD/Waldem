@@ -70,6 +70,7 @@ float3 GetRadiance(Payload payload, float3 worldPosition, float3 normal, float4 
     //shadow ray
     for (int i = 0; i < sceneData.NumLights; i++)
     {
+        radiance = 0.0f;
         payload.Missed = false;
         int lightIndex = LightIndices[i];
         Light light = Lights[lightIndex];
@@ -207,10 +208,24 @@ void RayGenShader()
     ray.TMax = TMAX;
 
     payload.IsReflectionPass = true;
-    
-    TraceRay(TLAS, 0, 0xFF, 0, 1, 0, ray, payload);
 
-    float4 reflectionColor = payload.Color;
+    float roughness = saturate(orm.g);
+    float4 reflectionColor = 0.0f;
+
+    // One-ray reflections on rough surfaces become fireflies, so disable at very high roughness.
+    if (roughness < 0.95f)
+    {
+        TraceRay(TLAS, 0, 0xFF, 0, 1, 0, ray, payload);
+
+        float oneMinusRoughness = saturate(1.0f - roughness);
+        float reflectionMask = oneMinusRoughness * oneMinusRoughness;
+        reflectionMask *= reflectionMask; // pow4 falloff
+
+        reflectionColor = payload.Color;
+        reflectionColor.rgb *= reflectionMask;
+        reflectionColor.rgb = min(reflectionColor.rgb, float3(8.0f, 8.0f, 8.0f));
+    }
+
     ReflectionRT[dispatchIndex] = reflectionColor;
 
     payload.IsReflectionPass = false;
@@ -222,10 +237,8 @@ void RayGenShader()
 
 float4 SampleTexture(Texture2D texture, float2 uv)
 {
-    uint2 texSize;
-    texture.GetDimensions(texSize.x, texSize.y);
-    int3 pixelCoord = int3(uv * texSize, 0);
-    return texture.Load(pixelCoord);
+    // Filtered sampling avoids nearest-neighbor sparkle in traced shading.
+    return texture.SampleLevel(myStaticSampler, uv, 0.0f);
 }
 
 [shader("miss")]
