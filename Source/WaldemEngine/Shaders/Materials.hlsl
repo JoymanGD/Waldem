@@ -9,4 +9,5 @@ struct MaterialAttribute
     float Metallic;
     float Roughness;
     int AlphaCut;
+    int CastShadows;
 };

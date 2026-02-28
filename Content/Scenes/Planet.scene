@@ -1,47 +1,6 @@
 [
   {
-    "name": "Clouds",
-    "tags": [
-      "Waldem.Selected"
-    ],
-    "components": {
-      "SceneEntity": {
-        "ParentId": 0,
-        "HierarchyDepth": 0,
-        "HierarchySlot": 2,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.0541495085,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1.0199999809,
-          "y": 1.0199999809,
-          "z": 1.0199999809
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Meshes\\Planet\\Sphere.mesh",
-        "MaterialRef": "Meshes\\Planet\\Scene.mat"
-      }
-    }
-  },
-  {
-    "name": "Sphere",
+    "name": "Planet",
     "components": {
       "SceneEntity": {
         "ParentId": 0,
@@ -100,8 +59,8 @@
         },
         "LocalScale": {
           "x": 1,
-          "y": 0.9999998212,
-          "z": 0.9999998212
+          "y": 0.9999998808,
+          "z": 0.9999998808
         },
         "___RotationQuat": {
           "x": 0.5989360809,
@@ -125,6 +84,48 @@
         "AreaHeight": 1,
         "AreaTwoSided": 0,
         "Type": "Directional"
+      }
+    }
+  },
+  {
+    "parent": "Planet",
+    "name": "Clouds",
+    "tags": [
+      "Waldem.Selected"
+    ],
+    "components": {
+      "SceneEntity": {
+        "ParentId": 757,
+        "HierarchyDepth": 1,
+        "HierarchySlot": 2,
+        "VisibleInHierarchy": true
+      },
+      "Waldem.Transform": {
+        "Position": {
+          "x": 0,
+          "y": 1.0541495085,
+          "z": 0
+        },
+        "Rotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "LocalScale": {
+          "x": 1.0199999809,
+          "y": 1.0199999809,
+          "z": 1.0199999809
+        },
+        "___RotationQuat": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        }
+      },
+      "Waldem.MeshComponent": {
+        "MeshRef": "Meshes\\Planet\\Sphere.mesh",
+        "MaterialRef": "Meshes\\Planet\\Scene.mat"
       }
     }
   }

@@ -212,6 +212,11 @@ namespace Waldem
                         Dirty = true;
                     }
 
+                    if(ImGui::Checkbox("Cast Shadows", &LoadedMaterial->CastShadows))
+                    {
+                        Dirty = true;
+                    }
+
                     ImGui::Spacing();
                     if (Dirty)
                     {

@@ -12,6 +12,7 @@ namespace Waldem
 		outData << Metallic;
 		outData << Roughness;
 		outData << AlphaCut;
+		outData << CastShadows;
 	}
 
 	void Material::Deserialize(WDataBuffer& inData)
@@ -23,6 +24,7 @@ namespace Waldem
 		inData >> Metallic;
 		inData >> Roughness;
 		inData >> AlphaCut;
+		inData >> CastShadows;
 
 		if(!DiffuseRef.Reference.empty() && DiffuseRef.Reference != "Empty")
 		{

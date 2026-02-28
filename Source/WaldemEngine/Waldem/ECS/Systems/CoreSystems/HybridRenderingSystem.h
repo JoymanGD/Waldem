@@ -331,6 +331,7 @@ namespace Waldem
                                 materialAttribute.Metallic = activeMaterial->Metallic;
                                 materialAttribute.Roughness = activeMaterial->Roughness;
                                 materialAttribute.AlphaCut = activeMaterial->AlphaCut ? 1 : 0;
+                                materialAttribute.CastShadows = activeMaterial->CastShadows ? 1 : 0;
                             }
                             materialAttribute.DiffuseTextureID = -1;
                             materialAttribute.NormalTextureID = -1;

@@ -17,6 +17,7 @@ namespace Waldem
         float Metallic = 0.0f;
         float Roughness = 1.0f;
         int AlphaCut = 0;
+        int CastShadows = 1;
     };
     
     class WALDEM_API Material : public Asset
@@ -46,6 +47,7 @@ namespace Waldem
         float Metallic = 0.0f;
         float Roughness = 1.0f;
         bool AlphaCut;
+        bool CastShadows = true;
         
     private:
         TextureReference DiffuseRef = {};

@@ -13,6 +13,7 @@ struct Payload
 {
     float4 Color;
     bool Missed;
+    bool CastShadows;
     bool IsReflectionPass;
 };
 
@@ -97,7 +98,7 @@ float3 GetRadiance(Payload payload, float3 worldPosition, float3 normal, float4 
             
             TraceRay(TLAS, 0, 0xFF, 0, 1, 0, ray, payload);
 
-            if(payload.Missed)
+            if(payload.Missed || !payload.CastShadows)
             {
                 radiance = normalize(light.Color) * light.Intensity / DIR_LIGHT_INTENSITY_RATIO * NdotL;
             }
@@ -125,7 +126,7 @@ float3 GetRadiance(Payload payload, float3 worldPosition, float3 normal, float4 
 
                 TraceRay(TLAS, 0, 0xFF, 0, 1, 0, ray, payload);
 
-                if(payload.Missed)
+                if(payload.Missed || !payload.CastShadows)
                 {
                     float attenuation = 1.0 / (A0 + A1 * distance + A2 * distance * distance);
                     attenuation *= smoothstep(light.Radius, 0.0, distance);
@@ -156,7 +157,7 @@ float3 GetRadiance(Payload payload, float3 worldPosition, float3 normal, float4 
 
                 TraceRay(TLAS, 0, 0xFF, 0, 1, 0, ray, payload);
 
-                if(payload.Missed)
+                if(payload.Missed || !payload.CastShadows)
                 {
                     float spotDot = dot(lightDirection, normalize(-spotLightForward));
                     float spotFalloff = smoothstep(cos(radians(light.OuterCone)), cos(radians(light.InnerCone)), spotDot);
@@ -242,12 +243,18 @@ void MissShader(inout Payload payload)
 void ClosestHitShader(inout Payload payload, in Attributes attribs)
 {
     payload.Missed = false;
+    
+    uint instanceId = InstanceID();
+    
+    StructuredBuffer<MaterialAttribute> materialAttributes = ResourceDescriptorHeap[MaterialBufferId];
+    MaterialAttribute material = materialAttributes[instanceId];
+
+    payload.CastShadows = material.CastShadows;
 
     if(payload.IsReflectionPass)
     {
         // Geometry data
         uint primIndex = PrimitiveIndex();
-        uint instanceId = InstanceID();
 
         // Access vertex attributes from your bound geometry buffers
         StructuredBuffer<Vertex> vertexBuffer = ResourceDescriptorHeap[VertexBufferId];
@@ -295,9 +302,6 @@ void ClosestHitShader(inout Payload payload, in Attributes attribs)
         float3 bt1 = v2.Bitangent;
         float3 bt2 = v3.Bitangent;
         float3 hitBitangent = normalize(bt0 * b0 + bt1 * b1 + bt2 * b2);
-
-        StructuredBuffer<MaterialAttribute> materialAttributes = ResourceDescriptorHeap[MaterialBufferId];
-        MaterialAttribute material = materialAttributes[instanceId];
 
         float4 color = hitColor * material.Albedo;
 
