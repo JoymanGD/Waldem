@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <future>
 #include <chrono>
+#include <vector>
 
 namespace Waldem
 {
@@ -48,6 +49,19 @@ namespace Waldem
         float CellSize = 100.0f;
         float Padding = 16.0f;
         std::unordered_map<std::string, Texture2D*> TextureThumbnails;
+        int ThumbnailsCreatedThisFrame = 0;
+        static constexpr int ThumbnailCreateBudgetPerFrame = 4;
+        static constexpr int ThumbnailMaxDimension = 128;
+        struct AssetListEntry
+        {
+            Path AssetPath;
+            bool IsDirectory = false;
+            WString Extension;
+        };
+        std::vector<AssetListEntry> CachedAssetEntries;
+        Path CachedEntriesPath;
+        std::string CachedSearchQuery;
+        bool AssetEntriesDirty = true;
         inline static std::optional<Path> SharedSelectedAssetPath = std::nullopt;
         inline static std::optional<Path> SharedFocusAssetPath = std::nullopt;
         std::optional<Path> PendingScrollToAssetPath = std::nullopt;
@@ -130,6 +144,7 @@ namespace Waldem
 
             SelectedAssetListPath = prefabPath;
             SharedSelectedAssetPath = prefabPath;
+            InvalidateAssetEntries();
             return true;
         }
 
@@ -165,6 +180,7 @@ namespace Waldem
 
             SelectedAssetListPath = materialPath;
             SharedSelectedAssetPath = materialPath;
+            InvalidateAssetEntries();
             return true;
         }
 
@@ -218,6 +234,7 @@ namespace Waldem
                 {
                     SelectedAssetListPath = LastImportTargetPath;
                     SharedSelectedAssetPath = LastImportTargetPath;
+                    InvalidateAssetEntries();
                 }
             }
         }
@@ -280,6 +297,7 @@ namespace Waldem
             SelectedAssetListPath = resolvedPath;
             SharedSelectedAssetPath = resolvedPath;
             PendingScrollToAssetPath = resolvedPath;
+            InvalidateAssetEntries();
             ImGui::SetWindowFocus("Content");
         }
 
@@ -314,6 +332,7 @@ namespace Waldem
                     }
                 }
                 TextureThumbnails.clear();
+                InvalidateAssetEntries();
             }
         }
 
@@ -439,6 +458,7 @@ namespace Waldem
             }
             TextureThumbnails.clear();
             PendingRenameTarget.reset();
+            InvalidateAssetEntries();
             return true;
         }
 
@@ -600,6 +620,11 @@ namespace Waldem
                 return it->second;
             }
 
+            if (ThumbnailsCreatedThisFrame >= ThumbnailCreateBudgetPerFrame)
+            {
+                return nullptr;
+            }
+
             auto textureDesc = CContentManager::LoadAsset<TextureDesc>(assetPath);
             if (!textureDesc)
             {
@@ -607,16 +632,66 @@ namespace Waldem
                 return nullptr;
             }
 
+            int thumbnailWidth = textureDesc->Width;
+            int thumbnailHeight = textureDesc->Height;
+            uint8* thumbnailData = textureDesc->Data;
+            bool ownsThumbnailData = false;
+
+            const bool canDownsampleRGBA =
+                textureDesc->Format == TextureFormat::R8G8B8A8_UNORM ||
+                textureDesc->Format == TextureFormat::R8G8B8A8_UNORM_SRGB ||
+                textureDesc->Format == TextureFormat::B8G8R8A8_UNORM ||
+                textureDesc->Format == TextureFormat::B8G8R8A8_UNORM_SRGB;
+
+            if (canDownsampleRGBA &&
+                textureDesc->Data &&
+                textureDesc->Width > 0 &&
+                textureDesc->Height > 0 &&
+                (textureDesc->Width > ThumbnailMaxDimension || textureDesc->Height > ThumbnailMaxDimension))
+            {
+                const float scale = std::min(
+                    (float)ThumbnailMaxDimension / (float)textureDesc->Width,
+                    (float)ThumbnailMaxDimension / (float)textureDesc->Height
+                );
+
+                thumbnailWidth = std::max(1, (int)(textureDesc->Width * scale));
+                thumbnailHeight = std::max(1, (int)(textureDesc->Height * scale));
+                thumbnailData = new uint8[thumbnailWidth * thumbnailHeight * 4];
+                ownsThumbnailData = true;
+
+                for (int y = 0; y < thumbnailHeight; ++y)
+                {
+                    const int srcY = (y * textureDesc->Height) / thumbnailHeight;
+                    for (int x = 0; x < thumbnailWidth; ++x)
+                    {
+                        const int srcX = (x * textureDesc->Width) / thumbnailWidth;
+                        const int srcIndex = (srcY * textureDesc->Width + srcX) * 4;
+                        const int dstIndex = (y * thumbnailWidth + x) * 4;
+
+                        thumbnailData[dstIndex + 0] = textureDesc->Data[srcIndex + 0];
+                        thumbnailData[dstIndex + 1] = textureDesc->Data[srcIndex + 1];
+                        thumbnailData[dstIndex + 2] = textureDesc->Data[srcIndex + 2];
+                        thumbnailData[dstIndex + 3] = textureDesc->Data[srcIndex + 3];
+                    }
+                }
+            }
+
             Texture2D* thumbnail = Renderer::CreateTexture2D(
                 "Thumbnail_" + textureDesc->Name.ToString(),
-                textureDesc->Width,
-                textureDesc->Height,
+                thumbnailWidth,
+                thumbnailHeight,
                 textureDesc->Format,
-                textureDesc->Data
+                thumbnailData
             );
+
+            if (ownsThumbnailData)
+            {
+                delete[] thumbnailData;
+            }
             
             delete textureDesc;
             TextureThumbnails[key] = thumbnail;
+            ThumbnailsCreatedThisFrame++;
             return thumbnail;
         }
 
@@ -656,6 +731,7 @@ namespace Waldem
                 {
                     SelectedFolderTreePath = entry.path();
                     CurrentPath = entry.path();
+                    InvalidateAssetEntries();
                 }
 
                 if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup))
@@ -677,6 +753,7 @@ namespace Waldem
                         if (ImGui::MenuItem("Delete"))
                         {
                             std::filesystem::remove_all(entry.path());
+                            InvalidateAssetEntries();
                         }
                         if (ImGui::MenuItem("Rename"))
                         {
@@ -704,6 +781,7 @@ namespace Waldem
             {
                 SelectedFolderTreePath.reset();
                 CurrentPath = CONTENT_PATH;
+                InvalidateAssetEntries();
             }
         }
 
@@ -715,51 +793,111 @@ namespace Waldem
             return result;
         }
 
-        void RenderEntry(const std::filesystem::directory_entry& entry)
+        void InvalidateAssetEntries()
         {
-            const std::string relativePath = relative(entry.path(), CONTENT_PATH).string();
-            if (strlen(SearchBuffer) > 0)
-            {
-                std::string searchLower = ToLower(SearchBuffer);
-                std::string pathLower   = ToLower(relativePath);
+            AssetEntriesDirty = true;
+        }
 
-                if (pathLower.find(searchLower) == std::string::npos)
-                {
-                    return;
-                }
-            }
-
-            WString extension = entry.path().extension().string();
-
-            bool isFolder = entry.is_directory();
-            
-            if(!IsSupportedExtension(extension) && !isFolder)
+        void RebuildAssetEntriesIfNeeded()
+        {
+            const std::string searchLower = ToLower(SearchBuffer);
+            if (!AssetEntriesDirty && CachedEntriesPath == CurrentPath && CachedSearchQuery == searchLower)
             {
                 return;
             }
 
+            CachedAssetEntries.clear();
+            std::error_code ec;
+            const auto options = std::filesystem::directory_options::skip_permission_denied;
+
+            if (searchLower.empty())
+            {
+                for (const auto& entry : std::filesystem::directory_iterator(CurrentPath, options, ec))
+                {
+                    std::error_code isDirEc;
+                    const bool isDirectory = entry.is_directory(isDirEc);
+                    if (isDirEc)
+                    {
+                        continue;
+                    }
+
+                    const WString extension = entry.path().extension().string();
+                    if (!isDirectory && !IsSupportedExtension(extension))
+                    {
+                        continue;
+                    }
+
+                    CachedAssetEntries.push_back({ entry.path(), isDirectory, extension });
+                }
+            }
+            else
+            {
+                for (const auto& entry : std::filesystem::recursive_directory_iterator(CurrentPath, options, ec))
+                {
+                    std::error_code isDirEc;
+                    const bool isDirectory = entry.is_directory(isDirEc);
+                    if (isDirEc)
+                    {
+                        continue;
+                    }
+
+                    const WString extension = entry.path().extension().string();
+                    if (!isDirectory && !IsSupportedExtension(extension))
+                    {
+                        continue;
+                    }
+
+                    std::error_code relEc;
+                    const std::string relativePath = std::filesystem::relative(entry.path(), CONTENT_PATH, relEc).string();
+                    if (!relEc)
+                    {
+                        if (ToLower(relativePath).find(searchLower) == std::string::npos)
+                        {
+                            continue;
+                        }
+                    }
+
+                    CachedAssetEntries.push_back({ entry.path(), isDirectory, extension });
+                }
+            }
+
+            std::sort(CachedAssetEntries.begin(), CachedAssetEntries.end(), [this](const AssetListEntry& lhs, const AssetListEntry& rhs)
+            {
+                if (lhs.IsDirectory != rhs.IsDirectory)
+                {
+                    return lhs.IsDirectory && !rhs.IsDirectory;
+                }
+
+                return ToLower(lhs.AssetPath.filename().string()) < ToLower(rhs.AssetPath.filename().string());
+            });
+
+            CachedEntriesPath = CurrentPath;
+            CachedSearchQuery = searchLower;
+            AssetEntriesDirty = false;
+        }
+
+        void RenderEntry(const AssetListEntry& entry)
+        {
+            const Path& entryPath = entry.AssetPath;
+            const bool isFolder = entry.IsDirectory;
+            const WString& extension = entry.Extension;
+
             ImGui::BeginGroup();
 
-            std::string id = "##Icon_" + entry.path().string();
+            std::string id = "##Icon_" + entryPath.string();
             ImVec2 size(CellSize, CellSize);
             ImVec2 cursor = ImGui::GetCursorScreenPos();
             ImVec2 rectMin = cursor;
             ImVec2 rectMax = ImVec2(cursor.x + size.x, cursor.y + size.y);
 
             ImDrawList* drawList = ImGui::GetWindowDrawList();
-
-            // Background
             drawList->AddRectFilled(rectMin, rectMax, IM_COL32(50, 50, 50, 255), 6.0f);
+            ImGui::InvisibleButton(id.c_str(), size);
 
-            // Click/hover handling
-            bool clicked = ImGui::InvisibleButton(id.c_str(), size);
-
-            if (entry.is_directory())
+            if (isFolder)
             {
-                // Folder rectangle (yellow)
                 ImVec2 folderMin(rectMin.x + 8, rectMin.y + 12);
                 ImVec2 folderMax(rectMax.x - 8, rectMax.y - 8);
-
                 drawList->AddRectFilled(folderMin, folderMax, IM_COL32(220, 180, 0, 255), 4.0f);
                 drawList->AddRect(folderMin, folderMax, IM_COL32(255, 210, 50, 255), 4.0f);
             }
@@ -768,7 +906,7 @@ namespace Waldem
                 Texture2D* thumbnail = nullptr;
                 if (extension == ".img")
                 {
-                    thumbnail = GetTextureThumbnail(entry.path());
+                    thumbnail = GetTextureThumbnail(entryPath);
                 }
 
                 ImVec2 fileMin(rectMin.x + 12, rectMin.y + 8);
@@ -780,117 +918,119 @@ namespace Waldem
                 }
                 else
                 {
-                    // Fallback file rectangle (blue)
                     drawList->AddRectFilled(fileMin, fileMax, IM_COL32(80, 150, 255, 255), 4.0f);
                     drawList->AddRect(fileMin, fileMax, IM_COL32(180, 220, 255, 255), 4.0f);
                 }
             }
 
-            if (clicked) {
-                // handle click
-            }
-
-            // --- Selection on single click ---
             if (ImGui::IsItemClicked())
             {
-                SelectedAssetListPath = entry.path(); // Works for both files and folders
-                SharedSelectedAssetPath = entry.path();
+                SelectedAssetListPath = entryPath;
+                SharedSelectedAssetPath = entryPath;
             }
 
-            // --- Highlight selected item ---
-            if (SelectedAssetListPath.has_value() && SelectedAssetListPath.value() == entry.path())
+            if (SelectedAssetListPath.has_value() && SelectedAssetListPath.value() == entryPath)
             {
-                ImDrawList* drawList = ImGui::GetWindowDrawList();
                 drawList->AddRect(
                     ImGui::GetItemRectMin(), ImGui::GetItemRectMax(),
-                    IM_COL32(255, 255, 0, 255), 4.0f // Yellow border
+                    IM_COL32(255, 255, 0, 255), 4.0f
                 );
             }
 
-            if (PendingScrollToAssetPath.has_value() && PendingScrollToAssetPath.value() == entry.path())
+            if (PendingScrollToAssetPath.has_value() && PendingScrollToAssetPath.value() == entryPath)
             {
                 ImGui::SetScrollHereY(0.5f);
                 PendingScrollToAssetPath.reset();
             }
 
-            // --- Double-click to enter folder or open file ---
             if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
             {
                 if (isFolder)
                 {
-                    CurrentPath = entry.path();
+                    CurrentPath = entryPath;
+                    InvalidateAssetEntries();
                 }
-                else
+                else if (extension == ".scene")
                 {
-                    if(extension == ".scene")
-                    {
-                        auto entryPath = entry.path();
-                        SceneManager::LoadScene(entryPath);
-                    }
+                    Path scenePath = entryPath;
+                    SceneManager::LoadScene(scenePath);
                 }
             }
 
-            // If it's a folder and being hovered, remember it
             if (isFolder && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup))
             {
-                HoveredDropTargetFolder = entry.path();
+                HoveredDropTargetFolder = entryPath;
             }
-            
-            const std::string itemName = entry.path().filename().string();
+
+            const std::string itemName = entryPath.filename().string();
 
             if (ImGui::BeginDragDropTarget())
             {
                 if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(HierarchyDragPayloadType))
                 {
                     const auto entityId = *(const flecs::entity_t*)payload->Data;
-                    Path targetFolder = isFolder ? entry.path() : CurrentPath;
+                    Path targetFolder = isFolder ? entryPath : CurrentPath;
                     CreatePrefabAssetFromEntity(entityId, targetFolder);
                 }
                 ImGui::EndDragDropTarget();
             }
-            
-            // Drag and drop
+
             if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
             {
-                std::string relativePath = std::filesystem::relative(entry.path(), CONTENT_PATH).string();
-                
+                std::string relativePath = std::filesystem::relative(entryPath, CONTENT_PATH).string();
                 ImGui::SetDragDropPayload(ExtensionToAssetString(extension), relativePath.c_str(), relativePath.size() + 1);
                 ImGui::Text("%s", itemName.c_str());
                 ImGui::EndDragDropSource();
             }
 
-            // Context menu
             if (ImGui::BeginPopupContextItem())
             {
                 if (isFolder && ImGui::BeginMenu("Create"))
                 {
                     if (ImGui::MenuItem("Material"))
                     {
-                        CreateMaterialAsset(entry.path());
+                        CreateMaterialAsset(entryPath);
                     }
                     ImGui::EndMenu();
                 }
 
                 if (ImGui::MenuItem("Delete"))
-                    std::filesystem::remove_all(entry.path());
+                {
+                    std::error_code ec;
+                    if (isFolder)
+                    {
+                        std::filesystem::remove_all(entryPath, ec);
+                    }
+                    else
+                    {
+                        std::filesystem::remove(entryPath, ec);
+                    }
+                    InvalidateAssetEntries();
+                }
                 if (ImGui::MenuItem("Rename"))
-                    BeginRenamePath(entry.path());
+                {
+                    BeginRenamePath(entryPath);
+                }
                 ImGui::EndPopup();
             }
 
-            if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+            std::string displayName = itemName;
+            if (ImGui::CalcTextSize(displayName.c_str()).x > CellSize)
             {
-                if (isFolder)
-                    CurrentPath = entry.path();
-                else
+                const char* ellipsis = "...";
+                size_t len = displayName.size();
+                while (len > 0)
                 {
-                    // Handle asset open
+                    std::string candidate = displayName.substr(0, len) + ellipsis;
+                    if (ImGui::CalcTextSize(candidate.c_str()).x <= CellSize)
+                    {
+                        displayName = candidate;
+                        break;
+                    }
+                    --len;
                 }
             }
-
-            ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + CellSize);
-            ImGui::TextWrapped("%s", itemName.c_str());
-            ImGui::PopTextWrapPos();
+            ImGui::TextUnformatted(displayName.c_str());
 
             ImGui::EndGroup();
         }
@@ -905,6 +1045,7 @@ namespace Waldem
                 if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                 {
                     CurrentPath = CurrentPath.parent_path();
+                    InvalidateAssetEntries();
                 }
 
                 // Keep parent-navigation row visually separate from the asset grid.
@@ -956,7 +1097,10 @@ namespace Waldem
                     {
                         std::filesystem::path newFolderPath = CurrentPath / folderName;
                         if (!std::filesystem::exists(newFolderPath))
+                        {
                             std::filesystem::create_directory(newFolderPath);
+                            InvalidateAssetEntries();
+                        }
                     }
 
                     folderName[0] = '\0';
@@ -977,30 +1121,41 @@ namespace Waldem
             int columnCount = (int)(panelWidth / (CellSize + Padding));
             if (columnCount < 1) columnCount = 1;
 
-            int itemIndex = 0;
+            RebuildAssetEntriesIfNeeded();
 
-            if (strlen(SearchBuffer) == 0)
+            const float rowHeight = CellSize + ImGui::GetTextLineHeightWithSpacing() + ImGui::GetStyle().ItemSpacing.y;
+            const int totalItems = (int)CachedAssetEntries.size();
+            const int rowCount = (totalItems + columnCount - 1) / columnCount;
+
+            if (PendingScrollToAssetPath.has_value())
             {
-                for (const auto& entry : std::filesystem::directory_iterator(CurrentPath))
+                for (int i = 0; i < totalItems; ++i)
                 {
-                    RenderEntry(entry);
-                    
-                    // Layout in grid
-                    itemIndex++;
-                    if (itemIndex % columnCount != 0)
-                        ImGui::SameLine();
+                    if (CachedAssetEntries[i].AssetPath == PendingScrollToAssetPath.value())
+                    {
+                        ImGui::SetScrollY((float)(i / columnCount) * rowHeight);
+                        break;
+                    }
                 }
             }
-            else
+
+            ImGuiListClipper clipper;
+            clipper.Begin(rowCount, rowHeight);
+            while (clipper.Step())
             {
-                for (const auto& entry : std::filesystem::recursive_directory_iterator(CurrentPath))
+                for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; ++row)
                 {
-                    RenderEntry(entry);
-                    
-                    // Layout in grid
-                    itemIndex++;
-                    if (itemIndex % columnCount != 0)
-                        ImGui::SameLine();
+                    const int startIndex = row * columnCount;
+                    const int endIndex = std::min(startIndex + columnCount, totalItems);
+
+                    for (int itemIndex = startIndex; itemIndex < endIndex; ++itemIndex)
+                    {
+                        RenderEntry(CachedAssetEntries[itemIndex]);
+                        if (itemIndex + 1 < endIndex)
+                        {
+                            ImGui::SameLine();
+                        }
+                    }
                 }
             }
 
@@ -1034,6 +1189,7 @@ namespace Waldem
         void OnDraw(float deltaTime) override
         {
             PollImportTask();
+            ThumbnailsCreatedThisFrame = 0;
 
             if (ImGui::Begin("Content", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus))
             {
@@ -1065,7 +1221,10 @@ namespace Waldem
                 }
 
                 ImGui::SameLine();
-                ImGui::InputTextWithHint("##Search", "Search...", SearchBuffer, IM_ARRAYSIZE(SearchBuffer));
+                if (ImGui::InputTextWithHint("##Search", "Search...", SearchBuffer, IM_ARRAYSIZE(SearchBuffer)))
+                {
+                    InvalidateAssetEntries();
+                }
                 ImGui::Separator();
 
                 //folders tree
