@@ -2076,30 +2076,10 @@ namespace Waldem
 
     void DX12Renderer::UpdateTLAS(AccelerationStructure* TLAS, Buffer* instanceBuffer, uint numInstances)
     {
-        auto cmdList = WorldCommandList.first;
-
-        // Prepare the acceleration structure inputs for update
-        D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS asInputs = {};
-        asInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
-        asInputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
-        asInputs.NumDescs = numInstances;
-        asInputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE |
-                         D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_UPDATE |
-                         D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PERFORM_UPDATE;  // Important for refit
-        asInputs.InstanceDescs = instanceBuffer->GetGPUAddress();
-
-        // Describe the acceleration structure build for update
-        D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC asDesc = {};
-        asDesc.Inputs = asInputs;
-        asDesc.ScratchAccelerationStructureData = TLAS->GetScratchBuffer()->GetGPUAddress();
-        asDesc.DestAccelerationStructureData = TLAS->GetGPUAddress();
-        asDesc.SourceAccelerationStructureData = TLAS->GetGPUAddress();  // Source is the existing TLAS
-
-        // Build the updated TLAS
-        cmdList->BuildRaytracingAccelerationStructure(&asDesc);
-
-        // Insert a barrier to ensure completion
-        cmdList->UAVBarrier(ResourceMap[(GraphicResource*)TLAS]);
+        // Route updates through the resize-safe build path.
+        // Refit-only path can fail when required TLAS size grows after scene changes.
+        AccelerationStructure* tlas = TLAS;
+        BuildTLAS(instanceBuffer, numInstances, tlas);
     }
 
     Buffer* DX12Renderer::CreateBuffer(WString name, BufferType type, uint32_t size, uint32_t stride, void* data, size_t dataSize)

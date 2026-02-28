@@ -242,7 +242,7 @@ namespace Waldem
                     DrawCommandsBuffer.AddData(nullptr, sizeof(DrawIndexedCommand));
                 }
 
-                Renderer::RenderData.TLAS.AddEmptyData();
+                Renderer::RenderData.TLAS.AddEmptyData(globalDrawId);
             });
             
             ECS::World.observer<MeshComponent>().event(flecs::OnSet).each([&](flecs::entity entity, MeshComponent& meshComponent)
@@ -427,7 +427,7 @@ namespace Waldem
                     DrawCommandsBuffer.UpdateOrAdd(nullptr, sizeof(DrawIndexedCommand), globalDrawId * sizeof(DrawIndexedCommand));
                 }
 
-                Renderer::RenderData.TLAS.AddEmptyData();
+                Renderer::RenderData.TLAS.AddEmptyData(globalDrawId);
             });
 
             ECS::World.observer<Sprite>().event(flecs::OnSet).each([&](flecs::entity entity, Sprite& sprite)

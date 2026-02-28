@@ -31,12 +31,25 @@ namespace Waldem
         ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
         WMap<float, ECS::Entity> HierarchyEntries;
         std::unordered_map<flecs::entity_t, bool> ExpandedByEntity;
+        flecs::entity_t SelectionAnchorEntity = 0;
+
+        std::vector<flecs::entity_t> GetSelectedEntityIds() const
+        {
+            std::vector<flecs::entity_t> selectedIds;
+            ECS::World.query<Selected>().each([&](flecs::entity selectedEntity, Selected)
+            {
+                selectedIds.push_back(selectedEntity.id());
+            });
+
+            return selectedIds;
+        }
 
         void SelectEntity(flecs::entity& entity)
         {
             DeselectAllEntities();
 
             entity.add<Selected>();
+            SelectionAnchorEntity = entity.id();
         }
 
         void DeselectAllEntities()
@@ -251,6 +264,37 @@ namespace Waldem
                 };
 
                 std::function<void(flecs::entity_t, int)> drawEntityRecursive;
+                std::vector<flecs::entity_t> visibleHierarchyOrder;
+                std::function<void(flecs::entity_t)> buildVisibleOrder;
+                buildVisibleOrder = [&](flecs::entity_t entityId)
+                {
+                    visibleHierarchyOrder.push_back(entityId);
+
+                    auto childrenIt = childrenByParent.find(entityId);
+                    const bool hasChildren = childrenIt != childrenByParent.end() && !childrenIt->second.empty();
+                    if(!hasChildren)
+                    {
+                        return;
+                    }
+
+                    auto expandedIt = ExpandedByEntity.find(entityId);
+                    const bool isExpanded = expandedIt == ExpandedByEntity.end() ? true : expandedIt->second;
+                    if(!isExpanded)
+                    {
+                        return;
+                    }
+
+                    for (auto childId : childrenIt->second)
+                    {
+                        buildVisibleOrder(childId);
+                    }
+                };
+
+                for (auto rootId : roots)
+                {
+                    buildVisibleOrder(rootId);
+                }
+
                 drawEntityRecursive = [&](flecs::entity_t entityId, int depth)
                 {
                     auto entityIt = entitiesById.find(entityId);
@@ -319,10 +363,6 @@ namespace Waldem
                             EditorCommandHistory::Get().Execute(std::make_unique<RenameEntityCommand>(entity.id(), originalName.c_str(), RenameString.c_str()));
                         }
 
-                        if(!isSelected)
-                        {
-                            SelectEntity(entity);
-                        }
                     }
 
                     if(startRename)
@@ -335,11 +375,91 @@ namespace Waldem
                         ImGui::SetItemDefaultFocus();
                     }
 
+                    if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
+                    {
+                        const bool ctrlHeld = ImGui::GetIO().KeyCtrl;
+                        const bool shiftHeld = ImGui::GetIO().KeyShift;
+
+                        if (shiftHeld && SelectionAnchorEntity != 0)
+                        {
+                            auto anchorIt = std::find(visibleHierarchyOrder.begin(), visibleHierarchyOrder.end(), SelectionAnchorEntity);
+                            auto currentIt = std::find(visibleHierarchyOrder.begin(), visibleHierarchyOrder.end(), entityId);
+
+                            if(anchorIt != visibleHierarchyOrder.end() && currentIt != visibleHierarchyOrder.end())
+                            {
+                                if(!ctrlHeld)
+                                {
+                                    DeselectAllEntities();
+                                }
+
+                                auto rangeBegin = anchorIt < currentIt ? anchorIt : currentIt;
+                                auto rangeEnd = anchorIt < currentIt ? currentIt : anchorIt;
+
+                                for (auto it = rangeBegin; it <= rangeEnd; ++it)
+                                {
+                                    auto rangeEntity = ECS::World.entity(*it);
+                                    if(rangeEntity.is_alive())
+                                    {
+                                        rangeEntity.add<Selected>();
+                                    }
+                                }
+
+                                SelectionAnchorEntity = entity.id();
+                            }
+                            else
+                            {
+                                SelectEntity(entity);
+                            }
+                        }
+                        else if (ctrlHeld)
+                        {
+                            if (entity.has<Selected>())
+                            {
+                                entity.remove<Selected>();
+                            }
+                            else
+                            {
+                                entity.add<Selected>();
+                            }
+
+                            SelectionAnchorEntity = entity.id();
+                        }
+                        else
+                        {
+                            if(!entity.has<Selected>())
+                            {
+                                SelectEntity(entity);
+                            }
+                            else
+                            {
+                                SelectionAnchorEntity = entity.id();
+                            }
+                        }
+                    }
+
                     if (ImGui::BeginDragDropSource())
                     {
                         const auto draggedEntityId = entity.id();
                         ImGui::SetDragDropPayload(HierarchyDragPayloadType, &draggedEntityId, sizeof(draggedEntityId));
-                        ImGui::TextUnformatted(entity.name().c_str());
+
+                        std::vector<flecs::entity_t> draggedSelectionIds;
+                        if(entity.has<Selected>())
+                        {
+                            draggedSelectionIds = GetSelectedEntityIds();
+                        }
+                        else
+                        {
+                            draggedSelectionIds.push_back(draggedEntityId);
+                        }
+
+                        if(draggedSelectionIds.size() > 1)
+                        {
+                            ImGui::Text("%zu entities", draggedSelectionIds.size());
+                        }
+                        else
+                        {
+                            ImGui::TextUnformatted(entity.name().c_str());
+                        }
                         ImGui::EndDragDropSource();
                     }
 
@@ -352,7 +472,29 @@ namespace Waldem
 
                             if (draggedEntity.is_alive() && draggedEntityId != entity.id())
                             {
-                                ECS::SetParent(draggedEntity, entity, true);
+                                std::vector<flecs::entity_t> entitiesToReparent;
+                                if(draggedEntity.has<Selected>())
+                                {
+                                    entitiesToReparent = GetSelectedEntityIds();
+                                }
+                                else
+                                {
+                                    entitiesToReparent.push_back(draggedEntityId);
+                                }
+
+                                for (auto reparentEntityId : entitiesToReparent)
+                                {
+                                    if(reparentEntityId == entity.id())
+                                    {
+                                        continue;
+                                    }
+
+                                    auto reparentEntity = ECS::World.entity(reparentEntityId);
+                                    if(reparentEntity.is_alive())
+                                    {
+                                        ECS::SetParent(reparentEntity, entity, true);
+                                    }
+                                }
                             }
                         }
                         if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PrefabDragPayloadType))
@@ -387,6 +529,11 @@ namespace Waldem
                 }
 
                 ImGui::InvisibleButton("##HierarchyEmptyDropTarget", ImVec2(ImGui::GetContentRegionAvail().x, emptyDropHeight));
+                if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
+                {
+                    DeselectAllEntities();
+                    SelectionAnchorEntity = 0;
+                }
                 if (ImGui::BeginDragDropTarget())
                 {
                     if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(HierarchyDragPayloadType))
@@ -396,7 +543,24 @@ namespace Waldem
 
                         if (draggedEntity.is_alive())
                         {
-                            ECS::ClearParent(draggedEntity, true);
+                            std::vector<flecs::entity_t> entitiesToUnparent;
+                            if(draggedEntity.has<Selected>())
+                            {
+                                entitiesToUnparent = GetSelectedEntityIds();
+                            }
+                            else
+                            {
+                                entitiesToUnparent.push_back(draggedEntityId);
+                            }
+
+                            for (auto unparentEntityId : entitiesToUnparent)
+                            {
+                                auto unparentEntity = ECS::World.entity(unparentEntityId);
+                                if(unparentEntity.is_alive())
+                                {
+                                    ECS::ClearParent(unparentEntity, true);
+                                }
+                            }
                         }
                     }
                     if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PrefabDragPayloadType))

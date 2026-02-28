@@ -1,4217 +1,4645 @@
 [
   {
-    "name": "Sponza",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 0,
-        "HierarchyDepth": 0,
-        "HierarchySlot": 0,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263451099,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 0.0080000004,
-          "y": 0.0080000004,
-          "z": 0.0080000004
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_0.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_102",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 102,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_102.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_2",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 2,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_2.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_3",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 3,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_3.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_4",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 4,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_4.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_5",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 5,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_5.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_6",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 6,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_6.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_7",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 7,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_7.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_8",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 8,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_8.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_9",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 9,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_9.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_10",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 10,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_10.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_11",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 11,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_11.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_12",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 12,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_12.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_13",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 13,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_13.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_14",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 14,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_14.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_15",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 15,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_15.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_16",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 16,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_16.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_17",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 17,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_17.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_18",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 18,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_18.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_19",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 19,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_19.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_20",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 20,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_20.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_21",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 21,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_21.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_22",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 22,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_22.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_23",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 23,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_23.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_24",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 24,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_24.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_25",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 25,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_25.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_26",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 26,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_26.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_27",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 27,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_27.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_28",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 28,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_28.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_29",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 29,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_29.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_30",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 30,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_30.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_31",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 31,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_31.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_32",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 32,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_32.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_33",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 33,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_33.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_34",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 34,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_34.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_35",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 35,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_35.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_36",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 36,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_36.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_37",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 37,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_37.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_38",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 38,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_38.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_39",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 39,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_39.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_40",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 40,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_40.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_41",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 41,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_41.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_42",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 42,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_42.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_43",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 43,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_43.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_44",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 44,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_44.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_45",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 45,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_45.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_46",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 46,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_46.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_47",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 47,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_47.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_48",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 48,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_48.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_49",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 49,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_49.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_50",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 50,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_50.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_51",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 51,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_51.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_52",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 52,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_52.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_53",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 53,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_53.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_54",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 54,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_54.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_55",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 55,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_55.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_56",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 56,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_56.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_57",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 57,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_57.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_58",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 58,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_58.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_59",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 59,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_59.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_60",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 60,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_60.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_61",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 61,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_61.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_62",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 62,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_62.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_63",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 63,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_63.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_64",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 64,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_64.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_65",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 65,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_65.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_66",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 66,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_66.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_67",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 67,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_67.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_68",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 68,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_68.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_69",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 69,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_69.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_70",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 70,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_70.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_71",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 71,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_71.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_72",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 72,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_72.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_73",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 73,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_73.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_74",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 74,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_74.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_75",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 75,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_75.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_76",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 76,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_76.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_77",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 77,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_77.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_78",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 78,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_78.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_79",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 79,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_79.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_80",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 80,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_80.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_81",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 81,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_81.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_82",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 82,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_82.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_83",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 83,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_83.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_84",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 84,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_84.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_85",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 85,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_85.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_86",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 86,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_86.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_87",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 87,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_87.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_88",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 88,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_88.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_89",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 89,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_89.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_90",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 90,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_90.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_91",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 91,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_91.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_92",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 92,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_92.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_93",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 93,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_93.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_94",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 94,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_94.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_95",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 95,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_95.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_96",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 96,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_96.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_97",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 97,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_97.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_98",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 98,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_98.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_99",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 99,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_99.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_100",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 100,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_100.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_101",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 101,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_101.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "parent": "Sponza",
-    "name": "nodes0_Mesh_1",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 756,
-        "HierarchyDepth": 1,
-        "HierarchySlot": 1,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 1.4263600111,
-          "z": 0
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Models\\Sponza\\meshes0_1.mesh",
-        "MaterialRef": "Empty"
-      }
-    }
-  },
-  {
-    "name": "SpotLight2",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 0,
-        "HierarchyDepth": 0,
-        "HierarchySlot": 105,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 10.345328331,
-          "y": 2.7876763344,
-          "z": 4.7444820404
-        },
-        "Rotation": {
-          "x": 0,
-          "y": -88.7077865601,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 0.9999998212,
-          "y": 1,
-          "z": 0.9999998212
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": -0.699088335,
-          "z": 0,
-          "w": 0.7150353193
-        }
-      },
-      "Waldem.Light": {
-        "Color": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "Intensity": 10,
-        "Radius": 82.6999969482,
-        "InnerCone": 1,
-        "OuterCone": 45,
-        "Softness": 0.7009999752,
-        "AreaWidth": 1,
-        "AreaHeight": 1,
-        "AreaTwoSided": 0,
-        "Type": "Spot"
-      }
-    }
-  },
-  {
-    "name": "PointLight1",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 0,
-        "HierarchyDepth": 0,
-        "HierarchySlot": 106,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": -1.5990232229,
-          "y": 11.6561689377,
-          "z": 0.4785863757
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.Light": {
-        "Color": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "Intensity": 12.8000001907,
-        "Radius": 65.1999969482,
-        "InnerCone": 1,
-        "OuterCone": 45,
-        "Softness": 0.001,
-        "AreaWidth": 1,
-        "AreaHeight": 1,
-        "AreaTwoSided": 0,
-        "Type": "Point"
-      }
-    }
-  },
-  {
-    "name": "SpotLight1",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 0,
-        "HierarchyDepth": 0,
-        "HierarchySlot": 103,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 10.345328331,
-          "y": 2.7876763344,
-          "z": -4.0341567993
-        },
-        "Rotation": {
-          "x": 0,
-          "y": -88.7077865601,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 0.9999998212,
-          "y": 1,
-          "z": 0.9999998212
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": -0.699088335,
-          "z": 0,
-          "w": 0.7150353193
-        }
-      },
-      "Waldem.Light": {
-        "Color": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "Intensity": 10,
-        "Radius": 82.6999969482,
-        "InnerCone": 1,
-        "OuterCone": 45,
-        "Softness": 0.7009999752,
-        "AreaWidth": 1,
-        "AreaHeight": 1,
-        "AreaTwoSided": 0,
-        "Type": "Spot"
-      }
-    }
-  },
-  {
-    "name": "PointLight2",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 0,
-        "HierarchyDepth": 0,
-        "HierarchySlot": 104,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": -1.5990232229,
-          "y": 3.7282135487,
-          "z": 0.4785863757
-        },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
-        }
-      },
-      "Waldem.Light": {
-        "Color": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "Intensity": 12.8000001907,
-        "Radius": 65.1999969482,
-        "InnerCone": 1,
-        "OuterCone": 45,
-        "Softness": 8.2010002136,
-        "AreaWidth": 1,
-        "AreaHeight": 1,
-        "AreaTwoSided": 0,
-        "Type": "Point"
+    "scene_id": 0,
+    "parent_scene_id": -1,
+    "entity": {
+      "name": "Sponza",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 0,
+          "HierarchyDepth": 0,
+          "HierarchySlot": 0,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263451099,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 0.0080000004,
+            "y": 0.0080000004,
+            "z": 0.0080000004
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_0.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_0"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 1,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_101",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 101,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_101.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_24"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 2,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_102",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 102,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_102.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_4"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 3,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_2",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 2,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_2.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_2"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 4,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_3",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 3,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_3.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_3"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 5,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_4",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 4,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_4.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_4"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 6,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_5",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 5,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_5.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_5"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 7,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_6",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 6,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_6.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_6"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 8,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_7",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 7,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_7.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_7"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 9,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_8",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 8,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_8.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_5"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 10,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_9",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 9,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_9.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_8"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 11,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_10",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 10,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_10.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_6"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 12,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_11",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 11,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_11.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_5"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 13,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_12",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 12,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_12.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_9"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 14,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_13",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 13,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_13.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_4"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 15,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_14",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 14,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_14.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_6"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 16,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_15",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 15,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_15.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_4"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 17,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_16",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 16,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_16.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_5"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 18,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_17",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 17,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_17.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_6"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 19,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_18",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 18,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_18.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_5"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 20,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_19",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 19,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_19.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_6"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 21,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_20",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 20,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_20.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_5"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 22,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_21",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 21,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_21.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_6"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 23,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_22",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 22,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_22.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_5"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 24,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_23",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 23,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_23.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_6"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 25,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_24",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 24,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_24.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_5"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 26,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_25",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 25,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_25.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_6"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 27,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_26",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 26,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_26.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_5"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 28,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_27",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 27,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_27.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_6"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 29,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_28",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 28,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_28.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_5"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 30,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_29",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 29,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_29.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_6"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 31,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_30",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 30,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_30.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_5"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 32,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_31",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 31,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_31.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_6"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 33,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_32",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 32,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_32.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_5"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 34,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_33",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 33,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_33.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_6"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 35,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_34",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 34,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_34.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_5"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 36,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_35",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 35,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_35.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_4"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 37,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_36",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 36,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_36.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_5"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 38,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_37",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 37,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_37.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_4"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 39,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_38",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 38,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_38.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_10"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 40,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_39",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 39,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_39.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_4"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 41,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_40",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 40,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_40.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_10"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 42,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_41",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 41,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_41.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_4"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 43,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_42",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 42,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_42.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_10"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 44,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_43",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 43,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_43.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_4"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 45,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_44",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 44,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_44.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_9"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 46,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_45",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 45,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_45.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_4"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 47,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_46",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 46,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_46.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_8"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 48,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_47",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 47,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_47.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_7"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 49,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_48",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 48,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_48.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_5"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 50,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_49",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 49,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_49.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_11"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 51,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_50",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 50,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_50.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_12"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 52,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_51",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 51,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_51.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_4"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 53,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_52",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 52,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_52.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_13"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 54,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_53",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 53,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_53.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_0"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 55,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_54",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 54,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_54.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_14"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 56,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_55",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 55,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_55.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_15"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 57,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_56",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 56,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_56.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_16"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 58,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_57",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 57,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_57.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_14"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 59,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_58",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 58,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_58.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_15"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 60,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_59",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 59,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_59.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_14"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 61,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_60",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 60,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_60.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_16"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 62,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_61",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 61,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_61.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_15"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 63,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_62",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 62,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_62.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_13"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 64,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_63",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 63,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_63.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_17"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 65,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_64",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 64,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_64.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_18"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 66,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_65",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 65,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_65.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_19"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 67,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_66",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 66,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_66.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_18"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 68,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_67",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 67,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_67.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_19"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 69,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_68",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 68,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_68.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_18"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 70,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_69",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 69,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_69.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_17"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 71,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_70",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 70,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_70.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_19"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 72,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_71",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 71,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_71.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_18"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 73,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_72",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 72,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_72.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_17"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 74,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_73",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 73,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_73.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_20"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 75,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_74",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 74,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_74.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_21"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 76,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_75",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 75,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_75.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_20"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 77,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_76",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 76,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_76.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_21"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 78,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_77",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 77,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_77.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_20"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 79,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_78",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 78,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_78.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_21"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 80,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_79",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 79,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_79.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_20"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 81,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_80",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 80,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_80.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_21"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 82,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_81",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 81,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_81.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_1"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 83,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_82",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 82,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_82.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_2"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 84,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_83",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 83,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_83.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_1"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 85,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_84",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 84,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_84.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_2"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 86,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_85",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 85,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_85.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_1"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 87,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_86",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 86,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_86.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_2"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 88,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_87",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 87,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_87.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_1"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 89,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_88",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 88,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_88.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_2"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 90,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_89",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 89,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_89.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_1"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 91,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_90",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 90,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_90.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_2"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 92,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_91",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 91,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_91.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_1"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 93,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_92",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 92,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_92.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_2"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 94,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_93",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 93,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_93.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_1"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 95,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_94",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 94,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_94.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_2"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 96,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_95",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 95,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_95.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_22"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 97,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_96",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 96,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_96.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_23"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 98,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_97",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 97,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_97.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_3"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 99,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_98",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 98,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_98.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_23"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 100,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_99",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 99,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_99.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_3"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 101,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_100",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 100,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_100.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_4"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 102,
+    "parent_scene_id": 0,
+    "entity": {
+      "parent": "Sponza",
+      "name": "nodes0_Mesh_1",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 756,
+          "HierarchyDepth": 1,
+          "HierarchySlot": 1,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.4263600111,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Models\\Sponza\\meshes0_1.mesh",
+          "MaterialRef": "Models\\Sponza\\Material_1"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 103,
+    "parent_scene_id": -1,
+    "entity": {
+      "name": "SpotLight2",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 0,
+          "HierarchyDepth": 0,
+          "HierarchySlot": 105,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 10.345328331,
+            "y": 2.7876763344,
+            "z": 4.7444820404
+          },
+          "Rotation": {
+            "x": 0,
+            "y": -88.7077865601,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 0.9999998212,
+            "y": 1,
+            "z": 0.9999998212
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": -0.699088335,
+            "z": 0,
+            "w": 0.7150353193
+          }
+        },
+        "Waldem.Light": {
+          "Color": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "Intensity": 10,
+          "Radius": 82.6999969482,
+          "InnerCone": 1,
+          "OuterCone": 45,
+          "Softness": 0.7009999752,
+          "AreaWidth": 1,
+          "AreaHeight": 1,
+          "AreaTwoSided": 0,
+          "Type": "Spot"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 104,
+    "parent_scene_id": -1,
+    "entity": {
+      "name": "PointLight1",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 0,
+          "HierarchyDepth": 0,
+          "HierarchySlot": 106,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": -1.5990232229,
+            "y": 11.6561689377,
+            "z": 0.4785863757
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.Light": {
+          "Color": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "Intensity": 12.8000001907,
+          "Radius": 65.1999969482,
+          "InnerCone": 1,
+          "OuterCone": 45,
+          "Softness": 0.001,
+          "AreaWidth": 1,
+          "AreaHeight": 1,
+          "AreaTwoSided": 0,
+          "Type": "Point"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 105,
+    "parent_scene_id": -1,
+    "entity": {
+      "name": "SpotLight1",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 0,
+          "HierarchyDepth": 0,
+          "HierarchySlot": 103,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 10.345328331,
+            "y": 2.7876763344,
+            "z": -4.0341567993
+          },
+          "Rotation": {
+            "x": 0,
+            "y": -88.7077865601,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 0.9999998212,
+            "y": 1,
+            "z": 0.9999998212
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": -0.699088335,
+            "z": 0,
+            "w": 0.7150353193
+          }
+        },
+        "Waldem.Light": {
+          "Color": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "Intensity": 10,
+          "Radius": 82.6999969482,
+          "InnerCone": 1,
+          "OuterCone": 45,
+          "Softness": 0.7009999752,
+          "AreaWidth": 1,
+          "AreaHeight": 1,
+          "AreaTwoSided": 0,
+          "Type": "Spot"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 106,
+    "parent_scene_id": -1,
+    "entity": {
+      "name": "PointLight2",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 0,
+          "HierarchyDepth": 0,
+          "HierarchySlot": 104,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": -1.5990232229,
+            "y": 3.7282135487,
+            "z": 0.4785863757
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.Light": {
+          "Color": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "Intensity": 12.8000001907,
+          "Radius": 65.1999969482,
+          "InnerCone": 1,
+          "OuterCone": 45,
+          "Softness": 8.2010002136,
+          "AreaWidth": 1,
+          "AreaHeight": 1,
+          "AreaTwoSided": 0,
+          "Type": "Point"
+        }
       }
     }
   }

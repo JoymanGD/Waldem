@@ -15,7 +15,7 @@ namespace Waldem
 
         ResizableAccelerationStructure(const WString& name, uint thresholdNum);
 
-        int AddEmptyData();
+        int AddEmptyData(int id = -1);
         
         void SetData(int id, WString& name, Buffer* VertexBuffer, Buffer* IndexBuffer, DrawIndexedCommand drawCommand, uint vertexCount, const Transform& transform);
         
@@ -31,6 +31,9 @@ namespace Waldem
         uint GetIndex(ResourceHeapType heapType) { return TLAS->GetIndex(heapType); }
         
     private:
+        void EnsureInstanceSlot(int id);
+        int GetBuildInstanceCount() const;
+
         AccelerationStructure* TLAS = nullptr;
         AccelerationStructure* DummyBLAS = nullptr;
         Buffer* DummyVertexBuffer;
@@ -38,6 +41,5 @@ namespace Waldem
         WArray<AccelerationStructure*> BLAS;
         ResizableBuffer* InstanceBuffer;
         WArray<RayTracingInstance> Instances;
-        int Num() const { return Instances.Num(); }
     };
 }

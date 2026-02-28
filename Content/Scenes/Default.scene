@@ -1,316 +1,347 @@
 [
   {
-    "name": "TreeLight",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 0,
-        "HierarchyDepth": 0,
-        "HierarchySlot": 3,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 3.4516718388,
-          "y": 5.1907410622,
-          "z": 0.0055626631
+    "scene_id": 0,
+    "parent_scene_id": -1,
+    "entity": {
+      "name": "Tree",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 0,
+          "HierarchyDepth": 0,
+          "HierarchySlot": 2,
+          "VisibleInHierarchy": true
         },
-        "Rotation": {
-          "x": -660.0860595703,
-          "y": 0,
-          "z": 0
+        "Waldem.Transform": {
+          "Position": {
+            "x": 4.582192421,
+            "y": 6.4024376869,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 5.9399995804,
+            "y": 5.9399995804,
+            "z": 5.9399995804
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
         },
-        "LocalScale": {
-          "x": 1,
-          "y": 0.9999999404,
-          "z": 0.9999999404
-        },
-        "___RotationQuat": {
-          "x": 0.4993471801,
-          "y": 0,
-          "z": 0,
-          "w": 0.8664019704
+        "Waldem.MeshComponent": {
+          "MeshRef": "Meshes\\Tree\\tmpwgxmq12r.mesh",
+          "MaterialRef": "Meshes\\Tree\\Default"
         }
-      },
-      "Waldem.Light": {
-        "Color": {
-          "x": 1,
-          "y": 1,
-          "z": 0
-        },
-        "Intensity": 53.5999984741,
-        "Radius": 10,
-        "InnerCone": 1,
-        "OuterCone": 45,
-        "Softness": 0.001,
-        "AreaWidth": 1,
-        "AreaHeight": 1,
-        "AreaTwoSided": 0,
-        "Type": "Point"
       }
     }
   },
   {
-    "name": "Sun",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 0,
-        "HierarchyDepth": 0,
-        "HierarchySlot": 1,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": -0.3654464483,
-          "y": 14.514755249,
-          "z": 3.3904013634
+    "scene_id": 1,
+    "parent_scene_id": -1,
+    "entity": {
+      "name": "Floor",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 0,
+          "HierarchyDepth": 0,
+          "HierarchySlot": 0,
+          "VisibleInHierarchy": true
         },
-        "Rotation": {
-          "x": 135.3864440918,
-          "y": 0,
-          "z": 0
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
         },
-        "LocalScale": {
-          "x": 1,
-          "y": 0.9999998808,
-          "z": 0.9999998808
-        },
-        "___RotationQuat": {
-          "x": 0.925164938,
-          "y": 0,
-          "z": 0,
-          "w": 0.3795653284
+        "Waldem.MeshComponent": {
+          "MeshRef": "Meshes\\Floor\\Floor.mesh",
+          "MaterialRef": "Meshes\\Mage\\Default.mat"
         }
-      },
-      "Waldem.Light": {
-        "Color": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "Intensity": 45.7999992371,
-        "Radius": 10,
-        "InnerCone": 1,
-        "OuterCone": 45,
-        "Softness": 0.001,
-        "AreaWidth": 1,
-        "AreaHeight": 1,
-        "AreaTwoSided": 0,
-        "Type": "Directional"
       }
     }
   },
   {
-    "name": "Spotlight",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 0,
-        "HierarchyDepth": 0,
-        "HierarchySlot": 5,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": -4.6247520447,
-          "y": 1.6648552418,
-          "z": -1.569573164
+    "scene_id": 2,
+    "parent_scene_id": -1,
+    "entity": {
+      "name": "Wall",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 0,
+          "HierarchyDepth": 0,
+          "HierarchySlot": 4,
+          "VisibleInHierarchy": true
         },
-        "Rotation": {
-          "x": 0,
-          "y": 184.5182342529,
-          "z": 0
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0.0324416161,
+            "y": 8.6293783188,
+            "z": -12.7202472687
+          },
+          "Rotation": {
+            "x": 74.5144348145,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 0.9999992251,
+            "z": 0.9999992251
+          },
+          "___RotationQuat": {
+            "x": 0.6053946614,
+            "y": 0,
+            "z": 0,
+            "w": 0.7959254384
+          }
         },
-        "LocalScale": {
-          "x": 0.9999998212,
-          "y": 1,
-          "z": 0.9999998212
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0.9992227554,
-          "z": 0,
-          "w": -0.0394190885
+        "Waldem.MeshComponent": {
+          "MeshRef": "Meshes\\Floor\\Floor.mesh",
+          "MaterialRef": "Meshes\\Mage\\Default.mat"
         }
-      },
-      "Waldem.Light": {
-        "Color": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "Intensity": 46.0999984741,
-        "Radius": 26.5,
-        "InnerCone": 1,
-        "OuterCone": 25.5,
-        "Softness": 0.001,
-        "AreaWidth": 1,
-        "AreaHeight": 1,
-        "AreaTwoSided": 0,
-        "Type": "Spot"
       }
     }
   },
   {
-    "name": "Tree",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 0,
-        "HierarchyDepth": 0,
-        "HierarchySlot": 2,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 4.582192421,
-          "y": 6.4024376869,
-          "z": 0
+    "scene_id": 3,
+    "parent_scene_id": -1,
+    "entity": {
+      "name": "TreeLight",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 0,
+          "HierarchyDepth": 0,
+          "HierarchySlot": 3,
+          "VisibleInHierarchy": true
         },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
+        "Waldem.Transform": {
+          "Position": {
+            "x": 3.4516718388,
+            "y": 5.1907410622,
+            "z": 0.0055626631
+          },
+          "Rotation": {
+            "x": -660.0860595703,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 0.9999998808,
+            "z": 0.9999998808
+          },
+          "___RotationQuat": {
+            "x": 0.4993471801,
+            "y": 0,
+            "z": 0,
+            "w": 0.8664019704
+          }
         },
-        "LocalScale": {
-          "x": 5.9399995804,
-          "y": 5.9399995804,
-          "z": 5.9399995804
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
+        "Waldem.Light": {
+          "Color": {
+            "x": 1,
+            "y": 1,
+            "z": 0
+          },
+          "Intensity": 53.5999984741,
+          "Radius": 10,
+          "InnerCone": 1,
+          "OuterCone": 45,
+          "Softness": 0.001,
+          "AreaWidth": 1,
+          "AreaHeight": 1,
+          "AreaTwoSided": 0,
+          "Type": "Point"
         }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Meshes\\Tree\\tmpwgxmq12r.mesh"
       }
     }
   },
   {
-    "name": "Floor",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 0,
-        "HierarchyDepth": 0,
-        "HierarchySlot": 0,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0,
-          "y": 0,
-          "z": 0
+    "scene_id": 4,
+    "parent_scene_id": -1,
+    "entity": {
+      "name": "Sun",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 0,
+          "HierarchyDepth": 0,
+          "HierarchySlot": 1,
+          "VisibleInHierarchy": true
         },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
+        "Waldem.Transform": {
+          "Position": {
+            "x": -0.3654464483,
+            "y": 14.514755249,
+            "z": 3.3904013634
+          },
+          "Rotation": {
+            "x": 135.3864440918,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 0.9999998808,
+            "z": 0.9999998808
+          },
+          "___RotationQuat": {
+            "x": 0.925164938,
+            "y": 0,
+            "z": 0,
+            "w": 0.3795653284
+          }
         },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
+        "Waldem.Light": {
+          "Color": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "Intensity": 45.7999992371,
+          "Radius": 10,
+          "InnerCone": 1,
+          "OuterCone": 45,
+          "Softness": 0.001,
+          "AreaWidth": 1,
+          "AreaHeight": 1,
+          "AreaTwoSided": 0,
+          "Type": "Directional"
         }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Meshes\\Floor\\Floor.mesh"
       }
     }
   },
   {
-    "name": "Wall",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 0,
-        "HierarchyDepth": 0,
-        "HierarchySlot": 4,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 0.0324416161,
-          "y": 8.6293783188,
-          "z": -12.7202472687
+    "scene_id": 5,
+    "parent_scene_id": -1,
+    "entity": {
+      "name": "Spotlight",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 0,
+          "HierarchyDepth": 0,
+          "HierarchySlot": 5,
+          "VisibleInHierarchy": true
         },
-        "Rotation": {
-          "x": 74.5144348145,
-          "y": 0,
-          "z": 0
+        "Waldem.Transform": {
+          "Position": {
+            "x": -4.6247520447,
+            "y": 1.6648552418,
+            "z": -1.569573164
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 184.5182342529,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 0.9999997616,
+            "y": 1,
+            "z": 0.9999997616
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0.9992227554,
+            "z": 0,
+            "w": -0.0394190922
+          }
         },
-        "LocalScale": {
-          "x": 1,
-          "y": 0.9999992847,
-          "z": 0.9999992847
-        },
-        "___RotationQuat": {
-          "x": 0.6053946614,
-          "y": 0,
-          "z": 0,
-          "w": 0.7959254384
+        "Waldem.Light": {
+          "Color": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "Intensity": 46.0999984741,
+          "Radius": 26.5,
+          "InnerCone": 1,
+          "OuterCone": 25.5,
+          "Softness": 0.001,
+          "AreaWidth": 1,
+          "AreaHeight": 1,
+          "AreaTwoSided": 0,
+          "Type": "Spot"
         }
-      },
-      "Waldem.MeshComponent": {
-        "MeshRef": "Meshes\\Floor\\Floor.mesh"
       }
     }
   },
   {
-    "name": "Particles",
-    "components": {
-      "SceneEntity": {
-        "ParentId": 0,
-        "HierarchyDepth": 0,
-        "HierarchySlot": 6,
-        "VisibleInHierarchy": true
-      },
-      "Waldem.Transform": {
-        "Position": {
-          "x": 5.4719882011,
-          "y": 0.8467592001,
-          "z": 1.0215744972
+    "scene_id": 6,
+    "parent_scene_id": -1,
+    "entity": {
+      "name": "Particles",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 0,
+          "HierarchyDepth": 0,
+          "HierarchySlot": 6,
+          "VisibleInHierarchy": true
         },
-        "Rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
+        "Waldem.Transform": {
+          "Position": {
+            "x": 5.4719882011,
+            "y": 0.8467592001,
+            "z": 1.0215744972
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
         },
-        "LocalScale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "___RotationQuat": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "w": 1
+        "Waldem.ParticleSystemComponent": {
+          "Color": {
+            "x": 0,
+            "y": 1,
+            "z": 0,
+            "w": 1
+          },
+          "Size": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "ParticlesAmount": 1000,
+          "Acceleration": {
+            "x": 0,
+            "y": 0.1000000015,
+            "z": 0
+          },
+          "Lifetime": 2
         }
-      },
-      "Waldem.ParticleSystemComponent": {
-        "Color": {
-          "x": 0,
-          "y": 1,
-          "z": 0,
-          "w": 1
-        },
-        "Size": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
-        "ParticlesAmount": 1000,
-        "Acceleration": {
-          "x": 0,
-          "y": 0.1000000015,
-          "z": 0
-        },
-        "Lifetime": 2
       }
     }
   }
