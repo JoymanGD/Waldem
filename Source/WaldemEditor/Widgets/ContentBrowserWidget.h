@@ -705,9 +705,7 @@ namespace Waldem
                 }
 
                 const std::string folderName = entry.path().filename().string() + "/";
-                ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow |
-                                           ImGuiTreeNodeFlags_OpenOnDoubleClick |
-                                           ImGuiTreeNodeFlags_SpanAvailWidth;
+                ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
 
                 if (SelectedFolderTreePath.has_value() && SelectedFolderTreePath.value() == entry.path())
                 {
@@ -775,9 +773,7 @@ namespace Waldem
             RenderFolderTreeNode(path);
 
             // Reset selection if clicking on empty space
-            if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) && 
-                ImGui::IsMouseClicked(ImGuiMouseButton_Left) && 
-                !ImGui::IsAnyItemHovered())
+            if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) && ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !ImGui::IsAnyItemHovered())
             {
                 SelectedFolderTreePath.reset();
                 CurrentPath = CONTENT_PATH;
@@ -931,9 +927,7 @@ namespace Waldem
 
             if (SelectedAssetListPath.has_value() && SelectedAssetListPath.value() == entryPath)
             {
-                drawList->AddRect(
-                    ImGui::GetItemRectMin(), ImGui::GetItemRectMax(),
-                    IM_COL32(255, 255, 0, 255), 4.0f
+                drawList->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), IM_COL32(255, 255, 0, 255), 4.0f
                 );
             }
 
