@@ -10,6 +10,7 @@
 #include "Waldem/Input/InputManager.h"
 #include "Waldem/Input/KeyCodes.h"
 #include "Waldem/Input/MouseButtonCodes.h"
+#include "Waldem/Renderer/Renderer.h"
 #include "Waldem/Renderer/Viewport/Viewport.h"
 #include "Waldem/Renderer/Viewport/ViewportManager.h"
 #include "Commands/EditorCommands.h"
@@ -27,6 +28,7 @@ namespace Waldem
         bool IsVisible = false;
         bool WasUsingGizmo = false;
         ComponentValueBlob GizmoBeforeTransform;
+        int SelectedRenderTarget = 0;
         
     public:
         EditorViewportWidget() {}
@@ -185,6 +187,18 @@ namespace Waldem
             IsVisible = ImGui::Begin(viewport->Name, nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus);
             if (IsVisible)
             {
+                const char* renderTargets[] =
+                {
+                    "Final",
+                    "Normals",
+                    "Reflections",
+                    "WorldPos",
+                    "ORM",
+                    "MeshID",
+                    "Color",
+                    "Radiance"
+                };
+
                 ImGuizmo::SetDrawlist(ImGui::GetCurrentWindow()->DrawList);
                 ImVec2 viewportPos = ImGui::GetCursorScreenPos();
                 ImVec2 viewportSize = ImGui::GetContentRegionAvail();
@@ -203,6 +217,37 @@ namespace Waldem
                 
                 auto renderTarget = viewport->FrameBuffer->GetCurrentRenderTarget();
                 ImGui::Image(renderTarget->GetGPUAddress(), viewportSize);
+
+                const float buttonWidth = 26.0f;
+                const float buttonHeight = 22.0f;
+                const float buttonPadding = 8.0f;
+                ImGui::SetCursorScreenPos(ImVec2(
+                    viewportPos.x + viewportSize.x - buttonWidth - buttonPadding,
+                    viewportPos.y + buttonPadding));
+
+                if(ImGui::Button("...##EditorViewportOptions", ImVec2(buttonWidth, buttonHeight)))
+                {
+                    ImGui::OpenPopup("EditorViewportOptionsPopup");
+                }
+
+                if(ImGui::BeginPopup("EditorViewportOptionsPopup"))
+                {
+                    ImGui::SetNextItemWidth(180.0f);
+                    ImGui::Combo("Render Target", &SelectedRenderTarget, renderTargets, IM_ARRAYSIZE(renderTargets));
+                    ImGui::Separator();
+
+                    auto& toggles = Renderer::RenderData.FeatureToggles;
+                    ImGui::Checkbox("Sky##Editor", &toggles.EnableSkyPass);
+                    ImGui::Checkbox("GBuffer##Editor", &toggles.EnableGBufferPass);
+                    ImGui::Checkbox("Ray Tracing##Editor", &toggles.EnableRayTracingPass);
+                    ImGui::Checkbox("Reflections##Editor", &toggles.EnableReflections);
+                    ImGui::Checkbox("Direct Lighting##Editor", &toggles.EnableDirectLighting);
+                    ImGui::Checkbox("Specular##Editor", &toggles.EnableSpecular);
+                    ImGui::Checkbox("Metallic##Editor", &toggles.EnableMetallic);
+                    ImGui::EndPopup();
+                }
+
+                Renderer::RenderData.EditorViewportOutputTarget = SelectedRenderTarget;
             }
             ImGui::End();
             ImGui::PopStyleVar();

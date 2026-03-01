@@ -9,6 +9,7 @@ namespace Waldem
     struct ScreenQuadRootConstants
     {
         uint TargetRT;
+        uint ViewMode;
     };
     
     class WALDEM_API ScreenQuadSystem : public ICoreSystem
@@ -50,7 +51,61 @@ namespace Waldem
                 
                 if(viewport->TryGetLinkedCamera(linkedCamera))
                 {
-                    RootConstants.TargetRT = viewport->GetGBufferRenderTarget(Deferred)->GetIndex(SRV_CBV);
+                    auto gbuffer = viewport->GetGBuffer();
+                    uint selectedOutputTarget = viewport->Type == EditorViewport
+                        ? Renderer::RenderData.EditorViewportOutputTarget
+                        : Renderer::RenderData.GameViewportOutputTarget;
+
+                    RootConstants.ViewMode = selectedOutputTarget;
+
+                    if(selectedOutputTarget == 1)
+                    {
+                        RootConstants.TargetRT = gbuffer->GetRenderTarget(Normal)->GetIndex(SRV_CBV);
+                    }
+                    else if(selectedOutputTarget == 2)
+                    {
+                        RootConstants.TargetRT = gbuffer->GetRenderTarget(Reflection)->GetIndex(SRV_CBV);
+                    }
+                    else if(selectedOutputTarget == 3)
+                    {
+                        RootConstants.TargetRT = gbuffer->GetRenderTarget(WorldPosition)->GetIndex(SRV_CBV);
+                    }
+                    else if(selectedOutputTarget == 4)
+                    {
+                        RootConstants.TargetRT = gbuffer->GetRenderTarget(ORM)->GetIndex(SRV_CBV);
+                    }
+                    else if(selectedOutputTarget == 5)
+                    {
+                        RootConstants.TargetRT = gbuffer->GetRenderTarget(MeshID)->GetIndex(SRV_CBV);
+                    }
+                    else if(selectedOutputTarget == 6)
+                    {
+                        RootConstants.TargetRT = gbuffer->GetRenderTarget(Color)->GetIndex(SRV_CBV);
+                    }
+                    else if(selectedOutputTarget == 7)
+                    {
+                        RootConstants.TargetRT = gbuffer->GetRenderTarget(Radiance)->GetIndex(SRV_CBV);
+                    }
+                    else if(Renderer::RenderData.FeatureToggles.EnableDeferredPass)
+                    {
+                        RootConstants.TargetRT = gbuffer->GetRenderTarget(Deferred)->GetIndex(SRV_CBV);
+                    }
+                    else if(Renderer::RenderData.FeatureToggles.EnableRayTracingPass)
+                    {
+                        RootConstants.TargetRT = gbuffer->GetRenderTarget(Radiance)->GetIndex(SRV_CBV);
+                    }
+                    else if(Renderer::RenderData.FeatureToggles.EnableGBufferPass)
+                    {
+                        RootConstants.TargetRT = gbuffer->GetRenderTarget(Color)->GetIndex(SRV_CBV);
+                    }
+                    else if(Renderer::RenderData.FeatureToggles.EnableSkyPass)
+                    {
+                        RootConstants.TargetRT = gbuffer->GetRenderTarget(SkyColor)->GetIndex(SRV_CBV);
+                    }
+                    else
+                    {
+                        RootConstants.TargetRT = gbuffer->GetRenderTarget(Deferred)->GetIndex(SRV_CBV);
+                    }
 
                     Renderer::BindRenderTargets(viewport->FrameBuffer->GetCurrentRenderTarget());
                     Renderer::BindDepthStencil(nullptr);

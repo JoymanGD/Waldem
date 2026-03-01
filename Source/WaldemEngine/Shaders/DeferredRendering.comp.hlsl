@@ -6,6 +6,7 @@ cbuffer RootConstants : register(b0)
     uint RadianceRTID;
     uint TargetRTID;
     uint SkyColorRTID;
+    uint EnableSky;
 };
 
 [numthreads(8, 8, 1)]
@@ -30,7 +31,7 @@ void main(uint2 tid : SV_DispatchThreadID)
     }
     else
     {
-        finalColor = skyColor.rgb;
+        finalColor = EnableSky != 0 ? skyColor.rgb : 0.0f;
     }
 
     TargetRT[tid] = float4(finalColor, 1.0f);

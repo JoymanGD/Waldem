@@ -57,6 +57,10 @@ namespace Waldem
         uint IndexBuffer;
         uint DrawCommandsBuffer;
         uint MaterialBuffer;
+        uint EnableReflections;
+        uint EnableDirectLighting;
+        uint EnableSpecular;
+        uint EnableMetallic;
     };
     
     struct DeferredRootConstants
@@ -65,6 +69,7 @@ namespace Waldem
         uint RadianceRT;
         uint DeferredRT;
         uint SkyColorRT;
+        uint EnableSky;
     };
 
     struct SkySceneData
@@ -612,6 +617,11 @@ namespace Waldem
             
             ECS::World.system<Sky>("SkyRenderingSystem").kind<ECS::OnDraw>().each([&](Sky& skybox)
             {
+                if(!Renderer::RenderData.FeatureToggles.EnableSkyPass)
+                {
+                    return;
+                }
+
                 auto viewport = Renderer::GetCurrentViewport();
                 
                 ECS::Entity linkedCamera;
@@ -654,6 +664,11 @@ namespace Waldem
             
             ECS::World.system("GBufferSystem").kind<ECS::OnDraw>().run([&](flecs::iter& it)
             {
+                if(!Renderer::RenderData.FeatureToggles.EnableGBufferPass)
+                {
+                    return;
+                }
+
                 if(BFCIndirectCommands.Num() <= 0 && NCIndirectCommands.Num() <= 0)
                 {
                     return;
@@ -728,6 +743,12 @@ namespace Waldem
                     auto gbuffer = viewport->GetGBuffer();
                     auto radianceRT = gbuffer->GetRenderTarget(Radiance);
 
+                    if(!Renderer::RenderData.FeatureToggles.EnableRayTracingPass)
+                    {
+                        gbuffer->Clear({ Radiance, Reflection });
+                        return;
+                    }
+
                     if(!linkedCamera.is_alive() || !linkedCamera.has<Camera>() || !linkedCamera.has<Transform>())
                     {
                         return;
@@ -755,6 +776,10 @@ namespace Waldem
                     RayTracingRootConstants.IndexBuffer = Renderer::RenderData.IndexBuffer.GetIndex(SRV_CBV);
                     RayTracingRootConstants.DrawCommandsBuffer = DrawCommandsBuffer.GetIndex(SRV_CBV);
                     RayTracingRootConstants.MaterialBuffer = MaterialAttributesBuffer.GetIndex(SRV_CBV);
+                    RayTracingRootConstants.EnableReflections = Renderer::RenderData.FeatureToggles.EnableReflections ? 1 : 0;
+                    RayTracingRootConstants.EnableDirectLighting = Renderer::RenderData.FeatureToggles.EnableDirectLighting ? 1 : 0;
+                    RayTracingRootConstants.EnableSpecular = Renderer::RenderData.FeatureToggles.EnableSpecular ? 1 : 0;
+                    RayTracingRootConstants.EnableMetallic = Renderer::RenderData.FeatureToggles.EnableMetallic ? 1 : 0;
 
                     //dispatching
                     viewport->GetGBuffer()->Barriers({Radiance, Reflection}, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
@@ -777,12 +802,19 @@ namespace Waldem
                     
                     auto deferredRT = viewport->GetGBufferRenderTarget(Deferred);
                     gbuffer->Clear({Deferred});
+
+                    if(!Renderer::RenderData.FeatureToggles.EnableDeferredPass)
+                    {
+                        return;
+                    }
+
                     gbuffer->Barrier(Deferred, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
                     
                     DeferredRootConstants.MeshIDRT = gbuffer->GetRenderTarget(MeshID)->GetIndex(SRV_CBV);
                     DeferredRootConstants.RadianceRT = gbuffer->GetRenderTarget(Radiance)->GetIndex(SRV_CBV);
                     DeferredRootConstants.DeferredRT = deferredRT->GetIndex(UAV);
                     DeferredRootConstants.SkyColorRT = gbuffer->GetRenderTarget(SkyColor)->GetIndex(SRV_CBV);
+                    DeferredRootConstants.EnableSky = Renderer::RenderData.FeatureToggles.EnableSkyPass ? 1 : 0;
                     Renderer::SetPipeline(DeferredRenderingPipeline);
                     Renderer::PushConstants(&DeferredRootConstants, sizeof(DeferredRootConstants));
                     

@@ -33,7 +33,7 @@ float SmithGeometry(float3 normal, float3 viewDirection, float3 lightDirection, 
     return SchlickBeckmannGS(normal, viewDirection, roughnessFactor) * SchlickBeckmannGS(normal, lightDirection, roughnessFactor);
 }
 
-float3 CookTorrenceBRDF(float3 normal, float3 viewDirection, float3 pixelToLightDirection, float3 albedo, float3 reflection, float roughnessFactor, float metallicFactor)
+float3 CookTorrenceBRDF(float3 normal, float3 viewDirection, float3 pixelToLightDirection, float3 albedo, float3 reflection, float roughnessFactor, float metallicFactor, bool enableSpecular, bool enableReflection)
 {
     roughnessFactor = saturate(roughnessFactor);
     metallicFactor = saturate(metallicFactor);
@@ -48,12 +48,23 @@ float3 CookTorrenceBRDF(float3 normal, float3 viewDirection, float3 pixelToLight
     float normalDistribution = NormalDistribution(normal, halfWayVector, roughnessFactor);
     float geometryFunction = SmithGeometry(normal, viewDirection, pixelToLightDirection, roughnessFactor);
 
-    float3 specularBRDF = (normalDistribution * geometryFunction * fresnel) / max(4.0f * saturate(dot(viewDirection, normal)) * saturate(dot(pixelToLightDirection, normal)), MIN_FLOAT_VALUE);
+    float3 baseSpecularBRDF = (normalDistribution * geometryFunction * fresnel) / max(4.0f * saturate(dot(viewDirection, normal)) * saturate(dot(pixelToLightDirection, normal)), MIN_FLOAT_VALUE);
     bool hasReflection = dot(reflection, reflection) > 1e-6f;
     float oneMinusRoughness = saturate(1.0f - roughnessFactor);
     // Single-ray reflections are too sharp on rough surfaces, so fade them out aggressively.
     float reflectionStrength = oneMinusRoughness * oneMinusRoughness;
-    specularBRDF = hasReflection ? lerp(specularBRDF, reflection * fresnel, reflectionStrength) : specularBRDF;
+    float3 reflectionSpecularBRDF = hasReflection ? (reflection * fresnel * reflectionStrength) : 0.0f;
+
+    float3 specularBRDF = 0.0f;
+    if(enableSpecular)
+    {
+        specularBRDF = baseSpecularBRDF;
+    }
+
+    if(enableReflection)
+    {
+        specularBRDF += reflectionSpecularBRDF;
+    }
 
     // Metals have kD as 0.0f, so more metallic a surface is, closes kS ~ 1 and kD ~ 0.
     // Using lambertian model for diffuse light now.
@@ -62,4 +73,9 @@ float3 CookTorrenceBRDF(float3 normal, float3 viewDirection, float3 pixelToLight
     float3 diffuseBRDF = albedo / PI;
 
     return (kD * diffuseBRDF + specularBRDF);
+}
+
+float3 CookTorrenceBRDF(float3 normal, float3 viewDirection, float3 pixelToLightDirection, float3 albedo, float3 reflection, float roughnessFactor, float metallicFactor)
+{
+    return CookTorrenceBRDF(normal, viewDirection, pixelToLightDirection, albedo, reflection, roughnessFactor, metallicFactor, true, true);
 }

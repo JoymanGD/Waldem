@@ -47,6 +47,10 @@ cbuffer RootConstants : register(b0)
     uint IndexBufferId;
     uint DrawCommandsBufferId;
     uint MaterialBufferId;
+    uint EnableReflections;
+    uint EnableDirectLighting;
+    uint EnableSpecular;
+    uint EnableMetallic;
 };
 
 SamplerState myStaticSampler : register(s0);
@@ -60,6 +64,13 @@ float smoothstep(float edge0, float edge1, float x)
 float3 GetRadiance(Payload payload, float3 worldPosition, float3 normal, float4 albedo, float4 orm, float4 reflection, RayTracingSceneData sceneData, float3 rayOrigin, float3 viewDirection)
 {
     float3 radiance = 0.0f;
+    float4 shadingORM = orm;
+
+    if(EnableMetallic == 0)
+    {
+        shadingORM.b = 0.0f;
+    }
+
     float3 finalColor = albedo.rgb * AMBIENT;
     
     StructuredBuffer<Light> Lights = ResourceDescriptorHeap[LightsBufferID];
@@ -68,105 +79,108 @@ float3 GetRadiance(Payload payload, float3 worldPosition, float3 normal, float4 
     RaytracingAccelerationStructure TLAS = ResourceDescriptorHeap[TLASID];
     
     //shadow ray
-    for (int i = 0; i < sceneData.NumLights; i++)
+    if(EnableDirectLighting != 0)
     {
-        radiance = 0.0f;
-        payload.Missed = false;
-        int lightIndex = LightIndices[i];
-        Light light = Lights[lightIndex];
-        matrix lightTransform = LightTransforms[lightIndex];
-        float3 lightDirection;
-
-        //fix for zero color
-        if(length(light.Color) == 0.0f)
+        for (int i = 0; i < sceneData.NumLights; i++)
         {
-            light.Color = float3(0.001f, 0.001f, 0.001f);
-        }
-        
-        if(light.Type == 0) //Directional
-        {
-            lightDirection = -GetForwardVector(lightTransform);
-            
-            float3 diffuse = GetDiffuseColor(lightDirection, normal, albedo, orm, reflection, viewDirection);
-            
-            float NdotL = saturate(dot(normal, lightDirection));
-            
-            RayDesc ray;
-            ray.Origin = rayOrigin;
-            ray.Direction = lightDirection;
-            ray.TMin = TMIN;
-            ray.TMax = TMAX;
-            
-            TraceRay(TLAS, 0, 0xFF, 0, 1, 0, ray, payload);
+            radiance = 0.0f;
+            payload.Missed = false;
+            int lightIndex = LightIndices[i];
+            Light light = Lights[lightIndex];
+            matrix lightTransform = LightTransforms[lightIndex];
+            float3 lightDirection;
 
-            if(payload.Missed || !payload.CastShadows)
+            //fix for zero color
+            if(length(light.Color) == 0.0f)
             {
-                radiance = normalize(light.Color) * light.Intensity / DIR_LIGHT_INTENSITY_RATIO * NdotL;
+                light.Color = float3(0.001f, 0.001f, 0.001f);
             }
-
-            finalColor += diffuse * radiance;
-        }
-        else if(light.Type == 1) //Point
-        {
-            float3 lightPosition = transpose(lightTransform)[3].xyz;
-            lightDirection = lightPosition - worldPosition;
-            float distance = length(lightDirection);
-            lightDirection /= distance; //Normalize
-            
-            if(distance <= light.Radius)
+        
+            if(light.Type == 0) //Directional
             {
-                float3 diffuse = GetDiffuseColor(lightDirection, normal, albedo, orm, reflection, viewDirection);
-                
+                lightDirection = -GetForwardVector(lightTransform);
+            
+                float3 diffuse = GetDiffuseColor(lightDirection, normal, albedo, shadingORM, reflection, viewDirection, EnableSpecular != 0, EnableReflections != 0);
+            
                 float NdotL = saturate(dot(normal, lightDirection));
-                
+            
                 RayDesc ray;
                 ray.Origin = rayOrigin;
                 ray.Direction = lightDirection;
                 ray.TMin = TMIN;
-                ray.TMax = min(distance, light.Radius);
-
+                ray.TMax = TMAX;
+            
                 TraceRay(TLAS, 0, 0xFF, 0, 1, 0, ray, payload);
 
                 if(payload.Missed || !payload.CastShadows)
                 {
-                    float attenuation = 1.0 / (A0 + A1 * distance + A2 * distance * distance);
-                    attenuation *= smoothstep(light.Radius, 0.0, distance);
-                    radiance = normalize(light.Color) * light.Intensity * attenuation * NdotL;
-                    finalColor += diffuse * radiance;
+                    radiance = normalize(light.Color) * light.Intensity / DIR_LIGHT_INTENSITY_RATIO * NdotL;
+                }
+
+                finalColor += diffuse * radiance;
+            }
+            else if(light.Type == 1) //Point
+            {
+                float3 lightPosition = transpose(lightTransform)[3].xyz;
+                lightDirection = lightPosition - worldPosition;
+                float distance = length(lightDirection);
+                lightDirection /= distance; //Normalize
+            
+                if(distance <= light.Radius)
+                {
+                    float3 diffuse = GetDiffuseColor(lightDirection, normal, albedo, shadingORM, reflection, viewDirection, EnableSpecular != 0, EnableReflections != 0);
+                
+                    float NdotL = saturate(dot(normal, lightDirection));
+                
+                    RayDesc ray;
+                    ray.Origin = rayOrigin;
+                    ray.Direction = lightDirection;
+                    ray.TMin = TMIN;
+                    ray.TMax = min(distance, light.Radius);
+
+                    TraceRay(TLAS, 0, 0xFF, 0, 1, 0, ray, payload);
+
+                    if(payload.Missed || !payload.CastShadows)
+                    {
+                        float attenuation = 1.0 / (A0 + A1 * distance + A2 * distance * distance);
+                        attenuation *= smoothstep(light.Radius, 0.0, distance);
+                        radiance = normalize(light.Color) * light.Intensity * attenuation * NdotL;
+                        finalColor += diffuse * radiance;
+                    }
                 }
             }
-        }
-        else if(light.Type == 2) //Spot
-        {
-            float3 lightPosition = transpose(lightTransform)[3].xyz;
-            lightDirection = lightPosition - worldPosition;
-            float3 spotLightForward = GetForwardVector(lightTransform);
-            float distance = length(lightDirection);
-            lightDirection /= distance; //Normalize
-
-            if(distance <= light.Radius)
+            else if(light.Type == 2) //Spot
             {
-                float3 diffuse = GetDiffuseColor(lightDirection, normal, albedo, orm, reflection, viewDirection);
-                
-                float NdotL = saturate(dot(normal, lightDirection));
-                
-                RayDesc ray;
-                ray.Origin = rayOrigin;
-                ray.Direction = lightDirection;
-                ray.TMin = TMIN;
-                ray.TMax = min(distance, light.Radius);
+                float3 lightPosition = transpose(lightTransform)[3].xyz;
+                lightDirection = lightPosition - worldPosition;
+                float3 spotLightForward = GetForwardVector(lightTransform);
+                float distance = length(lightDirection);
+                lightDirection /= distance; //Normalize
 
-                TraceRay(TLAS, 0, 0xFF, 0, 1, 0, ray, payload);
-
-                if(payload.Missed || !payload.CastShadows)
+                if(distance <= light.Radius)
                 {
-                    float spotDot = dot(lightDirection, normalize(-spotLightForward));
-                    float spotFalloff = smoothstep(cos(radians(light.OuterCone)), cos(radians(light.InnerCone)), spotDot);
-                    spotFalloff = pow(spotFalloff, light.Softness);
-                    float attenuation = 1.0 / (A0 + A1 * distance + A2 * distance * distance);
-                    attenuation *= smoothstep(light.Radius, 0.0, distance);
-                    radiance = normalize(light.Color) * light.Intensity * attenuation * spotFalloff * NdotL;
-                    finalColor += diffuse * radiance;
+                    float3 diffuse = GetDiffuseColor(lightDirection, normal, albedo, shadingORM, reflection, viewDirection, EnableSpecular != 0, EnableReflections != 0);
+                
+                    float NdotL = saturate(dot(normal, lightDirection));
+                
+                    RayDesc ray;
+                    ray.Origin = rayOrigin;
+                    ray.Direction = lightDirection;
+                    ray.TMin = TMIN;
+                    ray.TMax = min(distance, light.Radius);
+
+                    TraceRay(TLAS, 0, 0xFF, 0, 1, 0, ray, payload);
+
+                    if(payload.Missed || !payload.CastShadows)
+                    {
+                        float spotDot = dot(lightDirection, normalize(-spotLightForward));
+                        float spotFalloff = smoothstep(cos(radians(light.OuterCone)), cos(radians(light.InnerCone)), spotDot);
+                        spotFalloff = pow(spotFalloff, light.Softness);
+                        float attenuation = 1.0 / (A0 + A1 * distance + A2 * distance * distance);
+                        attenuation *= smoothstep(light.Radius, 0.0, distance);
+                        radiance = normalize(light.Color) * light.Intensity * attenuation * spotFalloff * NdotL;
+                        finalColor += diffuse * radiance;
+                    }
                 }
             }
         }
@@ -213,7 +227,7 @@ void RayGenShader()
     float4 reflectionColor = 0.0f;
 
     // One-ray reflections on rough surfaces become fireflies, so disable at very high roughness.
-    if (roughness < 0.95f)
+    if (EnableReflections != 0 && roughness < 0.95f)
     {
         TraceRay(TLAS, 0, 0xFF, 0, 1, 0, ray, payload);
 

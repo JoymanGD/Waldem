@@ -9,6 +9,13 @@ float3 GetDiffuseColor(float3 lightDir, float3 normal, float4 albedo, float4 orm
     return diffuse;
 }
 
+float3 GetDiffuseColor(float3 lightDir, float3 normal, float4 albedo, float4 orm, float4 reflection, float3 viewDirection, bool enableSpecular, bool enableReflection)
+{
+    float3 diffuse = CookTorrenceBRDF(normal, viewDirection, lightDir, albedo.rgb, reflection.rgb, orm.g, orm.b, enableSpecular, enableReflection);
+
+    return diffuse;
+}
+
 float3 GetNormal(float3 normal, float3 tangent, float3 bitangent, float4 normalMap)
 {
     float3x3 TBN = float3x3(tangent, bitangent, normal);
