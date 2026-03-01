@@ -327,17 +327,17 @@ namespace Waldem
                         const ImVec2 rowStartScreenPos = ImGui::GetCursorScreenPos();
                         ImGui::SetCursorScreenPos(ImVec2(rowStartScreenPos.x - hierarchyFoldAreaWidth - 4.0f, rowStartScreenPos.y));
                         ImGui::PushID((int)entityId);
-                        if (ImGui::InvisibleButton("##ExpandCollapse", ImVec2(hierarchyFoldAreaWidth, ImGui::GetFrameHeight())))
+                        const float rowTextHeight = ImGui::GetTextLineHeight();
+                        if (ImGui::InvisibleButton("##ExpandCollapse", ImVec2(hierarchyFoldAreaWidth, rowTextHeight)))
                         {
                             isExpanded = !isExpanded;
                         }
                         const ImVec2 foldMin = ImGui::GetItemRectMin();
-                        const ImVec2 foldMax = ImGui::GetItemRectMax();
                         const float arrowScale = 0.70f;
                         const float arrowSize = ImGui::GetFontSize() * arrowScale;
                         const ImVec2 arrowPos(
                             foldMin.x + (hierarchyFoldAreaWidth - arrowSize) * 0.5f,
-                            foldMin.y + (ImGui::GetFrameHeight() - arrowSize) * 0.5f
+                            rowStartScreenPos.y + (rowTextHeight - arrowSize) * 0.5f
                         );
                         ImGui::RenderArrow(
                             ImGui::GetWindowDrawList(),
