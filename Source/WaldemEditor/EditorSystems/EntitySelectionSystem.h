@@ -38,7 +38,7 @@ namespace Waldem
             EntitySelectionComputeShader = Renderer::LoadComputeShader("EntitySelection");
             EntitySelectionPipeline = Renderer::CreateComputePipeline("EntitySelectionPipeline", EntitySelectionComputeShader);
 
-            ECS::World.system("EntitySelectionSystem").kind<ECS::OnDraw>().run([&](flecs::iter& it)
+            ECS::World.system("EntitySelectionSystem").kind<ECS::OnDraw>().run([&](ECS::Iter& it)
             {
                 auto viewport = Renderer::GetCurrentViewport();
 

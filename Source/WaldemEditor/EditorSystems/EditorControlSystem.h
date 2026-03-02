@@ -117,7 +117,7 @@ namespace Waldem
 
         void UpdateLastMousePosition()
         {
-            ECS::World.system("UpdateLastMousePositionSystem").kind(flecs::OnUpdate).each([&]
+            ECS::World.system("UpdateLastMousePositionSystem").kind(ECS::OnUpdate).each([&]
             {
                 LastMousePos.x = MousePos.x;
                 LastMousePos.y = MousePos.y;
@@ -126,7 +126,7 @@ namespace Waldem
         
         void UpdateLightControl()
         {
-            ECS::World.system<Light, Transform>("UpdateLightControlSystem").kind(flecs::OnUpdate).each([&](flecs::entity entity, Light& light, Transform& transform)
+            ECS::World.system<Light, Transform>("UpdateLightControlSystem").kind(ECS::OnUpdate).each([&](ECS::Entity entity, Light& light, Transform& transform)
             {
                 if (IsRotatingLight)
                 {
@@ -174,7 +174,7 @@ namespace Waldem
         
         void UpdateCameraControl()
         {
-            ECS::World.system("UpdateCameraControlSystem").kind(flecs::OnUpdate).each([&]
+            ECS::World.system("UpdateCameraControlSystem").kind(ECS::OnUpdate).each([&]
             {
                 ECS::Entity linkedCamera;
                 if(ViewportManager::GetEditorViewport()->TryGetLinkedCamera(linkedCamera))
@@ -201,7 +201,7 @@ namespace Waldem
                 }
             });
 
-            ECS::World.system("UpdateCameraSpeedControlSystem").kind(flecs::OnUpdate).each([&]
+            ECS::World.system("UpdateCameraSpeedControlSystem").kind(ECS::OnUpdate).each([&]
             {
                 ECS::Entity linkedCamera;
                 if(ViewportManager::GetEditorViewport()->TryGetLinkedCamera(linkedCamera))

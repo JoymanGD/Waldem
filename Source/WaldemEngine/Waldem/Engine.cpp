@@ -157,7 +157,7 @@ namespace Waldem
 	bool Engine::OnWindowClose(WindowCloseEvent& e)
 	{
 		IsRunning = false;
-		ECS::World.release();
+		ECS::Shutdown();
 		return true;
 	}
 

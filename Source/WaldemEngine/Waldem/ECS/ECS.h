@@ -1,6 +1,6 @@
 #pragma once
 
-#include "flecs.h"
+#include "../../../../Vendor/flecs/include/flecs.h"
 #include "Components/SceneEntity.h"
 #include "Systems/CoreSystem.h"
 #include "Waldem/Types/FreeList.h"
@@ -18,7 +18,16 @@ namespace Waldem
         using Entity = flecs::entity;
         using EntityT = flecs::entity_t;
         using Id = flecs::id;
+        using IdT = flecs::id_t;
+        using Iter = flecs::iter;
+        using TypeSerializer = flecs::TypeSerializer;
+        using MetaOp = flecs::meta::op_t;
         using ComponentRegisterFn = void(*)(flecs::world&);
+
+        inline const EntityT OnAdd = flecs::OnAdd;
+        inline const EntityT OnSet = flecs::OnSet;
+        inline const EntityT OnRemove = flecs::OnRemove;
+        inline const EntityT OnUpdate = flecs::OnUpdate;
         
         extern WALDEM_API flecs::world World;
         extern WALDEM_API EntityT UpdatePipeline;
@@ -49,6 +58,26 @@ namespace Waldem
         }
         
         inline int GetEntitiesCount() { return World.query<SceneEntity>().count(); }
+
+        inline const ecs_type_info_t* GetTypeInfo(IdT componentId)
+        {
+            return ecs_get_type_info(World.c_ptr(), componentId);
+        }
+
+        inline void* ValueNew(IdT componentId)
+        {
+            return ecs_value_new(World.c_ptr(), componentId);
+        }
+
+        inline void ValueCopy(IdT componentId, void* dst, const void* src)
+        {
+            ecs_value_copy(World.c_ptr(), componentId, dst, src);
+        }
+
+        inline void ValueFree(IdT componentId, void* data)
+        {
+            ecs_value_free(World.c_ptr(), componentId, data);
+        }
         
         Entity WALDEM_API CreateEntity(const WString& name = "", bool enabled = true);
         Entity WALDEM_API CreateSceneEntity(const WString& name, bool enabled = true, bool visibleInHierarchy = true);
@@ -57,6 +86,7 @@ namespace Waldem
         void WALDEM_API ClearParent(Entity child, bool keepWorldTransform = true);
         Entity WALDEM_API GetParent(Entity child);
         void WALDEM_API RebuildParentRelations();
+        void WALDEM_API Shutdown();
 
         class Core
         {

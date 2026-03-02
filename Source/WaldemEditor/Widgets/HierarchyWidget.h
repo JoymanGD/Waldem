@@ -30,13 +30,13 @@ namespace Waldem
         bool RenameSelectedEntity = false;
         ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
         WMap<float, ECS::Entity> HierarchyEntries;
-        std::unordered_map<flecs::entity_t, bool> ExpandedByEntity;
-        flecs::entity_t SelectionAnchorEntity = 0;
+        std::unordered_map<ECS::EntityT, bool> ExpandedByEntity;
+        ECS::EntityT SelectionAnchorEntity = 0;
 
-        std::vector<flecs::entity_t> GetSelectedEntityIds() const
+        std::vector<ECS::EntityT> GetSelectedEntityIds() const
         {
-            std::vector<flecs::entity_t> selectedIds;
-            ECS::World.query<Selected>().each([&](flecs::entity selectedEntity, Selected)
+            std::vector<ECS::EntityT> selectedIds;
+            ECS::World.query<Selected>().each([&](ECS::Entity selectedEntity, Selected)
             {
                 selectedIds.push_back(selectedEntity.id());
             });
@@ -44,7 +44,7 @@ namespace Waldem
             return selectedIds;
         }
 
-        void SelectEntity(flecs::entity& entity)
+        void SelectEntity(ECS::Entity& entity)
         {
             DeselectAllEntities();
 
@@ -55,7 +55,7 @@ namespace Waldem
         void DeselectAllEntities()
         {
             ECS::World.defer_begin();
-            ECS::World.query<Selected>().each([&](flecs::entity selectedEntity, Selected)
+            ECS::World.query<Selected>().each([&](ECS::Entity selectedEntity, Selected)
             {
                 selectedEntity.remove<Selected>();
             });
@@ -88,8 +88,8 @@ namespace Waldem
                 return EditorShortcuts::GetShortcut(EditorShortcutAction::DuplicateEntity);
             }, [&]
             {
-                WArray<flecs::entity> selectedEntities;
-                ECS::World.query<Selected>().each([&](flecs::entity selectedEntity, Selected)
+                WArray<ECS::Entity> selectedEntities;
+                ECS::World.query<Selected>().each([&](ECS::Entity selectedEntity, Selected)
                 {
                     selectedEntities.Add(selectedEntity);
                 });
@@ -122,7 +122,7 @@ namespace Waldem
                 EditorCommandHistory::Get().Redo();
             });
             
-            ECS::World.observer<SceneEntity>("HierarchyWidgetSortSystemOnAdd").event(flecs::OnSet).each([&](flecs::entity entity, SceneEntity& sceneEntity)
+            ECS::World.observer<SceneEntity>("HierarchyWidgetSortSystemOnAdd").event(ECS::OnSet).each([&](ECS::Entity entity, SceneEntity& sceneEntity)
             {
                 if(!HierarchyEntries.Contains(sceneEntity.HierarchySlot))
                 {
@@ -130,7 +130,7 @@ namespace Waldem
                 }
             });
             
-            ECS::World.observer<SceneEntity>("HierarchyWidgetSortSystemOnRemove").event(flecs::OnRemove).each([&](flecs::entity entity, SceneEntity& sceneEntity)
+            ECS::World.observer<SceneEntity>("HierarchyWidgetSortSystemOnRemove").event(ECS::OnRemove).each([&](ECS::Entity entity, SceneEntity& sceneEntity)
             {
                 HierarchyEntries.Remove(sceneEntity.HierarchySlot);
             });
@@ -155,11 +155,11 @@ namespace Waldem
 
                 ImGui::Separator();
 
-                std::unordered_map<flecs::entity_t, ECS::Entity> entitiesById;
-                std::unordered_map<flecs::entity_t, flecs::entity_t> parentByEntity;
-                std::unordered_map<flecs::entity_t, float> slotByEntity;
-                std::unordered_map<flecs::entity_t, std::vector<flecs::entity_t>> childrenByParent;
-                std::vector<flecs::entity_t> roots;
+                std::unordered_map<ECS::EntityT, ECS::Entity> entitiesById;
+                std::unordered_map<ECS::EntityT, ECS::EntityT> parentByEntity;
+                std::unordered_map<ECS::EntityT, float> slotByEntity;
+                std::unordered_map<ECS::EntityT, std::vector<ECS::EntityT>> childrenByParent;
+                std::vector<ECS::EntityT> roots;
 
                 for (int i = 0; i < HierarchyEntries.Num(); ++i)
                 {
@@ -203,9 +203,9 @@ namespace Waldem
                     }
                 }
 
-                auto sortByHierarchySlot = [&](std::vector<flecs::entity_t>& ids)
+                auto sortByHierarchySlot = [&](std::vector<ECS::EntityT>& ids)
                 {
-                    std::sort(ids.begin(), ids.end(), [&](flecs::entity_t lhs, flecs::entity_t rhs)
+                    std::sort(ids.begin(), ids.end(), [&](ECS::EntityT lhs, ECS::EntityT rhs)
                     {
                         return slotByEntity[lhs] < slotByEntity[rhs];
                     });
@@ -263,10 +263,10 @@ namespace Waldem
                     }
                 };
 
-                std::function<void(flecs::entity_t, int)> drawEntityRecursive;
-                std::vector<flecs::entity_t> visibleHierarchyOrder;
-                std::function<void(flecs::entity_t)> buildVisibleOrder;
-                buildVisibleOrder = [&](flecs::entity_t entityId)
+                std::function<void(ECS::EntityT, int)> drawEntityRecursive;
+                std::vector<ECS::EntityT> visibleHierarchyOrder;
+                std::function<void(ECS::EntityT)> buildVisibleOrder;
+                buildVisibleOrder = [&](ECS::EntityT entityId)
                 {
                     visibleHierarchyOrder.push_back(entityId);
 
@@ -295,7 +295,7 @@ namespace Waldem
                     buildVisibleOrder(rootId);
                 }
 
-                drawEntityRecursive = [&](flecs::entity_t entityId, int depth)
+                drawEntityRecursive = [&](ECS::EntityT entityId, int depth)
                 {
                     auto entityIt = entitiesById.find(entityId);
                     if(entityIt == entitiesById.end())
@@ -442,7 +442,7 @@ namespace Waldem
                         const auto draggedEntityId = entity.id();
                         ImGui::SetDragDropPayload(HierarchyDragPayloadType, &draggedEntityId, sizeof(draggedEntityId));
 
-                        std::vector<flecs::entity_t> draggedSelectionIds;
+                        std::vector<ECS::EntityT> draggedSelectionIds;
                         if(entity.has<Selected>())
                         {
                             draggedSelectionIds = GetSelectedEntityIds();
@@ -467,12 +467,12 @@ namespace Waldem
                     {
                         if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(HierarchyDragPayloadType))
                         {
-                            auto draggedEntityId = *(const flecs::entity_t*)payload->Data;
+                            auto draggedEntityId = *(const ECS::EntityT*)payload->Data;
                             auto draggedEntity = ECS::World.entity(draggedEntityId);
 
                             if (draggedEntity.is_alive() && draggedEntityId != entity.id())
                             {
-                                std::vector<flecs::entity_t> entitiesToReparent;
+                                std::vector<ECS::EntityT> entitiesToReparent;
                                 if(draggedEntity.has<Selected>())
                                 {
                                     entitiesToReparent = GetSelectedEntityIds();
@@ -488,11 +488,33 @@ namespace Waldem
                                     {
                                         continue;
                                     }
+                                }
+
+                                std::vector<ECS::EntityT> validEntitiesToReparent;
+                                validEntitiesToReparent.reserve(entitiesToReparent.size());
+                                for (auto reparentEntityId : entitiesToReparent)
+                                {
+                                    if(reparentEntityId == entity.id())
+                                    {
+                                        continue;
+                                    }
 
                                     auto reparentEntity = ECS::World.entity(reparentEntityId);
                                     if(reparentEntity.is_alive())
                                     {
-                                        ECS::SetParent(reparentEntity, entity, true);
+                                        validEntitiesToReparent.push_back(reparentEntityId);
+                                    }
+                                }
+
+                                if(!validEntitiesToReparent.empty())
+                                {
+                                    if(validEntitiesToReparent.size() == 1)
+                                    {
+                                        EditorCommandHistory::Get().Execute(std::make_unique<SetParentCommand>(validEntitiesToReparent[0], entity.id(), true));
+                                    }
+                                    else
+                                    {
+                                        EditorCommandHistory::Get().Execute(std::make_unique<SetParentsBatchCommand>(validEntitiesToReparent, entity.id(), true));
                                     }
                                 }
                             }
@@ -538,12 +560,12 @@ namespace Waldem
                 {
                     if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(HierarchyDragPayloadType))
                     {
-                        auto draggedEntityId = *(const flecs::entity_t*)payload->Data;
+                        auto draggedEntityId = *(const ECS::EntityT*)payload->Data;
                         auto draggedEntity = ECS::World.entity(draggedEntityId);
 
                         if (draggedEntity.is_alive())
                         {
-                            std::vector<flecs::entity_t> entitiesToUnparent;
+                            std::vector<ECS::EntityT> entitiesToUnparent;
                             if(draggedEntity.has<Selected>())
                             {
                                 entitiesToUnparent = GetSelectedEntityIds();
@@ -553,12 +575,26 @@ namespace Waldem
                                 entitiesToUnparent.push_back(draggedEntityId);
                             }
 
+                            std::vector<ECS::EntityT> validEntitiesToUnparent;
+                            validEntitiesToUnparent.reserve(entitiesToUnparent.size());
                             for (auto unparentEntityId : entitiesToUnparent)
                             {
                                 auto unparentEntity = ECS::World.entity(unparentEntityId);
                                 if(unparentEntity.is_alive())
                                 {
-                                    ECS::ClearParent(unparentEntity, true);
+                                    validEntitiesToUnparent.push_back(unparentEntityId);
+                                }
+                            }
+
+                            if(!validEntitiesToUnparent.empty())
+                            {
+                                if(validEntitiesToUnparent.size() == 1)
+                                {
+                                    EditorCommandHistory::Get().Execute(std::make_unique<SetParentCommand>(validEntitiesToUnparent[0], 0, true));
+                                }
+                                else
+                                {
+                                    EditorCommandHistory::Get().Execute(std::make_unique<SetParentsBatchCommand>(validEntitiesToUnparent, 0, true));
                                 }
                             }
                         }
@@ -578,8 +614,8 @@ namespace Waldem
 
             if(DeleteSelectedEntity)
             {
-                WArray<flecs::entity> selectedEntities;
-                ECS::World.query<Selected>().each([&](flecs::entity selectedEntity, Selected)
+                WArray<ECS::Entity> selectedEntities;
+                ECS::World.query<Selected>().each([&](ECS::Entity selectedEntity, Selected)
                 {
                     selectedEntities.Add(selectedEntity);
                 });

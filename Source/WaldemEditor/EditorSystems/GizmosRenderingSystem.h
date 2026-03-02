@@ -152,42 +152,42 @@ namespace Waldem
             MaterialBuffer.UpdateOrAdd(MaterialAttributes.GetData(), MaterialAttributes.GetSize(), 0);
 
             // ECS observers
-            ECS::World.observer<Camera, Transform>().without<EditorComponent>().event(flecs::OnAdd).each([&](flecs::entity e, Camera&, Transform& t)
+            ECS::World.observer<Camera, Transform>().without<EditorComponent>().event(ECS::OnAdd).each([&](ECS::Entity e, Camera&, Transform& t)
             {
                 AddIcon(e, t, GizmoCamera);
             });
 
-            ECS::World.observer<Light, Transform>().event(flecs::OnAdd).each([&](flecs::entity e, Light&, Transform& t)
+            ECS::World.observer<Light, Transform>().event(ECS::OnAdd).each([&](ECS::Entity e, Light&, Transform& t)
             {
                 AddIcon(e, t, GizmoSun);
             });
 
-            ECS::World.observer<ParticleSystemComponent, Transform>().event(flecs::OnAdd).each([&](flecs::entity e, ParticleSystemComponent&, Transform& t)
+            ECS::World.observer<ParticleSystemComponent, Transform>().event(ECS::OnAdd).each([&](ECS::Entity e, ParticleSystemComponent&, Transform& t)
             {
                 AddIcon(e, t, GizmoParticleSystem);
             });
 
-            ECS::World.observer<Light>().event(flecs::OnSet).each([&](flecs::entity e, Light& light)
+            ECS::World.observer<Light>().event(ECS::OnSet).each([&](ECS::Entity e, Light& light)
             {
                 ChangeLightIcon(e, light);
             });
 
-            ECS::World.observer<Camera>().without<EditorComponent>().event(flecs::OnRemove).each([&](flecs::entity e, Camera&)
+            ECS::World.observer<Camera>().without<EditorComponent>().event(ECS::OnRemove).each([&](ECS::Entity e, Camera&)
             {
                 RemoveIcon(e);
             });
 
-            ECS::World.observer<Light>().event(flecs::OnRemove).each([&](flecs::entity e, Light&)
+            ECS::World.observer<Light>().event(ECS::OnRemove).each([&](ECS::Entity e, Light&)
             {
                 RemoveIcon(e);
             });
 
-            ECS::World.observer<ParticleSystemComponent>().event(flecs::OnRemove).each([&](flecs::entity e, ParticleSystemComponent&)
+            ECS::World.observer<ParticleSystemComponent>().event(ECS::OnRemove).each([&](ECS::Entity e, ParticleSystemComponent&)
             {
                 RemoveIcon(e);
             });
 
-            ECS::World.observer<Transform>().event(flecs::OnSet).each([&](flecs::entity e, Transform& t)
+            ECS::World.observer<Transform>().event(ECS::OnSet).each([&](ECS::Entity e, Transform& t)
             {
                 int drawId;
                 if (IdManager::GetId(e, GizmoDrawIdType, drawId))
@@ -196,13 +196,13 @@ namespace Waldem
                 }
             });
 
-            ECS::World.system("GizmoDrawSystem").kind<ECS::OnDraw>().run([&](flecs::iter& it)
+            ECS::World.system("GizmoDrawSystem").kind<ECS::OnDraw>().run([&](ECS::Iter& it)
             {
                 DrawIcons();
             });
         }
 
-        void AddIcon(flecs::entity e, Transform& t, GizmoType type)
+        void AddIcon(ECS::Entity e, Transform& t, GizmoType type)
         {
             int gizmoId = IdManager::AddId(e, GizmoDrawIdType);
 
@@ -222,7 +222,7 @@ namespace Waldem
             IndirectBuffer.UpdateOrAdd(&cmd, sizeof(IndirectIndexedCommand), gizmoId * sizeof(IndirectIndexedCommand));
         }
 
-        void ChangeLightIcon(flecs::entity e, Light& light)
+        void ChangeLightIcon(ECS::Entity e, Light& light)
         {
             int lightEntityId;
             if (IdManager::GetId(e, GizmoDrawIdType, lightEntityId))
@@ -252,7 +252,7 @@ namespace Waldem
             }
         }
 
-        void RemoveIcon(flecs::entity e)
+        void RemoveIcon(ECS::Entity e)
         {
             int gizmoId;
             if (IdManager::GetId(e, GizmoDrawIdType, gizmoId))

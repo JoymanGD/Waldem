@@ -20,7 +20,7 @@ namespace Waldem
     private:
         ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
 
-        void PushComponentStateCommand(flecs::entity entity, flecs::id id, const ComponentValueBlob& before, const void* afterPtr, bool allowMerge = true)
+        void PushComponentStateCommand(ECS::Entity entity, ECS::Id id, const ComponentValueBlob& before, const void* afterPtr, bool allowMerge = true)
         {
             ComponentValueBlob after(id.raw_id(), afterPtr);
             if(!before.IsValid() || !after.IsValid())
@@ -95,11 +95,11 @@ namespace Waldem
             ImGui::End();
         }
 
-        void DrawComponentFields(flecs::entity entity, flecs::id id, void* base, flecs::meta::op_t* ops, int32_t op_count, const std::string& prefix = "")
+        void DrawComponentFields(ECS::Entity entity, ECS::Id id, void* base, ECS::MetaOp* ops, int32_t op_count, const std::string& prefix = "")
         {
             for (int i = 0; i < op_count; i++)
             {
-                flecs::meta::op_t* op = &ops[i];
+                ECS::MetaOp* op = &ops[i];
                 void* ptr = ECS_OFFSET(base, op->offset);
 
                 if (!op->name || strncmp(op->name, "___", 3) == 0)
@@ -122,7 +122,7 @@ namespace Waldem
                         ImGui::BeginGroup();
                     }
 
-                    flecs::meta::op_t* inner_ops = op + 1;
+                    ECS::MetaOp* inner_ops = op + 1;
                     int inner_count = op->op_count - 2;
 
                     int drawn = 0;
@@ -452,15 +452,15 @@ namespace Waldem
             }
         }
 
-        void DrawComponents(flecs::entity& entity)
+        void DrawComponents(ECS::Entity& entity)
         {
-            std::vector<flecs::id> componentIds;
-            entity.each([&](flecs::id id)
+            std::vector<ECS::Id> componentIds;
+            entity.each([&](ECS::Id id)
             {
                 if (!id.is_entity())
                     return;
 
-                flecs::entity comp = id.entity();
+                ECS::Entity comp = id.entity();
 
                 if (comp == ECS::World.id<SceneEntity>())
                     return;
@@ -478,7 +478,7 @@ namespace Waldem
                     continue;
                 }
 
-                flecs::entity comp = id.entity();
+                ECS::Entity comp = id.entity();
 
                 void* ptr = entity.get_mut(id);
                 if (!ptr)
@@ -512,10 +512,10 @@ namespace Waldem
                     ImGui::Separator();
 
                     // === New Flecs Reflection Handling ===
-                    if (comp.has<flecs::TypeSerializer>())
+                    if (comp.has<ECS::TypeSerializer>())
                     {
-                        const auto& ts = comp.get<flecs::TypeSerializer>();
-                        auto ops = ecs_vec_first_t(&ts.ops, flecs::meta::op_t);
+                        const auto& ts = comp.get<ECS::TypeSerializer>();
+                        auto ops = ecs_vec_first_t(&ts.ops, ECS::MetaOp);
                         int op_count = ecs_vec_count(&ts.ops);
 
                         ImGui::BeginTable("##PropertiesTable", 2, ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_SizingStretchProp);

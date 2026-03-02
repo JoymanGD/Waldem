@@ -7,18 +7,17 @@
 
 #include "Waldem/ECS/ECS.h"
 #include "Waldem/Utils/ECSUtils.h"
-#include "flecs.h"
 
 namespace Waldem
 {
     struct ComponentValueBlob
     {
-        flecs::id_t ComponentId = 0;
+        ECS::IdT ComponentId = 0;
         void* Data = nullptr;
 
         ComponentValueBlob() = default;
 
-        ComponentValueBlob(flecs::id_t componentId, const void* src)
+        ComponentValueBlob(ECS::IdT componentId, const void* src)
         {
             Capture(componentId, src);
         }
@@ -84,7 +83,7 @@ namespace Waldem
             return ComponentId != 0 && Data != nullptr;
         }
 
-        void Capture(flecs::id_t componentId, const void* src)
+        void Capture(ECS::IdT componentId, const void* src)
         {
             Clear();
 
@@ -93,21 +92,21 @@ namespace Waldem
                 return;
             }
 
-            const ecs_type_info_t* typeInfo = ecs_get_type_info(ECS::World.c_ptr(), componentId);
+            const ecs_type_info_t* typeInfo = ECS::GetTypeInfo(componentId);
             if(typeInfo == nullptr || typeInfo->size == 0)
             {
                 return;
             }
 
             ComponentId = componentId;
-            Data = ecs_value_new(ECS::World.c_ptr(), ComponentId);
+            Data = ECS::ValueNew(ComponentId);
             if(Data == nullptr)
             {
                 ComponentId = 0;
                 return;
             }
 
-            ecs_value_copy(ECS::World.c_ptr(), ComponentId, Data, src);
+            ECS::ValueCopy(ComponentId, Data, src);
         }
 
         void ApplyTo(void* dst) const
@@ -117,7 +116,7 @@ namespace Waldem
                 return;
             }
 
-            ecs_value_copy(ECS::World.c_ptr(), ComponentId, dst, Data);
+            ECS::ValueCopy(ComponentId, dst, Data);
         }
 
         bool Equals(const ComponentValueBlob& other) const
@@ -132,7 +131,7 @@ namespace Waldem
                 return false;
             }
 
-            const ecs_type_info_t* typeInfo = ecs_get_type_info(ECS::World.c_ptr(), ComponentId);
+            const ecs_type_info_t* typeInfo = ECS::GetTypeInfo(ComponentId);
             if(typeInfo == nullptr)
             {
                 return false;
@@ -152,7 +151,7 @@ namespace Waldem
         {
             if(IsValid())
             {
-                ecs_value_free(ECS::World.c_ptr(), ComponentId, Data);
+                ECS::ValueFree(ComponentId, Data);
             }
 
             ComponentId = 0;
@@ -245,7 +244,7 @@ namespace Waldem
     class SetComponentDataCommand : public IEditorCommand
     {
     public:
-        SetComponentDataCommand(flecs::entity_t entityId, flecs::id_t componentId, const ComponentValueBlob& before, const ComponentValueBlob& after, bool allowMerge = true)
+        SetComponentDataCommand(ECS::EntityT entityId, ECS::IdT componentId, const ComponentValueBlob& before, const ComponentValueBlob& after, bool allowMerge = true)
             : EntityId(entityId), ComponentId(componentId), Before(before), After(after), AllowMerge(allowMerge)
         {
         }
@@ -296,14 +295,14 @@ namespace Waldem
                 return;
             }
 
-            flecs::id component(ECS::World, ComponentId);
+            ECS::Id component(ECS::World, ComponentId);
 
             if(!entity.has(component))
             {
                 entity.add(component);
             }
 
-            const ecs_type_info_t* typeInfo = ecs_get_type_info(ECS::World.c_ptr(), ComponentId);
+            const ecs_type_info_t* typeInfo = ECS::GetTypeInfo(ComponentId);
             const bool hasComponentData = typeInfo != nullptr && typeInfo->size > 0;
             if (hasComponentData)
             {
@@ -326,8 +325,8 @@ namespace Waldem
         }
 
     private:
-        flecs::entity_t EntityId = 0;
-        flecs::id_t ComponentId = 0;
+        ECS::EntityT EntityId = 0;
+        ECS::IdT ComponentId = 0;
         ComponentValueBlob Before;
         ComponentValueBlob After;
         bool AllowMerge = true;
@@ -336,7 +335,7 @@ namespace Waldem
     class RenameEntityCommand : public IEditorCommand
     {
     public:
-        RenameEntityCommand(flecs::entity_t entityId, const WString& before, const WString& after)
+        RenameEntityCommand(ECS::EntityT entityId, const WString& before, const WString& after)
             : EntityId(entityId), Before(before), After(after)
         {
         }
@@ -360,7 +359,7 @@ namespace Waldem
         }
 
     private:
-        flecs::entity_t EntityId = 0;
+        ECS::EntityT EntityId = 0;
         WString Before;
         WString After;
     };
@@ -373,7 +372,7 @@ namespace Waldem
         {
         }
 
-        flecs::entity_t GetEntityId() const { return EntityId; }
+        ECS::EntityT GetEntityId() const { return EntityId; }
 
         void Do() override
         {
@@ -403,19 +402,19 @@ namespace Waldem
         WString RequestedName;
         bool Enabled = true;
         bool VisibleInHierarchy = true;
-        flecs::entity_t EntityId = 0;
+        ECS::EntityT EntityId = 0;
         std::string EntitySnapshot;
     };
 
     class CloneSceneEntityCommand : public IEditorCommand
     {
     public:
-        explicit CloneSceneEntityCommand(flecs::entity_t sourceId)
+        explicit CloneSceneEntityCommand(ECS::EntityT sourceId)
             : SourceId(sourceId)
         {
         }
 
-        flecs::entity_t GetCloneId() const { return CloneId; }
+        ECS::EntityT GetCloneId() const { return CloneId; }
 
         void Do() override
         {
@@ -448,15 +447,15 @@ namespace Waldem
         }
 
     private:
-        flecs::entity_t SourceId = 0;
-        flecs::entity_t CloneId = 0;
+        ECS::EntityT SourceId = 0;
+        ECS::EntityT CloneId = 0;
         std::string CloneSnapshot;
     };
 
     class DeleteSceneEntityCommand : public IEditorCommand
     {
     public:
-        explicit DeleteSceneEntityCommand(flecs::entity entity)
+        explicit DeleteSceneEntityCommand(ECS::Entity entity)
         {
             EntityId = entity.id();
             if(entity.is_alive())
@@ -487,14 +486,14 @@ namespace Waldem
         }
 
     private:
-        flecs::entity_t EntityId = 0;
+        ECS::EntityT EntityId = 0;
         std::string EntitySnapshot;
     };
 
     class AddComponentCommand : public IEditorCommand
     {
     public:
-        AddComponentCommand(flecs::entity_t entityId, flecs::id_t componentId)
+        AddComponentCommand(ECS::EntityT entityId, ECS::IdT componentId)
             : EntityId(entityId), ComponentId(componentId)
         {
         }
@@ -502,7 +501,7 @@ namespace Waldem
         void Do() override
         {
             auto entity = ECS::World.entity(EntityId);
-            flecs::id component(ECS::World, ComponentId);
+            ECS::Id component(ECS::World, ComponentId);
 
             if(!entity.is_alive() || entity.has(component))
             {
@@ -511,7 +510,7 @@ namespace Waldem
 
             entity.add(component);
 
-            const ecs_type_info_t* typeInfo = ecs_get_type_info(ECS::World.c_ptr(), ComponentId);
+            const ecs_type_info_t* typeInfo = ECS::GetTypeInfo(ComponentId);
             const bool hasComponentData = typeInfo != nullptr && typeInfo->size > 0;
             if (!hasComponentData)
             {
@@ -529,7 +528,7 @@ namespace Waldem
         void Undo() override
         {
             auto entity = ECS::World.entity(EntityId);
-            flecs::id component(ECS::World, ComponentId);
+            ECS::Id component(ECS::World, ComponentId);
             if(!entity.is_alive() || !entity.has(component))
             {
                 return;
@@ -539,17 +538,17 @@ namespace Waldem
         }
 
     private:
-        flecs::entity_t EntityId = 0;
-        flecs::id_t ComponentId = 0;
+        ECS::EntityT EntityId = 0;
+        ECS::IdT ComponentId = 0;
     };
 
     class RemoveComponentCommand : public IEditorCommand
     {
     public:
-        RemoveComponentCommand(flecs::entity entity, flecs::id_t componentId)
+        RemoveComponentCommand(ECS::Entity entity, ECS::IdT componentId)
             : EntityId(entity.id()), ComponentId(componentId)
         {
-            flecs::id component(ECS::World, ComponentId);
+            ECS::Id component(ECS::World, ComponentId);
 
             if(entity.is_alive() && entity.has(component))
             {
@@ -564,7 +563,7 @@ namespace Waldem
         void Do() override
         {
             auto entity = ECS::World.entity(EntityId);
-            flecs::id component(ECS::World, ComponentId);
+            ECS::Id component(ECS::World, ComponentId);
             if(!entity.is_alive() || !entity.has(component))
             {
                 return;
@@ -581,7 +580,7 @@ namespace Waldem
                 return;
             }
 
-            flecs::id component(ECS::World, ComponentId);
+            ECS::Id component(ECS::World, ComponentId);
             if(!entity.has(component))
             {
                 entity.add(component);
@@ -598,8 +597,139 @@ namespace Waldem
         }
 
     private:
-        flecs::entity_t EntityId = 0;
-        flecs::id_t ComponentId = 0;
+        ECS::EntityT EntityId = 0;
+        ECS::IdT ComponentId = 0;
         ComponentValueBlob RemovedValue;
+    };
+
+    class SetParentCommand : public IEditorCommand
+    {
+    public:
+        SetParentCommand(ECS::EntityT childId, ECS::EntityT newParentId, bool keepWorldTransform = true)
+            : ChildId(childId), ParentAfterId(newParentId), KeepWorldTransform(keepWorldTransform)
+        {
+            auto child = ECS::World.entity(ChildId);
+            if(child.is_alive())
+            {
+                auto currentParent = ECS::GetParent(child);
+                ParentBeforeId = currentParent.is_alive() ? currentParent.id() : 0;
+            }
+        }
+
+        void Do() override
+        {
+            ApplyParent(ParentAfterId);
+        }
+
+        void Undo() override
+        {
+            ApplyParent(ParentBeforeId);
+        }
+
+    private:
+        void ApplyParent(ECS::EntityT parentId)
+        {
+            auto child = ECS::World.entity(ChildId);
+            if(!child.is_alive())
+            {
+                return;
+            }
+
+            if(parentId == 0)
+            {
+                ECS::ClearParent(child, KeepWorldTransform);
+                return;
+            }
+
+            auto parent = ECS::World.entity(parentId);
+            if(parent.is_alive())
+            {
+                ECS::SetParent(child, parent, KeepWorldTransform);
+            }
+            else
+            {
+                ECS::ClearParent(child, KeepWorldTransform);
+            }
+        }
+
+    private:
+        ECS::EntityT ChildId = 0;
+        ECS::EntityT ParentBeforeId = 0;
+        ECS::EntityT ParentAfterId = 0;
+        bool KeepWorldTransform = true;
+    };
+
+    class SetParentsBatchCommand : public IEditorCommand
+    {
+    public:
+        SetParentsBatchCommand(const std::vector<ECS::EntityT>& childIds, ECS::EntityT newParentId, bool keepWorldTransform = true)
+            : ChildIds(childIds), ParentAfterId(newParentId), KeepWorldTransform(keepWorldTransform)
+        {
+            ParentBeforeIds.reserve(ChildIds.size());
+            for (auto childId : ChildIds)
+            {
+                ECS::EntityT parentBeforeId = 0;
+                auto child = ECS::World.entity(childId);
+                if(child.is_alive())
+                {
+                    auto currentParent = ECS::GetParent(child);
+                    if(currentParent.is_alive())
+                    {
+                        parentBeforeId = currentParent.id();
+                    }
+                }
+
+                ParentBeforeIds.push_back(parentBeforeId);
+            }
+        }
+
+        void Do() override
+        {
+            for (auto childId : ChildIds)
+            {
+                ApplyParent(childId, ParentAfterId);
+            }
+        }
+
+        void Undo() override
+        {
+            const size_t count = std::min(ChildIds.size(), ParentBeforeIds.size());
+            for (size_t i = 0; i < count; ++i)
+            {
+                ApplyParent(ChildIds[i], ParentBeforeIds[i]);
+            }
+        }
+
+    private:
+        void ApplyParent(ECS::EntityT childId, ECS::EntityT parentId)
+        {
+            auto child = ECS::World.entity(childId);
+            if(!child.is_alive())
+            {
+                return;
+            }
+
+            if(parentId == 0)
+            {
+                ECS::ClearParent(child, KeepWorldTransform);
+                return;
+            }
+
+            auto parent = ECS::World.entity(parentId);
+            if(parent.is_alive())
+            {
+                ECS::SetParent(child, parent, KeepWorldTransform);
+            }
+            else
+            {
+                ECS::ClearParent(child, KeepWorldTransform);
+            }
+        }
+
+    private:
+        std::vector<ECS::EntityT> ChildIds;
+        std::vector<ECS::EntityT> ParentBeforeIds;
+        ECS::EntityT ParentAfterId = 0;
+        bool KeepWorldTransform = true;
     };
 }

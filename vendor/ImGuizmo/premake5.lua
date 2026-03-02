@@ -1,7 +1,8 @@
-project "flecs"
+project "ImGuizmo"
     location "."
     kind "SharedLib"
-    language "C"
+    language "C++"
+    cppdialect "C++20"
     staticruntime "off"
 
     targetdir ("../../Build/%{cfg.buildcfg}/%{prj.name}")
@@ -9,19 +10,29 @@ project "flecs"
 
     files
     {
-        "flecs.c"
+        "ImGuizmo.cpp",
+        "ImGuizmo.h"
     }
 
     includedirs
     {
-        "include"
+        ".",
+        "../imgui"
+    }
+
+    links
+    {
+        "imgui"
     }
 
     defines
     {
-        "flecs_EXPORTS",
-        "WIN32_LEAN_AND_MEAN"
+        "IMGUIZMO_EXPORTS",
+        "IMGUI_API=__declspec(dllimport)"
     }
+
+    filter "system:windows"
+        systemversion "latest"
 
     filter "configurations:Debug"
         runtime "Debug"

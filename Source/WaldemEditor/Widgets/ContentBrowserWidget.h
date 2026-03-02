@@ -118,7 +118,7 @@ namespace Waldem
             return result;
         }
 
-        bool CreatePrefabAssetFromEntity(flecs::entity_t entityId, const Path& folder)
+        bool CreatePrefabAssetFromEntity(ECS::EntityT entityId, const Path& folder)
         {
             auto entity = ECS::World.entity(entityId);
             if(!entity.is_alive() || !entity.has<SceneEntity>())
@@ -962,7 +962,7 @@ namespace Waldem
             {
                 if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(HierarchyDragPayloadType))
                 {
-                    const auto entityId = *(const flecs::entity_t*)payload->Data;
+                    const auto entityId = *(const ECS::EntityT*)payload->Data;
                     Path targetFolder = isFolder ? entryPath : CurrentPath;
                     CreatePrefabAssetFromEntity(entityId, targetFolder);
                 }
@@ -1172,7 +1172,7 @@ namespace Waldem
             {
                 if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(HierarchyDragPayloadType))
                 {
-                    const auto entityId = *(const flecs::entity_t*)payload->Data;
+                    const auto entityId = *(const ECS::EntityT*)payload->Data;
                     Path targetFolder = HoveredDropTargetFolder.has_value() ? HoveredDropTargetFolder.value() : CurrentPath;
                     CreatePrefabAssetFromEntity(entityId, targetFolder);
                 }

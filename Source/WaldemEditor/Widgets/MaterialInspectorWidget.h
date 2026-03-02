@@ -103,7 +103,7 @@ namespace Waldem
 
             const std::string targetMaterialPath = normalizeMaterialPath(LoadedPath);
 
-            ECS::World.query<MeshComponent>().each([&](flecs::entity entity, MeshComponent& meshComponent)
+            ECS::World.query<MeshComponent>().each([&](ECS::Entity entity, MeshComponent& meshComponent)
             {
                 if (!meshComponent.MeshRef.IsValid() || !meshComponent.MeshRef.Mesh)
                 {

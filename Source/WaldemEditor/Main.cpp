@@ -3,6 +3,7 @@
 
 #include "EditorLayer.h"
 #include "Waldem/Engine.h"
+#include "Waldem/ECS/ECS.h"
 #include "Waldem/Layers/DebugLayer.h"
 #include "Waldem/Log/Log.h"
 
@@ -11,6 +12,7 @@
 int main(int argc, char** argv)
 {
     Waldem::Log::Init();
+    ecs_os_set_api_defaults();
 
     auto engine = new Waldem::Engine();
     

@@ -643,5 +643,19 @@ namespace Waldem
                 ApplyParent(child, parent, true);
             }
         }
+
+        void Shutdown()
+        {
+            // Tear down query wrappers before releasing world memory.
+            HierarchyTransformQuery.reset();
+            LocalTransformMatrices.clear();
+            HierarchySlots.Clear();
+            RegisteredComponents = {};
+
+            if(World.c_ptr() != nullptr)
+            {
+                World.release();
+            }
+        }
     }
 }

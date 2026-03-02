@@ -78,7 +78,7 @@ namespace Waldem
             DrawSystems.Add(new GizmosRenderingSystem());
             DrawSystems.Add(new EntitySelectionSystem());
 
-            ECS::World.observer<Camera, Transform>().without<EditorComponent>().yield_existing().event(flecs::OnAdd).each([&](flecs::entity entity, Camera& camera, Transform& transform)
+            ECS::World.observer<Camera, Transform>().without<EditorComponent>().yield_existing().event(ECS::OnAdd).each([&](ECS::Entity entity, Camera& camera, Transform& transform)
             {
                 auto viewport = ViewportManager::GetGameViewport();
                 viewport->LinkCamera(entity);

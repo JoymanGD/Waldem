@@ -92,13 +92,13 @@ namespace Waldem
                 {
                     ECS::World.defer([&]
                     {
-                        ECS::World.query<Transform, Selected>("ClearSelectionQuery").each([&](flecs::entity entity, Transform&, Selected)
+                        ECS::World.query<Transform, Selected>("ClearSelectionQuery").each([&](ECS::Entity entity, Transform&, Selected)
                         {
                             entity.remove<Selected>();
                         });
                     });
 
-                    flecs::entity outEntity;
+                    ECS::Entity outEntity;
 
                     if(IdManager::GetEntityById(EntitySelectionSystem::HoveredEntityID, (IdType)EntitySelectionSystem::HoveredEntityType, outEntity))
                     {
@@ -110,7 +110,7 @@ namespace Waldem
                 }
             });
 
-            ECS::World.system<Transform, Selected>("EditorTransformGizmoSystem").kind<ECS::OnGUI>().each([&](flecs::entity entity, Transform& transform, Selected)
+            ECS::World.system<Transform, Selected>("EditorTransformGizmoSystem").kind<ECS::OnGUI>().each([&](ECS::Entity entity, Transform& transform, Selected)
             {
                 if(IsVisible)
                 {
@@ -199,6 +199,7 @@ namespace Waldem
                     "Radiance"
                 };
 
+                ImGuizmo::BeginFrame();
                 ImGuizmo::SetDrawlist(ImGui::GetCurrentWindow()->DrawList);
                 ImVec2 viewportPos = ImGui::GetCursorScreenPos();
                 ImVec2 viewportSize = ImGui::GetContentRegionAvail();

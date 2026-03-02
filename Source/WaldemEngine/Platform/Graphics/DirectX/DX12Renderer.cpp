@@ -13,7 +13,6 @@
 #include "DX12RayTracingPipeline.h"
 #include "DX12RayTracingShader.h"
 #include "imgui.h"
-#include "ImGuizmo.h"
 #include "backends/imgui_impl_dx12.h"
 #include "backends/imgui_impl_sdl2.h"
 #include "Waldem/Editor/UIStyles.h"
@@ -838,7 +837,6 @@ namespace Waldem
         ImGui_ImplDX12_NewFrame();
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
-        ImGuizmo::BeginFrame();
     }
 
     void DX12Renderer::EndUI()

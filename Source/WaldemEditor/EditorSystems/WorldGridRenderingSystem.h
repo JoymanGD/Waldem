@@ -41,7 +41,7 @@ namespace Waldem
             WorldGridRenderingComputeShader = Renderer::LoadComputeShader("WorldGrid");
             WorldGridRenderingPipeline = Renderer::CreateComputePipeline("WorldGridPipeline", WorldGridRenderingComputeShader);
             
-            ECS::World.system("WorldGridRenderingSystem").kind<ECS::OnDraw>().run([&](flecs::iter& it)
+            ECS::World.system("WorldGridRenderingSystem").kind<ECS::OnDraw>().run([&](ECS::Iter& it)
             {
                 auto viewport = Renderer::GetCurrentViewport();
 
