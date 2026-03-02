@@ -23,6 +23,7 @@
 #include "Systems/CoreSystems/PostProcessSystem.h"
 #include "Systems/CoreSystems/ScreenQuadSystem.h"
 #include "Systems/CoreSystems/SpatialAudioSystem.h"
+#include "Systems/CoreSystems/TrainingPathTracingSystem.h"
 #include "Waldem/Editor/AssetReference.h"
 #include "Waldem/Editor/AssetReference/AudioClipReference.h"
 #include "Waldem/Editor/AssetReference/MeshReference.h"
@@ -337,6 +338,7 @@ namespace Waldem
             Systems.Add(new HybridRenderingSystem());
             Systems.Add(new ParticleSystem());
             Systems.Add(new PostProcessSystem());
+            Systems.Add(new TrainingPathTracingSystem());
             Systems.Add(new ScreenQuadSystem());
 
             InitializeSystems();

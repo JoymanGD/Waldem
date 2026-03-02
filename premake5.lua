@@ -11,6 +11,8 @@ outputdir = "%{cfg.buildcfg}"
 local rootDir = os.getcwd()
 local contentPath = path.getabsolute(path.join(rootDir, "Content"))
 
+include "Vendor/flecs"
+
 -----------------------------------
 -- Global Source Folder
 -----------------------------------
@@ -29,30 +31,11 @@ IncludeDir["Assimp"]    = "Vendor/assimp/include"
 IncludeDir["stb"]       = "Vendor/stb/include"
 IncludeDir["dxc"]       = "Vendor/dxc/inc"
 IncludeDir["mono"]      = "Vendor/mono/include"
-IncludeDir["flecs"]     = "Vendor/flecs"
+IncludeDir["flecs"]     = "Vendor/flecs/include"
 IncludeDir["rapidjson"] = "Vendor/rapidjson/include"
 IncludeDir["Generated"] = "Intermediate/Generated"
-
------------------------------------
--- Shader filters
------------------------------------
-filter "files:**.hlsl"
-    flags { "ExcludeFromBuild", "NoPCH" }
-    shadermodel "6.6"
-
-filter "files:**.ps.hlsl"
-    shadertype "Pixel"
-    shaderentry "main"
-
-filter "files:**.vs.hlsl"
-    shadertype "Vertex"
-    shaderentry "main"
-
-filter "files:**.comp.hlsl"
-    shadertype "Compute"
-    shaderentry "main"
-
-filter {}
+IncludeDir["TinyCudaNN"] = "Vendor/tinycudann/include"
+IncludeDir["TinyCudaNNDep"] = "Vendor/tinycudann/dependencies"
 
 -----------------------------------
 -- Shared Post-Build function
@@ -160,6 +143,42 @@ project "WaldemHeaderTool"
 
     files { SourceDir .. "/WaldemHeaderTool/**.cpp" }
 
+------------------------------------
+-- WaldemCoach
+------------------------------------
+project "WaldemCoach"
+    location (SourceDir .. "/WaldemCoach")
+    kind "ConsoleApp"
+    cppdialect "C++20"
+
+    targetdir ("Build/" .. outputdir .. "/%{prj.name}")
+    objdir ("Intermediate/" .. outputdir .. "/%{prj.name}")
+
+    files
+    {
+        SourceDir .. "/WaldemCoach/**.h",
+        SourceDir .. "/WaldemCoach/**.cpp"
+    }
+
+    includedirs
+    {
+        "$(CUDA_PATH)/include",
+        "%{IncludeDir.TinyCudaNN}",
+        "%{IncludeDir.TinyCudaNNDep}",
+    }
+
+    libdirs
+    {
+        "Vendor/tinycudann/build/Release",
+        "$(CUDA_PATH)/lib/x64"
+    }
+
+    links
+    {
+        "tiny-cuda-nn",
+        "cudart"
+    }
+
 -----------------------------------
 -- WaldemEngine (DLL)
 -----------------------------------
@@ -187,20 +206,38 @@ project "WaldemEngine"
 
     files
     {
-        SourceDir .. "/WaldemEngine/**.h",
         SourceDir .. "/WaldemEngine/**.cpp",
-        "Intermediate/Generated/**.generated.h",
         SourceDir .. "/WaldemEngine/Shaders/**.hlsl",
 
-        "Vendor/flecs/flecs.c",
-        "Vendor/flecs/flecs.h",
-        "Vendor/imgui/**.h",
         "Vendor/imgui/**.cpp",
-        "Vendor/imgui/backends/**.h",
         "Vendor/imgui/backends/**.cpp",
-        "Vendor/ImGuizmo/**.h",
         "Vendor/ImGuizmo/**.cpp"
     }
+    
+    links
+    {
+        "flecs",
+    }
+    
+    filter {}
+    
+    filter "files:**.hlsl"
+        flags { "ExcludeFromBuild", "NoPCH" }
+        shadermodel "6.6"
+    
+    filter "files:**.ps.hlsl"
+        shadertype "Pixel"
+        shaderentry "main"
+    
+    filter "files:**.vs.hlsl"
+        shadertype "Vertex"
+        shaderentry "main"
+    
+    filter "files:**.comp.hlsl"
+        shadertype "Compute"
+        shaderentry "main"
+    
+    filter {}
 
     prebuildcommands {
         "\"%{wks.location}Build\\%{cfg.buildcfg}\\WaldemHeaderTool\\WaldemHeaderTool.exe\" " ..
@@ -209,10 +246,6 @@ project "WaldemEngine"
     }
 
     filter "files:Vendor/**.cpp"
-        flags { "NoPCH" }
-
-    filter "files:Vendor/flecs/flecs.c"
-        compileas "C"
         flags { "NoPCH" }
 
 -----------------------------------

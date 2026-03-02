@@ -2330,10 +2330,29 @@ namespace Waldem
                 if(resource)
                 {
                     auto beforeState = buffer->GetCurrentState();
+
+                    // If we're in an active render pass state, finish it before flushing.
+                    if(WorldCommandList.second)
+                    {
+                        WorldCommandList.first->EndInternal();
+                        WorldCommandList.second = false;
+                    }
+
                     //copy the GPU buffer to the readback buffer
                     ResourceBarrier(buffer, beforeState, COPY_SOURCE);
                     CopyResource(readbackBuffer, buffer);
                     ResourceBarrier(buffer, COPY_SOURCE, beforeState);
+
+                    // Submit the pending command list now so the copy is completed before mapping.
+                    WorldCommandList.first->Close();
+                    WorldCommandList.first->Execute(GraphicCommandQueue);
+                    Wait();
+                    WorldCommandList.first->Reset();
+                    WorldCommandList.first->SetGeneralDescriptorHeaps(GeneralResourcesHeap, GeneralSamplerHeap);
+                    WorldCommandList.first->SetRootSignature(GeneralRootSignature);
+                    uint bindlessMagic = 999;
+                    WorldCommandList.first->SetConstants(0, 1, &bindlessMagic, PipelineType::Graphics);
+
                     //map and copy data
                     UINT8* pMappedData;
                     HRESULT hr = resource->Map(0, nullptr, reinterpret_cast<void**>(&pMappedData));

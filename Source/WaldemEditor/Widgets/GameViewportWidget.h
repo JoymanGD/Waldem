@@ -78,6 +78,52 @@ namespace Waldem
                     ImGui::Checkbox("Direct Lighting##Game", &toggles.EnableDirectLighting);
                     ImGui::Checkbox("Specular##Game", &toggles.EnableSpecular);
                     ImGui::Checkbox("Metallic##Game", &toggles.EnableMetallic);
+                    ImGui::Separator();
+                    ImGui::Checkbox("Path Tracing##Game", &toggles.EnablePathTracing);
+                    ImGui::Checkbox("PT Accumulation##Game", &toggles.EnablePathTracingAccumulation);
+                    int ptBounces = (int)toggles.PathTracingMaxBounces;
+                    int ptSpp = (int)toggles.PathTracingSamplesPerPixel;
+                    if(ImGui::SliderInt("PT Bounces##Game", &ptBounces, 1, 4))
+                    {
+                        toggles.PathTracingMaxBounces = (uint)ptBounces;
+                    }
+                    if(ImGui::SliderInt("PT SPP##Game", &ptSpp, 1, 8))
+                    {
+                        toggles.PathTracingSamplesPerPixel = (uint)ptSpp;
+                    }
+                    ImGui::Separator();
+                    auto& renderData = Renderer::RenderData;
+                    int trainingSampleCount = (int)renderData.TrainingDatasetSampleCount;
+                    int trainingRaysPerPoint = (int)renderData.TrainingDatasetRaysPerPoint;
+                    int trainingBatches = (int)renderData.TrainingDatasetCaptureBatches;
+                    int trainingBounces = (int)renderData.TrainingDatasetMaxBounces;
+                    int trainingSeed = (int)renderData.TrainingDatasetSeed;
+                    if(ImGui::InputInt("Train Samples##Game", &trainingSampleCount))
+                    {
+                        renderData.TrainingDatasetSampleCount = trainingSampleCount > 1 ? (uint)trainingSampleCount : 1;
+                    }
+                    if(ImGui::SliderInt("Train Rays/Point##Game", &trainingRaysPerPoint, 1, 256))
+                    {
+                        renderData.TrainingDatasetRaysPerPoint = (uint)trainingRaysPerPoint;
+                    }
+                    if(ImGui::SliderInt("Train Batches##Game", &trainingBatches, 1, 128))
+                    {
+                        renderData.TrainingDatasetCaptureBatches = (uint)trainingBatches;
+                    }
+                    if(ImGui::SliderInt("Train Bounces##Game", &trainingBounces, 1, 4))
+                    {
+                        renderData.TrainingDatasetMaxBounces = (uint)trainingBounces;
+                    }
+                    if(ImGui::InputInt("Train Seed##Game", &trainingSeed))
+                    {
+                        renderData.TrainingDatasetSeed = trainingSeed > 0 ? (uint)trainingSeed : 1;
+                    }
+                    ImGui::Checkbox("Train Debug Output##Game", &renderData.TrainingDatasetDebugOutput);
+                    ImGui::TextWrapped("Output: %s", renderData.TrainingDatasetOutputPath.C_Str());
+                    if(ImGui::Button("Capture Training Dataset##Game"))
+                    {
+                        renderData.RequestTrainingDatasetCapture = true;
+                    }
                     ImGui::EndPopup();
                 }
 

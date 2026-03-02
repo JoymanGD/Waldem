@@ -12,6 +12,7 @@
 #include "Waldem/Renderer/ResizableAccelerationStructure.h"
 #include "Waldem/Renderer/ResizableBuffer.h"
 #include "Waldem/Renderer/Viewport/Viewport.h"
+#include <cstring>
 
 #define MAX_INDIRECT_COMMANDS 500
 
@@ -61,6 +62,11 @@ namespace Waldem
         uint EnableDirectLighting;
         uint EnableSpecular;
         uint EnableMetallic;
+        uint EnablePathTracing;
+        uint PathTracingMaxBounces;
+        uint PathTracingSamplesPerPixel;
+        uint PathTracingFrameIndex;
+        uint EnablePathTracingAccumulation;
     };
     
     struct DeferredRootConstants
@@ -130,6 +136,11 @@ namespace Waldem
         Buffer* RayTracingSceneDataBuffer = nullptr;
         RayTracingRootConstants RayTracingRootConstants;
         WArray<Matrix4> LightTransforms;
+        uint PathTracingFrameIndex = 0;
+        bool PathTracingHistoryValid = false;
+        Matrix4 LastPathTracingInvView = Matrix4(1.0f);
+        Matrix4 LastPathTracingInvProjection = Matrix4(1.0f);
+        Vector3 LastPathTracingCameraPosition = Vector3(0.0f);
 
         //Deferred
         Pipeline* DeferredRenderingPipeline = nullptr;
@@ -664,6 +675,16 @@ namespace Waldem
             
             ECS::World.system("GBufferSystem").kind<ECS::OnDraw>().run([&](flecs::iter& it)
             {
+                // Publish shared scene buffers for offline training systems.
+                Renderer::RenderData.SharedDrawCommandsBuffer = DrawCommandsBuffer.GetBuffer();
+                Renderer::RenderData.SharedMaterialAttributesBuffer = MaterialAttributesBuffer.GetBuffer();
+                Renderer::RenderData.SharedWorldTransformsBuffer = WorldTransformsBuffer.GetBuffer();
+                Renderer::RenderData.SharedLightsBuffer = LightsBuffer.GetBuffer();
+                Renderer::RenderData.SharedLightTransformsBuffer = LightTransformsBuffer.GetBuffer();
+                Renderer::RenderData.SharedLightsIndicesBuffer = LightsIndicesBuffer.GetBuffer();
+                Renderer::RenderData.SharedDrawCommandsCount = static_cast<uint>(BFCIndirectCommands.Num() + NCIndirectCommands.Num());
+                Renderer::RenderData.SharedNumLights = static_cast<uint>(LightsIndices.Num());
+
                 if(!Renderer::RenderData.FeatureToggles.EnableGBufferPass)
                 {
                     return;
@@ -761,6 +782,34 @@ namespace Waldem
                     RayTracingSceneData.InvProjectionMatrix = inverse(cameraComponent.ProjectionMatrix);
                     Renderer::UploadBuffer(RayTracingSceneDataBuffer, &RayTracingSceneData, sizeof(SRayTracingSceneData));
 
+                    auto& toggles = Renderer::RenderData.FeatureToggles;
+                    bool cameraChanged =
+                        !PathTracingHistoryValid ||
+                        memcmp(&LastPathTracingInvView, &RayTracingSceneData.InvViewMatrix, sizeof(Matrix4)) != 0 ||
+                        memcmp(&LastPathTracingInvProjection, &RayTracingSceneData.InvProjectionMatrix, sizeof(Matrix4)) != 0 ||
+                        memcmp(&LastPathTracingCameraPosition, &RayTracingSceneData.CameraPosition, sizeof(Vector3)) != 0;
+
+                    if(toggles.EnablePathTracing)
+                    {
+                        if(cameraChanged || !toggles.EnablePathTracingAccumulation)
+                        {
+                            PathTracingFrameIndex = 0;
+                        }
+                        else
+                        {
+                            PathTracingFrameIndex++;
+                        }
+                    }
+                    else
+                    {
+                        PathTracingFrameIndex = 0;
+                    }
+
+                    PathTracingHistoryValid = true;
+                    LastPathTracingInvView = RayTracingSceneData.InvViewMatrix;
+                    LastPathTracingInvProjection = RayTracingSceneData.InvProjectionMatrix;
+                    LastPathTracingCameraPosition = RayTracingSceneData.CameraPosition;
+
                     RayTracingRootConstants.WorldPositionRT = gbuffer->GetRenderTarget(WorldPosition)->GetIndex(SRV_CBV);
                     RayTracingRootConstants.NormalRT = gbuffer->GetRenderTarget(Normal)->GetIndex(SRV_CBV);
                     RayTracingRootConstants.ColorRT = gbuffer->GetRenderTarget(Color)->GetIndex(SRV_CBV);
@@ -776,10 +825,15 @@ namespace Waldem
                     RayTracingRootConstants.IndexBuffer = Renderer::RenderData.IndexBuffer.GetIndex(SRV_CBV);
                     RayTracingRootConstants.DrawCommandsBuffer = DrawCommandsBuffer.GetIndex(SRV_CBV);
                     RayTracingRootConstants.MaterialBuffer = MaterialAttributesBuffer.GetIndex(SRV_CBV);
-                    RayTracingRootConstants.EnableReflections = Renderer::RenderData.FeatureToggles.EnableReflections ? 1 : 0;
-                    RayTracingRootConstants.EnableDirectLighting = Renderer::RenderData.FeatureToggles.EnableDirectLighting ? 1 : 0;
-                    RayTracingRootConstants.EnableSpecular = Renderer::RenderData.FeatureToggles.EnableSpecular ? 1 : 0;
-                    RayTracingRootConstants.EnableMetallic = Renderer::RenderData.FeatureToggles.EnableMetallic ? 1 : 0;
+                    RayTracingRootConstants.EnableReflections = toggles.EnableReflections ? 1 : 0;
+                    RayTracingRootConstants.EnableDirectLighting = toggles.EnableDirectLighting ? 1 : 0;
+                    RayTracingRootConstants.EnableSpecular = toggles.EnableSpecular ? 1 : 0;
+                    RayTracingRootConstants.EnableMetallic = toggles.EnableMetallic ? 1 : 0;
+                    RayTracingRootConstants.EnablePathTracing = toggles.EnablePathTracing ? 1 : 0;
+                    RayTracingRootConstants.PathTracingMaxBounces = toggles.PathTracingMaxBounces > 4 ? 4 : toggles.PathTracingMaxBounces;
+                    RayTracingRootConstants.PathTracingSamplesPerPixel = toggles.PathTracingSamplesPerPixel;
+                    RayTracingRootConstants.PathTracingFrameIndex = PathTracingFrameIndex;
+                    RayTracingRootConstants.EnablePathTracingAccumulation = toggles.EnablePathTracingAccumulation ? 1 : 0;
 
                     //dispatching
                     viewport->GetGBuffer()->Barriers({Radiance, Reflection}, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
