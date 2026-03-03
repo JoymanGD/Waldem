@@ -147,30 +147,62 @@ project "WaldemCoach"
     language "C++"
     cppdialect "C++20"
     SetDefaultPaths()
+    debugdir ("Build/" .. OutputDir .. "/%{prj.name}")
 
     files
     {
         SourceDir .. "/WaldemCoach/**.h",
-        SourceDir .. "/WaldemCoach/**.cpp"
+        SourceDir .. "/WaldemCoach/**.cpp",
+        SourceDir .. "/WaldemCoach/**.cu"
     }
+
+    filter "files:**/TinyCuda/NIV/NIVCoach.cu"
+        buildmessage "Compiling CUDA source %{file.relpath}"
+        buildcommands
+        {
+            '"$(CUDA_PATH)/bin/nvcc.exe" -x cu -arch=sm_75 -std=c++17 --extended-lambda --expt-relaxed-constexpr -Xcompiler "/EHsc /MD" -c "%{file.relpath}" -o "%{cfg.objdir}/%{file.basename}.obj" ' ..
+            '-I"$(CUDA_PATH)/include" -I"%{wks.location}%{IncludeDir.TinyCudaNN}" -I"%{wks.location}%{IncludeDir.TinyCudaNNDep}" -I"%{wks.location}%{IncludeDir.TinyCudaNNDep}/fmt/include" ' ..
+            '-DWIN32_LEAN_AND_MEAN -D_WINSOCKAPI_ -DTCNN_HALF_PRECISION=1 -DTCNN_MIN_GPU_ARCH=75 -DFMT_CONSTEVAL='
+        }
+        buildoutputs { "%{cfg.objdir}/%{file.basename}.obj" }
+    filter {}
 
     includedirs
     {
         "$(CUDA_PATH)/include",
         "%{IncludeDir.TinyCudaNN}",
         "%{IncludeDir.TinyCudaNNDep}",
+        "%{IncludeDir.TinyCudaNNDep}/fmt/include",
     }
 
     libdirs
     {
         "Vendor/tinycudann/build/Release",
+        "Vendor/tinycudann/dependencies/fmt/build_vs/Release",
         "$(CUDA_PATH)/lib/x64"
     }
 
     links
     {
         "tiny-cuda-nn",
-        "cudart"
+        "tiny-cuda-nn-resources",
+        "fmt",
+        "cuda",
+        "nvrtc",
+        "cudart",
+        "%{cfg.objdir}/NIVCoach.obj",
+    }
+
+    defines
+    {
+        "TCNN_HALF_PRECISION=1",
+        "TCNN_MIN_GPU_ARCH=75",
+    }
+    
+    postbuildcommands
+    {
+        '{MKDIR} "%{cfg.targetdir}/Configs"',
+        '{COPYDIR} "%{wks.location}' .. SourceDir .. '/WaldemCoach/TinyCuda/NIV/Configs" "%{cfg.targetdir}/Configs"'
     }
 
 project "WaldemEngine"

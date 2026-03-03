@@ -192,7 +192,7 @@ public:
 			} catch (const std::runtime_error& e) {
 				m_jit_fusion = false;
 				log_warning("{}\nFailed to JIT-compile `{}`. Disabling JIT.", e.what(), name);
-				return std::unique_ptr<CudaRtcKernel>{};
+				return std::unique_ptr<CudaRtcKernel>(nullptr);
 			}
 		}).get();
 
@@ -240,7 +240,7 @@ public:
 			} catch (const std::runtime_error& e) {
 				m_jit_fusion = false;
 				log_warning("{}\nFailed to JIT-compile `{}`. Disabling JIT.", e.what(), name);
-				return std::unique_ptr<CudaRtcKernel>{};
+				return std::unique_ptr<CudaRtcKernel>(nullptr);
 			}
 		}).get();
 
@@ -320,7 +320,7 @@ public:
 			} catch (const std::runtime_error& e) {
 				m_jit_fusion = false;
 				log_warning("{}\nFailed to JIT-compile `{}`. Disabling JIT.", e.what(), name);
-				return std::unique_ptr<CudaRtcKernel>{};
+				return std::unique_ptr<CudaRtcKernel>(nullptr);
 			}
 		}).get();
 
@@ -426,7 +426,7 @@ public:
 			} catch (const std::runtime_error& e) {
 				m_jit_fusion = false;
 				log_warning("{}\nFailed to JIT-compile `{}`. Disabling JIT.", e.what(), name);
-				return std::unique_ptr<CudaRtcKernel>{};
+				return std::unique_ptr<CudaRtcKernel>(nullptr);
 			}
 		}).get();
 
@@ -547,7 +547,7 @@ public:
 			} catch (const std::runtime_error& e) {
 				m_jit_fusion = false;
 				log_warning("{}\nFailed to JIT-compile `{}`. Disabling JIT.", e.what(), name);
-				return std::unique_ptr<CudaRtcKernel>{};
+				return std::unique_ptr<CudaRtcKernel>(nullptr);
 			}
 		}).get();
 

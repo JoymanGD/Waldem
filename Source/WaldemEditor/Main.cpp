@@ -1,11 +1,12 @@
 #include "wdpch.h"
-#include "Main.h"
 
-#include "EditorLayer.h"
-#include "Waldem/Engine.h"
-#include "Waldem/ECS/ECS.h"
-#include "Waldem/Layers/DebugLayer.h"
+#include <stdio.h>
+#include "Waldem\Engine.h"
+#include "Waldem/Layers/Layer.h"
 #include "Waldem/Log/Log.h"
+#include "Waldem/Input/KeyCodes.h"
+#include "EditorLayer.h"
+#include "Waldem/ECS/ECS.h"
 
 #ifdef WD_PLATFORM_WINDOWS
 

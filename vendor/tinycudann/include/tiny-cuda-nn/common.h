@@ -77,7 +77,11 @@
 #endif
 
 #ifndef TCNN_MIN_GPU_ARCH
-#warning TCNN_MIN_GPU_ARCH was not defined. Using default value 75.
+#  ifdef _MSC_VER
+#    pragma message("TCNN_MIN_GPU_ARCH was not defined. Using default value 75.")
+#  else
+#    warning TCNN_MIN_GPU_ARCH was not defined. Using default value 75.
+#  endif
 #define TCNN_MIN_GPU_ARCH 75
 #endif
 
