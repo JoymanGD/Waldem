@@ -15,7 +15,7 @@ namespace Waldem
     public:
         ViewportManager() = default;
 
-        static SViewport* CreateViewport(ViewportType type, WString name, Point2 position, Point2 size, Point2 depthRange, int frameBufferSize, bool gbuffer = true, bool iterable = true)
+        static SViewport* CreateViewport(ViewportType type, const WString& name, Point2 position, Point2 size, Point2 depthRange, int frameBufferSize, bool gbuffer = true, bool iterable = true)
         {
             auto viewport = new SViewport(type, name, position, size, depthRange, frameBufferSize, gbuffer);
             Viewports.Add(viewport);
@@ -43,7 +43,7 @@ namespace Waldem
             return viewport;
         }
 
-        static SViewport* CreateViewport(ViewportType type, WString name, Point2 position, Point2 size, Point2 depthRange, SFrameBuffer* frameBuffer, bool gbuffer = true, bool iterable = true)
+        static SViewport* CreateViewport(ViewportType type, const WString& name, Point2 position, Point2 size, Point2 depthRange, SFrameBuffer* frameBuffer, bool gbuffer = true, bool iterable = true)
         {
             auto viewport = new SViewport(type, name, position, size, depthRange, frameBuffer, gbuffer);
             Viewports.Add(viewport);

@@ -44,11 +44,15 @@ namespace Waldem
         colors[ImGuiCol_ResizeGrip]             = ImVec4(0.20f, 0.28f, 0.34f, 0.50f);
         colors[ImGuiCol_ResizeGripHovered]      = ImVec4(0.30f, 0.45f, 0.56f, 0.85f);
         colors[ImGuiCol_ResizeGripActive]       = ImVec4(0.33f, 0.67f, 0.96f, 1.00f);
-        colors[ImGuiCol_Tab]                    = ImVec4(0.10f, 0.13f, 0.16f, 1.00f);
-        colors[ImGuiCol_TabHovered]             = ImVec4(0.20f, 0.29f, 0.36f, 1.00f);
-        colors[ImGuiCol_TabActive]              = ImVec4(0.15f, 0.23f, 0.29f, 1.00f);
-        colors[ImGuiCol_TabUnfocused]           = ImVec4(0.09f, 0.12f, 0.15f, 1.00f);
-        colors[ImGuiCol_TabUnfocusedActive]     = ImVec4(0.13f, 0.18f, 0.23f, 1.00f);
+        // Unity-like tabs: only selected tab has a background in focused/unfocused tab-bars.
+        colors[ImGuiCol_Tab]                    = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+        // Keep hovered tabs visible; active tab should never blend into background on hover.
+        colors[ImGuiCol_TabHovered]             = ImVec4(0.17f, 0.26f, 0.33f, 1.00f);
+        colors[ImGuiCol_TabSelected]            = ImVec4(0.15f, 0.23f, 0.29f, 1.00f);
+        colors[ImGuiCol_TabSelectedOverline]    = ImVec4(0.22f, 0.58f, 0.95f, 1.00f);
+        colors[ImGuiCol_TabDimmed]              = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+        colors[ImGuiCol_TabDimmedSelected]      = ImVec4(0.15f, 0.23f, 0.29f, 1.00f);
+        colors[ImGuiCol_TabDimmedSelectedOverline] = ImVec4(0.22f, 0.58f, 0.95f, 1.00f);
         colors[ImGuiCol_PlotLines]              = ImVec4(0.33f, 0.67f, 0.96f, 1.00f);
         colors[ImGuiCol_PlotLinesHovered]       = ImVec4(0.56f, 0.82f, 1.00f, 1.00f);
         colors[ImGuiCol_PlotHistogram]          = ImVec4(0.28f, 0.58f, 0.86f, 1.00f);
@@ -84,7 +88,7 @@ namespace Waldem
         style->TabCloseButtonMinWidthUnselected = -1.0f;
         style->TabCloseButtonMinWidthSelected = -1.0f;
         style->TabBarBorderSize         = 1.0f;
-        style->TabBarOverlineSize       = 2.0f;
+        style->TabBarOverlineSize       = 1.0f;
 
         style->WindowBorderSize = 1.0f;
         style->ChildBorderSize  = 1.0f;
@@ -98,7 +102,7 @@ namespace Waldem
         style->PopupRounding    = 6.0f;
         style->ScrollbarRounding= 7.0f;
         style->GrabRounding     = 5.0f;
-        style->TabRounding      = 5.0f;
+        style->TabRounding      = 0.0f;
         style->LogSliderDeadzone= 4.0f;
     }
 

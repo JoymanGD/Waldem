@@ -10,11 +10,11 @@ namespace Waldem
     {
         uint TargetRT;
         uint ViewMode;
+        uint PathTracingEnabled;
     };
     
     class WALDEM_API ScreenQuadSystem : public ICoreSystem
     {
-        RenderTarget* TargetRT = nullptr;
         Pipeline* QuadDrawPipeline = nullptr;
         PixelShader* QuadDrawPixelShader = nullptr;
         Quad FullscreenQuad = {};
@@ -29,8 +29,6 @@ namespace Waldem
                 { "POSITION", 0, TextureFormat::R32G32B32_FLOAT, 0, 0, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
                 { "TEXCOORD", 0, TextureFormat::R32G32_FLOAT, 0, 12, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
             };
-            
-            TargetRT = Renderer::GetRenderTarget("TargetRT");
             
             QuadDrawPixelShader = Renderer::LoadPixelShader("QuadDraw");
             QuadDrawPipeline = Renderer::CreateGraphicPipeline("QuadDrawPipeline",
@@ -57,6 +55,7 @@ namespace Waldem
                         : Renderer::RenderData.GameViewportOutputTarget;
 
                     RootConstants.ViewMode = selectedOutputTarget;
+                    RootConstants.PathTracingEnabled = Renderer::RenderData.FeatureToggles.EnablePathTracing ? 1u : 0u;
 
                     if(selectedOutputTarget == 1)
                     {
@@ -85,6 +84,14 @@ namespace Waldem
                     else if(selectedOutputTarget == 7)
                     {
                         RootConstants.TargetRT = gbuffer->GetRenderTarget(Radiance)->GetIndex(SRV_CBV);
+                    }
+                    else if(selectedOutputTarget == 8)
+                    {
+                        RootConstants.TargetRT = gbuffer->GetRenderTarget(NIVIrradiance)->GetIndex(SRV_CBV);
+                    }
+                    else if(selectedOutputTarget == 9)
+                    {
+                        RootConstants.TargetRT = gbuffer->GetRenderTarget(PathTracing)->GetIndex(SRV_CBV);
                     }
                     else if(Renderer::RenderData.FeatureToggles.EnableDeferredPass)
                     {
@@ -117,3 +124,5 @@ namespace Waldem
         }
     };
 }
+
+

@@ -184,7 +184,7 @@ namespace Waldem
         {
             auto viewport = ViewportManager::GetEditorViewport();
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-            IsVisible = ImGui::Begin(viewport->Name, nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus);
+            IsVisible = ImGui::Begin("Editor###Editor", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus);
             if (IsVisible)
             {
                 const char* renderTargets[] =
@@ -196,7 +196,9 @@ namespace Waldem
                     "ORM",
                     "MeshID",
                     "Color",
-                    "Radiance"
+                    "Radiance",
+                    "NIV Irradiance",
+                    "Path Tracing"
                 };
 
                 ImGuizmo::BeginFrame();
@@ -245,6 +247,11 @@ namespace Waldem
                     ImGui::Checkbox("Direct Lighting##Editor", &toggles.EnableDirectLighting);
                     ImGui::Checkbox("Specular##Editor", &toggles.EnableSpecular);
                     ImGui::Checkbox("Metallic##Editor", &toggles.EnableMetallic);
+                    ImGui::Checkbox("NIV Inference##Editor", &toggles.EnableNIVInference);
+                    ImGui::Checkbox("NIV Temporal##Editor", &Renderer::RenderData.EnableNIVTemporalSmoothing);
+                    ImGui::Checkbox("NIV Spatial##Editor", &Renderer::RenderData.EnableNIVSpatialFilter);
+                    ImGui::SliderFloat("NIV History##Editor", &Renderer::RenderData.NIVTemporalHistoryWeight, 0.0f, 0.98f, "%.2f");
+                    ImGui::SliderFloat("NIV Filter##Editor", &Renderer::RenderData.NIVSpatialFilterStrength, 0.0f, 1.0f, "%.2f");
                     ImGui::Separator();
                     ImGui::Checkbox("Path Tracing##Editor", &toggles.EnablePathTracing);
                     ImGui::Checkbox("PT Accumulation##Editor", &toggles.EnablePathTracingAccumulation);
@@ -258,39 +265,6 @@ namespace Waldem
                     {
                         toggles.PathTracingSamplesPerPixel = (uint)ptSpp;
                     }
-                    ImGui::Separator();
-                    auto& renderData = Renderer::RenderData;
-                    int trainingSampleCount = (int)renderData.TrainingDatasetSampleCount;
-                    int trainingRaysPerPoint = (int)renderData.TrainingDatasetRaysPerPoint;
-                    int trainingBatches = (int)renderData.TrainingDatasetCaptureBatches;
-                    int trainingBounces = (int)renderData.TrainingDatasetMaxBounces;
-                    int trainingSeed = (int)renderData.TrainingDatasetSeed;
-                    if(ImGui::InputInt("Train Samples##Editor", &trainingSampleCount))
-                    {
-                        renderData.TrainingDatasetSampleCount = trainingSampleCount > 1 ? (uint)trainingSampleCount : 1;
-                    }
-                    if(ImGui::SliderInt("Train Rays/Point##Editor", &trainingRaysPerPoint, 1, 256))
-                    {
-                        renderData.TrainingDatasetRaysPerPoint = (uint)trainingRaysPerPoint;
-                    }
-                    if(ImGui::SliderInt("Train Batches##Editor", &trainingBatches, 1, 128))
-                    {
-                        renderData.TrainingDatasetCaptureBatches = (uint)trainingBatches;
-                    }
-                    if(ImGui::SliderInt("Train Bounces##Editor", &trainingBounces, 1, 4))
-                    {
-                        renderData.TrainingDatasetMaxBounces = (uint)trainingBounces;
-                    }
-                    if(ImGui::InputInt("Train Seed##Editor", &trainingSeed))
-                    {
-                        renderData.TrainingDatasetSeed = trainingSeed > 0 ? (uint)trainingSeed : 1;
-                    }
-                    ImGui::Checkbox("Train Debug Output##Editor", &renderData.TrainingDatasetDebugOutput);
-                    ImGui::TextWrapped("Output: %s", renderData.TrainingDatasetOutputPath.C_Str());
-                    if(ImGui::Button("Capture Training Dataset##Editor"))
-                    {
-                        renderData.RequestTrainingDatasetCapture = true;
-                    }
                     ImGui::EndPopup();
                 }
 
@@ -301,3 +275,5 @@ namespace Waldem
         }
     };
 }
+
+

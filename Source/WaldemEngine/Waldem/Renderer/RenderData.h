@@ -20,6 +20,7 @@ namespace Waldem
         bool EnablePathTracingAccumulation = true;
         uint PathTracingMaxBounces = 3;
         uint PathTracingSamplesPerPixel = 1;
+        bool EnableNIVInference = false;
     };
 
     struct WALDEM_API RenderData
@@ -41,12 +42,23 @@ namespace Waldem
         uint SharedNumLights = 0;
 
         bool RequestTrainingDatasetCapture = false;
-        uint TrainingDatasetSampleCount = 32768;
-        uint TrainingDatasetRaysPerPoint = 32;
-        uint TrainingDatasetCaptureBatches = 1;
+        uint TrainingDatasetSampleCount = 131072;
+        uint TrainingDatasetRaysPerPoint = 512;
+        uint TrainingDatasetCaptureBatches = 32;
         uint TrainingDatasetMaxBounces = 3;
         uint TrainingDatasetSeed = 1;
         WString TrainingDatasetOutputPath = "Content/Training/irradiance_samples.bin";
         bool TrainingDatasetDebugOutput = false;
+
+        void* NIVRuntimeCoach = nullptr;
+        bool NIVLastInferenceAttempted = false;
+        bool NIVLastInferenceSucceeded = false;
+        uint NIVLastValidPixelCount = 0;
+        float NIVLastMeanLuminance = 0.0f;
+        float NIVLastMaxChannel = 0.0f;
+        bool EnableNIVTemporalSmoothing = true;
+        float NIVTemporalHistoryWeight = 0.85f;
+        bool EnableNIVSpatialFilter = true;
+        float NIVSpatialFilterStrength = 0.6f;
     };
 }

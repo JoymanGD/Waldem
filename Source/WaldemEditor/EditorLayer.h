@@ -18,6 +18,7 @@
 #include "EditorSystems/WorldGridRenderingSystem.h"
 #include "Waldem/ECS/Components/Sky.h"
 #include "Widgets/ContentBrowserWidget.h"
+#include "Widgets/CoachWidget.h"
 #include "Widgets/EditorViewportWidget.h"
 #include "Widgets/EntityDetailsWidget.h"
 #include "Widgets/GameViewportWidget.h"
@@ -51,7 +52,7 @@ namespace Waldem
             Vector2 size = { 1920, 1080 };
             auto cameraEntity = ECS::CreateEntity("EditorCamera");
             float aspectRatio = size.x / size.y;
-            cameraEntity.set<Transform>({Vector3(0, 10, -10.f)});
+            cameraEntity.set<Transform>({Vector3(0, 10, -10.f)}); 
             cameraEntity.set<Camera>({60.0f, aspectRatio, 0.001f, 1000.0f, 30.0f, 30.0f});
             auto& transform = cameraEntity.get_mut<Transform>();
             auto& camera = cameraEntity.get_mut<Camera>();
@@ -70,6 +71,7 @@ namespace Waldem
             Widgets.Add(new HierarchyWidget());
             Widgets.Add(new EntityDetailsWidget());
             Widgets.Add(new MaterialInspectorWidget());
+            Widgets.Add(new CoachWidget());
             Widgets.Add(new ContentBrowserWidget());
             
             //do it after all entities set up
@@ -226,7 +228,8 @@ namespace Waldem
             ImGui::PopStyleVar(3);
 
             ImGuiID dockspace_id = ImGui::GetID("MainDockspace");
-            ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
+            const ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode | ImGuiDockNodeFlags_NoWindowMenuButton;
+            ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 
             ImGui::End();
             
@@ -236,7 +239,7 @@ namespace Waldem
             if(!dockspaceInitialized)
             {
                 ImGui::DockBuilderRemoveNode(dockspace_id); // clear any previous layout
-                ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
+                ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace | ImGuiDockNodeFlags_NoWindowMenuButton);
                 ImGui::DockBuilderSetNodeSize(dockspace_id, ImGui::GetMainViewport()->Size);
 
                 ImGuiID dock_main_id = dockspace_id;
@@ -254,14 +257,15 @@ namespace Waldem
                 ImGui::DockBuilderSplitNode(dock_centerblock, ImGuiDir_Down, 0.25f, &dock_bottom, &dock_center); // 25% bottom
 
                 // Dock windows
-                ImGui::DockBuilderDockWindow("Entities", dock_left);
-                ImGui::DockBuilderDockWindow("Details", dock_details);
-                ImGui::DockBuilderDockWindow("Material Inspector", dock_details);
-                ImGui::DockBuilderDockWindow("Content", dock_bottom);
+                ImGui::DockBuilderDockWindow("Entities###Entities", dock_left);
+                ImGui::DockBuilderDockWindow("Details###Details", dock_details);
+                ImGui::DockBuilderDockWindow("Material Inspector###Material Inspector", dock_details);
+                ImGui::DockBuilderDockWindow("Coach###Coach", dock_details);
+                ImGui::DockBuilderDockWindow("Content###Content", dock_bottom);
 
                 // 👉 Instead of splitting the center, dock both as tabs
-                ImGui::DockBuilderDockWindow("Editor", dock_center);
-                ImGui::DockBuilderDockWindow("Game", dock_center);
+                ImGui::DockBuilderDockWindow("Editor###Editor", dock_center);
+                ImGui::DockBuilderDockWindow("Game###Game", dock_center);
 
                 ImGui::DockBuilderFinish(dockspace_id);
                 dockspaceInitialized = true;

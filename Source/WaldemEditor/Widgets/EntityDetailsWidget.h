@@ -45,9 +45,10 @@ namespace Waldem
 
         void OnDraw(float deltaTime) override
         {
-            if (ImGui::Begin("Details", nullptr,
+            const bool isVisible = ImGui::Begin("Details###Details", nullptr,
                 ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration |
-                ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus))
+                ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus);
+            if (isVisible)
             {
                 auto selectedEntities = ECS::World.query<Selected>();
                 WArray<ECS::Entity> selected;

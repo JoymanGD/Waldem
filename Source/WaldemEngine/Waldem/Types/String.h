@@ -39,19 +39,23 @@ namespace Waldem
 
 	    FORCEINLINE constexpr void SetData(const char* newData)
 	    {
-	        if (Data)
+	        if (newData == Data)
 	        {
-	            delete[] Data;
+	            return;
 	        }
 
 	        likely_if (newData)
 	        {
-	            Data = new char[strlen(newData) + 1];
-	            strcpy(Data, newData);
+	            const size_t len = strlen(newData);
+	            char* copied = new char[len + 1];
+	            memcpy(copied, newData, len + 1);
+	            delete[] Data;
+	            Data = copied;
 	            UpdateHash();
 	        }
 	        unlikely_else
 	        {
+	            delete[] Data;
 	            Data = nullptr;
 	            StringHash = 0;
 	        }
@@ -231,6 +235,7 @@ namespace Waldem
 	        uint len2 = other.Data ? strlen(other.Data) : 0;
 
 	        char* buffer = new char[len1 + len2 + 1];
+	        buffer[0] = '\0';
 	        if (Data) strcpy(buffer, Data);
 	        if (other.Data) strcat(buffer, other.Data);
 

@@ -543,10 +543,12 @@ namespace Waldem
 
         const char* fontCandidates[] =
         {
+            "Content/Fonts/Inter-Regular.ttf",
+            "Content/Fonts/Roboto-Regular.ttf",
             "Content/Fonts/Inter-Medium.ttf",
             "Content/Fonts/Roboto-Medium.ttf",
             "C:/Windows/Fonts/segoeui.ttf",
-            "C:/Windows/Fonts/segoeuib.ttf"
+            "C:/Windows/Fonts/arial.ttf"
         };
 
         ImFont* uiFont = nullptr;
@@ -714,6 +716,34 @@ namespace Waldem
         }
     }
 
+    void DX12Renderer::Flush()
+    {
+        auto cmd = WorldCommandList.first;
+        if (!cmd)
+        {
+            return;
+        }
+
+        if (WorldCommandList.second)
+        {
+            cmd->EndInternal();
+            WorldCommandList.second = false;
+        }
+
+        cmd->Close();
+        cmd->Execute(GraphicCommandQueue);
+        Wait();
+        cmd->Reset();
+        cmd->SetGeneralDescriptorHeaps(GeneralResourcesHeap, GeneralSamplerHeap);
+        cmd->SetRootSignature(GeneralRootSignature);
+        uint bindlessMagic = 999;
+        cmd->SetConstants(0, 1, &bindlessMagic, PipelineType::Graphics);
+        if (CurrentViewport)
+        {
+            SetViewport(*CurrentViewport);
+        }
+    }
+
     Point3 DX12Renderer::GetNumThreadsPerGroup(ComputeShader* computeShader)
     {
         ID3D12ShaderReflection* shaderReflection;
@@ -877,6 +907,16 @@ namespace Waldem
 
     void DX12Renderer::Destroy(GraphicResource* resource)
     {
+        if (SharedHandleMap.Contains(resource))
+        {
+            HANDLE handle = SharedHandleMap[resource];
+            if (handle)
+            {
+                CloseHandle(handle);
+            }
+            SharedHandleMap.Remove(resource);
+        }
+
         if(resource)
         {
             auto dx12Resource = ResourceMap[resource];
@@ -975,6 +1015,16 @@ namespace Waldem
 
     void DX12Renderer::DestroyImmediate(GraphicResource* resource)
     {
+        if (SharedHandleMap.Contains(resource))
+        {
+            HANDLE handle = SharedHandleMap[resource];
+            if (handle)
+            {
+                CloseHandle(handle);
+            }
+            SharedHandleMap.Remove(resource);
+        }
+
         if(resource)
         {
             auto dx12Resource = ResourceMap[resource];
@@ -1076,6 +1126,43 @@ namespace Waldem
         return ResourceMap[resource];
     }
 
+    void* DX12Renderer::GetSharedHandle(GraphicResource* resource)
+    {
+        if (!resource)
+        {
+            return nullptr;
+        }
+
+        if (SharedHandleMap.Contains(resource))
+        {
+            return SharedHandleMap[resource];
+        }
+
+        ID3D12Resource* dx12Resource = ResourceMap[resource];
+        if (!dx12Resource)
+        {
+            return nullptr;
+        }
+
+        HANDLE sharedHandle = nullptr;
+        HRESULT hr = Device->CreateSharedHandle(
+            dx12Resource,
+            nullptr,
+            GENERIC_ALL,
+            nullptr,
+            &sharedHandle
+        );
+
+        if (FAILED(hr))
+        {
+            DX12Helper::PrintHResultError(hr);
+            return nullptr;
+        }
+
+        SharedHandleMap[resource] = sharedHandle;
+        return sharedHandle;
+    }
+
     void DX12Renderer::Present()
     {
         auto mainViewport = ViewportManager::GetMainViewport();
@@ -1113,6 +1200,13 @@ namespace Waldem
 
     void DX12Renderer::SetPipeline(Pipeline* pipeline)
     {
+        if (!pipeline || !WorldCommandList.first)
+        {
+            return;
+        }
+
+        WorldCommandList.first->SetGeneralDescriptorHeaps(GeneralResourcesHeap, GeneralSamplerHeap);
+        WorldCommandList.first->SetRootSignature(GeneralRootSignature);
         WorldCommandList.first->SetPipeline(pipeline);
         CurrentPipelineType = pipeline->CurrentPipelineType;
     }
@@ -1527,7 +1621,8 @@ namespace Waldem
             renderTarget->SetIndex(uavIndex, UAV);
         
             D3D12_CPU_DESCRIPTOR_HANDLE uavHandle = GeneralResourcesHeap->GetCPUDescriptorHandleForHeapStart();
-            uavHandle.ptr += uavIndex * descriptorSize;
+            const UINT uavDescriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+            uavHandle.ptr += uavIndex * uavDescriptorSize;
 
             D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
             uavDesc.Format = (DXGI_FORMAT)format;
@@ -2108,9 +2203,11 @@ namespace Waldem
 
         ID3D12Resource* Resource;
         
+        const D3D12_HEAP_FLAGS heapFlags = (type == StorageBuffer) ? D3D12_HEAP_FLAG_SHARED : D3D12_HEAP_FLAG_NONE;
+
         HRESULT hr = Device->CreateCommittedResource(
             &heapProps,
-            D3D12_HEAP_FLAG_NONE,
+            heapFlags,
             &bufferDesc,
             D3D12_RESOURCE_STATE_COMMON,
             nullptr,
@@ -2350,6 +2447,11 @@ namespace Waldem
                     WorldCommandList.first->SetRootSignature(GeneralRootSignature);
                     uint bindlessMagic = 999;
                     WorldCommandList.first->SetConstants(0, 1, &bindlessMagic, PipelineType::Graphics);
+                    if(CurrentViewport)
+                    {
+                        // Reset() clears rasterizer state; restore viewport/scissor for subsequent draws this frame.
+                        SetViewport(*CurrentViewport);
+                    }
 
                     //map and copy data
                     UINT8* pMappedData;

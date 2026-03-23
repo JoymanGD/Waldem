@@ -147,7 +147,8 @@ namespace Waldem
 
         void OnDraw(float deltaTime) override
         {
-            if (ImGui::Begin("Material Inspector", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus))
+            const bool isVisible = ImGui::Begin("Material Inspector###Material Inspector", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus);
+            if (isVisible)
             {
                 const auto& selectedPath = ContentBrowserWidget::GetSelectedAssetPath();
                 bool selectedMaterial = selectedPath.has_value() && selectedPath->extension() == ".mat";

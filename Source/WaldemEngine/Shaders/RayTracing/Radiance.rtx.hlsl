@@ -40,6 +40,7 @@ cbuffer RootConstants : register(b0)
     uint ColorRTID;
     uint ORMRTID;
     uint RadianceRTID;
+    uint PathTracingRTID;
     uint ReflectionRTID;
     uint LightsBufferID;
     uint LightTransformsBufferID;
@@ -243,6 +244,7 @@ void RayGenShader()
     Texture2D ColorRT = ResourceDescriptorHeap[ColorRTID];
     Texture2D ORMRT = ResourceDescriptorHeap[ORMRTID];
     RWTexture2D<float4> RadianceRT = ResourceDescriptorHeap[RadianceRTID];
+    RWTexture2D<float4> PathTracingRT = ResourceDescriptorHeap[PathTracingRTID];
     RWTexture2D<float4> ReflectionRT = ResourceDescriptorHeap[ReflectionRTID];
     Payload payload;
     
@@ -258,77 +260,6 @@ void RayGenShader()
 
     bool hasGeometry = length(normal) > 0.0001f;
 
-    if(EnablePathTracing != 0)
-    {
-        if(!hasGeometry)
-        {
-            float3 sky = float3(0.53f, 0.81f, 0.92f);
-            float3 outputColor = sky;
-            if(EnablePathTracingAccumulation != 0 && PathTracingFrameIndex > 0)
-            {
-                float3 prev = RadianceRT[dispatchIndex].rgb;
-                float blend = 1.0f / (PathTracingFrameIndex + 1.0f);
-                outputColor = lerp(prev, outputColor, blend);
-            }
-            RadianceRT[dispatchIndex] = float4(outputColor, 1.0f);
-            ReflectionRT[dispatchIndex] = 0.0f;
-            return;
-        }
-
-        payload.Color = 0.0f;
-        payload.Missed = false;
-        payload.CastShadows = true;
-        payload.IsReflectionPass = false;
-        payload.IsPathTracing = false;
-        payload.Depth = 0;
-        payload.Seed = 0;
-
-        float3 direct = GetRadiance(payload, worldPosition, normal, albedo, orm, 0.0f, sceneData, rayOrigin, -viewDirection);
-        uint spp = max(PathTracingSamplesPerPixel, 1u);
-        float3 indirectAccum = 0.0f;
-
-        for(uint s = 0; s < spp; s++)
-        {
-            uint seed = dispatchIndex.x * 1973u + dispatchIndex.y * 9277u + PathTracingFrameIndex * 26699u + s * 3181u + 911u;
-            float3 bounceDir = SampleCosineHemisphere(normalize(normal), seed);
-            float ndotl = saturate(dot(normalize(normal), bounceDir));
-
-            RayDesc pathRay;
-            pathRay.Origin = rayOrigin;
-            pathRay.Direction = bounceDir;
-            pathRay.TMin = TMIN;
-            pathRay.TMax = TMAX;
-
-            Payload pathPayload;
-            pathPayload.Color = 0.0f;
-            pathPayload.Missed = false;
-            pathPayload.CastShadows = true;
-            pathPayload.IsReflectionPass = false;
-            pathPayload.IsPathTracing = true;
-            pathPayload.Depth = 1;
-            pathPayload.Seed = seed;
-
-            TraceRay(TLAS, 0, 0xFF, 0, 1, 0, pathRay, pathPayload);
-
-            indirectAccum += pathPayload.Color.rgb * albedo.rgb * ndotl;
-        }
-
-        float3 tracedColor = direct + (indirectAccum / spp);
-        tracedColor = min(tracedColor, float3(16.0f, 16.0f, 16.0f));
-
-        float3 finalPT = tracedColor;
-        if(EnablePathTracingAccumulation != 0 && PathTracingFrameIndex > 0)
-        {
-            float3 prev = RadianceRT[dispatchIndex].rgb;
-            float blend = 1.0f / (PathTracingFrameIndex + 1.0f);
-            finalPT = lerp(prev, finalPT, blend);
-        }
-
-        RadianceRT[dispatchIndex] = float4(finalPT, 1.0f);
-        ReflectionRT[dispatchIndex] = 0.0f;
-        return;
-    }
-    
     float3 reflectedDirection = reflect(viewDirection, normalize(normal));
 
     RayDesc ray;
@@ -622,10 +553,14 @@ void ClosestHitShader(inout Payload payload, in Attributes attribs)
             RaytracingAccelerationStructure TLAS = ResourceDescriptorHeap[TLASID];
             TraceRay(TLAS, 0, 0xFF, 0, 1, 0, bounceRay, bouncePayload);
 
-            indirect = bouncePayload.Color.rgb * color.rgb * ndotl;
+            indirect = bouncePayload.Color.rgb * color.rgb;
         }
 
         float3 traced = direct + indirect;
         payload.Color = float4(min(traced, float3(16.0f, 16.0f, 16.0f)), 1.0f);
     }
 }
+
+
+
+

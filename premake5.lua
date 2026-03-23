@@ -31,6 +31,7 @@ IncludeDir["TinyCudaNNDep"] = "Vendor/tinycudann/dependencies"
 local function SetDefaultPaths()
     targetdir ("Build/" .. OutputDir .. "/%{prj.name}")
     objdir ("Intermediate/" .. OutputDir .. "/%{prj.name}")
+    debugdir ("Build/" .. OutputDir .. "/%{prj.name}")
 end
 
 local function SetupCommonCppProject()
@@ -85,8 +86,8 @@ local function SetupCommonCppProject()
         defines { "WD_PLATFORM_WINDOWS" }
 
     filter "configurations:Debug"
-        defines { "WD_DEBUG" }
-        runtime "Debug"
+        defines { "WD_DEBUG", "_ALLOW_ITERATOR_DEBUG_LEVEL_MISMATCH", "_ALLOW_RUNTIME_LIBRARY_MISMATCH" }
+        runtime "Release"
         symbols "on"
 
     filter "configurations:Release"
@@ -141,70 +142,6 @@ project "WaldemHeaderTool"
         SourceDir .. "/WaldemHeaderTool/**.cpp"
     }
 
-project "WaldemCoach"
-    location (SourceDir .. "/WaldemCoach")
-    kind "ConsoleApp"
-    language "C++"
-    cppdialect "C++20"
-    SetDefaultPaths()
-    debugdir ("Build/" .. OutputDir .. "/%{prj.name}")
-
-    files
-    {
-        SourceDir .. "/WaldemCoach/**.h",
-        SourceDir .. "/WaldemCoach/**.cpp",
-        SourceDir .. "/WaldemCoach/**.cu"
-    }
-
-    filter "files:**/TinyCuda/NIV/NIVCoach.cu"
-        buildmessage "Compiling CUDA source %{file.relpath}"
-        buildcommands
-        {
-            '"$(CUDA_PATH)/bin/nvcc.exe" -x cu -arch=sm_75 -std=c++17 --extended-lambda --expt-relaxed-constexpr -Xcompiler "/EHsc /MD" -c "%{file.relpath}" -o "%{cfg.objdir}/%{file.basename}.obj" ' ..
-            '-I"$(CUDA_PATH)/include" -I"%{wks.location}%{IncludeDir.TinyCudaNN}" -I"%{wks.location}%{IncludeDir.TinyCudaNNDep}" -I"%{wks.location}%{IncludeDir.TinyCudaNNDep}/fmt/include" ' ..
-            '-DWIN32_LEAN_AND_MEAN -D_WINSOCKAPI_ -DTCNN_HALF_PRECISION=1 -DTCNN_MIN_GPU_ARCH=75 -DFMT_CONSTEVAL='
-        }
-        buildoutputs { "%{cfg.objdir}/%{file.basename}.obj" }
-    filter {}
-
-    includedirs
-    {
-        "$(CUDA_PATH)/include",
-        "%{IncludeDir.TinyCudaNN}",
-        "%{IncludeDir.TinyCudaNNDep}",
-        "%{IncludeDir.TinyCudaNNDep}/fmt/include",
-    }
-
-    libdirs
-    {
-        "Vendor/tinycudann/build/Release",
-        "Vendor/tinycudann/dependencies/fmt/build_vs/Release",
-        "$(CUDA_PATH)/lib/x64"
-    }
-
-    links
-    {
-        "tiny-cuda-nn",
-        "tiny-cuda-nn-resources",
-        "fmt",
-        "cuda",
-        "nvrtc",
-        "cudart",
-        "%{cfg.objdir}/NIVCoach.obj",
-    }
-
-    defines
-    {
-        "TCNN_HALF_PRECISION=1",
-        "TCNN_MIN_GPU_ARCH=75",
-    }
-    
-    postbuildcommands
-    {
-        '{MKDIR} "%{cfg.targetdir}/Configs"',
-        '{COPYDIR} "%{wks.location}' .. SourceDir .. '/WaldemCoach/TinyCuda/NIV/Configs" "%{cfg.targetdir}/Configs"'
-    }
-
 project "WaldemEngine"
     location (SourceDir .. "/WaldemEngine")
     kind "SharedLib"
@@ -218,19 +155,38 @@ project "WaldemEngine"
 
     includedirs
     {
-        "%{IncludeDir.flecs}"
+        "%{IncludeDir.flecs}",
+        "$(CUDA_PATH)/include",
+        "%{IncludeDir.TinyCudaNN}",
+        "%{IncludeDir.TinyCudaNNDep}",
+        "%{IncludeDir.TinyCudaNNDep}/fmt/include",
     }
 
     files
     {
         SourceDir .. "/WaldemEngine/**.h",
         SourceDir .. "/WaldemEngine/**.cpp",
-        SourceDir .. "/WaldemEngine/Shaders/**.hlsl"
+        SourceDir .. "/WaldemEngine/Shaders/**.hlsl",
+        SourceDir .. "/WaldemEngine/**.cu"
+    }
+    
+    libdirs
+    {
+        "Vendor/tinycudann/build/Release",
+        "Vendor/tinycudann/dependencies/fmt/build_vs/Release",
+        "$(CUDA_PATH)/lib/x64"
     }
 
     links
     {
-        "flecs"
+        "flecs",
+        "tiny-cuda-nn",
+        "tiny-cuda-nn-resources",
+        "fmt",
+        "cuda",
+        "nvrtc",
+        "cudart",
+        "%{cfg.objdir}/NIVCoach.obj",
     }
 
     defines
@@ -238,7 +194,9 @@ project "WaldemEngine"
         "WD_BUILD_DLL",
         "WD_DYNAMIC_LINK",
         "_CRT_SECURE_NO_WARNINGS",
-        "IMGUI_API=__declspec(dllimport)"
+        "IMGUI_API=__declspec(dllimport)",
+        "TCNN_HALF_PRECISION=1",
+        "TCNN_MIN_GPU_ARCH=75",
     }
 
     prebuildcommands
@@ -247,6 +205,35 @@ project "WaldemEngine"
         "\"%{wks.location}Source\\WaldemEngine\" " ..
         "\"%{wks.location}Intermediate\\Generated\""
     }
+    
+    postbuildcommands
+    {
+        '{MKDIR} "%{cfg.targetdir}/Config"',
+        '{COPYDIR} "%{wks.location}' .. SourceDir .. '/%{prj.name}/Config" "%{cfg.targetdir}/Config"'
+    }
+
+    filter { "files:**.cu", "configurations:Debug" }
+        flags { "NoPCH" }
+        buildmessage "Compiling CUDA source %{file.relpath}"
+        buildcommands
+        {
+            '"$(CUDA_PATH)/bin/nvcc.exe" -x cu -arch=sm_75 -std=c++17 --extended-lambda --expt-relaxed-constexpr -Xcompiler "/EHsc /MD" -c "%{file.relpath}" -o "%{cfg.objdir}/%{file.basename}.obj" ' ..
+            '-I"$(CUDA_PATH)/include" -I"%{wks.location}%{IncludeDir.TinyCudaNN}" -I"%{wks.location}%{IncludeDir.TinyCudaNNDep}" -I"%{wks.location}%{IncludeDir.TinyCudaNNDep}/fmt/include" -I"%{wks.location}Source/WaldemEngine" ' ..
+            '-DWIN32_LEAN_AND_MEAN -D_WINSOCKAPI_ -DWD_PLATFORM_WINDOWS -DWD_BUILD_DLL -DWD_DYNAMIC_LINK -DNDEBUG -D_ALLOW_ITERATOR_DEBUG_LEVEL_MISMATCH -D_ALLOW_RUNTIME_LIBRARY_MISMATCH -DTCNN_HALF_PRECISION=1 -DTCNN_MIN_GPU_ARCH=75 -DFMT_CONSTEVAL='
+        }
+        buildoutputs { "%{cfg.objdir}/%{file.basename}.obj" }
+
+    filter { "files:**.cu", "configurations:Release" }
+        flags { "NoPCH" }
+        buildmessage "Compiling CUDA source %{file.relpath}"
+        buildcommands
+        {
+            '"$(CUDA_PATH)/bin/nvcc.exe" -x cu -arch=sm_75 -std=c++17 --extended-lambda --expt-relaxed-constexpr -Xcompiler "/EHsc /MD" -c "%{file.relpath}" -o "%{cfg.objdir}/%{file.basename}.obj" ' ..
+            '-I"$(CUDA_PATH)/include" -I"%{wks.location}%{IncludeDir.TinyCudaNN}" -I"%{wks.location}%{IncludeDir.TinyCudaNNDep}" -I"%{wks.location}%{IncludeDir.TinyCudaNNDep}/fmt/include" -I"%{wks.location}Source/WaldemEngine" ' ..
+            '-DWIN32_LEAN_AND_MEAN -D_WINSOCKAPI_ -DWD_PLATFORM_WINDOWS -DWD_BUILD_DLL -DWD_DYNAMIC_LINK -DNDEBUG -D_ALLOW_ITERATOR_DEBUG_LEVEL_MISMATCH -D_ALLOW_RUNTIME_LIBRARY_MISMATCH -DTCNN_HALF_PRECISION=1 -DTCNN_MIN_GPU_ARCH=75 -DFMT_CONSTEVAL='
+        }
+        buildoutputs { "%{cfg.objdir}/%{file.basename}.obj" }
+    filter {}
 
     filter "files:**.hlsl"
         flags { "ExcludeFromBuild", "NoPCH" }

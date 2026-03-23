@@ -1,4 +1,5 @@
 #pragma once
+#include "Waldem/Core.h"
 #include "Waldem/Types/DataBuffer.h"
 
 namespace Waldem

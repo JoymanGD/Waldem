@@ -9476,7 +9476,9 @@ bool    ImGui::BeginTabBarEx(ImGuiTabBar* tab_bar, const ImRect& tab_bar_bb, ImG
     tab_bar->PrevTabsContentsHeight = tab_bar->CurrTabsContentsHeight;
     tab_bar->CurrTabsContentsHeight = 0.0f;
     tab_bar->ItemSpacingY = g.Style.ItemSpacing.y;
-    tab_bar->FramePadding = g.Style.FramePadding;
+    // Dock tabs: keep compact look but give labels a small internal horizontal padding.
+    const float dock_tab_padding_x = 6.0f;
+    tab_bar->FramePadding = ImVec2((flags & ImGuiTabBarFlags_DockNode) ? dock_tab_padding_x : g.Style.FramePadding.x, g.Style.FramePadding.y);
     tab_bar->TabsActiveCount = 0;
     tab_bar->LastTabItemIdx = -1;
     tab_bar->BeginCount = 1;
@@ -9546,6 +9548,7 @@ static float TabBarCalcScrollableWidth(ImGuiTabBar* tab_bar, ImGuiTabBarSection*
 static void ImGui::TabBarLayout(ImGuiTabBar* tab_bar)
 {
     ImGuiContext& g = *GImGui;
+    const float tab_spacing_x = (tab_bar->Flags & ImGuiTabBarFlags_DockNode) ? 0.0f : g.Style.ItemInnerSpacing.x;
     tab_bar->WantLayout = false;
 
     // Garbage collect by compacting list
@@ -9592,8 +9595,8 @@ static void ImGui::TabBarLayout(ImGuiTabBar* tab_bar)
         ImQsort(tab_bar->Tabs.Data, tab_bar->Tabs.Size, sizeof(ImGuiTabItem), TabItemComparerBySection);
 
     // Calculate spacing between sections
-    sections[0].Spacing = sections[0].TabCount > 0 && (sections[1].TabCount + sections[2].TabCount) > 0 ? g.Style.ItemInnerSpacing.x : 0.0f;
-    sections[1].Spacing = sections[1].TabCount > 0 && sections[2].TabCount > 0 ? g.Style.ItemInnerSpacing.x : 0.0f;
+    sections[0].Spacing = sections[0].TabCount > 0 && (sections[1].TabCount + sections[2].TabCount) > 0 ? tab_spacing_x : 0.0f;
+    sections[1].Spacing = sections[1].TabCount > 0 && sections[2].TabCount > 0 ? tab_spacing_x : 0.0f;
 
     // Setup next selected tab
     ImGuiID scroll_to_tab_id = 0;
@@ -9649,7 +9652,7 @@ static void ImGui::TabBarLayout(ImGuiTabBar* tab_bar)
 
         int section_n = TabItemGetSectionIdx(tab);
         ImGuiTabBarSection* section = &sections[section_n];
-        section->Width += tab->ContentWidth + (section_n == curr_section_n ? g.Style.ItemInnerSpacing.x : 0.0f);
+        section->Width += tab->ContentWidth + (section_n == curr_section_n ? tab_spacing_x : 0.0f);
         curr_section_n = section_n;
 
         // Store data so we can build an array sorted by width if we need to shrink tabs down
@@ -9723,7 +9726,7 @@ static void ImGui::TabBarLayout(ImGuiTabBar* tab_bar)
             ImGuiTabItem* tab = &tab_bar->Tabs[section_tab_index + tab_n];
             tab->Offset = tab_offset;
             tab->NameOffset = -1;
-            tab_offset += tab->Width + (tab_n < section->TabCount - 1 ? g.Style.ItemInnerSpacing.x : 0.0f);
+            tab_offset += tab->Width + (tab_n < section->TabCount - 1 ? tab_spacing_x : 0.0f);
         }
         tab_bar->WidthAllTabs += ImMax(section->Width + section->Spacing, 0.0f);
         tab_offset += section->Spacing;

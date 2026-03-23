@@ -45,8 +45,8 @@ namespace Waldem
 
     public:
         SViewport() = default;
-        SViewport(ViewportType type, WString name, Point2 position, Point2 size, Point2 depthRange, int frameBufferSize, bool gbuffer = true);
-        SViewport(ViewportType type, WString name, Point2 position, Point2 size, Point2 depthRange, SFrameBuffer* frameBuffer, bool gbuffer = true);
+        SViewport(ViewportType type, const WString& name, Point2 position, Point2 size, Point2 depthRange, int frameBufferSize, bool gbuffer = true);
+        SViewport(ViewportType type, const WString& name, Point2 position, Point2 size, Point2 depthRange, SFrameBuffer* frameBuffer, bool gbuffer = true);
 
         void SetViewport(Point2 position, Point2 size, Point2 depthRange);
 

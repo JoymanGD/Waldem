@@ -6,7 +6,7 @@
 
 #define MAX_RAYTRACING_PAYLOAD_SIZE 128
 #define MAX_RAYTRACING_ATTRIBUTES_SIZE 8
-#define MAX_RAYTRACING_RECURSION_DEPTH 5
+#define MAX_RAYTRACING_RECURSION_DEPTH 8
 
 namespace Waldem
 {
@@ -148,7 +148,7 @@ namespace Waldem
         auto pipelineConfig = raytracingPipeline.CreateSubobject<CD3DX12_RAYTRACING_PIPELINE_CONFIG_SUBOBJECT>();
         // PERFOMANCE TIP: Set max recursion depth as low as needed 
         // as drivers may apply optimization strategies for low recursion depths. 
-        UINT maxRecursionDepth = MAX_RAYTRACING_RECURSION_DEPTH; // ~ primary rays only. 
+        UINT maxRecursionDepth = MAX_RAYTRACING_RECURSION_DEPTH;
         pipelineConfig->Config(maxRecursionDepth);
 
         D3D12_FEATURE_DATA_D3D12_OPTIONS5 options5 = {};

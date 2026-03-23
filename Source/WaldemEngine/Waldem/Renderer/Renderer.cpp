@@ -91,6 +91,11 @@ namespace Waldem
         Instance->PlatformRenderer->Wait();
     }
 
+    void Renderer::Flush()
+    {
+        Instance->PlatformRenderer->Flush();
+    }
+
     void Renderer::Compute(Point3 groupCount)
     {
         Instance->PlatformRenderer->Compute(groupCount);
@@ -273,11 +278,20 @@ namespace Waldem
 
     void Renderer::ResourceBarrier(GraphicResource* resource, ResourceStates before, ResourceStates after)
     {
+        if(resource == nullptr || before == after)
+            return;
+
         Instance->PlatformRenderer->ResourceBarrier(resource, before, after);
     }
 
     ResourceStates Renderer::ResourceBarrier(GraphicResource* resource, ResourceStates after)
     {
+        if(resource == nullptr)
+            return COMMON;
+
+        if(resource->GetCurrentState() == after)
+            return after;
+
         return Instance->PlatformRenderer->ResourceBarrier(resource, after);
     }
 
@@ -324,6 +338,11 @@ namespace Waldem
     void* Renderer::GetPlatformResource(GraphicResource* resource)
     {
         return Instance->PlatformRenderer->GetPlatformResource(resource);
+    }
+
+    void* Renderer::GetSharedHandle(GraphicResource* resource)
+    {
+        return Instance->PlatformRenderer->GetSharedHandle(resource);
     }
 
     SViewport* Renderer::GetCurrentViewport()

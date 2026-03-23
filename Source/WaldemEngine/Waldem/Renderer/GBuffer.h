@@ -18,8 +18,10 @@ namespace Waldem
         Radiance = 7,
         Reflection = 8,
         SkyColor = 9,
-        Ping = 11,
-        Pong = 12,
+        NIVIrradiance = 10,
+        PathTracing = 11,
+        Ping = 12,
+        Pong = 13,
     };
 
     struct SGBuffer
@@ -34,6 +36,8 @@ namespace Waldem
         RenderTarget* RadianceRT = nullptr;
         RenderTarget* ReflectionRT = nullptr;
         RenderTarget* SkyColorRT = nullptr;
+        RenderTarget* NIVIrradianceRT = nullptr;
+        RenderTarget* PathTracingRT = nullptr;
         RenderTarget* PingRT = nullptr;
         RenderTarget* PongRT = nullptr;
 
@@ -49,6 +53,8 @@ namespace Waldem
             RadianceRT = Renderer::CreateRenderTarget("RadianceRT", size.x, size.y, GetFormat(GBufferRenderTarget::Radiance));
             ReflectionRT = Renderer::CreateRenderTarget("ReflectionRT", size.x, size.y, GetFormat(GBufferRenderTarget::Reflection));
             SkyColorRT = Renderer::CreateRenderTarget("SkyColorRT", size.x, size.y, GetFormat(GBufferRenderTarget::SkyColor));
+            NIVIrradianceRT = Renderer::CreateRenderTarget("NIVIrradianceRT", size.x, size.y, GetFormat(GBufferRenderTarget::NIVIrradiance));
+            PathTracingRT = Renderer::CreateRenderTarget("PathTracingRT", size.x, size.y, GetFormat(GBufferRenderTarget::PathTracing));
             PingRT = Renderer::CreateRenderTarget("PingRT", size.x, size.y, GetFormat(GBufferRenderTarget::Ping));
             PongRT = Renderer::CreateRenderTarget("PongRT", size.x, size.y, GetFormat(GBufferRenderTarget::Pong));
         }
@@ -77,6 +83,10 @@ namespace Waldem
                 return ReflectionRT;
             case GBufferRenderTarget::SkyColor:
                 return SkyColorRT;
+            case GBufferRenderTarget::NIVIrradiance:
+                return NIVIrradianceRT;
+            case GBufferRenderTarget::PathTracing:
+                return PathTracingRT;
             case GBufferRenderTarget::Ping:
                 return PingRT;
             case GBufferRenderTarget::Pong:
@@ -97,6 +107,8 @@ namespace Waldem
             Renderer::ResizeRenderTarget(RadianceRT, size.x, size.y);
             Renderer::ResizeRenderTarget(ReflectionRT, size.x, size.y);
             Renderer::ResizeRenderTarget(SkyColorRT, size.x, size.y);
+            Renderer::ResizeRenderTarget(NIVIrradianceRT, size.x, size.y);
+            Renderer::ResizeRenderTarget(PathTracingRT, size.x, size.y);
             Renderer::ResizeRenderTarget(PingRT, size.x, size.y);
             Renderer::ResizeRenderTarget(PongRT, size.x, size.y);
         }
@@ -114,6 +126,8 @@ namespace Waldem
                 GBufferRenderTarget::Radiance,
                 GBufferRenderTarget::Reflection,
                 GBufferRenderTarget::SkyColor,
+                GBufferRenderTarget::NIVIrradiance,
+                GBufferRenderTarget::PathTracing,
                 GBufferRenderTarget::Ping,
                 GBufferRenderTarget::Pong
             };
@@ -169,6 +183,8 @@ namespace Waldem
                 case GBufferRenderTarget::Radiance: return TextureFormat::R32G32B32A32_FLOAT;
                 case GBufferRenderTarget::Reflection: return TextureFormat::R32G32B32A32_FLOAT;
                 case GBufferRenderTarget::SkyColor: return TextureFormat::R16G16B16A16_FLOAT;
+                case GBufferRenderTarget::NIVIrradiance: return TextureFormat::R16G16B16A16_FLOAT;
+                case GBufferRenderTarget::PathTracing: return TextureFormat::R32G32B32A32_FLOAT;
                 case GBufferRenderTarget::Ping: return TextureFormat::R16G16B16A16_FLOAT;
                 case GBufferRenderTarget::Pong: return TextureFormat::R16G16B16A16_FLOAT;
                 default: return TextureFormat::UNKNOWN;
@@ -189,6 +205,8 @@ namespace Waldem
                 GetFormat(Radiance),
                 GetFormat(Reflection),
                 GetFormat(SkyColor),
+                GetFormat(NIVIrradiance),
+                GetFormat(PathTracing),
                 GetFormat(Ping),
                 GetFormat(Pong)
             };

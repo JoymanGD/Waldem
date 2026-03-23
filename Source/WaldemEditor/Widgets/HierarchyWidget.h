@@ -138,7 +138,8 @@ namespace Waldem
 
         void OnDraw(float deltaTime) override
         {
-            if (ImGui::Begin("Entities", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus))
+            const bool isVisible = ImGui::Begin("Entities###Entities", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus);
+            if (isVisible)
             {
                 const bool hierarchyFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
 
@@ -544,13 +545,16 @@ namespace Waldem
                     drawEntityRecursive(rootId, 0);
                 }
 
-                float emptyDropHeight = ImGui::GetContentRegionAvail().y;
-                if (emptyDropHeight < 24.0f)
+                ImVec2 emptyDropSize = ImGui::GetContentRegionAvail();
+                if (emptyDropSize.y < 24.0f)
                 {
-                    emptyDropHeight = 24.0f;
+                    emptyDropSize.y = 24.0f;
                 }
 
-                ImGui::InvisibleButton("##HierarchyEmptyDropTarget", ImVec2(ImGui::GetContentRegionAvail().x, emptyDropHeight));
+                // ImGui::InvisibleButton requires both dimensions to be strictly > 0.
+                emptyDropSize.x = ImMax(emptyDropSize.x, 1.0f);
+                emptyDropSize.y = ImMax(emptyDropSize.y, 1.0f);
+                ImGui::InvisibleButton("##HierarchyEmptyDropTarget", emptyDropSize);
                 if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
                 {
                     DeselectAllEntities();

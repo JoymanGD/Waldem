@@ -1,0 +1,129 @@
+{
+  "version": 1,
+  "nodes": [
+    {
+      "id": 0,
+      "parent": -1,
+      "local_matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        3.7100000381469727,
+        8.087685585021973,
+        1.0715839862823486,
+        1.0
+      ],
+      "entity": {
+        "name": "MirrorChain",
+        "tags": [
+          "Waldem.Selected"
+        ],
+        "components": {
+          "SceneEntity": {
+            "ParentId": 0,
+            "HierarchyDepth": 0,
+            "HierarchySlot": 108,
+            "VisibleInHierarchy": true
+          },
+          "Waldem.Transform": {
+            "Position": {
+              "x": 3.7100000381,
+              "y": 8.087685585,
+              "z": 1.0715839863
+            },
+            "Rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "LocalScale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            },
+            "___RotationQuat": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            }
+          },
+          "Waldem.MeshComponent": {
+            "MeshRef": "Models\\Sponza\\meshes0_77.mesh",
+            "MaterialRef": "Models\\Sponza\\Material_20"
+          }
+        }
+      }
+    },
+    {
+      "id": 1,
+      "parent": 0,
+      "local_matrix": [
+        0.03654094040393829,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        -0.000037638899812009186,
+        0.021885180845856667,
+        0.0,
+        0.0,
+        -0.0391610786318779,
+        -0.00006735058559570462,
+        0.0,
+        -6.186878204345703,
+        0.9860858917236328,
+        -1.4343533515930176,
+        1.0
+      ],
+      "entity": {
+        "parent": "MirrorChain",
+        "name": "Mirror",
+        "components": {
+          "SceneEntity": {
+            "ParentId": 758,
+            "HierarchyDepth": 1,
+            "HierarchySlot": 107,
+            "VisibleInHierarchy": true
+          },
+          "Waldem.Transform": {
+            "Position": {
+              "x": -2.4768781662,
+              "y": 9.0737714767,
+              "z": -0.3627693653
+            },
+            "Rotation": {
+              "x": 90.0984954834,
+              "y": 0,
+              "z": 0
+            },
+            "LocalScale": {
+              "x": 0.0365409404,
+              "y": 0.0218852125,
+              "z": 0.0391611345
+            },
+            "___RotationQuat": {
+              "x": 0.7077145576,
+              "y": 0,
+              "z": 0,
+              "w": 0.7064985037
+            }
+          },
+          "Waldem.MeshComponent": {
+            "MeshRef": "Meshes\\Floor\\Floor.mesh",
+            "MaterialRef": "Materials\\Test.mat"
+          }
+        }
+      }
+    }
+  ]
+}

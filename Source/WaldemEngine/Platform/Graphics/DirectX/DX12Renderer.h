@@ -34,6 +34,7 @@ namespace Waldem
         void SetVertexBuffers(Buffer* vertexBuffer, uint32 numBuffers, uint32 startIndex = 0) override;
         void Signal() override;
         void Wait() override;
+        void Flush() override;
         Point3 GetNumThreadsPerGroup(ComputeShader* computeShader) override;
         void Compute(Point3 groupCount) override;
         void TraceRays(Pipeline* rayTracingPipeline, Point3 numRays) override;
@@ -79,6 +80,7 @@ namespace Waldem
         void Destroy(GraphicResource* resource) override; 
         void DestroyImmediate(GraphicResource* resource) override; 
         void* GetPlatformResource(GraphicResource* resource) override;
+        void* GetSharedHandle(GraphicResource* resource) override;
         SViewport* GetCurrentViewport() override { return CurrentViewport; }
 
     private:
@@ -117,6 +119,7 @@ namespace Waldem
 
         //bindless
         WMap<GraphicResource*, ID3D12Resource*> ResourceMap;
+        WMap<GraphicResource*, HANDLE> SharedHandleMap;
         DescriptorAllocator GeneralAllocator = DescriptorAllocator(BINDLESS_MAX_DESCRIPTORS);
         ID3D12DescriptorHeap* GeneralResourcesHeap = nullptr;
         ID3D12DescriptorHeap* GeneralSamplerHeap = nullptr;

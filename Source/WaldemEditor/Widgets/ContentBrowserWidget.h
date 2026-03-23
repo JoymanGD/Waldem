@@ -19,6 +19,8 @@
 #include <chrono>
 #include <vector>
 
+#include "imgui_internal.h"
+
 namespace Waldem
 {
     class ContentBrowserWidget : public IWidget
@@ -1161,13 +1163,16 @@ namespace Waldem
                 SharedSelectedAssetPath.reset();
             }
 
-            float dropTargetHeight = ImGui::GetContentRegionAvail().y;
-            if(dropTargetHeight < 24.0f)
+            ImVec2 dropTargetSize = ImGui::GetContentRegionAvail();
+            if (dropTargetSize.y < 24.0f)
             {
-                dropTargetHeight = 24.0f;
+                dropTargetSize.y = 24.0f;
             }
 
-            ImGui::InvisibleButton("##PrefabDropTarget", ImVec2(ImGui::GetContentRegionAvail().x, dropTargetHeight));
+            // ImGui::InvisibleButton requires both dimensions to be strictly > 0.
+            dropTargetSize.x = ImMax(dropTargetSize.x, 1.0f);
+            dropTargetSize.y = ImMax(dropTargetSize.y, 1.0f);
+            ImGui::InvisibleButton("##PrefabDropTarget", dropTargetSize);
             if (ImGui::BeginDragDropTarget())
             {
                 if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(HierarchyDragPayloadType))
@@ -1185,7 +1190,7 @@ namespace Waldem
             PollImportTask();
             ThumbnailsCreatedThisFrame = 0;
 
-            if (ImGui::Begin("Content", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus))
+            if (ImGui::Begin("Content###Content", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus))
             {
                 ProcessFocusRequest();
                 HoveredDropTargetFolder.reset();

@@ -38,6 +38,7 @@ namespace Waldem
         virtual void SetVertexBuffers(Buffer* vertexBuffer, uint32 numBuffers, uint32 startIndex = 0) = 0;
         virtual void Signal() = 0;
         virtual void Wait() = 0;
+        virtual void Flush() = 0;
         virtual Point3 GetNumThreadsPerGroup(ComputeShader* computeShader) = 0;
         virtual void Compute(Point3 groupCount) = 0;
         virtual void TraceRays(Pipeline* rayTracingPipeline, Point3 numRays) = 0;
@@ -82,6 +83,7 @@ namespace Waldem
         virtual void Destroy(GraphicResource* resource) = 0;
         virtual void DestroyImmediate(GraphicResource* resource) = 0;
         virtual void* GetPlatformResource(GraphicResource* resource) = 0;
+        virtual void* GetSharedHandle(GraphicResource* resource) = 0;
         virtual void DrawIndexedInstanced(uint uint, Waldem::uint uint32, Waldem::uint start_index_location, int base_vertex_location, Waldem::uint start_instance_location) = 0;
         virtual SViewport* GetCurrentViewport() = 0;
     };
@@ -104,6 +106,7 @@ namespace Waldem
         static void SetVertexBuffers(Buffer* vertexBuffer, uint32 numBuffers, uint32 startIndex = 0);
         static void Signal();
         static void Wait();
+        static void Flush();
         static Point3 GetNumThreadsPerGroup(ComputeShader* computeShader);
         static void Compute(Point3 groupCount);
         static void TraceRays(Pipeline* rayTracingPipeline, Point3 numRays);
@@ -149,6 +152,7 @@ namespace Waldem
         static void Destroy(GraphicResource* resource);
         static void DestroyImmediate(GraphicResource* resource);
         static void* GetPlatformResource(GraphicResource* resource);
+        static void* GetSharedHandle(GraphicResource* resource);
         static SViewport* GetCurrentViewport();
 
         static RendererAPI RAPI;

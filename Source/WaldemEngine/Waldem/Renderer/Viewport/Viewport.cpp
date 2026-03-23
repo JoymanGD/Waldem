@@ -6,7 +6,7 @@
 
 namespace Waldem
 {
-    SViewport::SViewport(ViewportType type, WString name, Point2 position, Point2 size, Point2 depthRange, int frameBufferSize, bool gbuffer) : Type(type), Name(name), Position(position), Size(size), DepthRange(depthRange)
+    SViewport::SViewport(ViewportType type, const WString& name, Point2 position, Point2 size, Point2 depthRange, int frameBufferSize, bool gbuffer) : Type(type), Name(name), Position(position), Size(size), DepthRange(depthRange)
     {
         FrameBuffer = new SFrameBuffer(name, frameBufferSize, size);
 
@@ -16,7 +16,7 @@ namespace Waldem
         }
     }
     
-    SViewport::SViewport(ViewportType type, WString name, Point2 position, Point2 size, Point2 depthRange, SFrameBuffer* frameBuffer, bool gbuffer) : Type(type), Name(name), Position(position), Size(size), DepthRange(depthRange)
+    SViewport::SViewport(ViewportType type, const WString& name, Point2 position, Point2 size, Point2 depthRange, SFrameBuffer* frameBuffer, bool gbuffer) : Type(type), Name(name), Position(position), Size(size), DepthRange(depthRange)
     {
         FrameBuffer = frameBuffer;
 

@@ -22,6 +22,14 @@
 	#define WD_ENABLE_ASSERTS
 #endif
 
+#ifndef FORCEINLINE
+	#if defined(_MSC_VER)
+		#define FORCEINLINE __forceinline
+	#else
+		#define FORCEINLINE inline
+	#endif
+#endif
+
 #ifdef WD_ENABLE_ASSERTS
 	#define WD_ASSERT(x, ...) { if(!(x)) { WD_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }
 	#define WD_CORE_ASSERT(x, ...) { if(!(x)) { WD_CORE_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }

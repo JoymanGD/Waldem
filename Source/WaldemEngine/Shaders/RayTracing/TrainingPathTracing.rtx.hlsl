@@ -8,6 +8,10 @@
 #define PI 3.14159265359f
 #endif
 
+#ifndef TRAIN_RAY_BIAS
+#define TRAIN_RAY_BIAS TMIN
+#endif
+
 struct TrainingSample
 {
     float4 WorldPosition;
@@ -18,8 +22,13 @@ struct TrainingSample
 struct Payload
 {
     float3 Radiance;
+    float3 NextRayOrigin;
+    float3 NextRayDirection;
+    float3 Throughput;
     uint IsShadowRay;
     uint Hit;
+    uint FirstHitBackfacing;
+    uint ContinuePath;
     uint Depth;
     uint Seed;
 };
@@ -48,6 +57,18 @@ cbuffer RootConstants : register(b0)
     uint RaysPerPoint;
     uint MaxBounces;
     uint SeedOffset;
+    float SceneMinX;
+    float SceneMinY;
+    float SceneMinZ;
+    float SceneMinW;
+    float SceneMaxX;
+    float SceneMaxY;
+    float SceneMaxZ;
+    float SceneMaxW;
+    float SurfaceSampleProbability;
+    uint EnableBackfaceCulling;
+    uint Padding0;
+    uint Padding1;
 };
 
 SamplerState myStaticSampler : register(s0);
@@ -86,6 +107,16 @@ float3 SampleCosineHemisphere(float3 n, inout uint seed)
     return normalize(tangent * x + bitangent * y + n * z);
 }
 
+float3 SampleUniformSphere(inout uint seed)
+{
+    const float u = Random01(seed);
+    const float v = Random01(seed);
+    const float z = 1.0f - 2.0f * u;
+    const float r = sqrt(saturate(1.0f - z * z));
+    const float phi = 2.0f * PI * v;
+    return float3(r * cos(phi), r * sin(phi), z);
+}
+
 float3 SafeNormalize(float3 v, float3 fallback)
 {
     float len2 = dot(v, v);
@@ -102,11 +133,186 @@ float smoothstep_custom(float edge0, float edge1, float x)
     return t * t * (3.0f - 2.0f * t);
 }
 
+float3 GetNormal(float3 normal, float3 tangent, float3 bitangent, float4 normalMap)
+{
+    float3x3 TBN = float3x3(tangent, bitangent, normal);
+    return mul(normalMap.xyz * 2.0f - 1.0f, TBN);
+}
+
+float4 SampleTexture(Texture2D texture, float2 uv)
+{
+    return texture.SampleLevel(myStaticSampler, uv, 0.0f);
+}
+
+float3 GetTrainingPathTracingDirectLighting(float3 worldPosition, float3 worldNormal, float3 albedo, bool castShadows, float3 rayOrigin)
+{
+    float3 direct = 0.0f;
+
+    if(NumLights == 0u)
+    {
+        return direct;
+    }
+
+    StructuredBuffer<Light> lights = ResourceDescriptorHeap[LightsBufferId];
+    StructuredBuffer<float4x4> lightTransforms = ResourceDescriptorHeap[LightTransformsBufferId];
+    StructuredBuffer<int> lightIndices = ResourceDescriptorHeap[LightsIndicesBufferId];
+    RaytracingAccelerationStructure TLAS = ResourceDescriptorHeap[TLASID];
+
+    [loop]
+    for(uint i = 0; i < NumLights; i++)
+    {
+        int lightIndex = lightIndices[i];
+        Light light = lights[lightIndex];
+        float4x4 lightTransform = lightTransforms[lightIndex];
+        float3 lightDir = 0.0f;
+        float3 radiance = 0.0f;
+
+        if(length(light.Color) == 0.0f)
+        {
+            light.Color = float3(0.001f, 0.001f, 0.001f);
+        }
+
+        if(light.Type == 0u)
+        {
+            lightDir = -GetForwardVector(lightTransform);
+            float nDotL = saturate(dot(worldNormal, lightDir));
+            if(nDotL <= 0.0f)
+            {
+                continue;
+            }
+
+            Payload shadowPayload;
+            shadowPayload.Radiance = 0.0f;
+            shadowPayload.NextRayOrigin = 0.0f;
+            shadowPayload.NextRayDirection = 0.0f;
+            shadowPayload.Throughput = 0.0f;
+            shadowPayload.IsShadowRay = 1u;
+            shadowPayload.Hit = 0u;
+            shadowPayload.FirstHitBackfacing = 0u;
+            shadowPayload.ContinuePath = 0u;
+            shadowPayload.Depth = 0u;
+            shadowPayload.Seed = 0u;
+
+            RayDesc shadowRay;
+            shadowRay.Origin = rayOrigin;
+            shadowRay.Direction = lightDir;
+            shadowRay.TMin = TRAIN_RAY_BIAS;
+            shadowRay.TMax = TMAX;
+            TraceRay(TLAS, 0, 0xFF, 0, 1, 0, shadowRay, shadowPayload);
+
+            if(shadowPayload.Hit == 0u || !castShadows)
+            {
+                radiance = light.Color * light.Intensity / 10.0f * nDotL;
+            }
+        }
+        else if(light.Type == 1u)
+        {
+            float3 lightPosition = transpose(lightTransform)[3].xyz;
+            float3 toLight = lightPosition - worldPosition;
+            float distance = length(toLight);
+            if(distance <= 1e-6f || distance > light.Radius)
+            {
+                continue;
+            }
+
+            lightDir = toLight / distance;
+            float nDotL = saturate(dot(worldNormal, lightDir));
+            if(nDotL <= 0.0f)
+            {
+                continue;
+            }
+
+            Payload shadowPayload;
+            shadowPayload.Radiance = 0.0f;
+            shadowPayload.NextRayOrigin = 0.0f;
+            shadowPayload.NextRayDirection = 0.0f;
+            shadowPayload.Throughput = 0.0f;
+            shadowPayload.IsShadowRay = 1u;
+            shadowPayload.Hit = 0u;
+            shadowPayload.FirstHitBackfacing = 0u;
+            shadowPayload.ContinuePath = 0u;
+            shadowPayload.Depth = 0u;
+            shadowPayload.Seed = 0u;
+
+            RayDesc shadowRay;
+            shadowRay.Origin = rayOrigin;
+            shadowRay.Direction = lightDir;
+            shadowRay.TMin = TRAIN_RAY_BIAS;
+            shadowRay.TMax = max(min(distance, light.Radius) - TRAIN_RAY_BIAS, TRAIN_RAY_BIAS);
+            TraceRay(TLAS, 0, 0xFF, 0, 1, 0, shadowRay, shadowPayload);
+
+            if(shadowPayload.Hit == 0u || !castShadows)
+            {
+                float attenuation = 1.0f / (A0 + A1 * distance + A2 * distance * distance);
+                attenuation *= smoothstep_custom(light.Radius, 0.0f, distance);
+                radiance = light.Color * light.Intensity * attenuation * nDotL;
+            }
+        }
+        else if(light.Type == 2u)
+        {
+            float3 lightPosition = transpose(lightTransform)[3].xyz;
+            float3 toLight = lightPosition - worldPosition;
+            float3 spotLightForward = GetForwardVector(lightTransform);
+            float distance = length(toLight);
+            if(distance <= 1e-6f || distance > light.Radius)
+            {
+                continue;
+            }
+
+            lightDir = toLight / distance;
+            float nDotL = saturate(dot(worldNormal, lightDir));
+            if(nDotL <= 0.0f)
+            {
+                continue;
+            }
+
+            float spotDot = dot(lightDir, normalize(-spotLightForward));
+            float spotFalloff = smoothstep_custom(cos(radians(light.OuterCone)), cos(radians(light.InnerCone)), spotDot);
+            spotFalloff = pow(spotFalloff, light.Softness);
+            if(spotFalloff <= 0.0f)
+            {
+                continue;
+            }
+
+            Payload shadowPayload;
+            shadowPayload.Radiance = 0.0f;
+            shadowPayload.NextRayOrigin = 0.0f;
+            shadowPayload.NextRayDirection = 0.0f;
+            shadowPayload.Throughput = 0.0f;
+            shadowPayload.IsShadowRay = 1u;
+            shadowPayload.Hit = 0u;
+            shadowPayload.FirstHitBackfacing = 0u;
+            shadowPayload.ContinuePath = 0u;
+            shadowPayload.Depth = 0u;
+            shadowPayload.Seed = 0u;
+
+            RayDesc shadowRay;
+            shadowRay.Origin = rayOrigin;
+            shadowRay.Direction = lightDir;
+            shadowRay.TMin = TRAIN_RAY_BIAS;
+            shadowRay.TMax = max(min(distance, light.Radius) - TRAIN_RAY_BIAS, TRAIN_RAY_BIAS);
+            TraceRay(TLAS, 0, 0xFF, 0, 1, 0, shadowRay, shadowPayload);
+
+            if(shadowPayload.Hit == 0u || !castShadows)
+            {
+                float attenuation = 1.0f / (A0 + A1 * distance + A2 * distance * distance);
+                attenuation *= smoothstep_custom(light.Radius, 0.0f, distance);
+                radiance = light.Color * light.Intensity * attenuation * spotFalloff * nDotL;
+            }
+        }
+
+        direct += (albedo * (1.0f / PI)) * radiance;
+    }
+
+    return direct;
+}
+
 bool GetRandomSurfaceSample(uint sampleIndex, inout uint seed, out float3 outWorldPos, out float3 outWorldNormal)
 {
     StructuredBuffer<uint2> triangleRefs = ResourceDescriptorHeap[TriangleRefsBufferId];
     StructuredBuffer<float> triangleCdf = ResourceDescriptorHeap[TriangleCdfBufferId];
     StructuredBuffer<DrawCommand> drawCommands = ResourceDescriptorHeap[DrawCommandsBufferId];
+    StructuredBuffer<MaterialAttribute> materialAttributes = ResourceDescriptorHeap[MaterialBufferId];
     StructuredBuffer<Vertex> vertexBuffer = ResourceDescriptorHeap[VertexBufferId];
     StructuredBuffer<uint> indexBuffer = ResourceDescriptorHeap[IndexBufferId];
     StructuredBuffer<float4x4> worldTransforms = ResourceDescriptorHeap[WorldTransformsBufferId];
@@ -158,10 +364,43 @@ bool GetRandomSurfaceSample(uint sampleIndex, inout uint seed, out float3 outWor
 
     float3 localPos = v0.Position.xyz * b0 + v1.Position.xyz * b1 + v2.Position.xyz * b2;
     float3 localNormal = SafeNormalize(v0.Normal.xyz * b0 + v1.Normal.xyz * b1 + v2.Normal.xyz * b2, float3(0.0f, 1.0f, 0.0f));
+    float2 hitUV = v0.UV * b0 + v1.UV * b1 + v2.UV * b2;
+    float3 hitTangent = SafeNormalize(v0.Tangent.xyz * b0 + v1.Tangent.xyz * b1 + v2.Tangent.xyz * b2, float3(1.0f, 0.0f, 0.0f));
+    float3 hitBitangent = SafeNormalize(v0.Bitangent.xyz * b0 + v1.Bitangent.xyz * b1 + v2.Bitangent.xyz * b2, float3(0.0f, 1.0f, 0.0f));
+
+    MaterialAttribute material = materialAttributes[drawId];
+    if(material.NormalTextureIndex != -1)
+    {
+        Texture2D<float4> normalTex = ResourceDescriptorHeap[NonUniformResourceIndex(material.NormalTextureIndex)];
+        float4 normalSample = SampleTexture(normalTex, hitUV);
+        localNormal = GetNormal(localNormal, hitTangent, hitBitangent, normalSample);
+    }
+
     float4x4 world = worldTransforms[drawId];
 
     outWorldPos = mul(world, float4(localPos, 1.0f)).xyz;
     outWorldNormal = SafeNormalize(mul((float3x3)world, localNormal), float3(0.0f, 1.0f, 0.0f));
+    return true;
+}
+
+bool GetRandomVolumeSample(inout uint seed, out float3 outWorldPos, out float3 outWorldNormal)
+{
+    float3 sceneMin = float3(SceneMinX, SceneMinY, SceneMinZ);
+    float3 sceneMax = float3(SceneMaxX, SceneMaxY, SceneMaxZ);
+    float3 span = sceneMax - sceneMin;
+    if(span.x <= 1e-6f || span.y <= 1e-6f || span.z <= 1e-6f)
+    {
+        outWorldPos = 0.0f;
+        outWorldNormal = float3(0.0f, 1.0f, 0.0f);
+        return false;
+    }
+
+    outWorldPos = float3(
+        lerp(sceneMin.x, sceneMax.x, Random01(seed)),
+        lerp(sceneMin.y, sceneMax.y, Random01(seed)),
+        lerp(sceneMin.z, sceneMax.z, Random01(seed))
+    );
+    outWorldNormal = SampleUniformSphere(seed);
     return true;
 }
 
@@ -176,7 +415,16 @@ void RayGenShader()
 
     float3 worldPos;
     float3 worldNormal;
-    bool validSample = GetRandomSurfaceSample(sampleIndex, seed, worldPos, worldNormal);
+    bool validSample = false;
+    const bool sampleSurface = (NumTriangleRefs > 0u) && (Random01(seed) < SurfaceSampleProbability);
+    if(sampleSurface)
+    {
+        validSample = GetRandomSurfaceSample(sampleIndex, seed, worldPos, worldNormal);
+    }
+    else
+    {
+        validSample = GetRandomVolumeSample(seed, worldPos, worldNormal);
+    }
 
     TrainingSample sample = (TrainingSample)0;
     sample.WorldPosition = float4(worldPos, 1.0f);
@@ -186,34 +434,84 @@ void RayGenShader()
     {
         uint spp = max(RaysPerPoint, 1u);
         float3 accumIncidentRadiance = 0.0f;
+        uint firstHitCount = 0u;
+        uint backfacingCount = 0u;
 
         [loop]
         for(uint s = 0; s < spp; s++)
         {
             uint pathSeed = seed + s * 7919u;
-            float3 dir = SampleCosineHemisphere(worldNormal, pathSeed);
+            float3 sampleContribution = 0.0f;
 
             RayDesc ray;
-            ray.Origin = worldPos + worldNormal * 0.001f;
-            ray.Direction = dir;
-            ray.TMin = TMIN;
+            ray.Origin = worldPos + worldNormal * TRAIN_RAY_BIAS;
+            ray.Direction = SampleCosineHemisphere(worldNormal, pathSeed);
+            ray.TMin = TRAIN_RAY_BIAS;
             ray.TMax = TMAX;
 
             Payload payload;
             payload.Radiance = 0.0f;
+            payload.NextRayOrigin = 0.0f;
+            payload.NextRayDirection = 0.0f;
+            payload.Throughput = 1.0f;
             payload.IsShadowRay = 0u;
             payload.Hit = 0u;
+            payload.FirstHitBackfacing = 0u;
+            payload.ContinuePath = 0u;
             payload.Depth = 0u;
             payload.Seed = pathSeed;
 
-            TraceRay(TLAS, 0, 0xFF, 0, 1, 0, ray, payload);
-            accumIncidentRadiance += payload.Radiance;
+            [loop]
+            for(uint bounce = 0; bounce < MaxBounces; bounce++)
+            {
+                payload.Radiance = 0.0f;
+                payload.Hit = 0u;
+                payload.ContinuePath = 0u;
+                payload.Depth = bounce;
+
+                TraceRay(TLAS, 0, 0xFF, 0, 1, 0, ray, payload);
+
+                if(bounce == 0u && payload.Hit != 0u)
+                {
+                    firstHitCount++;
+                    backfacingCount += payload.FirstHitBackfacing;
+                }
+
+                sampleContribution += payload.Radiance;
+
+                if(payload.Hit == 0u || payload.ContinuePath == 0u)
+                {
+                    break;
+                }
+
+                ray.Origin = payload.NextRayOrigin;
+                ray.Direction = payload.NextRayDirection;
+                ray.TMin = TRAIN_RAY_BIAS;
+                ray.TMax = TMAX;
+            }
+
+            accumIncidentRadiance += sampleContribution;
+        }
+
+        // The paper culls interior samples based on backfacing majority.
+        // Apply only to volume samples and only when enough first-hit evidence exists,
+        // otherwise this can incorrectly zero out almost the whole dataset.
+        if(EnableBackfaceCulling != 0u && !sampleSurface && firstHitCount > (spp / 2u) && backfacingCount * 2u > firstHitCount)
+        {
+            validSample = false;
         }
 
         // Cosine-weighted hemisphere estimator for irradiance:
         // E = (1/N) * sum( Li * PI )
-        float3 irradiance = (accumIncidentRadiance / spp) * PI;
-        sample.DiffuseIrradiance = float4(irradiance, 1.0f);
+        if(validSample)
+        {
+            float3 irradiance = (accumIncidentRadiance / spp) * PI;
+            sample.DiffuseIrradiance = float4(irradiance, 1.0f);
+        }
+        else
+        {
+            sample.DiffuseIrradiance = float4(0.0f, 0.0f, 0.0f, 1.0f);
+        }
     }
 
     outputSamples[sampleIndex] = sample;
@@ -225,12 +523,16 @@ void MissShader(inout Payload payload)
     if(payload.IsShadowRay != 0u)
     {
         payload.Hit = 0u;
+        payload.FirstHitBackfacing = 0u;
+        payload.ContinuePath = 0u;
         payload.Radiance = 0.0f;
         return;
     }
 
     payload.Hit = 0u;
-    payload.Radiance = float3(0.53f, 0.81f, 0.92f);
+    payload.FirstHitBackfacing = 0u;
+    payload.ContinuePath = 0u;
+    payload.Radiance = float3(0.3f, 0.3f, 0.3f);
 }
 
 [shader("closesthit")]
@@ -239,9 +541,13 @@ void ClosestHitShader(inout Payload payload, in Attributes attribs)
     if(payload.IsShadowRay != 0u)
     {
         payload.Hit = 1u;
+        payload.FirstHitBackfacing = 0u;
+        payload.ContinuePath = 0u;
         payload.Radiance = 0.0f;
         return;
     }
+
+    payload.Hit = 1u;
 
     uint instanceId = InstanceID();
 
@@ -268,150 +574,57 @@ void ClosestHitShader(inout Payload payload, in Attributes attribs)
     Vertex v1 = vertexBuffer[(uint)((int)triIndices.y + drawCommand.BaseVertexLocation)];
     Vertex v2 = vertexBuffer[(uint)((int)triIndices.z + drawCommand.BaseVertexLocation)];
 
+    float4 c0 = v0.Color;
+    float4 c1 = v1.Color;
+    float4 c2 = v2.Color;
+    float4 hitColor = c0 * b0 + c1 * b1 + c2 * b2;
+
     float3 localNormal = SafeNormalize(v0.Normal.xyz * b0 + v1.Normal.xyz * b1 + v2.Normal.xyz * b2, float3(0.0f, 1.0f, 0.0f));
-    float3 worldNormal = SafeNormalize(mul(ObjectToWorld4x3(), float4(localNormal, 0.0f)).xyz, float3(0.0f, 1.0f, 0.0f));
+    float2 uv = v0.UV * b0 + v1.UV * b1 + v2.UV * b2;
+    float3 hitTangent = SafeNormalize(v0.Tangent.xyz * b0 + v1.Tangent.xyz * b1 + v2.Tangent.xyz * b2, float3(1.0f, 0.0f, 0.0f));
+    float3 hitBitangent = SafeNormalize(v0.Bitangent.xyz * b0 + v1.Bitangent.xyz * b1 + v2.Bitangent.xyz * b2, float3(0.0f, 1.0f, 0.0f));
+
+    float4 sampledNormal = float4(localNormal, 0.0f);
+    if(material.NormalTextureIndex != -1)
+    {
+        Texture2D<float4> normalTex = ResourceDescriptorHeap[NonUniformResourceIndex(material.NormalTextureIndex)];
+        sampledNormal = SampleTexture(normalTex, uv);
+        sampledNormal = float4(GetNormal(localNormal, hitTangent, hitBitangent, sampledNormal), 0.0f);
+    }
+
+    sampledNormal = mul(ObjectToWorld4x3(), sampledNormal);
+    float3 worldNormalUnflipped = SafeNormalize(sampledNormal.xyz, float3(0.0f, 1.0f, 0.0f));
+    if(payload.Depth == 0u)
+    {
+        payload.FirstHitBackfacing = dot(worldNormalUnflipped, -WorldRayDirection()) < 0.0f ? 1u : 0u;
+    }
+
+    float3 worldNormal = worldNormalUnflipped;
     if(dot(worldNormal, -WorldRayDirection()) < 0.0f)
     {
         worldNormal = -worldNormal;
     }
     float3 hitPos = WorldRayOrigin() + WorldRayDirection() * RayTCurrent();
 
-    float3 albedo = material.Albedo.rgb;
+    float3 albedo = (hitColor * material.Albedo).rgb;
     if(material.DiffuseTextureIndex != -1)
     {
-        float2 uv = v0.UV * b0 + v1.UV * b1 + v2.UV * b2;
         Texture2D colorTex = ResourceDescriptorHeap[NonUniformResourceIndex(material.DiffuseTextureIndex)];
-        albedo *= colorTex.SampleLevel(myStaticSampler, uv, 0.0f).rgb;
+        albedo *= SampleTexture(colorTex, uv).rgb;
     }
 
-    float3 directLight = 0.0f;
-    if(NumLights > 0u)
+    float3 rayOrigin = hitPos + worldNormal * TRAIN_RAY_BIAS;
+    float3 directLight = GetTrainingPathTracingDirectLighting(hitPos, worldNormal, albedo, material.CastShadows, rayOrigin);
+
+    payload.Radiance = min(payload.Throughput * directLight, float3(16.0f, 16.0f, 16.0f));
+    payload.ContinuePath = 0u;
+
+    if(payload.Depth < MaxBounces - 1u)
     {
-        StructuredBuffer<Light> lights = ResourceDescriptorHeap[LightsBufferId];
-        StructuredBuffer<float4x4> lightTransforms = ResourceDescriptorHeap[LightTransformsBufferId];
-        StructuredBuffer<int> lightIndices = ResourceDescriptorHeap[LightsIndicesBufferId];
-        RaytracingAccelerationStructure TLAS = ResourceDescriptorHeap[TLASID];
-
-        [loop]
-        for(uint i = 0; i < NumLights; i++)
-        {
-            int lightIndex = lightIndices[i];
-            Light light = lights[lightIndex];
-            float4x4 lightTransform = lightTransforms[lightIndex];
-            float3 radiance = 0.0f;
-            float3 toLight = 0.0f;
-            float lightDistance = TMAX;
-
-            if(light.Type == 0u) // Directional
-            {
-                toLight = -normalize(float3(lightTransform[0][2], lightTransform[1][2], lightTransform[2][2]));
-                float nDotL = saturate(dot(worldNormal, toLight));
-                if(nDotL <= 0.0f)
-                {
-                    continue;
-                }
-
-                Payload shadowPayload;
-                shadowPayload.Radiance = 0.0f;
-                shadowPayload.IsShadowRay = 1u;
-                shadowPayload.Hit = 0u;
-                shadowPayload.Depth = 0u;
-                shadowPayload.Seed = 0u;
-
-                RayDesc shadowRay;
-                shadowRay.Origin = hitPos + worldNormal * 0.001f;
-                shadowRay.Direction = toLight;
-                shadowRay.TMin = TMIN;
-                shadowRay.TMax = TMAX;
-                TraceRay(TLAS, 0, 0xFF, 0, 1, 0, shadowRay, shadowPayload);
-
-                if(shadowPayload.Hit == 0u)
-                {
-                    radiance = normalize(light.Color) * light.Intensity / 10.0f * nDotL;
-                }
-            }
-            else if(light.Type == 1u || light.Type == 2u) // Point / Spot
-            {
-                float3 lightPosition = transpose(lightTransform)[3].xyz;
-                float3 l = lightPosition - hitPos;
-                lightDistance = length(l);
-                if(lightDistance <= 1e-6f || lightDistance > light.Radius)
-                {
-                    continue;
-                }
-                toLight = l / lightDistance;
-
-                float nDotL = saturate(dot(worldNormal, toLight));
-                if(nDotL <= 0.0f)
-                {
-                    continue;
-                }
-
-                float spotFalloff = 1.0f;
-                if(light.Type == 2u)
-                {
-                    float3 spotForward = normalize(float3(lightTransform[0][2], lightTransform[1][2], lightTransform[2][2]));
-                    float spotDot = dot(toLight, -spotForward);
-                    spotFalloff = smoothstep_custom(cos(radians(light.OuterCone)), cos(radians(light.InnerCone)), spotDot);
-                    spotFalloff = pow(spotFalloff, light.Softness);
-                    if(spotFalloff <= 0.0f)
-                    {
-                        continue;
-                    }
-                }
-
-                Payload shadowPayload;
-                shadowPayload.Radiance = 0.0f;
-                shadowPayload.IsShadowRay = 1u;
-                shadowPayload.Hit = 0u;
-                shadowPayload.Depth = 0u;
-                shadowPayload.Seed = 0u;
-
-                RayDesc shadowRay;
-                shadowRay.Origin = hitPos + worldNormal * 0.001f;
-                shadowRay.Direction = toLight;
-                shadowRay.TMin = TMIN;
-                shadowRay.TMax = lightDistance - 0.001f;
-                TraceRay(TLAS, 0, 0xFF, 0, 1, 0, shadowRay, shadowPayload);
-
-                if(shadowPayload.Hit == 0u)
-                {
-                    float attenuation = 1.0f / (A0 + A1 * lightDistance + A2 * lightDistance * lightDistance);
-                    attenuation *= smoothstep_custom(light.Radius, 0.0f, lightDistance);
-                    radiance = normalize(light.Color) * light.Intensity * attenuation * nDotL * spotFalloff;
-                }
-            }
-
-            directLight += albedo * radiance;
-        }
+        payload.Seed = payload.Seed + payload.Depth * 1664525u + 1013904223u;
+        payload.Throughput *= albedo;
+        payload.NextRayOrigin = rayOrigin;
+        payload.NextRayDirection = SampleCosineHemisphere(worldNormal, payload.Seed);
+        payload.ContinuePath = 1u;
     }
-
-    if(payload.Depth >= MaxBounces)
-    {
-        payload.Radiance = directLight;
-        return;
-    }
-
-    float3 nextDir = SampleCosineHemisphere(worldNormal, payload.Seed);
-
-    Payload bouncePayload;
-    bouncePayload.Radiance = 0.0f;
-    bouncePayload.IsShadowRay = 0u;
-    bouncePayload.Hit = 0u;
-    bouncePayload.Depth = payload.Depth + 1;
-    bouncePayload.Seed = payload.Seed;
-
-    RayDesc bounceRay;
-    bounceRay.Origin = hitPos + worldNormal * 0.001f;
-    bounceRay.Direction = nextDir;
-    bounceRay.TMin = TMIN;
-    bounceRay.TMax = TMAX;
-
-    RaytracingAccelerationStructure TLAS = ResourceDescriptorHeap[TLASID];
-    TraceRay(TLAS, 0, 0xFF, 0, 1, 0, bounceRay, bouncePayload);
-
-    // Lambert BRDF with cosine-weighted sampling:
-    // f*cos/pdf = albedo
-    float3 indirect = albedo * bouncePayload.Radiance;
-    payload.Radiance = directLight + indirect;
 }

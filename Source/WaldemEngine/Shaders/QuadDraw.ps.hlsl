@@ -12,6 +12,7 @@ cbuffer ScreenQuadRootConstants : register(b0)
 {
     uint TargetRTId;
     uint ViewMode;
+    uint PathTracingEnabled;
 }
 
 float3 HashColor(uint id)
@@ -50,6 +51,32 @@ float4 main(PS_INPUT input) : SV_TARGET
     if(ViewMode == 4) // ORM
     {
         return float4(saturate(color.rgb), 1.0f);
+    }
+
+    if(ViewMode == 8) // NIV Irradiance visualization
+    {
+        int2 pixelPos = int2(input.Position.xy);
+        float3 niv = TargetRT.Load(int3(pixelPos, 0)).rgb;
+
+        if(any(isnan(niv)))
+        {
+            return float4(1.0f, 0.0f, 1.0f, 1.0f);
+        }
+
+        // Robust debug view for HDR irradiance: log compression + per-channel mapping.
+        float3 hdr = max(niv, 0.0f);
+        float3 mapped = log2(1.0f + hdr * 16.0f) / 5.0f;
+        return float4(saturate(mapped), 1.0f);
+    }
+
+    if(ViewMode == 9) // Path Tracing visualization
+    {
+        if(PathTracingEnabled == 0u)
+        {
+            return float4(0.0f, 0.0f, 0.0f, 1.0f);
+        }
+
+        return color;
     }
 
     return color;
