@@ -1,5 +1,6 @@
 #pragma once
 #include "Waldem/ECS/Components/ColliderComponent.h"
+#include "Waldem/Renderer/Model/Plane.h"
 #include "Waldem/Renderer/Model/Simplex.h"
 #include "Waldem/Types/WMap.h"
 #include "Waldem/Types/WPair.h"
@@ -293,6 +294,15 @@ namespace Waldem
             }
 
             return false;
+        }
+        
+        static void ExtractPositionsFromVertexData(const WArray<Vertex>& vertexData, WArray<Vector3>& positions)
+        {
+            positions.Resize(vertexData.Num());
+            for (size_t i = 0; i < vertexData.Num(); ++i)
+            {
+                positions[i] = vertexData[i].Position;
+            }
         }
     };
 }

@@ -27,14 +27,14 @@ namespace Waldem
     public:
         CMesh() {}
         CMesh(WString name) : Asset(name, AssetType::Mesh) {}
-        CMesh(WArray<Vertex> vertexData, WArray<uint> indexData, MaterialReference materialRef, AABB bBox, WString name = "", Matrix4 objectMatrix = glm::identity<Matrix4>());
+        CMesh(WArray<Vertex> vertexData, WArray<uint> indexData, Path materialPath, AABB bBox, WString name = "", Matrix4 objectMatrix = glm::identity<Matrix4>());
         
         void Serialize(WDataBuffer& outData) override;
         void Deserialize(WDataBuffer& inData) override;
 
         Buffer* VertexBuffer = nullptr;
         Buffer* IndexBuffer = nullptr;
-        MaterialReference MaterialRef = {};
+        Path MaterialPath = "Content/Materials/Default.mat";
         WArray<Vector3> Positions;
         WArray<Vertex> VertexData;
         WArray<uint> IndexData;

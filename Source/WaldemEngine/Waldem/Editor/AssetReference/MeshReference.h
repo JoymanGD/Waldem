@@ -8,6 +8,9 @@ namespace Waldem
     struct MeshReference : AssetReference
     {
         CMesh* Mesh = nullptr;
+
+        MeshReference(Path reference = "Empty") : AssetReference(reference) {}
+        MeshReference(CMesh* mesh) : Mesh(mesh) {}
         
         void LoadAsset() override
         {

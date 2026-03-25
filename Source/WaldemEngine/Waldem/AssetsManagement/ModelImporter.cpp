@@ -329,7 +329,7 @@ namespace Waldem
                 CMesh* mesh = new CMesh(meshName);
                 mesh->VertexData = vertexBufferData;
                 mesh->IndexData = indexBufferData;
-                mesh->MaterialRef = MaterialReference(materialRef);
+                mesh->MaterialPath = materialRef;
                 mesh->BBox = meshAABB;
                 mesh->ObjectMatrix = Matrix4(1.0f);
                 mesh->Positions.Resize(mesh->VertexData.Num());

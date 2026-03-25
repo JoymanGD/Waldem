@@ -11,12 +11,10 @@ namespace Waldem
         MaterialReference(Path reference = "Empty") : AssetReference(reference) {}
         
         Material* Mat = nullptr;
+        bool IsLoaded = false;
         
         void LoadAsset() override
         {
-            // Do not delete previous Mat here.
-            // Component snapshots/undo can copy raw pointers, which may leave Mat stale.
-            // Deleting a stale pointer crashes; just replace runtime pointer on load.
             Mat = nullptr;
 
             if (Reference.empty() || Reference == "Empty")
@@ -28,6 +26,8 @@ namespace Waldem
             auto path = Reference;
             path.replace_extension(".mat");
             Mat = CContentManager::LoadAsset<Material>(path);
+
+            IsLoaded = true;
         }
 
         AssetType GetType() override { return AssetType::Material; }

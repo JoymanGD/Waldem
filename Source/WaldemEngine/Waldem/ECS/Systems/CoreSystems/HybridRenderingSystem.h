@@ -328,37 +328,13 @@ namespace Waldem
                         
                         if(meshComponent.MeshRef.IsValid())
                         {
-                            auto isEmptyReference = [](const Path& reference)
+                            if(meshComponent.MaterialRef.Reference != meshComponent.MeshRef.Mesh->MaterialPath || !meshComponent.MaterialRef.IsLoaded)
                             {
-                                return reference.empty() || reference == "Empty";
-                            };
-
-                            // Keep component MaterialRef in sync with mesh default when it's not explicitly overridden.
-                            if(isEmptyReference(meshComponent.MaterialRef.Reference) &&
-                               !isEmptyReference(meshComponent.MeshRef.Mesh->MaterialRef.Reference))
-                            {
-                                meshComponent.MaterialRef.Reference = meshComponent.MeshRef.Mesh->MaterialRef.Reference;
-                                meshComponent.MaterialRef.Mat = meshComponent.MeshRef.Mesh->MaterialRef.Mat;
-                            }
-
-                            Material* activeMaterial = meshComponent.MeshRef.Mesh->MaterialRef.Mat;
-                            const bool hasComponentMaterialRef = !isEmptyReference(meshComponent.MaterialRef.Reference);
-                            const bool overridesMeshMaterial =
-                                hasComponentMaterialRef &&
-                                (meshComponent.MaterialRef.Reference != meshComponent.MeshRef.Mesh->MaterialRef.Reference);
-
-                            bool useComponentMaterial = overridesMeshMaterial;
-                            if(useComponentMaterial)
-                            {
-                                // Always reload when a component material reference is set.
-                                // The path can change while Mat still points to previously loaded material.
+                                meshComponent.MaterialRef.Reference = meshComponent.MeshRef.Mesh->MaterialPath;
                                 meshComponent.MaterialRef.LoadAsset();
-
-                                if(meshComponent.MaterialRef.IsValid())
-                                {
-                                    activeMaterial = meshComponent.MaterialRef.Mat;
-                                }
                             }
+
+                            Material* activeMaterial = meshComponent.MaterialRef.Mat;
 
                             meshComponent.DrawCommand = {
                                 (uint)meshComponent.MeshRef.Mesh->IndexData.Num(),

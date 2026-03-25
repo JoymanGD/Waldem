@@ -35,6 +35,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "Systems/CoreSystems/TerrainSystem.h"
+
 namespace Waldem
 {
     namespace ECS
@@ -334,6 +336,7 @@ namespace Waldem
             Systems.Add(new PhysicsIntegrationSystem());
             Systems.Add(new CollisionSystem());
             Systems.Add(new SpatialAudioSystem());
+            Systems.Add(new TerrainSystem());
             Systems.Add(new AnimationSystem());
             Systems.Add(new HybridRenderingSystem());
             Systems.Add(new ParticleSystem());

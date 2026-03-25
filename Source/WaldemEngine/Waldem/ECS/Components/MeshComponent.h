@@ -17,6 +17,8 @@ namespace Waldem
         DrawIndexedCommand DrawCommand;
         
         MeshComponent() {}
+        MeshComponent(MeshReference meshRef) : MeshRef(meshRef) {}
+        MeshComponent(MeshReference meshRef, MaterialReference materialRef) : MeshRef(meshRef), MaterialRef(materialRef) {}
 
         bool IsValid() const { return MeshRef.IsValid(); }
     };

@@ -384,7 +384,7 @@ namespace Waldem
 
                                             if (meshComponent->MeshRef.IsValid() && meshComponent->MeshRef.Mesh)
                                             {
-                                                const MaterialReference& defaultMaterialRef = meshComponent->MeshRef.Mesh->MaterialRef;
+                                                const MaterialReference& defaultMaterialRef = meshComponent->MaterialRef;
                                                 const bool materialRefIsEmpty = meshComponent->MaterialRef.Reference.empty() || meshComponent->MaterialRef.Reference == "Empty";
                                                 const bool defaultMaterialIsValidPath = !defaultMaterialRef.Reference.empty() && defaultMaterialRef.Reference != "Empty";
 
