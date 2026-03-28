@@ -47,7 +47,7 @@ namespace Waldem
 
         void CacheFrustrumCorners()
         {
-            auto editorCamera = ECS::World.lookup("EditorCamera");
+            auto editorCamera = ECS::World.lookup("__EditorCamera");
 
             if(editorCamera)
             {

@@ -12,6 +12,9 @@ namespace Waldem
 
         FIELD()
         bool Enabled = true;
+
+        FIELD(Hidden)
+        WString FieldOverrides;
     };
 }
 

@@ -134,7 +134,7 @@ namespace Waldem
                     {
                         Vector3 cameraUp, cameraRight;
 
-                        if(auto editorCamera = ECS::World.lookup("EditorCamera"))
+                        if(auto editorCamera = ECS::World.lookup("__EditorCamera"))
                         {
                             auto& cameraTransform = editorCamera.get<Transform>();
                             cameraUp = cameraTransform.GetUpVector();

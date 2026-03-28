@@ -99,52 +99,6 @@
     "scene_id": 2,
     "parent_scene_id": -1,
     "entity": {
-      "name": "Mage",
-      "components": {
-        "SceneEntity": {
-          "ParentId": 0,
-          "HierarchyDepth": 0,
-          "HierarchySlot": 0,
-          "VisibleInHierarchy": true
-        },
-        "Waldem.Transform": {
-          "Position": {
-            "x": 3.1409664154,
-            "y": 0.0176938772,
-            "z": -4.5099015236
-          },
-          "Rotation": {
-            "x": 90.2219314575,
-            "y": 0,
-            "z": 0
-          },
-          "LocalScale": {
-            "x": 1,
-            "y": 0.9999999404,
-            "z": 0.9999999404
-          },
-          "___RotationQuat": {
-            "x": 0.7084749341,
-            "y": 0,
-            "z": 0,
-            "w": 0.7057359815
-          }
-        },
-        "Waldem.MeshComponent": {
-          "MeshRef": "Meshes\\Mage\\Mage_LP.mesh",
-          "MaterialRef": "Meshes\\Mage\\Default"
-        },
-        "Waldem.ScriptComponent": {
-          "Script": "Scripts\\TestScript.cs",
-          "Enabled": true
-        }
-      }
-    }
-  },
-  {
-    "scene_id": 3,
-    "parent_scene_id": -1,
-    "entity": {
       "name": "RotatingMage_Clone_Clone",
       "components": {
         "SceneEntity": {
@@ -182,7 +136,55 @@
         },
         "Waldem.ScriptComponent": {
           "Script": "Scripts\\RotatingObject.cs",
-          "Enabled": true
+          "Enabled": true,
+          "___FieldOverrides": ""
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 3,
+    "parent_scene_id": -1,
+    "entity": {
+      "name": "RotatingMage",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 0,
+          "HierarchyDepth": 0,
+          "HierarchySlot": 4,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": -5.6939764023,
+            "y": 0.0176940057,
+            "z": 3.9696831703
+          },
+          "Rotation": {
+            "x": 90.2219314575,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 0.9999999404,
+            "z": 0.9999999404
+          },
+          "___RotationQuat": {
+            "x": 0.7084749341,
+            "y": 0,
+            "z": 0,
+            "w": 0.7057359815
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Meshes\\Mage\\Mage_LP.mesh",
+          "MaterialRef": "Meshes\\Mage\\Default"
+        },
+        "Waldem.ScriptComponent": {
+          "Script": "Scripts\\RotatingObject.cs",
+          "Enabled": true,
+          "___FieldOverrides": ""
         }
       }
     }
@@ -228,20 +230,71 @@
         },
         "Waldem.ScriptComponent": {
           "Script": "Scripts\\RotatingObject.cs",
-          "Enabled": true
+          "Enabled": true,
+          "___FieldOverrides": ""
         }
       }
     }
   },
   {
     "scene_id": 5,
-    "parent_scene_id": 2,
+    "parent_scene_id": -1,
+    "entity": {
+      "name": "Mage",
+      "tags": [
+        "Waldem.Selected"
+      ],
+      "components": {
+        "SceneEntity": {
+          "ParentId": 0,
+          "HierarchyDepth": 0,
+          "HierarchySlot": 0,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 3.1409664154,
+            "y": 0.0176938772,
+            "z": -4.5099015236
+          },
+          "Rotation": {
+            "x": 90.2219314575,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 0.9999999404,
+            "z": 0.9999999404
+          },
+          "___RotationQuat": {
+            "x": 0.7084749341,
+            "y": 0,
+            "z": 0,
+            "w": 0.7057359815
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Meshes\\Mage\\Mage_LP.mesh",
+          "MaterialRef": "Meshes\\Mage\\Default"
+        },
+        "Waldem.ScriptComponent": {
+          "Script": "Scripts\\TestScript.cs",
+          "Enabled": true,
+          "___FieldOverrides": ""
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 6,
+    "parent_scene_id": 5,
     "entity": {
       "parent": "Mage",
       "name": "Camera",
       "components": {
         "SceneEntity": {
-          "ParentId": 770,
+          "ParentId": "8589935361",
           "HierarchyDepth": 1,
           "HierarchySlot": 2,
           "VisibleInHierarchy": true
@@ -274,55 +327,6 @@
           "AspectRatio": 0.7963737845,
           "NearPlane": 0.001,
           "FarPlane": 1000
-        }
-      }
-    }
-  },
-  {
-    "scene_id": 6,
-    "parent_scene_id": -1,
-    "entity": {
-      "name": "RotatingMage",
-      "tags": [
-        "Waldem.Selected"
-      ],
-      "components": {
-        "SceneEntity": {
-          "ParentId": 0,
-          "HierarchyDepth": 0,
-          "HierarchySlot": 4,
-          "VisibleInHierarchy": true
-        },
-        "Waldem.Transform": {
-          "Position": {
-            "x": -5.6939764023,
-            "y": 0.0176940057,
-            "z": 3.9696831703
-          },
-          "Rotation": {
-            "x": 90.2219314575,
-            "y": 0,
-            "z": 0
-          },
-          "LocalScale": {
-            "x": 1,
-            "y": 0.9999999404,
-            "z": 0.9999999404
-          },
-          "___RotationQuat": {
-            "x": 0.7084749341,
-            "y": 0,
-            "z": 0,
-            "w": 0.7057359815
-          }
-        },
-        "Waldem.MeshComponent": {
-          "MeshRef": "Meshes\\Mage\\Mage_LP.mesh",
-          "MaterialRef": "Meshes\\Mage\\Default"
-        },
-        "Waldem.ScriptComponent": {
-          "Script": "Scripts\\RotatingObject.cs",
-          "Enabled": true
         }
       }
     }

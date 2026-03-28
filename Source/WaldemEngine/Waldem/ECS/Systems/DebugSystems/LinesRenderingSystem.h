@@ -53,7 +53,7 @@ namespace Waldem
             {
                 if(IsInitialized)
                 {
-                    if(auto editorCamera = ECS::World.lookup("EditorCamera"))
+                    if(auto editorCamera = ECS::World.lookup("__EditorCamera"))
                     {
                         ViewProjection = editorCamera.get<Camera>().ViewProjectionMatrix;
                     }

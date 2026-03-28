@@ -9,8 +9,10 @@
 #include "Waldem/Editor/AssetReference/MaterialReference.h"
 #include "Waldem/Editor/AssetReference/ScriptReference.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
+#include "Waldem/ECS/Components/ScriptComponent.h"
 #include "Waldem/Extensions/ImGUIExtension.h"
 #include "Waldem/Input/InputManager.h"
+#include "Waldem/Scripting/ScriptEngine.h"
 #include "Commands/EditorCommands.h"
 #include "ContentBrowserWidget.h"
 
@@ -20,6 +22,103 @@ namespace Waldem
     {
     private:
         ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
+
+        void DrawScriptFieldsEditor(ECS::Entity entity, ECS::Id id, ScriptComponent& scriptComponent)
+        {
+            if(!scriptComponent.Script.IsValid())
+            {
+                return;
+            }
+
+            std::vector<ScriptEngine::ScriptFieldDescriptor> fields;
+            if(!ScriptEngine::GetScriptFieldDescriptors(scriptComponent, fields))
+            {
+                ImGui::TextDisabled("No editable script fields");
+                return;
+            }
+
+            if(fields.empty())
+            {
+                return;
+            }
+
+            ImGui::Spacing();
+            ImGui::SeparatorText("Script Fields");
+
+            if(ImGui::BeginTable("##ScriptFieldsTable", 2, ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_SizingStretchProp))
+            {
+                ImGui::TableSetupColumn("Property", ImGuiTableColumnFlags_WidthFixed, 120.0f);
+                ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
+
+                for(const auto& field : fields)
+                {
+                    ScriptEngine::ScriptFieldValue value;
+                    if(!ScriptEngine::GetScriptFieldValue(scriptComponent, field.Name, value))
+                    {
+                        continue;
+                    }
+
+                    ImGui::TableNextRow();
+                    ImGui::TableSetColumnIndex(0);
+                    ImGui::TextUnformatted(field.Name.c_str());
+                    ImGui::TableSetColumnIndex(1);
+
+                    const std::string uniqueId = "##ScriptField_" + field.Name + "_" + std::to_string((uint64_t)entity.id());
+                    ComponentValueBlob before(id.raw_id(), &scriptComponent);
+
+                    switch(value.Type)
+                    {
+                    case ScriptEngine::ScriptFieldType::Float:
+                    {
+                        if(ImGui::DragFloat(uniqueId.c_str(), &value.FloatValue, 0.1f))
+                        {
+                            ScriptEngine::SetScriptFieldValue(scriptComponent, field.Name, value);
+                            entity.modified(id);
+                            PushComponentStateCommand(entity, id, before, &scriptComponent);
+                        }
+                        break;
+                    }
+                    case ScriptEngine::ScriptFieldType::Int:
+                    {
+                        if(ImGui::DragInt(uniqueId.c_str(), &value.IntValue))
+                        {
+                            ScriptEngine::SetScriptFieldValue(scriptComponent, field.Name, value);
+                            entity.modified(id);
+                            PushComponentStateCommand(entity, id, before, &scriptComponent);
+                        }
+                        break;
+                    }
+                    case ScriptEngine::ScriptFieldType::Bool:
+                    {
+                        if(ImGui::Checkbox(uniqueId.c_str(), &value.BoolValue))
+                        {
+                            ScriptEngine::SetScriptFieldValue(scriptComponent, field.Name, value);
+                            entity.modified(id);
+                            PushComponentStateCommand(entity, id, before, &scriptComponent);
+                        }
+                        break;
+                    }
+                    case ScriptEngine::ScriptFieldType::Vector3:
+                    {
+                        float vectorValues[3] = { value.Vector3Value.x, value.Vector3Value.y, value.Vector3Value.z };
+                        if(ImGui::DragFloat3(uniqueId.c_str(), vectorValues, 0.1f))
+                        {
+                            value.Vector3Value = Vector3(vectorValues[0], vectorValues[1], vectorValues[2]);
+                            ScriptEngine::SetScriptFieldValue(scriptComponent, field.Name, value);
+                            entity.modified(id);
+                            PushComponentStateCommand(entity, id, before, &scriptComponent);
+                        }
+                        break;
+                    }
+                    default:
+                        ImGui::TextDisabled("<unsupported>");
+                        break;
+                    }
+                }
+
+                ImGui::EndTable();
+            }
+        }
 
         void PushComponentStateCommand(ECS::Entity entity, ECS::Id id, const ComponentValueBlob& before, const void* afterPtr, bool allowMerge = true)
         {
@@ -550,6 +649,11 @@ namespace Waldem
                         DrawComponentFields(entity, id, ptr, ops, op_count);
 
                         ImGui::EndTable();
+                    }
+
+                    if(id == ECS::World.id<ScriptComponent>())
+                    {
+                        DrawScriptFieldsEditor(entity, id, *(ScriptComponent*)ptr);
                     }
 
                     ImGui::PopStyleVar(2);

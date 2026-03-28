@@ -3,10 +3,15 @@
 
 #include <mono/jit/jit.h>
 #include <mono/metadata/assembly.h>
+#include <mono/metadata/attrdefs.h>
+#include <mono/metadata/class.h>
 #include <mono/metadata/object.h>
 
 #include "Mono.h"
 #include <fstream>
+#include <rapidjson/document.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
 #include <regex>
 #include <vector>
 #include "Waldem/ECS/Components/Camera.h"
@@ -37,6 +42,10 @@ namespace Waldem
             float z = 0.0f;
         };
 
+        using ScriptFieldType = ScriptEngine::ScriptFieldType;
+        using ScriptFieldValue = ScriptEngine::ScriptFieldValue;
+        using ScriptFieldDescriptor = ScriptEngine::ScriptFieldDescriptor;
+
         std::string ToUtf8Path(const Path& path)
         {
             return path.string();
@@ -46,6 +55,298 @@ namespace Waldem
         {
             Path currentFolder = GetCurrentFolder();
             return currentFolder.parent_path().parent_path().parent_path();
+        }
+
+        ScriptFieldType GetScriptFieldType(MonoType* monoType)
+        {
+            if(monoType == nullptr)
+            {
+                return ScriptFieldType::None;
+            }
+
+            switch(mono_type_get_type(monoType))
+            {
+            case MONO_TYPE_R4:
+                return ScriptFieldType::Float;
+            case MONO_TYPE_I4:
+                return ScriptFieldType::Int;
+            case MONO_TYPE_BOOLEAN:
+                return ScriptFieldType::Bool;
+            case MONO_TYPE_VALUETYPE:
+            {
+                MonoClass* typeClass = mono_class_from_mono_type(monoType);
+                if(typeClass == nullptr)
+                {
+                    return ScriptFieldType::None;
+                }
+
+                const char* classNamespace = mono_class_get_namespace(typeClass);
+                const char* className = mono_class_get_name(typeClass);
+                if(classNamespace != nullptr && className != nullptr &&
+                    strcmp(classNamespace, "Waldem") == 0 &&
+                    strcmp(className, "Vector3") == 0)
+                {
+                    return ScriptFieldType::Vector3;
+                }
+
+                return ScriptFieldType::None;
+            }
+            default:
+                return ScriptFieldType::None;
+            }
+        }
+
+        bool IsEditableScriptField(MonoClassField* field, ScriptFieldType& outType)
+        {
+            if(field == nullptr)
+            {
+                return false;
+            }
+
+            const uint32_t flags = mono_field_get_flags(field);
+            if((flags & MONO_FIELD_ATTR_PUBLIC) == 0 || (flags & MONO_FIELD_ATTR_STATIC) != 0)
+            {
+                return false;
+            }
+
+            const char* fieldName = mono_field_get_name(field);
+            if(fieldName == nullptr || fieldName[0] == '<')
+            {
+                return false;
+            }
+
+            outType = GetScriptFieldType(mono_field_get_type(field));
+            return outType != ScriptFieldType::None;
+        }
+
+        ScriptFieldValue ReadFieldValue(MonoObject* instanceObject, MonoClassField* field, ScriptFieldType type)
+        {
+            ScriptFieldValue value;
+            value.Type = type;
+
+            switch(type)
+            {
+            case ScriptFieldType::Float:
+                mono_field_get_value(instanceObject, field, &value.FloatValue);
+                break;
+            case ScriptFieldType::Int:
+                mono_field_get_value(instanceObject, field, &value.IntValue);
+                break;
+            case ScriptFieldType::Bool:
+                mono_field_get_value(instanceObject, field, &value.BoolValue);
+                break;
+            case ScriptFieldType::Vector3:
+            {
+                ScriptVector3 vectorValue;
+                mono_field_get_value(instanceObject, field, &vectorValue);
+                value.Vector3Value = Vector3(vectorValue.x, vectorValue.y, vectorValue.z);
+                break;
+            }
+            default:
+                break;
+            }
+
+            return value;
+        }
+
+        void WriteFieldValue(MonoObject* instanceObject, MonoClassField* field, const ScriptFieldValue& value)
+        {
+            switch(value.Type)
+            {
+            case ScriptFieldType::Float:
+                mono_field_set_value(instanceObject, field, (void*)&value.FloatValue);
+                break;
+            case ScriptFieldType::Int:
+                mono_field_set_value(instanceObject, field, (void*)&value.IntValue);
+                break;
+            case ScriptFieldType::Bool:
+                mono_field_set_value(instanceObject, field, (void*)&value.BoolValue);
+                break;
+            case ScriptFieldType::Vector3:
+            {
+                ScriptVector3 vectorValue;
+                vectorValue.x = value.Vector3Value.x;
+                vectorValue.y = value.Vector3Value.y;
+                vectorValue.z = value.Vector3Value.z;
+                mono_field_set_value(instanceObject, field, &vectorValue);
+                break;
+            }
+            default:
+                break;
+            }
+        }
+
+        bool TryParseFieldOverrides(const WString& overrides, std::unordered_map<std::string, ScriptFieldValue>& outValues)
+        {
+            outValues.clear();
+            if(overrides.IsEmpty())
+            {
+                return true;
+            }
+
+            rapidjson::Document document;
+            document.Parse(overrides.C_Str());
+            if(document.HasParseError() || !document.IsArray())
+            {
+                return false;
+            }
+
+            for(auto& entry : document.GetArray())
+            {
+                if(!entry.IsObject() || !entry.HasMember("name") || !entry["name"].IsString() || !entry.HasMember("type") || !entry["type"].IsInt())
+                {
+                    continue;
+                }
+
+                ScriptFieldValue value;
+                value.Type = (ScriptFieldType)entry["type"].GetInt();
+                const std::string fieldName = entry["name"].GetString();
+
+                switch(value.Type)
+                {
+                case ScriptFieldType::Float:
+                    if(entry.HasMember("float") && entry["float"].IsNumber())
+                    {
+                        value.FloatValue = entry["float"].GetFloat();
+                        outValues[fieldName] = value;
+                    }
+                    break;
+                case ScriptFieldType::Int:
+                    if(entry.HasMember("int") && entry["int"].IsInt())
+                    {
+                        value.IntValue = entry["int"].GetInt();
+                        outValues[fieldName] = value;
+                    }
+                    break;
+                case ScriptFieldType::Bool:
+                    if(entry.HasMember("bool") && entry["bool"].IsBool())
+                    {
+                        value.BoolValue = entry["bool"].GetBool();
+                        outValues[fieldName] = value;
+                    }
+                    break;
+                case ScriptFieldType::Vector3:
+                    if(entry.HasMember("vector3") && entry["vector3"].IsObject())
+                    {
+                        const auto& vectorObject = entry["vector3"];
+                        if(vectorObject.HasMember("x") && vectorObject["x"].IsNumber() &&
+                            vectorObject.HasMember("y") && vectorObject["y"].IsNumber() &&
+                            vectorObject.HasMember("z") && vectorObject["z"].IsNumber())
+                        {
+                            value.Vector3Value = Vector3(vectorObject["x"].GetFloat(), vectorObject["y"].GetFloat(), vectorObject["z"].GetFloat());
+                            outValues[fieldName] = value;
+                        }
+                    }
+                    break;
+                default:
+                    break;
+                }
+            }
+
+            return true;
+        }
+
+        WString SerializeFieldOverrides(const std::unordered_map<std::string, ScriptFieldValue>& values)
+        {
+            rapidjson::StringBuffer buffer;
+            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+            writer.StartArray();
+
+            for(const auto& [name, value] : values)
+            {
+                writer.StartObject();
+                writer.Key("name");
+                writer.String(name.c_str());
+                writer.Key("type");
+                writer.Int((int)value.Type);
+
+                switch(value.Type)
+                {
+                case ScriptFieldType::Float:
+                    writer.Key("float");
+                    writer.Double(value.FloatValue);
+                    break;
+                case ScriptFieldType::Int:
+                    writer.Key("int");
+                    writer.Int(value.IntValue);
+                    break;
+                case ScriptFieldType::Bool:
+                    writer.Key("bool");
+                    writer.Bool(value.BoolValue);
+                    break;
+                case ScriptFieldType::Vector3:
+                    writer.Key("vector3");
+                    writer.StartObject();
+                    writer.Key("x");
+                    writer.Double(value.Vector3Value.x);
+                    writer.Key("y");
+                    writer.Double(value.Vector3Value.y);
+                    writer.Key("z");
+                    writer.Double(value.Vector3Value.z);
+                    writer.EndObject();
+                    break;
+                default:
+                    break;
+                }
+
+                writer.EndObject();
+            }
+
+            writer.EndArray();
+            return buffer.GetString();
+        }
+
+        bool CollectScriptFieldDescriptors(MonoClass* klass, MonoObject* defaultInstance, std::vector<ScriptFieldDescriptor>& outFields)
+        {
+            outFields.clear();
+            if(klass == nullptr || defaultInstance == nullptr)
+            {
+                return false;
+            }
+
+            std::vector<ScriptFieldDescriptor> reversedFields;
+
+            for(MonoClass* currentClass = klass; currentClass != nullptr; currentClass = mono_class_get_parent(currentClass))
+            {
+                void* iterator = nullptr;
+                while(MonoClassField* field = mono_class_get_fields(currentClass, &iterator))
+                {
+                    ScriptFieldType fieldType = ScriptFieldType::None;
+                    if(!IsEditableScriptField(field, fieldType))
+                    {
+                        continue;
+                    }
+
+                    ScriptFieldDescriptor descriptor;
+                    descriptor.Name = mono_field_get_name(field);
+                    descriptor.DefaultValue = ReadFieldValue(defaultInstance, field, fieldType);
+                    reversedFields.push_back(descriptor);
+                }
+            }
+
+            outFields.assign(reversedFields.rbegin(), reversedFields.rend());
+            return true;
+        }
+
+        MonoClassField* FindScriptField(MonoClass* klass, const std::string& fieldName, ScriptFieldType* outType = nullptr)
+        {
+            for(MonoClass* currentClass = klass; currentClass != nullptr; currentClass = mono_class_get_parent(currentClass))
+            {
+                if(MonoClassField* field = mono_class_get_field_from_name(currentClass, fieldName.c_str()))
+                {
+                    ScriptFieldType fieldType = ScriptFieldType::None;
+                    if(IsEditableScriptField(field, fieldType))
+                    {
+                        if(outType != nullptr)
+                        {
+                            *outType = fieldType;
+                        }
+                        return field;
+                    }
+                }
+            }
+
+            return nullptr;
         }
 
         Path ResolveScriptAssemblyPath()
@@ -659,6 +960,67 @@ namespace Waldem
         return true;
     }
 
+    bool ScriptEngine::GetScriptFieldDescriptors(const ScriptComponent& scriptComponent, std::vector<ScriptFieldDescriptor>& outFields)
+    {
+        outFields.clear();
+        if(Runtime == nullptr || !scriptComponent.Script.IsValid())
+        {
+            return false;
+        }
+
+        MonoAssembly* assembly = ResolveAssembly(scriptComponent);
+        MonoClass* klass = ResolveClass(assembly, scriptComponent);
+        if(klass == nullptr)
+        {
+            return false;
+        }
+
+        MonoObject* defaultInstance = Runtime->CreateObject(klass);
+        if(defaultInstance == nullptr)
+        {
+            return false;
+        }
+
+        return CollectScriptFieldDescriptors(klass, defaultInstance, outFields);
+    }
+
+    bool ScriptEngine::GetScriptFieldValue(const ScriptComponent& scriptComponent, const std::string& fieldName, ScriptFieldValue& outValue)
+    {
+        std::vector<ScriptFieldDescriptor> fields;
+        if(!GetScriptFieldDescriptors(scriptComponent, fields))
+        {
+            return false;
+        }
+
+        for(const ScriptFieldDescriptor& field : fields)
+        {
+            if(field.Name == fieldName)
+            {
+                outValue = field.DefaultValue;
+                break;
+            }
+        }
+
+        std::unordered_map<std::string, ScriptFieldValue> overrides;
+        TryParseFieldOverrides(scriptComponent.FieldOverrides, overrides);
+        auto overrideIt = overrides.find(fieldName);
+        if(overrideIt != overrides.end())
+        {
+            outValue = overrideIt->second;
+            return true;
+        }
+
+        return outValue.Type != ScriptFieldType::None;
+    }
+
+    void ScriptEngine::SetScriptFieldValue(ScriptComponent& scriptComponent, const std::string& fieldName, const ScriptFieldValue& value)
+    {
+        std::unordered_map<std::string, ScriptFieldValue> overrides;
+        TryParseFieldOverrides(scriptComponent.FieldOverrides, overrides);
+        overrides[fieldName] = value;
+        scriptComponent.FieldOverrides = SerializeFieldOverrides(overrides);
+    }
+
     bool ScriptEngine::LoadCoreAssembly()
     {
         if(Runtime == nullptr)
@@ -852,6 +1214,8 @@ namespace Waldem
             return false;
         }
 
+        ApplyFieldOverrides(scriptComponent, klass, instanceObject);
+
         ScriptInstance instance;
         instance.Class = klass;
         instance.SetEntityIdMethod = Runtime->GetMethod(klass, "__SetEntityId", 1);
@@ -877,6 +1241,32 @@ namespace Waldem
 
         InvokeNoArgs(storedInstance, storedInstance.OnCreateMethod);
         return true;
+    }
+
+    void ScriptEngine::ApplyFieldOverrides(const ScriptComponent& scriptComponent, MonoClass* klass, MonoObject* instanceObject)
+    {
+        if(klass == nullptr || instanceObject == nullptr)
+        {
+            return;
+        }
+
+        std::unordered_map<std::string, ScriptFieldValue> overrides;
+        if(!TryParseFieldOverrides(scriptComponent.FieldOverrides, overrides) || overrides.empty())
+        {
+            return;
+        }
+
+        for(const auto& [fieldName, value] : overrides)
+        {
+            ScriptFieldType actualType = ScriptFieldType::None;
+            MonoClassField* field = FindScriptField(klass, fieldName, &actualType);
+            if(field == nullptr || actualType != value.Type)
+            {
+                continue;
+            }
+
+            WriteFieldValue(instanceObject, field, value);
+        }
     }
 
     void ScriptEngine::DestroyEntityInstance(ECS::EntityT entityId)

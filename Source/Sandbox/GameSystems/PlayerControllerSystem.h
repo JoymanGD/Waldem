@@ -40,7 +40,7 @@ namespace Waldem
             {
                 if(length(DeltaPos) > 1e-6f)
                 {
-                    auto& cameraTransform = ECS::World.lookup("EditorCamera").get<Transform>();
+                    auto& cameraTransform = ECS::World.lookup("__EditorCamera").get<Transform>();
                     Vector3 forward = cameraTransform.GetForwardVector();
                     forward.y = 0;
                     forward = normalize(forward);

@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <string>
 #include <unordered_map>
+#include <vector>
 #include <mono/metadata/assembly.h>
 #include <mono/metadata/object.h>
 
@@ -16,10 +17,37 @@ namespace Waldem
     class WALDEM_API ScriptEngine
     {
     public:
+        enum class ScriptFieldType
+        {
+            None = 0,
+            Float,
+            Int,
+            Bool,
+            Vector3
+        };
+
+        struct ScriptFieldValue
+        {
+            ScriptFieldType Type = ScriptFieldType::None;
+            float FloatValue = 0.0f;
+            int32_t IntValue = 0;
+            bool BoolValue = false;
+            Vector3 Vector3Value = { 0, 0, 0 };
+        };
+
+        struct ScriptFieldDescriptor
+        {
+            std::string Name;
+            ScriptFieldValue DefaultValue;
+        };
+
         static void Initialize(Mono* runtime);
         static void Shutdown();
         static bool ReloadScripts(bool rebuildAssembly = true);
         static const char* GetLastReloadStatus() { return LastReloadStatus.c_str(); }
+        static bool GetScriptFieldDescriptors(const ScriptComponent& scriptComponent, std::vector<ScriptFieldDescriptor>& outFields);
+        static bool GetScriptFieldValue(const ScriptComponent& scriptComponent, const std::string& fieldName, ScriptFieldValue& outValue);
+        static void SetScriptFieldValue(ScriptComponent& scriptComponent, const std::string& fieldName, const ScriptFieldValue& value);
 
         static bool IsInitialized() { return Runtime != nullptr; }
         static bool CreateEntityInstance(ECS::Entity entity, const ScriptComponent& scriptComponent);
@@ -41,6 +69,7 @@ namespace Waldem
 
         static bool RebuildScriptAssembly();
         static bool CopyAssemblyToRuntimeFolder();
+        static void ApplyFieldOverrides(const ScriptComponent& scriptComponent, MonoClass* klass, MonoObject* instanceObject);
         static bool LoadCoreAssembly();
         static MonoAssembly* ResolveAssembly(const ScriptComponent& scriptComponent);
         static MonoClass* ResolveClass(MonoAssembly* assembly, const ScriptComponent& scriptComponent);

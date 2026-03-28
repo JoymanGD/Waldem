@@ -51,7 +51,7 @@ namespace Waldem
             EditorShortcuts::Load();
             
             Vector2 size = { 1920, 1080 };
-            auto cameraEntity = ECS::CreateEntity("EditorCamera");
+            auto cameraEntity = ECS::CreateEntity("__EditorCamera");
             float aspectRatio = size.x / size.y;
             cameraEntity.set<Transform>({Vector3(0, 10, -10.f)}); 
             cameraEntity.set<Camera>({60.0f, aspectRatio, 0.001f, 1000.0f, 30.0f, 30.0f});
@@ -62,7 +62,7 @@ namespace Waldem
             cameraEntity.add<EditorComponent>();
             ViewportManager::GetEditorViewport()->LinkCamera(cameraEntity);
 
-            auto skyEntity = ECS::CreateEntity("Sky");
+            auto skyEntity = ECS::CreateEntity("__EditorSky");
             skyEntity.add<Transform>();
             skyEntity.add<Sky>();
 
