@@ -43,6 +43,20 @@ namespace Waldem
             LoadStage = 0;
         }
 
+        static void LoadSceneImmediate(const Path& path)
+        {
+            PendingPath = path;
+            NeedToDeserializeScene = false;
+            LoadInProgress = false;
+            LoadProgress = 0.0f;
+            LoadStage = 0;
+
+            UnloadScene();
+            CurrentScene = new GameScene();
+            CurrentScene->Initialize();
+            CurrentScene->Deserialize(PendingPath);
+        }
+
         static bool GetLoadStatus(float& outProgress, std::string& outLabel)
         {
             outProgress = LoadProgress;

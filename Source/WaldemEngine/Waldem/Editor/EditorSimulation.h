@@ -1,0 +1,97 @@
+#pragma once
+
+#include "Waldem/Audio/Audio.h"
+#include "Waldem/ECS/Components/AudioSource.h"
+#include "Waldem/SceneManagement/SceneManager.h"
+#include "Waldem/Utils/FileUtils.h"
+
+namespace Waldem
+{
+    enum class EditorSimulationState
+    {
+        Edit = 0,
+        Play = 1,
+        Pause = 2
+    };
+
+    class WALDEM_API EditorSimulation
+    {
+    public:
+        static EditorSimulationState GetState() { return State; }
+        static bool IsEditing() { return State == EditorSimulationState::Edit; }
+        static bool IsPlaying() { return State == EditorSimulationState::Play || State == EditorSimulationState::Pause; }
+        static bool IsPaused() { return State == EditorSimulationState::Pause; }
+        static bool ShouldRunRuntimeSystems() { return State == EditorSimulationState::Play; }
+
+        static bool Play()
+        {
+            if(State == EditorSimulationState::Pause)
+            {
+                State = EditorSimulationState::Play;
+                return true;
+            }
+
+            if(State != EditorSimulationState::Edit || SceneManager::GetCurrentScene() == nullptr)
+            {
+                return false;
+            }
+
+            SnapshotPath = GetCurrentFolder() / "__EditorPlayMode.scene";
+            SceneManager::GetCurrentScene()->Serialize(SnapshotPath);
+
+            State = EditorSimulationState::Play;
+            SceneManager::LoadSceneImmediate(SnapshotPath);
+            return true;
+        }
+
+        static bool Pause()
+        {
+            if(State != EditorSimulationState::Play)
+            {
+                return false;
+            }
+
+            State = EditorSimulationState::Pause;
+            return true;
+        }
+
+        static bool Stop()
+        {
+            if(State == EditorSimulationState::Edit)
+            {
+                return false;
+            }
+
+            ECS::World.query<AudioSource>().each([&](AudioSource& audioSource)
+            {
+                if(audioSource.ClipRef.IsValid() && audioSource.ClipRef.Clip && audioSource.ClipRef.Clip->CurrentChannel)
+                {
+                    Audio::Stop(audioSource.ClipRef.Clip);
+                }
+            });
+
+            State = EditorSimulationState::Edit;
+
+            if(!SnapshotPath.empty() && exists(SnapshotPath))
+            {
+                SceneManager::LoadSceneImmediate(SnapshotPath);
+            }
+
+            return true;
+        }
+
+        static const char* GetStateName()
+        {
+            switch(State)
+            {
+            case EditorSimulationState::Play: return "Play";
+            case EditorSimulationState::Pause: return "Pause";
+            default: return "Edit";
+            }
+        }
+
+    private:
+        inline static EditorSimulationState State = EditorSimulationState::Edit;
+        inline static Path SnapshotPath;
+    };
+}

@@ -14,8 +14,14 @@ namespace Waldem
         void PrintAssemblyTypes(MonoAssembly* assembly);
     public:
         void Initialize();
+        void Shutdown();
+        bool ReloadAppDomain();
         MonoAssembly* LoadCSharpAssembly(const Path& assemblyPath);
         MonoClass* GetClass(MonoAssembly* assembly, const WString& className, const WString& namespaceName = "");
         MonoObject* CreateObject(MonoClass* klass);
+        MonoMethod* GetMethod(MonoClass* klass, const char* methodName, int parameterCount);
+        MonoObject* InvokeMethod(MonoObject* instance, MonoMethod* method, void** params = nullptr);
+        void RegisterInternalCall(const char* name, const void* method);
+        MonoDomain* GetAppDomain() const { return MonoAppDomain; }
     };
 }

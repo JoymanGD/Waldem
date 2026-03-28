@@ -4,6 +4,9 @@
 #include <fstream>
 #include <mono/jit/jit.h>
 #include <mono/metadata/assembly.h>
+#include <mono/metadata/class.h>
+#include <mono/metadata/debug-helpers.h>
+#include <mono/metadata/mono-gc.h>
 
 #include "Waldem/Utils/FileUtils.h"
 
@@ -11,10 +14,11 @@ namespace Waldem
 {
     void Mono::Initialize()
     {
-        auto currentPath = GetCurrentFolder().append("/");
+        const Path currentPath = GetCurrentFolder();
+        const Path monoLibPath = currentPath / "mono" / "lib" / "4.5";
         
         //Init mono
-        mono_set_assemblies_path(currentPath.append("/mono/lib/4.5").string().c_str());
+        mono_set_assemblies_path(monoLibPath.string().c_str());
 
         MonoRootDomain = mono_jit_init("WaldemScriptRuntime");
         
@@ -27,10 +31,47 @@ namespace Waldem
         // Create an App Domain
         MonoAppDomain = mono_domain_create_appdomain((char*)"WaldemAppDomain", nullptr);
         mono_domain_set(MonoAppDomain, true);
+    }
 
-        auto testAssembly = LoadCSharpAssembly(currentPath.append("ScriptEngine.dll"));
-        auto monoClass = GetClass(testAssembly, "CSharpTesting");
-        auto monoObject = CreateObject(monoClass);
+    void Mono::Shutdown()
+    {
+        if(MonoAppDomain != nullptr)
+        {
+            mono_domain_set(MonoRootDomain, false);
+            mono_domain_unload(MonoAppDomain);
+            MonoAppDomain = nullptr;
+        }
+
+        if(MonoRootDomain != nullptr)
+        {
+            mono_jit_cleanup(MonoRootDomain);
+            MonoRootDomain = nullptr;
+        }
+    }
+
+    bool Mono::ReloadAppDomain()
+    {
+        if(MonoRootDomain == nullptr)
+        {
+            return false;
+        }
+
+        if(MonoAppDomain != nullptr)
+        {
+            mono_domain_set(MonoRootDomain, false);
+            mono_domain_unload(MonoAppDomain);
+            MonoAppDomain = nullptr;
+        }
+
+        MonoAppDomain = mono_domain_create_appdomain((char*)"WaldemAppDomain", nullptr);
+        if(MonoAppDomain == nullptr)
+        {
+            WD_CORE_ERROR("Failed to recreate Mono app domain");
+            return false;
+        }
+
+        mono_domain_set(MonoAppDomain, true);
+        return true;
     }
 
     char* ReadBytes(const Path& filepath, uint32_t* outSize)
@@ -65,6 +106,11 @@ namespace Waldem
     {
         uint32_t fileSize = 0;
         char* fileData = ReadBytes(assemblyPath, &fileSize);
+        if(fileData == nullptr || fileSize == 0)
+        {
+            WD_CORE_ERROR("Failed to read assembly bytes from {0}", assemblyPath.string());
+            return nullptr;
+        }
 
         // NOTE: We can't use this image for anything other than loading the assembly because this image doesn't have a reference to the assembly
         MonoImageOpenStatus status;
@@ -106,6 +152,11 @@ namespace Waldem
 
     MonoClass* Mono::GetClass(MonoAssembly* assembly, const WString& className, const WString& namespaceName)
     {
+        if(assembly == nullptr)
+        {
+            return nullptr;
+        }
+
         MonoImage* image = mono_assembly_get_image(assembly);
         MonoClass* klass = mono_class_from_name(image, namespaceName.C_Str(), className.C_Str());
 
@@ -120,6 +171,11 @@ namespace Waldem
 
     MonoObject* Mono::CreateObject(MonoClass* klass)
     {
+        if(klass == nullptr || MonoAppDomain == nullptr)
+        {
+            return nullptr;
+        }
+
         MonoObject* instance = mono_object_new(MonoAppDomain, klass);
 
         if (instance == nullptr)
@@ -129,5 +185,48 @@ namespace Waldem
         
         mono_runtime_object_init(instance);
         return instance;
+    }
+
+    MonoMethod* Mono::GetMethod(MonoClass* klass, const char* methodName, int parameterCount)
+    {
+        if(klass == nullptr)
+        {
+            return nullptr;
+        }
+
+        for(MonoClass* currentClass = klass; currentClass != nullptr; currentClass = mono_class_get_parent(currentClass))
+        {
+            if(MonoMethod* method = mono_class_get_method_from_name(currentClass, methodName, parameterCount))
+            {
+                return method;
+            }
+        }
+
+        return nullptr;
+    }
+
+    MonoObject* Mono::InvokeMethod(MonoObject* instance, MonoMethod* method, void** params)
+    {
+        if(method == nullptr || instance == nullptr)
+        {
+            return nullptr;
+        }
+
+        MonoObject* exception = nullptr;
+        MonoObject* result = mono_runtime_invoke(method, instance, params, &exception);
+        if(exception != nullptr)
+        {
+            MonoString* exceptionString = mono_object_to_string(exception, nullptr);
+            char* exceptionChars = mono_string_to_utf8(exceptionString);
+            WD_CORE_ERROR("Managed exception: {0}", exceptionChars != nullptr ? exceptionChars : "unknown");
+            mono_free(exceptionChars);
+        }
+
+        return result;
+    }
+
+    void Mono::RegisterInternalCall(const char* name, const void* method)
+    {
+        mono_add_internal_call(name, method);
     }
 }

@@ -54,6 +54,7 @@ namespace Waldem
         auto yaw = glm::yaw(rotation);
         auto roll = glm::roll(rotation);
         Rotation += degrees(Vector3(pitch, yaw, roll));
+        LastRotation = Rotation;
         
         Update();
     }
@@ -70,7 +71,8 @@ namespace Waldem
         
         Vector3 pitchYawRoll = Vector3(pitch, yaw, roll);
 
-        Rotation += degrees(pitchYawRoll);
+        Rotation += pitchYawRoll;
+        LastRotation = Rotation;
 
         Update();
     }
@@ -109,6 +111,8 @@ namespace Waldem
         Rotation = pitchYawRoll;
         
         ApplyPitchYawRoll();
+        LastRotation = Rotation;
+        Update();
     }
 
     void Transform::SetRotation(Quaternion newRotation)

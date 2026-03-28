@@ -91,7 +91,7 @@ namespace Waldem
         case AssetType::Audio:     return ".sound";
         case AssetType::Scene:     return ".scene";
         case AssetType::Prefab:    return ".prefab";
-        case AssetType::Script:    return ".script";
+        case AssetType::Script:    return ".cs";
         case AssetType::Unknown:   return "Unknown";
         default:                   return "Invalid";
         }
@@ -108,6 +108,7 @@ namespace Waldem
         if(extension == ".scene") return AssetType::Scene;
         if(extension == ".prefab") return AssetType::Prefab;
         if(extension == ".script") return AssetType::Script;
+        if(extension == ".cs") return AssetType::Script;
         
         return AssetType::Unknown;
     }
@@ -123,6 +124,7 @@ namespace Waldem
         if (extension == ".scene") return "Scene";
         if (extension == ".prefab") return "Prefab";
         if (extension == ".script") return "Script";
+        if (extension == ".cs") return "Script";
         
         return "Invalid";
     }
@@ -138,6 +140,7 @@ namespace Waldem
             extension == ".mat" ||
             extension == ".scene" ||
             extension == ".prefab" ||
-            extension == ".script";
+            extension == ".script" ||
+            extension == ".cs";
     }
 }

@@ -14,6 +14,7 @@
 #include "Layers/DebugLayer.h"
 #include "Renderer/Viewport/ViewportManager.h"
 #include "SceneManagement/SceneManager.h"
+#include "Scripting/ScriptEngine.h"
 
 namespace Waldem
 {
@@ -36,7 +37,8 @@ namespace Waldem
 		AudioManager = Audio();
 
 		MonoRuntime = Mono();
-		// MonoRuntime.Initialize();
+		MonoRuntime.Initialize();
+		ScriptEngine::Initialize(&MonoRuntime);
 
 		//Window
 		Window = CWindow::Create();
@@ -157,6 +159,8 @@ namespace Waldem
 	bool Engine::OnWindowClose(WindowCloseEvent& e)
 	{
 		IsRunning = false;
+		ScriptEngine::Shutdown();
+		MonoRuntime.Shutdown();
 		ECS::Shutdown();
 		return true;
 	}

@@ -12,6 +12,7 @@
 #include "Waldem/SceneManagement/Prefab.h"
 #include "Waldem/SceneManagement/ModelSpawner.h"
 #include "Commands/EditorCommands.h"
+#include "../EditorShortcutContext.h"
 #include "../EditorShortcuts.h"
 #include <algorithm>
 #include <functional>
@@ -73,7 +74,7 @@ namespace Waldem
             }, [&]
             {
                 DeleteSelectedEntity = true;
-            });
+            }, [] { return EditorShortcutContexts::Has(EditorShortcutContext::Hierarchy); });
 
             inputManager->SubscribeToDynamicShortcut([]
             {
@@ -81,7 +82,7 @@ namespace Waldem
             }, [&]
             {
                 RenameSelectedEntity = true;
-            });
+            }, [] { return EditorShortcutContexts::Has(EditorShortcutContext::Hierarchy); });
 
             inputManager->SubscribeToDynamicShortcut([]
             {
@@ -104,7 +105,7 @@ namespace Waldem
                     auto cloneEntity = ECS::World.entity(cloneCommandPtr->GetCloneId());
                     cloneEntity.add<Selected>();
                 }
-            });
+            }, [] { return EditorShortcutContexts::Has(EditorShortcutContext::Hierarchy); });
 
             inputManager->SubscribeToDynamicShortcut([]
             {
@@ -142,6 +143,7 @@ namespace Waldem
             if (isVisible)
             {
                 const bool hierarchyFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
+                EditorShortcutContexts::SetActive(EditorShortcutContext::Hierarchy, hierarchyFocused);
 
                 if (ImGui::Button("+  New Entity", ImVec2(ImGui::GetContentRegionAvail().x, 0.0f)))
                 {
@@ -613,6 +615,10 @@ namespace Waldem
                     }
                     ImGui::EndDragDropTarget();
                 }
+            }
+            else
+            {
+                EditorShortcutContexts::SetActive(EditorShortcutContext::Hierarchy, false);
             }
             ImGui::End();
 

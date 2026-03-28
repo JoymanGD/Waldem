@@ -10,6 +10,7 @@
 #include "Components/PlayerController.h"
 #include "Components/RigidBody.h"
 #include "Components/Selected.h"
+#include "Components/ScriptComponent.h"
 #include "Components/Sky.h"
 #include "Components/Sprite.h"
 #include "Components/Transform.h"
@@ -22,6 +23,7 @@
 #include "Systems\CoreSystems\PhysicsIntegrationSystem.h"
 #include "Systems/CoreSystems/PostProcessSystem.h"
 #include "Systems/CoreSystems/ScreenQuadSystem.h"
+#include "Systems/CoreSystems/ScriptExecutionSystem.h"
 #include "Systems/CoreSystems/SpatialAudioSystem.h"
 #include "Systems/CoreSystems/TrainingPathTracingSystem.h"
 #include "Waldem/Editor/AssetReference.h"
@@ -29,6 +31,7 @@
 #include "Waldem/Editor/AssetReference/MeshReference.h"
 #include "Waldem/Editor/AssetReference/TextureReference.h"
 #include "Waldem/Editor/AssetReference/MaterialReference.h"
+#include "Waldem/Editor/AssetReference/ScriptReference.h"
 #include "Waldem/Utils/ECSUtils.h"
 #include <cmath>
 #include <memory>
@@ -295,6 +298,11 @@ namespace Waldem
                 CacheLocalMatrixFromWorld(entity);
             });
 
+            World.observer<Camera, Transform>().event(flecs::OnSet).each([&](flecs::entity, Camera& camera, Transform& transform)
+            {
+                camera.SetViewMatrix(transform);
+            });
+
             World.observer<Transform>().event(flecs::OnRemove).each([&](flecs::entity entity, Transform&)
             {
                 LocalTransformMatrices.erase(entity.id());
@@ -302,7 +310,7 @@ namespace Waldem
 
             HierarchyTransformQuery = std::make_unique<flecs::query<Transform, const Transform>>(World.query_builder<Transform, const Transform>().term_at(1).parent().cascade().build());
 
-            World.system("HierarchyTransformPropagation").kind(flecs::OnUpdate).run([&](flecs::iter&)
+            auto propagateHierarchyTransforms = [&](flecs::iter&)
             {
                 if(!HierarchyTransformQuery)
                 {
@@ -329,13 +337,17 @@ namespace Waldem
                     entity.modified<Transform>();
                     IsTransformHierarchyUpdate = previousTransformFlag;
                 });
-            });
+            };
+
+            World.system("HierarchyTransformPropagationUpdate").kind(flecs::OnUpdate).run(propagateHierarchyTransforms);
+            World.system("HierarchyTransformPropagationDraw").kind<OnDraw>().run(propagateHierarchyTransforms);
             
             // Systems.Add(OceanSimulationSystem());
             Systems.Add(new PhysicsAccumulationSystem());
             Systems.Add(new PhysicsIntegrationSystem());
             Systems.Add(new CollisionSystem());
             Systems.Add(new SpatialAudioSystem());
+            Systems.Add(new ScriptExecutionSystem());
             Systems.Add(new TerrainSystem());
             Systems.Add(new AnimationSystem());
             Systems.Add(new HybridRenderingSystem());
@@ -511,6 +523,20 @@ namespace Waldem
                     return 0;
                 })
                 .assign_string([](AudioClipReference* data, const char *value)
+                {
+                    data->Reference = Path(value);
+                });
+
+            World.component<ScriptReference>()
+                .opaque(flecs::String)
+                .serialize([](const flecs::serializer *s, const ScriptReference *data)
+                {
+                    WString refStr = data->Reference.string();
+                    const char* cstr = refStr.C_Str();
+                    s->value(flecs::String, &cstr);
+                    return 0;
+                })
+                .assign_string([](ScriptReference* data, const char *value)
                 {
                     data->Reference = Path(value);
                 });

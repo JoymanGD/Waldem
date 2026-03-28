@@ -27,6 +27,7 @@
 #include "Widgets/MaterialInspectorWidget.h"
 #include "Widgets/Widget.h"
 #include "Commands/EditorCommands.h"
+#include "EditorShortcutContext.h"
 #include "EditorShortcuts.h"
 
 namespace Waldem
@@ -207,8 +208,12 @@ namespace Waldem
         {
             // 🪟 Fullscreen invisible host window for the dockspace
             ImGuiViewport* viewport = ImGui::GetMainViewport();
-            ImGui::SetNextWindowPos(viewport->WorkPos);
-            ImGui::SetNextWindowSize(viewport->WorkSize);
+            ImVec2 dockspacePos = viewport->WorkPos;
+            ImVec2 dockspaceSize = viewport->WorkSize;
+            dockspacePos.y += MenuBarWidget::GetSecondaryBarHeight();
+            dockspaceSize.y -= MenuBarWidget::GetSecondaryBarHeight();
+            ImGui::SetNextWindowPos(dockspacePos);
+            ImGui::SetNextWindowSize(dockspaceSize);
             ImGui::SetNextWindowViewport(viewport->ID);
 
             ImGuiWindowFlags host_window_flags =
@@ -248,32 +253,40 @@ namespace Waldem
                 ImGuiID dock_left, dock_right;
                 ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Left, 0.2f, &dock_left, &dock_main_id); // 20% left
 
-                // Split right side horizontally: right (Details) and center+bottom
-                ImGuiID dock_details, dock_centerblock;
-                ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Right, 0.25f, &dock_details, &dock_centerblock); // 25% right
+                // Split right side horizontally: right panel and center+bottom
+                ImGuiID dock_right_panel, dock_centerblock;
+                ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Right, 0.25f, &dock_right_panel, &dock_centerblock); // 25% right
+
+                // Split right panel vertically: details on top, material inspector below
+                ImGuiID dock_details, dock_materials;
+                ImGui::DockBuilderSplitNode(dock_right_panel, ImGuiDir_Down, 0.45f, &dock_materials, &dock_details);
 
                 // Split centerblock vertically: bottom (Content) and center
                 ImGuiID dock_bottom, dock_center;
                 ImGui::DockBuilderSplitNode(dock_centerblock, ImGuiDir_Down, 0.25f, &dock_bottom, &dock_center); // 25% bottom
 
+                ImGuiID dock_editor, dock_game;
+                ImGui::DockBuilderSplitNode(dock_center, ImGuiDir_Right, 0.35f, &dock_game, &dock_editor);
+
                 // Dock windows
                 ImGui::DockBuilderDockWindow("Entities###Entities", dock_left);
                 ImGui::DockBuilderDockWindow("Details###Details", dock_details);
-                ImGui::DockBuilderDockWindow("Material Inspector###Material Inspector", dock_details);
-                ImGui::DockBuilderDockWindow("Coach###Coach", dock_details);
+                ImGui::DockBuilderDockWindow("Material Inspector###Material Inspector", dock_materials);
                 ImGui::DockBuilderDockWindow("Content###Content", dock_bottom);
 
                 // 👉 Instead of splitting the center, dock both as tabs
-                ImGui::DockBuilderDockWindow("Editor###Editor", dock_center);
-                ImGui::DockBuilderDockWindow("Game###Game", dock_center);
+                ImGui::DockBuilderDockWindow("Editor###Editor", dock_editor);
+                ImGui::DockBuilderDockWindow("Game###Game", dock_game);
 
                 ImGui::DockBuilderFinish(dockspace_id);
-                dockspaceInitialized = true;
+                dockspaceInitialized = true; 
             }
         }
 
         void Draw() override
         {
+            EditorShortcutContexts::BeginFrame();
+
             auto viewport = ViewportManager::GetEditorViewport();
             Renderer::Begin(viewport);
             ECS::RunDrawPipeline(Time::DeltaTime);

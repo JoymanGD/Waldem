@@ -1,8 +1,11 @@
 #pragma once
 #include "imgui.h"
+#include "CoachWidget.h"
 #include "Widget.h"
 #include "Waldem/ECS/Systems/System.h"
+#include "Waldem/Editor/EditorSimulation.h"
 #include "Waldem/SceneManagement/SceneManager.h"
+#include "Waldem/Scripting/ScriptEngine.h"
 #include "Waldem/Utils/FileUtils.h"
 #include "Commands/EditorCommands.h"
 #include "../EditorShortcuts.h"
@@ -15,6 +18,8 @@ namespace Waldem
     class MenuBarWidget : public IWidget
     {
     private:
+        inline static float SecondaryBarHeight = 0.0f;
+
         struct KeyOption
         {
             int Key;
@@ -107,6 +112,11 @@ namespace Waldem
         
     public:
         MenuBarWidget() {}
+
+        static float GetSecondaryBarHeight()
+        {
+            return SecondaryBarHeight;
+        }
 
         void Initialize(InputManager* inputManager) override
         {
@@ -226,6 +236,30 @@ namespace Waldem
                     ImGui::EndMenu();
                 }
 
+                if (ImGui::BeginMenu("Scripts"))
+                {
+                    if (ImGui::MenuItem("Reload Scripts"))
+                    {
+                        ScriptEngine::ReloadScripts(true);
+                    }
+
+                    ImGui::Separator();
+                    ImGui::TextWrapped("%s", ScriptEngine::GetLastReloadStatus());
+
+                    ImGui::EndMenu();
+                }
+
+                if (ImGui::BeginMenu("Window"))
+                {
+                    bool showCoach = CoachWidget::IsVisible();
+                    if(ImGui::MenuItem("Coach", nullptr, &showCoach))
+                    {
+                        CoachWidget::SetVisible(showCoach);
+                    }
+
+                    ImGui::EndMenu();
+                }
+
                 if (sceneLoading)
                 {
                     ImGui::Separator();
@@ -236,6 +270,104 @@ namespace Waldem
                 }
                 ImGui::EndMainMenuBar();
             }
+
+            ImGuiViewport* viewport = ImGui::GetMainViewport();
+            const float frameHeight = ImGui::GetFrameHeight();
+            const float verticalPadding = ImGui::GetStyle().FramePadding.y * 2.0f;
+            const float toolbarHeight = frameHeight + verticalPadding;
+            SecondaryBarHeight = toolbarHeight;
+
+            ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x, viewport->Pos.y + ImGui::GetFrameHeight()));
+            ImGui::SetNextWindowSize(ImVec2(viewport->Size.x, toolbarHeight));
+            ImGui::SetNextWindowViewport(viewport->ID);
+
+            ImGuiWindowFlags toolbarFlags =
+                ImGuiWindowFlags_NoTitleBar |
+                ImGuiWindowFlags_NoCollapse |
+                ImGuiWindowFlags_NoResize |
+                ImGuiWindowFlags_NoMove |
+                ImGuiWindowFlags_NoSavedSettings |
+                ImGuiWindowFlags_NoScrollbar |
+                ImGuiWindowFlags_NoScrollWithMouse;
+
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+
+            if(ImGui::Begin("SimulationToolbar", nullptr, toolbarFlags))
+            {
+                const char* pauseLabel = EditorSimulation::IsPaused() ? "Resume" : "Pause";
+                const float spacing = ImGui::GetStyle().ItemSpacing.x;
+                const bool showPlay = !EditorSimulation::IsPlaying();
+                const bool showPause = EditorSimulation::IsPlaying();
+                const bool showStop = EditorSimulation::IsPlaying();
+                const float playWidth = showPlay ? (ImGui::CalcTextSize("Play").x + ImGui::GetStyle().FramePadding.x * 2.0f) : 0.0f;
+                const float pauseWidth = showPause ? (ImGui::CalcTextSize(pauseLabel).x + ImGui::GetStyle().FramePadding.x * 2.0f) : 0.0f;
+                const float stopWidth = showStop ? (ImGui::CalcTextSize("Stop").x + ImGui::GetStyle().FramePadding.x * 2.0f) : 0.0f;
+                const std::string modeLabel = std::string("Mode: ") + EditorSimulation::GetStateName();
+                const float modeWidth = ImGui::CalcTextSize(modeLabel.c_str()).x;
+                int visibleItems = (showPlay ? 1 : 0) + (showPause ? 1 : 0) + (showStop ? 1 : 0) + 1;
+                const float totalWidth = playWidth + pauseWidth + stopWidth + modeWidth + spacing * (float)std::max(0, visibleItems - 1);
+                bool needsSameLine = false;
+
+                const float centeredX = (ImGui::GetContentRegionAvail().x - totalWidth) * 0.5f;
+                if(centeredX > 0.0f)
+                {
+                    ImGui::SetCursorPosX(centeredX);
+                }
+
+                if(showPlay)
+                {
+                    if(ImGui::Button("Play"))
+                    {
+                        EditorSimulation::Play();
+                    }
+                    needsSameLine = true;
+                }
+
+                if(showPause)
+                {
+                    if(needsSameLine)
+                    {
+                        ImGui::SameLine();
+                    }
+
+                    if(ImGui::Button(pauseLabel))
+                    {
+                        if(EditorSimulation::IsPaused())
+                        {
+                            EditorSimulation::Play();
+                        }
+                        else
+                        {
+                            EditorSimulation::Pause();
+                        }
+                    }
+                    needsSameLine = true;
+                }
+
+                if(showStop)
+                {
+                    if(needsSameLine)
+                    {
+                        ImGui::SameLine();
+                    }
+
+                    if(ImGui::Button("Stop"))
+                    {
+                        EditorSimulation::Stop();
+                    }
+                    needsSameLine = true;
+                }
+
+                if(needsSameLine)
+                {
+                    ImGui::SameLine();
+                }
+                ImGui::TextUnformatted(modeLabel.c_str());
+            }
+
+            ImGui::End();
+            ImGui::PopStyleVar(2);
         }
     };
 }

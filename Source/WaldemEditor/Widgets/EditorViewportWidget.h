@@ -14,6 +14,7 @@
 #include "Waldem/Renderer/Viewport/Viewport.h"
 #include "Waldem/Renderer/Viewport/ViewportManager.h"
 #include "Commands/EditorCommands.h"
+#include "../EditorShortcutContext.h"
 #include "../EditorShortcuts.h"
 
 namespace Waldem
@@ -51,7 +52,7 @@ namespace Waldem
                 {
                     CurrentOperation = ImGuizmo::TRANSLATE;
                 }
-            });
+            }, [] { return EditorShortcutContexts::Has(EditorShortcutContext::EditorViewport); });
 
             inputManager->SubscribeToDynamicShortcut([]
             {
@@ -62,7 +63,7 @@ namespace Waldem
                 {
                     CurrentOperation = ImGuizmo::ROTATE;
                 }
-            });
+            }, [] { return EditorShortcutContexts::Has(EditorShortcutContext::EditorViewport); });
 
             inputManager->SubscribeToDynamicShortcut([]
             {
@@ -73,7 +74,7 @@ namespace Waldem
                 {
                     CurrentOperation = ImGuizmo::SCALE;
                 }
-            });
+            }, [] { return EditorShortcutContexts::Has(EditorShortcutContext::EditorViewport); });
 
             inputManager->SubscribeToDynamicShortcut([]
             {
@@ -84,7 +85,7 @@ namespace Waldem
                 {
                     CurrentMode = CurrentMode == ImGuizmo::LOCAL ? ImGuizmo::WORLD : ImGuizmo::LOCAL;
                 }
-            });
+            }, [] { return EditorShortcutContexts::Has(EditorShortcutContext::EditorViewport); });
 
             inputManager->SubscribeToMouseButtonEvent(WD_MOUSE_BUTTON_LEFT, [&](bool isPressed)
             {
@@ -217,6 +218,15 @@ namespace Waldem
                 }
                 
                 viewport->IsMouseOver = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
+                if(viewport->IsMouseOver && (ImGui::IsMouseClicked(ImGuiMouseButton_Left) || ImGui::IsMouseClicked(ImGuiMouseButton_Right)))
+                {
+                    viewport->IsFocused = true;
+                    if(auto gameViewport = ViewportManager::GetGameViewport())
+                    {
+                        gameViewport->IsFocused = false;
+                    }
+                }
+                EditorShortcutContexts::SetActive(EditorShortcutContext::EditorViewport, viewport->IsFocused);
                 
                 auto renderTarget = viewport->FrameBuffer->GetCurrentRenderTarget();
                 ImGui::Image(renderTarget->GetGPUAddress(), viewportSize);
@@ -269,6 +279,12 @@ namespace Waldem
                 }
 
                 Renderer::RenderData.EditorViewportOutputTarget = SelectedRenderTarget;
+            }
+            else
+            {
+                viewport->IsMouseOver = false;
+                viewport->IsFocused = false;
+                EditorShortcutContexts::SetActive(EditorShortcutContext::EditorViewport, false);
             }
             ImGui::End();
             ImGui::PopStyleVar();

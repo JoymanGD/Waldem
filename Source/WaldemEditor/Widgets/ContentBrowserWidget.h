@@ -1,6 +1,7 @@
 #pragma once
 #include "imgui.h"
 #include "Widget.h"
+#include "../EditorShortcutContext.h"
 #include "Waldem/AssetsManagement/ContentManager.h"
 #include "Waldem/Renderer/Model/Material.h"
 #include "Waldem/SceneManagement/SceneManager.h"
@@ -265,7 +266,7 @@ namespace Waldem
 
             if (!candidate.has_extension())
             {
-                static const char* extensions[] = { ".mesh", ".mat", ".img", ".wav", ".scene", ".prefab", ".model" };
+                static const char* extensions[] = { ".mesh", ".mat", ".img", ".wav", ".scene", ".prefab", ".model", ".cs" };
                 for (const auto* extension : extensions)
                 {
                     Path withExtension = candidate;
@@ -573,7 +574,7 @@ namespace Waldem
             }, [&]
             {
                 RenameSelectedAssetRequested = true;
-            });
+            }, [] { return EditorShortcutContexts::Has(EditorShortcutContext::ContentBrowser); });
 
             inputManager->SubscribeToDynamicShortcut([]
             {
@@ -581,7 +582,7 @@ namespace Waldem
             }, [&]
             {
                 DeleteSelectedAssetRequested = true;
-            });
+            }, [] { return EditorShortcutContexts::Has(EditorShortcutContext::ContentBrowser); });
 
             CContentManager::SubscribeToFileDroppedEvent([this](Path path)
             {
@@ -1190,7 +1191,8 @@ namespace Waldem
             PollImportTask();
             ThumbnailsCreatedThisFrame = 0;
 
-            if (ImGui::Begin("Content###Content", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus))
+            const bool isVisible = ImGui::Begin("Content###Content", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus);
+            if (isVisible)
             {
                 ProcessFocusRequest();
                 HoveredDropTargetFolder.reset();
@@ -1245,6 +1247,7 @@ namespace Waldem
                 ImGui::PopStyleVar();
 
                 const bool contentFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
+                EditorShortcutContexts::SetActive(EditorShortcutContext::ContentBrowser, contentFocused);
                 if (RenameSelectedAssetRequested && contentFocused)
                 {
                     if (SelectedAssetListPath.has_value())
@@ -1264,6 +1267,10 @@ namespace Waldem
 
                 DrawRenamePopup();
                 DrawModelImportPopup();
+            }
+            else
+            {
+                EditorShortcutContexts::SetActive(EditorShortcutContext::ContentBrowser, false);
             }
 
             RenameSelectedAssetRequested = false;

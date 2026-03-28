@@ -35,6 +35,7 @@ namespace Waldem
         Point2 DepthRange = { 0, 1 };
         SFrameBuffer* FrameBuffer = nullptr;
         bool IsMouseOver = false;
+        bool IsFocused = false;
     private:
         WArray<ResizeCallback> ResizeCallbacks;
         ResizeCallback ResizeFunction;

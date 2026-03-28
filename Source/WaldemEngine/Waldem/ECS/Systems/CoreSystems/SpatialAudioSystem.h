@@ -1,5 +1,6 @@
 #pragma once
 #include "Waldem/Audio/Audio.h"
+#include "Waldem/Editor/EditorSimulation.h"
 #include "Waldem/ECS/Components/AudioListener.h"
 #include "Waldem/ECS/Components/AudioSource.h"
 #include "Waldem/ECS/Systems/System.h"
@@ -33,6 +34,11 @@ namespace Waldem
             
             ECS::World.system<AudioListener, Transform>("Spatial audio system").kind(flecs::OnUpdate).each([&](AudioListener& listener, Transform& listenerTransform)
             {
+                if(!EditorSimulation::ShouldRunRuntimeSystems())
+                {
+                    return;
+                }
+
                 auto audioSourcesQuery = ECS::World.query<AudioSource, Transform>();
                 
                 audioSourcesQuery.each([&](AudioSource& source, Transform& sourceTransform)

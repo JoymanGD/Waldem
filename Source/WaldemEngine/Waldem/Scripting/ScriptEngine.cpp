@@ -1,0 +1,949 @@
+#include "wdpch.h"
+#include "ScriptEngine.h"
+
+#include <mono/jit/jit.h>
+#include <mono/metadata/assembly.h>
+#include <mono/metadata/object.h>
+
+#include "Mono.h"
+#include <fstream>
+#include <regex>
+#include <vector>
+#include "Waldem/ECS/Components/Camera.h"
+#include "Waldem/ECS/Components/RigidBody.h"
+#include "Waldem/ECS/Components/ScriptComponent.h"
+#include "Waldem/ECS/Components/Transform.h"
+#include "Waldem/Input/Input.h"
+#include "Waldem/Renderer/Viewport/ViewportManager.h"
+#include "Waldem/Time.h"
+#include "Waldem/Utils/FileUtils.h"
+
+namespace Waldem
+{
+    namespace
+    {
+        enum class ScriptComponentKind : int32_t
+        {
+            None = 0,
+            Transform = 1,
+            Camera = 2,
+            RigidBody = 3
+        };
+
+        struct ScriptVector3
+        {
+            float x = 0.0f;
+            float y = 0.0f;
+            float z = 0.0f;
+        };
+
+        std::string ToUtf8Path(const Path& path)
+        {
+            return path.string();
+        }
+
+        Path ResolveProjectRootPath()
+        {
+            Path currentFolder = GetCurrentFolder();
+            return currentFolder.parent_path().parent_path().parent_path();
+        }
+
+        Path ResolveScriptAssemblyPath()
+        {
+            const Path currentFolder = GetCurrentFolder();
+            const Path localAssemblyPath = currentFolder / "ScriptEngine.dll";
+            const Path siblingAssemblyPath = currentFolder.parent_path() / "ScriptEngine" / "ScriptEngine.dll";
+
+            const bool hasLocalAssembly = exists(localAssemblyPath);
+            const bool hasSiblingAssembly = exists(siblingAssemblyPath);
+
+            if(hasLocalAssembly && hasSiblingAssembly)
+            {
+                std::error_code errorCode;
+                const auto localWriteTime = last_write_time(localAssemblyPath, errorCode);
+                if(errorCode)
+                {
+                    return localAssemblyPath;
+                }
+
+                const auto siblingWriteTime = last_write_time(siblingAssemblyPath, errorCode);
+                if(errorCode)
+                {
+                    return localAssemblyPath;
+                }
+
+                return siblingWriteTime > localWriteTime ? siblingAssemblyPath : localAssemblyPath;
+            }
+
+            if(hasSiblingAssembly)
+            {
+                return siblingAssemblyPath;
+            }
+
+            return localAssemblyPath;
+        }
+
+        std::string ReadCommandOutput(const std::string& command)
+        {
+            std::string output;
+            FILE* pipe = _popen(command.c_str(), "r");
+            if(pipe == nullptr)
+            {
+                return output;
+            }
+
+            char buffer[512];
+            while(fgets(buffer, sizeof(buffer), pipe) != nullptr)
+            {
+                output += buffer;
+            }
+
+            _pclose(pipe);
+
+            while(!output.empty() && (output.back() == '\n' || output.back() == '\r'))
+            {
+                output.pop_back();
+            }
+
+            return output;
+        }
+
+        bool RunProcessBlocking(const std::wstring& commandLine, const Path& workingDirectory)
+        {
+            STARTUPINFOW startupInfo = {};
+            startupInfo.cb = sizeof(startupInfo);
+
+            PROCESS_INFORMATION processInfo = {};
+            std::vector<wchar_t> mutableCommandLine(commandLine.begin(), commandLine.end());
+            mutableCommandLine.push_back(L'\0');
+
+            const std::wstring workingDirectoryString = workingDirectory.wstring();
+            if(!CreateProcessW(
+                nullptr,
+                mutableCommandLine.data(),
+                nullptr,
+                nullptr,
+                FALSE,
+                CREATE_NO_WINDOW,
+                nullptr,
+                workingDirectoryString.c_str(),
+                &startupInfo,
+                &processInfo))
+            {
+                return false;
+            }
+
+            WaitForSingleObject(processInfo.hProcess, INFINITE);
+
+            DWORD exitCode = 0;
+            GetExitCodeProcess(processInfo.hProcess, &exitCode);
+
+            CloseHandle(processInfo.hThread);
+            CloseHandle(processInfo.hProcess);
+
+            return exitCode == 0;
+        }
+
+        Path ResolveScriptPath(const ScriptReference& scriptReference)
+        {
+            Path scriptPath = scriptReference.Reference;
+            if(scriptPath.is_relative())
+            {
+                scriptPath = Path(CONTENT_PATH) / scriptPath;
+            }
+
+            return scriptPath;
+        }
+
+        bool ReadTextFile(const Path& path, std::string& outText)
+        {
+            std::ifstream stream(path, std::ios::in);
+            if(!stream.is_open())
+            {
+                return false;
+            }
+
+            outText.assign(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
+            return true;
+        }
+
+        bool ExtractScriptMetadata(const ScriptReference& scriptReference, Path& outAssemblyPath, WString& outNamespaceName, WString& outClassName)
+        {
+            const Path scriptPath = ResolveScriptPath(scriptReference);
+            if(scriptPath.empty() || !exists(scriptPath))
+            {
+                return false;
+            }
+
+            std::string source;
+            if(!ReadTextFile(scriptPath, source))
+            {
+                return false;
+            }
+
+            std::smatch namespaceMatch;
+            if(std::regex_search(source, namespaceMatch, std::regex(R"(\bnamespace\s+([A-Za-z_][A-Za-z0-9_\.]*))")))
+            {
+                outNamespaceName = namespaceMatch[1].str().c_str();
+            }
+            else
+            {
+                outNamespaceName = "";
+            }
+
+            std::smatch classMatch;
+            if(std::regex_search(source, classMatch, std::regex(R"(\bclass\s+([A-Za-z_][A-Za-z0-9_]*)\s*:\s*[A-Za-z_][A-Za-z0-9_\.<>]*)")))
+            {
+                outClassName = classMatch[1].str().c_str();
+            }
+            else
+            {
+                outClassName = scriptPath.stem().string().c_str();
+            }
+
+            outAssemblyPath = ResolveScriptAssemblyPath();
+            return !outClassName.IsEmpty();
+        }
+
+        ECS::Entity GetEntityChecked(uint64_t entityId)
+        {
+            if(entityId == 0)
+            {
+                return {};
+            }
+
+            ECS::Entity entity = ECS::World.entity(static_cast<ECS::EntityT>(entityId));
+            if(!entity.is_alive())
+            {
+                return {};
+            }
+
+            return entity;
+        }
+
+        bool Entity_HasComponent(uint64_t entityId, int32_t componentKind)
+        {
+            ECS::Entity entity = GetEntityChecked(entityId);
+            if(!entity.is_alive())
+            {
+                return false;
+            }
+
+            switch(static_cast<ScriptComponentKind>(componentKind))
+            {
+            case ScriptComponentKind::Transform: return entity.has<Transform>();
+            case ScriptComponentKind::Camera: return entity.has<Camera>();
+            case ScriptComponentKind::RigidBody: return entity.has<RigidBody>();
+            default: return false;
+            }
+        }
+
+        bool Input_IsKeyPressed(int keyCode)
+        {
+            SViewport* gameViewport = ViewportManager::GetGameViewport();
+            if(gameViewport != nullptr && !gameViewport->IsFocused)
+            {
+                return false;
+            }
+
+            return Input::IsKeyPressed(keyCode);
+        }
+
+        bool Input_IsMouseButtonPressed(int button)
+        {
+            SViewport* gameViewport = ViewportManager::GetGameViewport();
+            if(gameViewport != nullptr && !gameViewport->IsFocused)
+            {
+                return false;
+            }
+
+            return Input::IsMouseButtonPressed(button);
+        }
+
+        float Time_GetDeltaTime()
+        {
+            return Time::DeltaTime;
+        }
+
+        float Time_GetFixedDeltaTime()
+        {
+            return Time::FixedDeltaTime;
+        }
+
+        float Time_GetElapsedTime()
+        {
+            return Time::ElapsedTime;
+        }
+
+        void Transform_GetPosition(uint64_t entityId, ScriptVector3* outPosition)
+        {
+            if(outPosition == nullptr)
+            {
+                return;
+            }
+
+            ECS::Entity entity = GetEntityChecked(entityId);
+            if(!entity.is_alive() || !entity.has<Transform>())
+            {
+                *outPosition = {};
+                return;
+            }
+
+            const auto& transform = entity.get<Transform>();
+            outPosition->x = transform.Position.x;
+            outPosition->y = transform.Position.y;
+            outPosition->z = transform.Position.z;
+        }
+
+        void Transform_SetPosition(uint64_t entityId, ScriptVector3* position)
+        {
+            if(position == nullptr)
+            {
+                return;
+            }
+
+            ECS::Entity entity = GetEntityChecked(entityId);
+            if(!entity.is_alive() || !entity.has<Transform>())
+            {
+                return;
+            }
+
+            auto& transform = entity.get_mut<Transform>();
+            transform.SetPosition(position->x, position->y, position->z);
+            entity.modified<Transform>();
+        }
+
+        void Transform_GetForward(uint64_t entityId, ScriptVector3* outForward)
+        {
+            if(outForward == nullptr)
+            {
+                return;
+            }
+
+            ECS::Entity entity = GetEntityChecked(entityId);
+            if(!entity.is_alive() || !entity.has<Transform>())
+            {
+                *outForward = {};
+                return;
+            }
+
+            const auto& transform = entity.get<Transform>();
+            auto forward = transform.GetForwardVector();
+            outForward->x = forward.x;
+            outForward->y = forward.y;
+            outForward->z = forward.z;
+        }
+
+        void Transform_GetRight(uint64_t entityId, ScriptVector3* outRight)
+        {
+            if(outRight == nullptr)
+            {
+                return;
+            }
+
+            ECS::Entity entity = GetEntityChecked(entityId);
+            if(!entity.is_alive() || !entity.has<Transform>())
+            {
+                *outRight = {};
+                return;
+            }
+
+            const auto& transform = entity.get<Transform>();
+            auto right = transform.GetRightVector();
+            outRight->x = right.x;
+            outRight->y = right.y;
+            outRight->z = right.z;
+        }
+
+        void Transform_GetUp(uint64_t entityId, ScriptVector3* outUp)
+        {
+            if(outUp == nullptr)
+            {
+                return;
+            }
+
+            ECS::Entity entity = GetEntityChecked(entityId);
+            if(!entity.is_alive() || !entity.has<Transform>())
+            {
+                *outUp = {};
+                return;
+            }
+
+            const auto& transform = entity.get<Transform>();
+            auto up = transform.GetUpVector();
+            outUp->x = up.x;
+            outUp->y = up.y;
+            outUp->z = up.z;
+        }
+
+        void Transform_Translate(uint64_t entityId, ScriptVector3* translation)
+        {
+            if(translation == nullptr)
+            {
+                return;
+            }
+
+            ECS::Entity entity = GetEntityChecked(entityId);
+            if(!entity.is_alive() || !entity.has<Transform>())
+            {
+                return;
+            }
+
+            auto& transform = entity.get_mut<Transform>();
+            transform.Translate(Vector3(translation->x, translation->y, translation->z));
+            entity.modified<Transform>();
+        }
+
+        void Transform_GetRotation(uint64_t entityId, ScriptVector3* outRotation)
+        {
+            if(outRotation == nullptr)
+            {
+                return;
+            }
+
+            ECS::Entity entity = GetEntityChecked(entityId);
+            if(!entity.is_alive() || !entity.has<Transform>())
+            {
+                *outRotation = {};
+                return;
+            }
+
+            const auto& transform = entity.get<Transform>();
+            outRotation->x = transform.Rotation.x;
+            outRotation->y = transform.Rotation.y;
+            outRotation->z = transform.Rotation.z;
+        }
+
+        void Transform_SetRotation(uint64_t entityId, ScriptVector3* rotation)
+        {
+            if(rotation == nullptr)
+            {
+                return;
+            }
+
+            ECS::Entity entity = GetEntityChecked(entityId);
+            if(!entity.is_alive() || !entity.has<Transform>())
+            {
+                return;
+            }
+
+            auto& transform = entity.get_mut<Transform>();
+            transform.SetRotation(rotation->x, rotation->y, rotation->z);
+            entity.modified<Transform>();
+        }
+
+        void Transform_Rotate(uint64_t entityId, ScriptVector3* rotationDelta)
+        {
+            if(rotationDelta == nullptr)
+            {
+                return;
+            }
+
+            ECS::Entity entity = GetEntityChecked(entityId);
+            if(!entity.is_alive() || !entity.has<Transform>())
+            {
+                return;
+            }
+
+            auto& transform = entity.get_mut<Transform>();
+            transform.Rotate(rotationDelta->y, rotationDelta->x, rotationDelta->z);
+            entity.modified<Transform>();
+        }
+
+        void Transform_GetScale(uint64_t entityId, ScriptVector3* outScale)
+        {
+            if(outScale == nullptr)
+            {
+                return;
+            }
+
+            ECS::Entity entity = GetEntityChecked(entityId);
+            if(!entity.is_alive() || !entity.has<Transform>())
+            {
+                *outScale = {};
+                return;
+            }
+
+            const auto& transform = entity.get<Transform>();
+            outScale->x = transform.LocalScale.x;
+            outScale->y = transform.LocalScale.y;
+            outScale->z = transform.LocalScale.z;
+        }
+
+        void Transform_SetScale(uint64_t entityId, ScriptVector3* scale)
+        {
+            if(scale == nullptr)
+            {
+                return;
+            }
+
+            ECS::Entity entity = GetEntityChecked(entityId);
+            if(!entity.is_alive() || !entity.has<Transform>())
+            {
+                return;
+            }
+
+            auto& transform = entity.get_mut<Transform>();
+            transform.SetScale(scale->x, scale->y, scale->z);
+            entity.modified<Transform>();
+        }
+    }
+
+    void ScriptEngine::Initialize(Mono* runtime)
+    {
+        Runtime = runtime;
+        AssemblyCache.clear();
+        EntityInstances.clear();
+
+        if(Runtime == nullptr)
+        {
+            WD_CORE_ERROR("ScriptEngine initialization failed: Mono runtime is null");
+            return;
+        }
+
+        RegisterInternalCalls();
+        LoadCoreAssembly();
+    }
+
+    void ScriptEngine::Shutdown()
+    {
+        for(auto& [entityId, instance] : EntityInstances)
+        {
+            InvokeNoArgs(instance, instance.OnDestroyMethod);
+            if(instance.GCHandle != 0)
+            {
+                mono_gchandle_free(instance.GCHandle);
+            }
+        }
+
+        EntityInstances.clear();
+        AssemblyCache.clear();
+        CoreAssembly = nullptr;
+        Runtime = nullptr;
+    }
+
+    bool ScriptEngine::RebuildScriptAssembly()
+    {
+        const Path projectRoot = ResolveProjectRootPath();
+        const Path vsWherePath = Path("C:/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe");
+        if(!exists(vsWherePath))
+        {
+            LastReloadStatus = "vswhere.exe was not found";
+            WD_CORE_ERROR("{0}", LastReloadStatus);
+            return false;
+        }
+
+        const std::string vsWhereCommand = "\"" + vsWherePath.string() + "\" -latest -requires Microsoft.Component.MSBuild -find MSBuild\\**\\Bin\\MSBuild.exe";
+        const std::string msbuildPathString = ReadCommandOutput(vsWhereCommand);
+        if(msbuildPathString.empty())
+        {
+            LastReloadStatus = "Failed to locate MSBuild";
+            WD_CORE_ERROR("{0}", LastReloadStatus);
+            return false;
+        }
+
+        const std::wstring configuration = GetCurrentFolder().parent_path().filename().wstring();
+        const Path csprojPath = projectRoot / "Source" / "ScriptEngine" / "ScriptEngine.csproj";
+
+        const std::wstring commandLine =
+            L"\"" + Path(msbuildPathString).wstring() + L"\" \"" + csprojPath.wstring() +
+            L"\" /t:Build /p:Configuration=" + configuration + L" /p:Platform=x64 /nologo";
+
+        if(!RunProcessBlocking(commandLine, projectRoot))
+        {
+            LastReloadStatus = "ScriptEngine build failed";
+            WD_CORE_ERROR("{0}", LastReloadStatus);
+            return false;
+        }
+
+        return true;
+    }
+
+    bool ScriptEngine::CopyAssemblyToRuntimeFolder()
+    {
+        const Path configuration = GetCurrentFolder().parent_path().filename();
+        const Path sourceAssemblyPath = ResolveProjectRootPath() / "Build" / configuration / "ScriptEngine" / "ScriptEngine.dll";
+        const Path sourcePdbPath = sourceAssemblyPath.parent_path() / "ScriptEngine.pdb";
+        const Path targetAssemblyPath = GetCurrentFolder() / "ScriptEngine.dll";
+        const Path targetPdbPath = GetCurrentFolder() / "ScriptEngine.pdb";
+
+        std::error_code errorCode;
+        copy_file(sourceAssemblyPath, targetAssemblyPath, std::filesystem::copy_options::overwrite_existing, errorCode);
+        if(errorCode)
+        {
+            LastReloadStatus = "Failed to copy ScriptEngine.dll to runtime folder";
+            WD_CORE_ERROR("{0}", LastReloadStatus);
+            return false;
+        }
+
+        if(exists(sourcePdbPath))
+        {
+            errorCode.clear();
+            copy_file(sourcePdbPath, targetPdbPath, std::filesystem::copy_options::overwrite_existing, errorCode);
+        }
+
+        return true;
+    }
+
+    bool ScriptEngine::ReloadScripts(bool rebuildAssembly)
+    {
+        if(Runtime == nullptr)
+        {
+            LastReloadStatus = "Script runtime is not initialized";
+            return false;
+        }
+
+        std::vector<ECS::EntityT> scriptedEntities;
+        auto query = ECS::World.query_builder<ScriptComponent>().build();
+        query.each([&](ECS::Entity entity, ScriptComponent&)
+        {
+            scriptedEntities.push_back(entity.id());
+        });
+
+        for(auto& [entityId, instance] : EntityInstances)
+        {
+            InvokeNoArgs(instance, instance.OnDestroyMethod);
+            if(instance.GCHandle != 0)
+            {
+                mono_gchandle_free(instance.GCHandle);
+            }
+        }
+
+        EntityInstances.clear();
+        AssemblyCache.clear();
+        CoreAssembly = nullptr;
+
+        if(rebuildAssembly && !RebuildScriptAssembly())
+        {
+            return false;
+        }
+
+        if(!CopyAssemblyToRuntimeFolder())
+        {
+            return false;
+        }
+
+        if(!Runtime->ReloadAppDomain())
+        {
+            LastReloadStatus = "Failed to reload Mono app domain";
+            WD_CORE_ERROR("{0}", LastReloadStatus);
+            return false;
+        }
+
+        RegisterInternalCalls();
+        if(!LoadCoreAssembly())
+        {
+            LastReloadStatus = "Failed to load rebuilt script assembly";
+            WD_CORE_ERROR("{0}", LastReloadStatus);
+            return false;
+        }
+
+        int recreatedCount = 0;
+        for(ECS::EntityT entityId : scriptedEntities)
+        {
+            ECS::Entity entity = ECS::World.entity(entityId);
+            if(!entity.is_alive() || !entity.has<ScriptComponent>())
+            {
+                continue;
+            }
+
+            const ScriptComponent& scriptComponent = entity.get<ScriptComponent>();
+            if(CreateEntityInstance(entity, scriptComponent))
+            {
+                recreatedCount++;
+            }
+        }
+
+        LastReloadStatus = "Reloaded " + std::to_string(recreatedCount) + " script instance(s)";
+        WD_CORE_INFO("{0}", LastReloadStatus);
+        return true;
+    }
+
+    bool ScriptEngine::LoadCoreAssembly()
+    {
+        if(Runtime == nullptr)
+        {
+            return false;
+        }
+
+        Path assemblyPath = ResolveScriptAssemblyPath();
+
+        CoreAssembly = Runtime->LoadCSharpAssembly(assemblyPath);
+        if(CoreAssembly == nullptr)
+        {
+            WD_CORE_ERROR("Failed to load core script assembly from {0}", assemblyPath.string());
+            return false;
+        }
+
+        WD_CORE_INFO("Loaded script assembly from {0}", assemblyPath.string());
+        AssemblyCache[ToUtf8Path(assemblyPath)] = CoreAssembly;
+        return true;
+    }
+
+    MonoAssembly* ScriptEngine::ResolveAssembly(const ScriptComponent& scriptComponent)
+    {
+        if(Runtime == nullptr)
+        {
+            return nullptr;
+        }
+
+        Path assemblyPath;
+        WString namespaceName;
+        WString className;
+        if(!ExtractScriptMetadata(scriptComponent.Script, assemblyPath, namespaceName, className))
+        {
+            WD_CORE_ERROR("Failed to resolve script metadata from '{0}'", scriptComponent.Script.Reference.string());
+            return nullptr;
+        }
+
+        if(assemblyPath.is_relative())
+        {
+            assemblyPath = GetCurrentFolder() / assemblyPath;
+        }
+
+        const std::string assemblyKey = ToUtf8Path(assemblyPath);
+        auto cached = AssemblyCache.find(assemblyKey);
+        if(cached != AssemblyCache.end())
+        {
+            return cached->second;
+        }
+
+        MonoAssembly* assembly = Runtime->LoadCSharpAssembly(assemblyPath);
+        if(assembly != nullptr)
+        {
+            AssemblyCache[assemblyKey] = assembly;
+        }
+
+        return assembly;
+    }
+
+    MonoClass* ScriptEngine::ResolveClass(MonoAssembly* assembly, const ScriptComponent& scriptComponent)
+    {
+        if(Runtime == nullptr || assembly == nullptr)
+        {
+            return nullptr;
+        }
+
+        Path assemblyPath;
+        WString namespaceName;
+        WString className;
+        if(!ExtractScriptMetadata(scriptComponent.Script, assemblyPath, namespaceName, className))
+        {
+            return nullptr;
+        }
+
+        return Runtime->GetClass(
+            assembly,
+            className,
+            namespaceName
+        );
+    }
+
+    ScriptEngine::ScriptInstance* ScriptEngine::GetInstance(ECS::EntityT entityId)
+    {
+        auto it = EntityInstances.find(entityId);
+        if(it == EntityInstances.end())
+        {
+            return nullptr;
+        }
+
+        return &it->second;
+    }
+
+    void ScriptEngine::RegisterInternalCalls()
+    {
+        Runtime->RegisterInternalCall("Waldem.InternalCalls::Entity_HasComponent", &Entity_HasComponent);
+        Runtime->RegisterInternalCall("Waldem.InternalCalls::Input_IsKeyPressed", &Input_IsKeyPressed);
+        Runtime->RegisterInternalCall("Waldem.InternalCalls::Input_IsMouseButtonPressed", &Input_IsMouseButtonPressed);
+        Runtime->RegisterInternalCall("Waldem.InternalCalls::Time_GetDeltaTime", &Time_GetDeltaTime);
+        Runtime->RegisterInternalCall("Waldem.InternalCalls::Time_GetFixedDeltaTime", &Time_GetFixedDeltaTime);
+        Runtime->RegisterInternalCall("Waldem.InternalCalls::Time_GetElapsedTime", &Time_GetElapsedTime);
+        Runtime->RegisterInternalCall("Waldem.InternalCalls::Transform_GetPosition", &Transform_GetPosition);
+        Runtime->RegisterInternalCall("Waldem.InternalCalls::Transform_SetPosition", &Transform_SetPosition);
+        Runtime->RegisterInternalCall("Waldem.InternalCalls::Transform_GetForward", &Transform_GetForward);
+        Runtime->RegisterInternalCall("Waldem.InternalCalls::Transform_GetRight", &Transform_GetRight);
+        Runtime->RegisterInternalCall("Waldem.InternalCalls::Transform_GetUp", &Transform_GetUp);
+        Runtime->RegisterInternalCall("Waldem.InternalCalls::Transform_Translate", &Transform_Translate);
+        Runtime->RegisterInternalCall("Waldem.InternalCalls::Transform_GetRotation", &Transform_GetRotation);
+        Runtime->RegisterInternalCall("Waldem.InternalCalls::Transform_SetRotation", &Transform_SetRotation);
+        Runtime->RegisterInternalCall("Waldem.InternalCalls::Transform_Rotate", &Transform_Rotate);
+        Runtime->RegisterInternalCall("Waldem.InternalCalls::Transform_GetScale", &Transform_GetScale);
+        Runtime->RegisterInternalCall("Waldem.InternalCalls::Transform_SetScale", &Transform_SetScale);
+    }
+
+    MonoObject* ScriptEngine::GetManagedInstance(const ScriptInstance& instance)
+    {
+        if(instance.GCHandle == 0)
+        {
+            return nullptr;
+        }
+
+        return mono_gchandle_get_target(instance.GCHandle);
+    }
+
+    void ScriptEngine::InvokeNoArgs(const ScriptInstance& instance, MonoMethod* method)
+    {
+        if(method == nullptr)
+        {
+            return;
+        }
+
+        MonoObject* managedInstance = GetManagedInstance(instance);
+        if(managedInstance == nullptr)
+        {
+            return;
+        }
+
+        Runtime->InvokeMethod(managedInstance, method, nullptr);
+    }
+
+    void ScriptEngine::InvokeSingleFloat(const ScriptInstance& instance, MonoMethod* method, float value)
+    {
+        if(method == nullptr)
+        {
+            return;
+        }
+
+        MonoObject* managedInstance = GetManagedInstance(instance);
+        if(managedInstance == nullptr)
+        {
+            return;
+        }
+
+        void* params[1] = { &value };
+        Runtime->InvokeMethod(managedInstance, method, params);
+    }
+
+    bool ScriptEngine::CreateEntityInstance(ECS::Entity entity, const ScriptComponent& scriptComponent)
+    {
+        if(!IsInitialized() || !entity.is_alive() || !scriptComponent.Enabled || !scriptComponent.Script.IsValid())
+        {
+            return false;
+        }
+
+        DestroyEntityInstance(entity.id());
+
+        MonoAssembly* assembly = ResolveAssembly(scriptComponent);
+        if(assembly == nullptr)
+        {
+            WD_CORE_ERROR("Failed to resolve script assembly for entity {0}", (uint64_t)entity.id());
+            return false;
+        }
+
+        MonoClass* klass = ResolveClass(assembly, scriptComponent);
+        if(klass == nullptr)
+        {
+            Path assemblyPath;
+            WString namespaceName;
+            WString className;
+            ExtractScriptMetadata(scriptComponent.Script, assemblyPath, namespaceName, className);
+
+            WD_CORE_ERROR(
+                "Failed to resolve script class {0}.{1}",
+                namespaceName.C_Str(),
+                className.C_Str()
+            );
+            return false;
+        }
+
+        MonoObject* instanceObject = Runtime->CreateObject(klass);
+        if(instanceObject == nullptr)
+        {
+            return false;
+        }
+
+        ScriptInstance instance;
+        instance.Class = klass;
+        instance.SetEntityIdMethod = Runtime->GetMethod(klass, "__SetEntityId", 1);
+        instance.OnCreateMethod = Runtime->GetMethod(klass, "OnCreate", 0);
+        instance.OnUpdateMethod = Runtime->GetMethod(klass, "OnUpdate", 1);
+        instance.OnFixedUpdateMethod = Runtime->GetMethod(klass, "OnFixedUpdate", 1);
+        instance.OnDestroyMethod = Runtime->GetMethod(klass, "OnDestroy", 0);
+        instance.GCHandle = mono_gchandle_new(instanceObject, true);
+
+        EntityInstances[entity.id()] = instance;
+        ScriptInstance& storedInstance = EntityInstances[entity.id()];
+
+        if(storedInstance.SetEntityIdMethod != nullptr)
+        {
+            uint64_t entityId = static_cast<uint64_t>(entity.id());
+            void* params[1] = { &entityId };
+            Runtime->InvokeMethod(instanceObject, storedInstance.SetEntityIdMethod, params);
+        }
+        else
+        {
+            WD_CORE_ERROR("Failed to bind managed entity id for script instance on entity {0}", (uint64_t)entity.id());
+        }
+
+        InvokeNoArgs(storedInstance, storedInstance.OnCreateMethod);
+        return true;
+    }
+
+    void ScriptEngine::DestroyEntityInstance(ECS::EntityT entityId)
+    {
+        ScriptInstance* instance = GetInstance(entityId);
+        if(instance == nullptr)
+        {
+            return;
+        }
+
+        InvokeNoArgs(*instance, instance->OnDestroyMethod);
+
+        if(instance->GCHandle != 0)
+        {
+            mono_gchandle_free(instance->GCHandle);
+        }
+
+        EntityInstances.erase(entityId);
+    }
+
+    void ScriptEngine::OnUpdate(ECS::Entity entity, const ScriptComponent& scriptComponent, float deltaTime)
+    {
+        if(!entity.is_alive() || !scriptComponent.Enabled || !scriptComponent.Script.IsValid())
+        {
+            return;
+        }
+
+        ScriptInstance* instance = GetInstance(entity.id());
+        if(instance == nullptr)
+        {
+            if(!CreateEntityInstance(entity, scriptComponent))
+            {
+                return;
+            }
+
+            instance = GetInstance(entity.id());
+            if(instance == nullptr)
+            {
+                return;
+            }
+        }
+
+        InvokeSingleFloat(*instance, instance->OnUpdateMethod, deltaTime);
+    }
+
+    void ScriptEngine::OnFixedUpdate(ECS::Entity entity, const ScriptComponent& scriptComponent, float fixedDeltaTime)
+    {
+        if(!entity.is_alive() || !scriptComponent.Enabled || !scriptComponent.Script.IsValid())
+        {
+            return;
+        }
+
+        ScriptInstance* instance = GetInstance(entity.id());
+        if(instance == nullptr)
+        {
+            if(!CreateEntityInstance(entity, scriptComponent))
+            {
+                return;
+            }
+
+            instance = GetInstance(entity.id());
+            if(instance == nullptr)
+            {
+                return;
+            }
+        }
+
+        InvokeSingleFloat(*instance, instance->OnFixedUpdateMethod, fixedDeltaTime);
+    }
+}

@@ -7,6 +7,7 @@
 #include "Waldem/Editor/AssetReference/TextureReference.h"
 #include "Waldem/Editor/AssetReference/MeshReference.h"
 #include "Waldem/Editor/AssetReference/MaterialReference.h"
+#include "Waldem/Editor/AssetReference/ScriptReference.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
 #include "Waldem/Extensions/ImGUIExtension.h"
 #include "Waldem/Input/InputManager.h"
@@ -323,17 +324,38 @@ namespace Waldem
                     case EcsOpOpaqueStruct:
                     case EcsOpOpaqueValue:
                     {
+                        const auto stringId = ECS::World.id<WString>();
                         const auto textureRefId = ECS::World.id<TextureReference>();
                         const auto meshRefId = ECS::World.id<MeshReference>();
                         const auto materialRefId = ECS::World.id<MaterialReference>();
                         const auto audioRefId = ECS::World.id<AudioClipReference>();
+                        const auto scriptRefId = ECS::World.id<ScriptReference>();
                         const auto baseAssetRefId = ECS::World.id<AssetReference>();
+
+                        if (op->type == stringId)
+                        {
+                            WString* value = static_cast<WString*>(ptr);
+                            std::string text = value != nullptr ? value->ToString() : "";
+                            std::vector<char> buffer(text.begin(), text.end());
+                            buffer.resize(256, '\0');
+
+                            ComponentValueBlob before(id.raw_id(), base);
+                            ImGui::SetNextItemWidth(200.f);
+                            if (ImGui::InputText(uniqueId.c_str(), buffer.data(), buffer.size()))
+                            {
+                                *value = buffer.data();
+                                entity.modified(id);
+                                PushComponentStateCommand(entity, id, before, base, false);
+                            }
+                            break;
+                        }
 
                         const bool isAssetReferenceType =
                             op->type == textureRefId ||
                             op->type == meshRefId ||
                             op->type == materialRefId ||
                             op->type == audioRefId ||
+                            op->type == scriptRefId ||
                             op->type == baseAssetRefId;
 
                         if (isAssetReferenceType)
@@ -345,6 +367,7 @@ namespace Waldem
                             else if (op->type == meshRefId) assetType = AssetType::Mesh;
                             else if (op->type == materialRefId) assetType = AssetType::Material;
                             else if (op->type == audioRefId) assetType = AssetType::Audio;
+                            else if (op->type == scriptRefId) assetType = AssetType::Script;
                             else if (op->type == baseAssetRefId && op->name)
                             {
                                 const std::string fieldName = op->name;
@@ -352,6 +375,7 @@ namespace Waldem
                                 else if (fieldName.find("Material") != std::string::npos) assetType = AssetType::Material;
                                 else if (fieldName.find("Texture") != std::string::npos) assetType = AssetType::Texture;
                                 else if (fieldName.find("Audio") != std::string::npos || fieldName.find("Clip") != std::string::npos) assetType = AssetType::Audio;
+                                else if (fieldName.find("Script") != std::string::npos) assetType = AssetType::Script;
                             }
 
                             if (assetType == AssetType::Unknown)

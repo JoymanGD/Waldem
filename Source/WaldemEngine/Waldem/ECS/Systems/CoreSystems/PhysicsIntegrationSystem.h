@@ -1,4 +1,5 @@
 #pragma once
+#include "Waldem/Editor/EditorSimulation.h"
 #include "Waldem/Time.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/ECS/Components/RigidBody.h"
@@ -17,6 +18,7 @@ namespace Waldem
         {
             ECS::World.system<Transform, RigidBody>().kind<ECS::OnFixedUpdate>().each([&](ECS::Entity entity, Transform& transform, RigidBody& rigidBody)
             {
+                if(!EditorSimulation::ShouldRunRuntimeSystems()) return;
                 if(rigidBody.IsKinematic) return;
 
                 auto deltaTime = Time::FixedDeltaTime;

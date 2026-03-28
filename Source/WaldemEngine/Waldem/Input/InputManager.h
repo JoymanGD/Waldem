@@ -12,6 +12,7 @@ namespace Waldem
     using MouseScrollEventHandler = std::function<void(Vector2)>;
     using ShortcutHandler = std::function<void()>;
     using DynamicShortcutProvider = std::function<Shortcut()>;
+    using ShortcutPredicate = std::function<bool()>;
     
     class WALDEM_API InputManager
     {
@@ -41,9 +42,9 @@ namespace Waldem
             ShortcutHandlers[shortcut].Add(handler);
         }
 
-        void SubscribeToDynamicShortcut(DynamicShortcutProvider provider, ShortcutHandler handler)
+        void SubscribeToDynamicShortcut(DynamicShortcutProvider provider, ShortcutHandler handler, ShortcutPredicate predicate = {})
         {
-            DynamicShortcutHandlers.Add({provider, handler});
+            DynamicShortcutHandlers.Add({provider, handler, predicate});
         }
         
         bool Broadcast(Event& event, bool blockShortcuts = false)
@@ -73,7 +74,7 @@ namespace Waldem
                         for (auto& entry : DynamicShortcutHandlers)
                         {
                             Shortcut shortcut = entry.Provider();
-                            if (shortcut.Matches(PressedKeys))
+                            if (shortcut.Matches(PressedKeys) && (!entry.Predicate || entry.Predicate()))
                             {
                                 entry.Handler();
                             }
@@ -149,6 +150,7 @@ namespace Waldem
         {
             DynamicShortcutProvider Provider;
             ShortcutHandler Handler;
+            ShortcutPredicate Predicate;
         };
         WArray<DynamicShortcutEntry> DynamicShortcutHandlers;
         WArray<MouseMoveEventHandler> MouseMoveEventHandlers;

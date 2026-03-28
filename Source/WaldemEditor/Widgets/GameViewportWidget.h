@@ -1,6 +1,7 @@
 #pragma once
 #include "imgui.h"
 #include "Widget.h"
+#include "../EditorShortcutContext.h"
 #include "Waldem/Renderer/Renderer.h"
 #include "Waldem/Renderer/Viewport/Viewport.h"
 #include "Waldem/Renderer/Viewport/ViewportManager.h"
@@ -51,6 +52,15 @@ namespace Waldem
                 }
                 
                 viewport->IsMouseOver = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
+                if(viewport->IsMouseOver && (ImGui::IsMouseClicked(ImGuiMouseButton_Left) || ImGui::IsMouseClicked(ImGuiMouseButton_Right)))
+                {
+                    viewport->IsFocused = true;
+                    if(auto editorViewport = ViewportManager::GetEditorViewport())
+                    {
+                        editorViewport->IsFocused = false;
+                    }
+                }
+                EditorShortcutContexts::SetActive(EditorShortcutContext::GameViewport, viewport->IsFocused);
                 
                 auto renderTarget = viewport->FrameBuffer->GetCurrentRenderTarget();
                 ImGui::Image(renderTarget->GetGPUAddress(), viewportSize);
@@ -103,6 +113,12 @@ namespace Waldem
                 }
 
                 Renderer::RenderData.GameViewportOutputTarget = SelectedRenderTarget;
+            }
+            else
+            {
+                viewport->IsMouseOver = false;
+                viewport->IsFocused = false;
+                EditorShortcutContexts::SetActive(EditorShortcutContext::GameViewport, false);
             }
             ImGui::End();
             ImGui::PopStyleVar();

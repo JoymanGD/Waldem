@@ -1,4 +1,5 @@
 #pragma once
+#include "Waldem/Editor/EditorSimulation.h"
 #include "Waldem/Time.h"
 #include "Waldem/ECS/Components/ColliderComponent.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
@@ -725,6 +726,8 @@ namespace Waldem
             // ECS::World.system().kind(flecs::OnUpdate).each([&]
             ECS::World.system().kind<ECS::OnFixedUpdate>().each([&]
             {
+                if(!EditorSimulation::ShouldRunRuntimeSystems()) return;
+
                 for (auto& contact : ContactCache)
                 {
                     contact.WasUpdatedThisFrame = false;

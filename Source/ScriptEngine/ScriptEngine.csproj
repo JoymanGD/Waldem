@@ -42,7 +42,23 @@
   <ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\Content\Scripts\RotatingObject.cs">
+      <Link>Content\Scripts\RotatingObject.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Content\Scripts\TestScript.cs">
+      <Link>Content\Scripts\TestScript.cs</Link>
+    </Compile>
     <Compile Include="CSharpTesting.cs" />
+    <Compile Include="Component.cs" />
+    <Compile Include="Entity.cs" />
+    <Compile Include="Input.cs" />
+    <Compile Include="InternalCalls.cs" />
+    <Compile Include="KeyCode.cs" />
+    <Compile Include="MouseButton.cs" />
+    <Compile Include="ScriptableEntity.cs" />
+    <Compile Include="Time.cs" />
+    <Compile Include="TransformComponent.cs" />
+    <Compile Include="Vector3.cs" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>

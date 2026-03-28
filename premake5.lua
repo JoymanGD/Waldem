@@ -112,6 +112,7 @@ local function SetupPostBuild(prjName)
         'xcopy /E /I /Y "%{wks.location}Content\\*" "%{cfg.targetdir}\\Content\\"',
 
         'xcopy /Y "%{wks.location}Build\\%{cfg.buildcfg}\\WaldemEngine\\WaldemEngine.dll" "%{cfg.targetdir}\\"',
+        'xcopy /Y "%{wks.location}Build\\%{cfg.buildcfg}\\ScriptEngine\\ScriptEngine.dll" "%{cfg.targetdir}\\"',
         'xcopy /Y "%{wks.location}Build\\%{cfg.buildcfg}\\flecs\\flecs.dll" "%{cfg.targetdir}\\"',
         'xcopy /Y "%{wks.location}Build\\%{cfg.buildcfg}\\imgui\\imgui.dll" "%{cfg.targetdir}\\"',
         'xcopy /Y "%{wks.location}Build\\%{cfg.buildcfg}\\ImGuizmo\\ImGuizmo.dll" "%{cfg.targetdir}\\"',
@@ -316,5 +317,6 @@ project "ScriptEngine"
 
     files
     {
-        SourceDir .. "/ScriptEngine/**.cs"
+        SourceDir .. "/ScriptEngine/**.cs",
+        "Content/Scripts/**.cs"
     }

@@ -14,6 +14,8 @@ namespace Waldem
     class CoachWidget : public IWidget
     {
     private:
+        inline static bool Visible = false;
+
         struct CoachParams
         {
             uint32 InputDims = 0;
@@ -255,6 +257,16 @@ namespace Waldem
     public:
         CoachWidget() = default;
 
+        static bool IsVisible()
+        {
+            return Visible;
+        }
+
+        static void SetVisible(bool visible)
+        {
+            Visible = visible;
+        }
+
         void Initialize(InputManager* inputManager) override
         {
             (void)inputManager;
@@ -273,7 +285,12 @@ namespace Waldem
         void OnDraw(float deltaTime) override
         {
             (void)deltaTime;
-            const bool isVisible = ImGui::Begin("Coach###Coach");
+            if(!Visible)
+            {
+                return;
+            }
+
+            const bool isVisible = ImGui::Begin("Coach###Coach", &Visible);
             if (!isVisible)
             {
                 ImGui::End();
