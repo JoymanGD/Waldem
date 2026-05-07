@@ -14,27 +14,20 @@
 #include <rapidjson/writer.h>
 #include <regex>
 #include <vector>
-#include "Waldem/ECS/Components/Camera.h"
-#include "Waldem/ECS/Components/RigidBody.h"
 #include "Waldem/ECS/Components/ScriptComponent.h"
-#include "Waldem/ECS/Components/Transform.h"
-#include "Waldem/Input/Input.h"
-#include "Waldem/Renderer/Viewport/ViewportManager.h"
-#include "Waldem/Time.h"
 #include "Waldem/Utils/FileUtils.h"
+#include "Bindings/CameraBindings.h"
+#include "Bindings/EntityBindings.h"
+#include "Bindings/InputBindings.h"
+#include "Bindings/LightBindings.h"
+#include "Bindings/RigidBodyBindings.h"
+#include "Bindings/TimeBindings.h"
+#include "Bindings/TransformBindings.h"
 
 namespace Waldem
 {
     namespace
     {
-        enum class ScriptComponentKind : int32_t
-        {
-            None = 0,
-            Transform = 1,
-            Camera = 2,
-            RigidBody = 3
-        };
-
         struct ScriptVector3
         {
             float x = 0.0f;
@@ -506,288 +499,6 @@ namespace Waldem
             return !outClassName.IsEmpty();
         }
 
-        ECS::Entity GetEntityChecked(uint64_t entityId)
-        {
-            if(entityId == 0)
-            {
-                return {};
-            }
-
-            ECS::Entity entity = ECS::World.entity(static_cast<ECS::EntityT>(entityId));
-            if(!entity.is_alive())
-            {
-                return {};
-            }
-
-            return entity;
-        }
-
-        bool Entity_HasComponent(uint64_t entityId, int32_t componentKind)
-        {
-            ECS::Entity entity = GetEntityChecked(entityId);
-            if(!entity.is_alive())
-            {
-                return false;
-            }
-
-            switch(static_cast<ScriptComponentKind>(componentKind))
-            {
-            case ScriptComponentKind::Transform: return entity.has<Transform>();
-            case ScriptComponentKind::Camera: return entity.has<Camera>();
-            case ScriptComponentKind::RigidBody: return entity.has<RigidBody>();
-            default: return false;
-            }
-        }
-
-        bool Input_IsKeyPressed(int keyCode)
-        {
-            SViewport* gameViewport = ViewportManager::GetGameViewport();
-            if(gameViewport != nullptr && !gameViewport->IsFocused)
-            {
-                return false;
-            }
-
-            return Input::IsKeyPressed(keyCode);
-        }
-
-        bool Input_IsMouseButtonPressed(int button)
-        {
-            SViewport* gameViewport = ViewportManager::GetGameViewport();
-            if(gameViewport != nullptr && !gameViewport->IsFocused)
-            {
-                return false;
-            }
-
-            return Input::IsMouseButtonPressed(button);
-        }
-
-        float Time_GetDeltaTime()
-        {
-            return Time::DeltaTime;
-        }
-
-        float Time_GetFixedDeltaTime()
-        {
-            return Time::FixedDeltaTime;
-        }
-
-        float Time_GetElapsedTime()
-        {
-            return Time::ElapsedTime;
-        }
-
-        void Transform_GetPosition(uint64_t entityId, ScriptVector3* outPosition)
-        {
-            if(outPosition == nullptr)
-            {
-                return;
-            }
-
-            ECS::Entity entity = GetEntityChecked(entityId);
-            if(!entity.is_alive() || !entity.has<Transform>())
-            {
-                *outPosition = {};
-                return;
-            }
-
-            const auto& transform = entity.get<Transform>();
-            outPosition->x = transform.Position.x;
-            outPosition->y = transform.Position.y;
-            outPosition->z = transform.Position.z;
-        }
-
-        void Transform_SetPosition(uint64_t entityId, ScriptVector3* position)
-        {
-            if(position == nullptr)
-            {
-                return;
-            }
-
-            ECS::Entity entity = GetEntityChecked(entityId);
-            if(!entity.is_alive() || !entity.has<Transform>())
-            {
-                return;
-            }
-
-            auto& transform = entity.get_mut<Transform>();
-            transform.SetPosition(position->x, position->y, position->z);
-            entity.modified<Transform>();
-        }
-
-        void Transform_GetForward(uint64_t entityId, ScriptVector3* outForward)
-        {
-            if(outForward == nullptr)
-            {
-                return;
-            }
-
-            ECS::Entity entity = GetEntityChecked(entityId);
-            if(!entity.is_alive() || !entity.has<Transform>())
-            {
-                *outForward = {};
-                return;
-            }
-
-            const auto& transform = entity.get<Transform>();
-            auto forward = transform.GetForwardVector();
-            outForward->x = forward.x;
-            outForward->y = forward.y;
-            outForward->z = forward.z;
-        }
-
-        void Transform_GetRight(uint64_t entityId, ScriptVector3* outRight)
-        {
-            if(outRight == nullptr)
-            {
-                return;
-            }
-
-            ECS::Entity entity = GetEntityChecked(entityId);
-            if(!entity.is_alive() || !entity.has<Transform>())
-            {
-                *outRight = {};
-                return;
-            }
-
-            const auto& transform = entity.get<Transform>();
-            auto right = transform.GetRightVector();
-            outRight->x = right.x;
-            outRight->y = right.y;
-            outRight->z = right.z;
-        }
-
-        void Transform_GetUp(uint64_t entityId, ScriptVector3* outUp)
-        {
-            if(outUp == nullptr)
-            {
-                return;
-            }
-
-            ECS::Entity entity = GetEntityChecked(entityId);
-            if(!entity.is_alive() || !entity.has<Transform>())
-            {
-                *outUp = {};
-                return;
-            }
-
-            const auto& transform = entity.get<Transform>();
-            auto up = transform.GetUpVector();
-            outUp->x = up.x;
-            outUp->y = up.y;
-            outUp->z = up.z;
-        }
-
-        void Transform_Translate(uint64_t entityId, ScriptVector3* translation)
-        {
-            if(translation == nullptr)
-            {
-                return;
-            }
-
-            ECS::Entity entity = GetEntityChecked(entityId);
-            if(!entity.is_alive() || !entity.has<Transform>())
-            {
-                return;
-            }
-
-            auto& transform = entity.get_mut<Transform>();
-            transform.Translate(Vector3(translation->x, translation->y, translation->z));
-            entity.modified<Transform>();
-        }
-
-        void Transform_GetRotation(uint64_t entityId, ScriptVector3* outRotation)
-        {
-            if(outRotation == nullptr)
-            {
-                return;
-            }
-
-            ECS::Entity entity = GetEntityChecked(entityId);
-            if(!entity.is_alive() || !entity.has<Transform>())
-            {
-                *outRotation = {};
-                return;
-            }
-
-            const auto& transform = entity.get<Transform>();
-            outRotation->x = transform.Rotation.x;
-            outRotation->y = transform.Rotation.y;
-            outRotation->z = transform.Rotation.z;
-        }
-
-        void Transform_SetRotation(uint64_t entityId, ScriptVector3* rotation)
-        {
-            if(rotation == nullptr)
-            {
-                return;
-            }
-
-            ECS::Entity entity = GetEntityChecked(entityId);
-            if(!entity.is_alive() || !entity.has<Transform>())
-            {
-                return;
-            }
-
-            auto& transform = entity.get_mut<Transform>();
-            transform.SetRotation(rotation->x, rotation->y, rotation->z);
-            entity.modified<Transform>();
-        }
-
-        void Transform_Rotate(uint64_t entityId, ScriptVector3* rotationDelta)
-        {
-            if(rotationDelta == nullptr)
-            {
-                return;
-            }
-
-            ECS::Entity entity = GetEntityChecked(entityId);
-            if(!entity.is_alive() || !entity.has<Transform>())
-            {
-                return;
-            }
-
-            auto& transform = entity.get_mut<Transform>();
-            transform.Rotate(rotationDelta->y, rotationDelta->x, rotationDelta->z);
-            entity.modified<Transform>();
-        }
-
-        void Transform_GetScale(uint64_t entityId, ScriptVector3* outScale)
-        {
-            if(outScale == nullptr)
-            {
-                return;
-            }
-
-            ECS::Entity entity = GetEntityChecked(entityId);
-            if(!entity.is_alive() || !entity.has<Transform>())
-            {
-                *outScale = {};
-                return;
-            }
-
-            const auto& transform = entity.get<Transform>();
-            outScale->x = transform.LocalScale.x;
-            outScale->y = transform.LocalScale.y;
-            outScale->z = transform.LocalScale.z;
-        }
-
-        void Transform_SetScale(uint64_t entityId, ScriptVector3* scale)
-        {
-            if(scale == nullptr)
-            {
-                return;
-            }
-
-            ECS::Entity entity = GetEntityChecked(entityId);
-            if(!entity.is_alive() || !entity.has<Transform>())
-            {
-                return;
-            }
-
-            auto& transform = entity.get_mut<Transform>();
-            transform.SetScale(scale->x, scale->y, scale->z);
-            entity.modified<Transform>();
-        }
     }
 
     void ScriptEngine::Initialize(Mono* runtime)
@@ -1114,23 +825,13 @@ namespace Waldem
 
     void ScriptEngine::RegisterInternalCalls()
     {
-        Runtime->RegisterInternalCall("Waldem.InternalCalls::Entity_HasComponent", &Entity_HasComponent);
-        Runtime->RegisterInternalCall("Waldem.InternalCalls::Input_IsKeyPressed", &Input_IsKeyPressed);
-        Runtime->RegisterInternalCall("Waldem.InternalCalls::Input_IsMouseButtonPressed", &Input_IsMouseButtonPressed);
-        Runtime->RegisterInternalCall("Waldem.InternalCalls::Time_GetDeltaTime", &Time_GetDeltaTime);
-        Runtime->RegisterInternalCall("Waldem.InternalCalls::Time_GetFixedDeltaTime", &Time_GetFixedDeltaTime);
-        Runtime->RegisterInternalCall("Waldem.InternalCalls::Time_GetElapsedTime", &Time_GetElapsedTime);
-        Runtime->RegisterInternalCall("Waldem.InternalCalls::Transform_GetPosition", &Transform_GetPosition);
-        Runtime->RegisterInternalCall("Waldem.InternalCalls::Transform_SetPosition", &Transform_SetPosition);
-        Runtime->RegisterInternalCall("Waldem.InternalCalls::Transform_GetForward", &Transform_GetForward);
-        Runtime->RegisterInternalCall("Waldem.InternalCalls::Transform_GetRight", &Transform_GetRight);
-        Runtime->RegisterInternalCall("Waldem.InternalCalls::Transform_GetUp", &Transform_GetUp);
-        Runtime->RegisterInternalCall("Waldem.InternalCalls::Transform_Translate", &Transform_Translate);
-        Runtime->RegisterInternalCall("Waldem.InternalCalls::Transform_GetRotation", &Transform_GetRotation);
-        Runtime->RegisterInternalCall("Waldem.InternalCalls::Transform_SetRotation", &Transform_SetRotation);
-        Runtime->RegisterInternalCall("Waldem.InternalCalls::Transform_Rotate", &Transform_Rotate);
-        Runtime->RegisterInternalCall("Waldem.InternalCalls::Transform_GetScale", &Transform_GetScale);
-        Runtime->RegisterInternalCall("Waldem.InternalCalls::Transform_SetScale", &Transform_SetScale);
+        Bindings::RegisterEntityCalls(Runtime);
+        Bindings::RegisterInputCalls(Runtime);
+        Bindings::RegisterTimeCalls(Runtime);
+        Bindings::RegisterTransformCalls(Runtime);
+        Bindings::RegisterRigidBodyCalls(Runtime);
+        Bindings::RegisterCameraCalls(Runtime);
+        Bindings::RegisterLightCalls(Runtime);
     }
 
     MonoObject* ScriptEngine::GetManagedInstance(const ScriptInstance& instance)

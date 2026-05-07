@@ -42,6 +42,9 @@
   <ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\Content\Scripts\CameraTestScript.cs">
+      <Link>Content\Scripts\CameraTestScript.cs</Link>
+    </Compile>
     <Compile Include="..\..\Content\Scripts\RotatingObject.cs">
       <Link>Content\Scripts\RotatingObject.cs</Link>
     </Compile>
@@ -49,12 +52,22 @@
       <Link>Content\Scripts\TestScript.cs</Link>
     </Compile>
     <Compile Include="CSharpTesting.cs" />
+    <Compile Include="CameraComponent.cs" />
     <Compile Include="Component.cs" />
     <Compile Include="Entity.cs" />
     <Compile Include="Input.cs" />
+    <Compile Include="InternalCalls.Camera.cs" />
+    <Compile Include="InternalCalls.Entity.cs" />
+    <Compile Include="InternalCalls.Input.cs" />
+    <Compile Include="InternalCalls.Light.cs" />
+    <Compile Include="InternalCalls.RigidBody.cs" />
+    <Compile Include="InternalCalls.Time.cs" />
+    <Compile Include="InternalCalls.Transform.cs" />
     <Compile Include="InternalCalls.cs" />
     <Compile Include="KeyCode.cs" />
+    <Compile Include="LightComponent.cs" />
     <Compile Include="MouseButton.cs" />
+    <Compile Include="RigidBodyComponent.cs" />
     <Compile Include="ScriptableEntity.cs" />
     <Compile Include="Time.cs" />
     <Compile Include="TransformComponent.cs" />

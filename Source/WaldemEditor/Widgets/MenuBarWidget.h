@@ -120,6 +120,13 @@ namespace Waldem
 
         void Initialize(InputManager* inputManager) override
         {
+            inputManager->SubscribeToDynamicShortcut([]
+            {
+                return EditorShortcuts::GetShortcut(EditorShortcutAction::ReloadScripts);
+            }, []
+            {
+                ScriptEngine::ReloadScripts(true);
+            });
         }
 
         void ExportScene(Path& path)

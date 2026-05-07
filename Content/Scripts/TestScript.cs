@@ -2,7 +2,7 @@ using Waldem;
 
 namespace Waldem
 {
-    public class RotateOverTime : ScriptableEntity
+    public class TestScript : ScriptableEntity
     {
         public float RotationSpeed = 100;
         public float MoveSpeed = 10.0f;

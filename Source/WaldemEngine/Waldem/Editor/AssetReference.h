@@ -1,4 +1,5 @@
 #pragma once
+#include "Waldem/Serialization/Asset.h"
 
 namespace Waldem
 {
