@@ -174,7 +174,7 @@ project "WaldemEngine"
     libdirs
     {
         "Vendor/tinycudann/build/Release",
-        "Vendor/tinycudann/dependencies/fmt/build_vs/Release",
+        "Vendor/tinycudann/build/dependencies/fmt/Release",
         "$(CUDA_PATH)/lib/x64"
     }
 

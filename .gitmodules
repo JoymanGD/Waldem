@@ -4,3 +4,6 @@
 [submodule "Waldem/vendor/glm"]
 	path = Waldem/vendor/glm
 	url = https://github.com/g-truc/glm
+[submodule "Vendor/tinycudann"]
+	path = Vendor/tinycudann
+	url = https://github.com/NVlabs/tiny-cuda-nn.git
