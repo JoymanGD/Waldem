@@ -178,6 +178,11 @@ project "WaldemEngine"
         "$(CUDA_PATH)/lib/x64"
     }
 
+    linkoptions
+    {
+        "/WHOLEARCHIVE:tiny-cuda-nn.lib",
+    }
+
     links
     {
         "flecs",
@@ -185,7 +190,6 @@ project "WaldemEngine"
         "tiny-cuda-nn-resources",
         "fmt",
         "cuda",
-        "nvrtc",
         "cudart",
         "%{cfg.objdir}/NIVCoach.obj",
     }
