@@ -32,7 +32,7 @@
     ]
   },
   "network": {
-    "otype": "FullyFusedMLP",
+    "otype": "CutlassMLP",
     "activation": "ReLU",
     "output_activation": "None",
     "n_neurons": 64,

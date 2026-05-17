@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include <vector>
 #include <cfloat>
+#include <excpt.h>
 
 #include "json/json.hpp"
 #include <cuda_runtime.h>
@@ -20,6 +21,18 @@
 #ifndef CONTENT_PATH
 #define CONTENT_PATH "Content"
 #endif
+
+// Must be a plain C function (no C++ objects, no C++ EH) so __try/__except is valid.
+static int SafeCudaGetDeviceCount() noexcept {
+    int count = 0;
+    __try {
+        cudaGetDeviceCount(&count);
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER) {
+        return -1;
+    }
+    return count;
+}
 
 namespace Waldem
 {
@@ -772,24 +785,41 @@ namespace Waldem
                     TrainingSteps = trainingSteps;
                     DatasetPath = datasetPath;
 
-                    int deviceCount = 0;
-                    cudaError_t cudaErr = cudaGetDeviceCount(&deviceCount);
-                    if (cudaErr != cudaSuccess)
+                    std::cout << "[NIV] Calling cudaGetDeviceCount..." << std::endl;
+                    int deviceCount = SafeCudaGetDeviceCount();
+                    if (deviceCount < 0)
                     {
-                        throw std::runtime_error(std::string("[NIV] cudaGetDeviceCount failed: ") + cudaGetErrorString(cudaErr));
+                        throw std::runtime_error(
+                            "[NIV] CUDA driver crashed during initialization (access violation in cudaGetDeviceCount).\n"
+                            "This is almost always a CUDA runtime vs driver version mismatch.\n"
+                            "Fix: update your NVIDIA GPU driver to the version required by the CUDA toolkit "
+                            "this project was built with (check $(CUDA_PATH) version and nvidia.com/drivers).");
                     }
-                    if (deviceCount <= 0)
+                    if (deviceCount == 0)
                     {
-                        throw std::runtime_error("[NIV] No CUDA devices found.");
+                        throw std::runtime_error("[NIV] No CUDA-capable GPU found.");
                     }
+                    std::cout << "[NIV] deviceCount=" << deviceCount << std::endl;
+                    cudaError_t cudaErr = cudaSuccess;
 
+                    std::cout << "[NIV] Calling cudaGetDevice..." << std::endl;
                     int activeDevice = 0;
                     cudaErr = cudaGetDevice(&activeDevice);
                     if (cudaErr != cudaSuccess)
                     {
                         throw std::runtime_error(std::string("[NIV] cudaGetDevice failed: ") + cudaGetErrorString(cudaErr));
                     }
+                    std::cout << "[NIV] activeDevice=" << activeDevice << std::endl;
 
+                    std::cout << "[NIV] Calling cudaSetDevice(" << activeDevice << ")..." << std::endl;
+                    cudaErr = cudaSetDevice(activeDevice);
+                    if (cudaErr != cudaSuccess)
+                    {
+                        throw std::runtime_error(std::string("[NIV] cudaSetDevice failed: ") + cudaGetErrorString(cudaErr));
+                    }
+                    std::cout << "[NIV] cudaSetDevice OK" << std::endl;
+
+                    std::cout << "[NIV] Calling cudaGetDeviceProperties..." << std::endl;
                     cudaDeviceProp prop{};
                     cudaErr = cudaGetDeviceProperties(&prop, activeDevice);
                     if (cudaErr != cudaSuccess)
@@ -855,7 +885,9 @@ namespace Waldem
                         std::cout << "[NIV] Config loss otype: " << config["loss"]["otype"].get<std::string>() << std::endl;
                     }
 
+                    std::cout << "[NIV] Calling create_from_config..." << std::endl;
                     ImplPtr->Model = tcnn::create_from_config(InputDims, OutputDims, config);
+                    std::cout << "[NIV] create_from_config done" << std::endl;
                     cudaErr = cudaDeviceSynchronize();
                     if (cudaErr != cudaSuccess)
                     {
@@ -864,6 +896,7 @@ namespace Waldem
 
                     if (!ActiveCheckpointPath.empty())
                     {
+                        std::cout << "[NIV] Checking for checkpoint: " << ActiveCheckpointPath.string() << std::endl;
                         const std::filesystem::path resolvedCheckpoint = ResolveCheckpointReadPath(ActiveCheckpointPath);
                         if (!resolvedCheckpoint.empty())
                         {
