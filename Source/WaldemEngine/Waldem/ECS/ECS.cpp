@@ -540,6 +540,20 @@ namespace Waldem
                 {
                     data->Reference = Path(value);
                 });
+
+            World.component<SkeletalMeshReference>()
+                .opaque(flecs::String)
+                .serialize([](const flecs::serializer *s, const SkeletalMeshReference *data)
+                {
+                    WString refStr = data->Reference.string();
+                    const char* cstr = refStr.C_Str();
+                    s->value(flecs::String, &cstr);
+                    return 0;
+                })
+                .assign_string([](SkeletalMeshReference* data, const char *value)
+                {
+                    data->Reference = Path(value);
+                });
         }
 
         void Core::RegisterAllComponents()

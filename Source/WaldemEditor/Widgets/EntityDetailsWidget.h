@@ -6,6 +6,7 @@
 #include "Waldem/Editor/AssetReference/AudioClipReference.h"
 #include "Waldem/Editor/AssetReference/TextureReference.h"
 #include "Waldem/Editor/AssetReference/MeshReference.h"
+#include "Waldem/Editor/AssetReference/SkeletalMeshReference.h"
 #include "Waldem/Editor/AssetReference/MaterialReference.h"
 #include "Waldem/Editor/AssetReference/ScriptReference.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
@@ -426,6 +427,7 @@ namespace Waldem
                         const auto stringId = ECS::World.id<WString>();
                         const auto textureRefId = ECS::World.id<TextureReference>();
                         const auto meshRefId = ECS::World.id<MeshReference>();
+                        const auto skeletalMeshRefId = ECS::World.id<SkeletalMeshReference>();
                         const auto materialRefId = ECS::World.id<MaterialReference>();
                         const auto audioRefId = ECS::World.id<AudioClipReference>();
                         const auto scriptRefId = ECS::World.id<ScriptReference>();
@@ -452,6 +454,7 @@ namespace Waldem
                         const bool isAssetReferenceType =
                             op->type == textureRefId ||
                             op->type == meshRefId ||
+                            op->type == skeletalMeshRefId ||
                             op->type == materialRefId ||
                             op->type == audioRefId ||
                             op->type == scriptRefId ||
@@ -464,6 +467,7 @@ namespace Waldem
                             AssetType assetType = AssetType::Unknown;
                             if (op->type == textureRefId) assetType = AssetType::Texture;
                             else if (op->type == meshRefId) assetType = AssetType::Mesh;
+                            else if (op->type == skeletalMeshRefId) assetType = AssetType::Mesh;
                             else if (op->type == materialRefId) assetType = AssetType::Material;
                             else if (op->type == audioRefId) assetType = AssetType::Audio;
                             else if (op->type == scriptRefId) assetType = AssetType::Script;

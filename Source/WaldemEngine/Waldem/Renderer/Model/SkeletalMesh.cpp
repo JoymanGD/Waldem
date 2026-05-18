@@ -11,6 +11,8 @@ namespace Waldem
 		VertexData.Serialize(outData);
 		IndexData.Serialize(outData);
 		VertexBonesDatas.Serialize(outData);
+		InverseBindPoseMatrices.Serialize(outData);
+		outData << BoneCount;
 		outData << MaterialPath;
 		outData << BBox;
 		outData << ObjectMatrix;
@@ -21,6 +23,8 @@ namespace Waldem
 		VertexData.Deserialize(inData);
 		IndexData.Deserialize(inData);
 		VertexBonesDatas.Deserialize(inData);
+		InverseBindPoseMatrices.Deserialize(inData);
+		inData >> BoneCount;
 		inData >> MaterialPath;
 		inData >> BBox;
 		inData >> ObjectMatrix;

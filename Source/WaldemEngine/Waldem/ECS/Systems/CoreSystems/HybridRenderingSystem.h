@@ -2,6 +2,7 @@
 #include "Waldem/ECS/IdManager.h"
 #include "Waldem/Input/Input.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
+#include "Waldem/ECS/Components/SkeletalMeshComponent.h"
 #include "Waldem/ECS/Components/Light.h"
 #include "Waldem/Renderer/Shader.h"
 #include "Waldem/Renderer/Model/Quad.h"
@@ -102,6 +103,16 @@ namespace Waldem
         uint Height;
     };
 
+    struct SkinningRootConstants
+    {
+        uint BindPoseVertexBuffer;
+        uint SkinnedVertexBuffer;
+        uint VertexBonesBuffer;
+        uint BoneMatricesBuffer;
+        uint VertexOffset;
+        uint VertexCount;
+    };
+
     struct SkySceneData
     {
         Matrix4 InverseProjection;
@@ -181,6 +192,23 @@ namespace Waldem
         Buffer* NIVPredictedOutputBuffer = nullptr; // float4[pixelCount]
         Buffer* NIVPredictedHistoryBuffer = nullptr; // float4[pixelCount]
         uint NIVBufferCapacityPixels = 0;
+
+        //Skeletal mesh skinning
+        Pipeline* SkinningPipeline = nullptr;
+        ComputeShader* SkinningComputeShader = nullptr;
+        SkinningRootConstants SkinningConstants;
+
+        struct SkeletalSkinningEntry
+        {
+            uint BindPoseVertexSRV;
+            uint VertexBonesSRV;
+            Buffer* BoneMatricesBuffer;
+            int VertexOffset;
+            uint VertexCount;
+            DrawIndexedCommand DrawCommand;
+            int GlobalDrawId;
+        };
+        WMap<flecs::entity_t, SkeletalSkinningEntry> SkeletalSkinningData;
 
         //Sprite rendering
         WArray<Vertex> SpriteVertices;
@@ -276,6 +304,10 @@ namespace Waldem
             NIVPackComputeShader = Renderer::LoadComputeShader("NIVPackInputs");
             NIVPackPipeline = Renderer::CreateComputePipeline("NIVPackPipeline", NIVPackComputeShader);
             NIVWorldPositionBuffer = Renderer::CreateBuffer("NIVWorldPositionBuffer", StorageBuffer, sizeof(float) * 4, sizeof(float) * 4);
+
+            //Skeletal mesh skinning
+            SkinningComputeShader = Renderer::LoadComputeShader("Animation");
+            SkinningPipeline = Renderer::CreateComputePipeline("SkinningPipeline", SkinningComputeShader);
             NIVWorldNormalValidBuffer = Renderer::CreateBuffer("NIVWorldNormalValidBuffer", StorageBuffer, sizeof(float) * 4, sizeof(float) * 4);
             NIVPredictedOutputBuffer = Renderer::CreateBuffer("NIVPredictedOutputBuffer", StorageBuffer, sizeof(float) * 4, sizeof(float) * 4);
             NIVPredictedHistoryBuffer = Renderer::CreateBuffer("NIVPredictedHistoryBuffer", StorageBuffer, sizeof(float) * 4, sizeof(float) * 4);
@@ -434,6 +466,211 @@ namespace Waldem
                         {
                             WorldTransformsBuffer.RemoveData(sizeof(Matrix4), globalDrawId * sizeof(Matrix4));
                         }
+
+                        IdManager::RemoveId(entity, BackFaceCullingDrawIdType);
+                    }
+
+                    IdManager::RemoveId(entity, GlobalDrawIdType);
+                }
+            });
+
+            ECS::World.observer<SkeletalMeshComponent, Transform>().event(flecs::OnAdd).each([&](flecs::entity entity, SkeletalMeshComponent& skeletalMeshComponent, Transform& transform)
+            {
+                auto globalDrawId = IdManager::AddId(entity, GlobalDrawIdType);
+                auto bfcDrawId = IdManager::AddId(entity, BackFaceCullingDrawIdType);
+
+                if(bfcDrawId >= BFCIndirectCommands.Num())
+                {
+                    BFCIndirectCommands.Add(IndirectIndexedCommand());
+                    BFCIndirectBuffer.UpdateOrAdd(nullptr, sizeof(IndirectIndexedCommand), bfcDrawId * sizeof(IndirectIndexedCommand));
+                }
+
+                WorldTransformsBuffer.UpdateOrAdd(&transform.Matrix, sizeof(Matrix4), globalDrawId * sizeof(Matrix4));
+
+                if(globalDrawId >= MaterialAttributes.Num())
+                {
+                    MaterialAttributes.Add(MaterialShaderAttribute());
+                    MaterialAttributesBuffer.AddData(nullptr, sizeof(MaterialShaderAttribute));
+                    DrawCommandsBuffer.AddData(nullptr, sizeof(DrawIndexedCommand));
+                }
+
+                Renderer::RenderData.TLAS.AddEmptyData(globalDrawId);
+            });
+
+            ECS::World.observer<SkeletalMeshComponent>().event(flecs::OnSet).each([&](flecs::entity entity, SkeletalMeshComponent& skeletalMeshComponent)
+            {
+                int globalDrawId;
+
+                if(IdManager::GetId(entity, GlobalDrawIdType, globalDrawId))
+                {
+                    int bfcDrawId;
+
+                    if(IdManager::GetId(entity, BackFaceCullingDrawIdType, bfcDrawId))
+                    {
+                        bool meshReferenceIsEmpty = skeletalMeshComponent.MeshRef.Reference.empty() || skeletalMeshComponent.MeshRef.Reference == "Empty";
+
+                        if(meshReferenceIsEmpty && !skeletalMeshComponent.MeshRef.IsValid())
+                        {
+                            return;
+                        }
+
+                        if(!meshReferenceIsEmpty && !skeletalMeshComponent.MeshRef.IsValid())
+                        {
+                            skeletalMeshComponent.MeshRef.LoadAsset();
+                        }
+
+                        if(skeletalMeshComponent.MeshRef.IsValid())
+                        {
+                            if(skeletalMeshComponent.MaterialRef.Reference != skeletalMeshComponent.MeshRef.Mesh->MaterialPath || !skeletalMeshComponent.MaterialRef.IsLoaded)
+                            {
+                                skeletalMeshComponent.MaterialRef.Reference = skeletalMeshComponent.MeshRef.Mesh->MaterialPath;
+                                skeletalMeshComponent.MaterialRef.LoadAsset();
+                            }
+
+                            Material* activeMaterial = skeletalMeshComponent.MaterialRef.Mat;
+                            SkeletalMesh* skeletalMesh = skeletalMeshComponent.MeshRef.Mesh;
+
+                            skeletalMeshComponent.DrawCommand.IndexCountPerInstance = (uint)skeletalMesh->IndexData.Num();
+                            skeletalMeshComponent.DrawCommand.InstanceCount         = 1;
+                            skeletalMeshComponent.DrawCommand.StartInstanceLocation = 0;
+
+                            uint vertexCount = skeletalMesh->VertexData.Num();
+
+                            // Only pack vertex/index data on first assignment; re-assignments update in-place
+                            bool isFirstAssignment = SkeletalSkinningData.Find(entity.id()) == nullptr;
+
+                            if(isFirstAssignment)
+                            {
+                                skeletalMeshComponent.DrawCommand.StartIndexLocation  = (uint)IndicesCount;
+                                skeletalMeshComponent.DrawCommand.BaseVertexLocation  = (int)VerticesCount;
+
+                                Renderer::RenderData.VertexBuffer.AddData(skeletalMesh->VertexData.GetData(), skeletalMesh->VertexData.GetSize());
+                                Renderer::RenderData.IndexBuffer.AddData(skeletalMesh->IndexData.GetData(), skeletalMesh->IndexData.GetSize());
+
+                                VerticesCount += vertexCount;
+                                IndicesCount  += skeletalMeshComponent.DrawCommand.IndexCountPerInstance;
+                            }
+
+                            auto& command = BFCIndirectCommands[bfcDrawId];
+                            command.DrawId = globalDrawId;
+                            command.Command = skeletalMeshComponent.DrawCommand;
+
+                            BFCIndirectBuffer.UpdateData(&command, sizeof(IndirectIndexedCommand), sizeof(IndirectIndexedCommand) * bfcDrawId);
+
+                            auto& materialAttribute = MaterialAttributes[globalDrawId];
+
+                            if(activeMaterial)
+                            {
+                                materialAttribute.Albedo = activeMaterial->Albedo;
+                                materialAttribute.Metallic = activeMaterial->Metallic;
+                                materialAttribute.Roughness = activeMaterial->Roughness;
+                                materialAttribute.AlphaCut = activeMaterial->AlphaCut ? 1 : 0;
+                                materialAttribute.CastShadows = activeMaterial->CastShadows ? 1 : 0;
+                            }
+                            materialAttribute.DiffuseTextureID = -1;
+                            materialAttribute.NormalTextureID = -1;
+                            materialAttribute.ORMTextureID = -1;
+
+                            if(activeMaterial)
+                            {
+                                if(activeMaterial->HasDiffuseTexture())
+                                    materialAttribute.DiffuseTextureID = activeMaterial->GetDiffuseTexture()->GetIndex(SRV_CBV);
+                                if(activeMaterial->HasNormalTexture())
+                                    materialAttribute.NormalTextureID = activeMaterial->GetNormalTexture()->GetIndex(SRV_CBV);
+                                if(activeMaterial->HasORMTexture())
+                                    materialAttribute.ORMTextureID = activeMaterial->GetORMTexture()->GetIndex(SRV_CBV);
+                            }
+
+                            MaterialAttributesBuffer.UpdateData(&materialAttribute, sizeof(MaterialShaderAttribute), globalDrawId * sizeof(MaterialShaderAttribute));
+                            DrawCommandsBuffer.UpdateData(&skeletalMeshComponent.DrawCommand, sizeof(DrawIndexedCommand), globalDrawId * sizeof(DrawIndexedCommand));
+
+                            auto& transform = entity.get<Transform>();
+
+                            // Clean up previous bone matrices buffer if this entity was already registered
+                            // (use the map as source of truth, not the component field, to avoid stale pointer issues)
+                            SkeletalSkinningEntry* existingEntry = SkeletalSkinningData.Find(entity.id());
+                            if(existingEntry && existingEntry->BoneMatricesBuffer)
+                            {
+                                Renderer::Destroy(existingEntry->BoneMatricesBuffer);
+                                delete existingEntry->BoneMatricesBuffer;
+                                existingEntry->BoneMatricesBuffer = nullptr;
+                                skeletalMeshComponent.BoneMatricesBuffer = nullptr;
+                            }
+
+                            int boneCount = skeletalMesh->BoneCount > 0 ? skeletalMesh->BoneCount : 1;
+                            skeletalMeshComponent.BoneCount = boneCount;
+
+                            WArray<Matrix4> identityMatrices;
+                            identityMatrices.Resize(boneCount, Matrix4(1.0f));
+                            skeletalMeshComponent.BoneMatricesBuffer = Renderer::CreateBuffer(
+                                "BoneMatricesBuffer",
+                                StorageBuffer,
+                                boneCount * sizeof(Matrix4),
+                                sizeof(Matrix4),
+                                identityMatrices.GetData()
+                            );
+
+                            // Register skinning data for the per-frame skinning compute dispatch
+                            SkeletalSkinningEntry& entry = SkeletalSkinningData[entity.id()];
+                            entry.BindPoseVertexSRV  = skeletalMesh->VertexBuffer->GetIndex(SRV_CBV);
+                            entry.VertexBonesSRV     = skeletalMesh->VertexBonesBuffer->GetIndex(SRV_CBV);
+                            entry.BoneMatricesBuffer = skeletalMeshComponent.BoneMatricesBuffer;
+                            entry.VertexOffset       = skeletalMeshComponent.DrawCommand.BaseVertexLocation;
+                            entry.VertexCount        = vertexCount;
+                            entry.DrawCommand        = skeletalMeshComponent.DrawCommand;
+                            entry.GlobalDrawId       = globalDrawId;
+
+                            Renderer::Wait();
+                            Renderer::RenderData.TLAS.SetData(globalDrawId, skeletalMesh->Name, Renderer::RenderData.VertexBuffer, Renderer::RenderData.IndexBuffer, skeletalMeshComponent.DrawCommand, vertexCount, transform);
+                        }
+                    }
+                }
+            });
+
+            ECS::World.observer<SkeletalMeshComponent>().event(flecs::OnRemove).each([&](flecs::entity entity, SkeletalMeshComponent& skeletalMeshComponent)
+            {
+                int globalDrawId;
+
+                if(IdManager::GetId(entity, GlobalDrawIdType, globalDrawId))
+                {
+                    int bfcDrawId;
+
+                    if(IdManager::GetId(entity, BackFaceCullingDrawIdType, bfcDrawId))
+                    {
+                        IndirectIndexedCommand& command = BFCIndirectCommands[bfcDrawId];
+
+                        if(skeletalMeshComponent.MeshRef.IsValid())
+                        {
+                            Renderer::RenderData.VertexBuffer.RemoveData(skeletalMeshComponent.MeshRef.Mesh->VertexData.GetSize(), command.Command.BaseVertexLocation * sizeof(Vertex));
+                            Renderer::RenderData.IndexBuffer.RemoveData(skeletalMeshComponent.MeshRef.Mesh->IndexData.GetSize(), command.Command.StartIndexLocation * sizeof(uint));
+
+                            VerticesCount -= skeletalMeshComponent.MeshRef.Mesh->VertexData.Num();
+                            IndicesCount  -= skeletalMeshComponent.MeshRef.Mesh->IndexData.Num();
+                        }
+
+                        BFCIndirectBuffer.RemoveData(sizeof(IndirectIndexedCommand), bfcDrawId * sizeof(IndirectIndexedCommand));
+
+                        command.DrawId  = -1;
+                        command.Command = { 0, 0, 0, 0, 0 };
+
+                        MaterialAttributesBuffer.RemoveData(sizeof(MaterialShaderAttribute), globalDrawId * sizeof(MaterialShaderAttribute));
+                        DrawCommandsBuffer.RemoveData(sizeof(DrawIndexedCommand), globalDrawId * sizeof(DrawIndexedCommand));
+
+                        Renderer::RenderData.TLAS.RemoveData(globalDrawId);
+
+                        if(entity.has<Transform>())
+                        {
+                            WorldTransformsBuffer.RemoveData(sizeof(Matrix4), globalDrawId * sizeof(Matrix4));
+                        }
+
+                        if(skeletalMeshComponent.BoneMatricesBuffer)
+                        {
+                            Renderer::Destroy(skeletalMeshComponent.BoneMatricesBuffer);
+                            delete skeletalMeshComponent.BoneMatricesBuffer;
+                            skeletalMeshComponent.BoneMatricesBuffer = nullptr;
+                        }
+
+                        SkeletalSkinningData.Remove(entity.id());
 
                         IdManager::RemoveId(entity, BackFaceCullingDrawIdType);
                     }
@@ -686,6 +923,48 @@ namespace Waldem
                 }
             });
             
+            ECS::World.system("SkeletalMeshSkinningSystem").kind<ECS::OnDraw>().run([&](flecs::iter& it)
+            {
+                if(SkeletalSkinningData.IsEmpty())
+                    return;
+
+                Renderer::ResourceBarrier(Renderer::RenderData.VertexBuffer.GetBuffer(), UNORDERED_ACCESS);
+
+                for(uint skinIdx = 0; skinIdx < SkeletalSkinningData.Num(); ++skinIdx)
+                {
+                    auto& entry = SkeletalSkinningData.At(skinIdx).value;
+
+                    SkinningConstants.BindPoseVertexBuffer = entry.BindPoseVertexSRV;
+                    SkinningConstants.SkinnedVertexBuffer  = Renderer::RenderData.VertexBuffer.GetIndex(UAV);
+                    SkinningConstants.VertexBonesBuffer    = entry.VertexBonesSRV;
+                    SkinningConstants.BoneMatricesBuffer   = entry.BoneMatricesBuffer->GetIndex(SRV_CBV);
+                    SkinningConstants.VertexOffset         = (uint)entry.VertexOffset;
+                    SkinningConstants.VertexCount          = entry.VertexCount;
+
+                    Renderer::SetPipeline(SkinningPipeline);
+                    Renderer::PushConstants(&SkinningConstants, sizeof(SkinningRootConstants));
+
+                    uint groupCount = (entry.VertexCount + 63) / 64;
+                    Renderer::Compute(Point3(groupCount, 1, 1));
+                }
+
+                Renderer::UAVBarrier(Renderer::RenderData.VertexBuffer.GetBuffer());
+                Renderer::ResourceBarrier(Renderer::RenderData.VertexBuffer.GetBuffer(), (ResourceStates)(VERTEX_AND_CONSTANT_BUFFER | NON_PIXEL_SHADER_RESOURCE));
+
+                for(uint skinIdx = 0; skinIdx < SkeletalSkinningData.Num(); ++skinIdx)
+                {
+                    auto& entry = SkeletalSkinningData.At(skinIdx).value;
+
+                    Renderer::RenderData.TLAS.UpdateGeometry(
+                        entry.GlobalDrawId,
+                        Renderer::RenderData.VertexBuffer.GetBuffer(),
+                        Renderer::RenderData.IndexBuffer.GetBuffer(),
+                        entry.DrawCommand,
+                        entry.VertexCount
+                    );
+                }
+            });
+
             ECS::World.system("GBufferClearSystem").kind<ECS::OnDraw>().run([&](flecs::iter& it)
             {
                 SViewport* viewport = Renderer::GetCurrentViewport();

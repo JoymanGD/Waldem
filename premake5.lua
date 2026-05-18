@@ -84,6 +84,7 @@ local function SetupCommonCppProject()
     filter "system:windows"
         systemversion "latest"
         defines { "WD_PLATFORM_WINDOWS" }
+        buildoptions { "/bigobj" }
 
     filter "configurations:Debug"
         defines { "WD_DEBUG", "_ALLOW_ITERATOR_DEBUG_LEVEL_MISMATCH", "_ALLOW_RUNTIME_LIBRARY_MISMATCH" }
@@ -214,7 +215,9 @@ project "WaldemEngine"
     postbuildcommands
     {
         '{MKDIR} "%{cfg.targetdir}/Config"',
-        '{COPYDIR} "%{wks.location}' .. SourceDir .. '/%{prj.name}/Config" "%{cfg.targetdir}/Config"'
+        '{COPYDIR} "%{wks.location}' .. SourceDir .. '/%{prj.name}/Config" "%{cfg.targetdir}/Config"',
+        'xcopy /Y "%{cfg.targetdir}\\WaldemEngine.dll" "%{wks.location}Build\\%{cfg.buildcfg}\\WaldemEditor\\"',
+        'xcopy /Y "%{cfg.targetdir}\\WaldemEngine.lib" "%{wks.location}Build\\%{cfg.buildcfg}\\WaldemEditor\\"'
     }
 
     filter { "files:**.cu", "configurations:Debug" }
