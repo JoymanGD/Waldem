@@ -1,64 +1,165 @@
 #pragma once
 #include "Waldem/ECS/ECS.h"
-#include "Waldem/ECS/IdManager.h"
-#include "Waldem/ECS/Components/AnimationListener.h"
-#include "Waldem/ECS/Components/MeshComponent.h"
+#include "Waldem/ECS/Components/AnimatorComponent.h"
+#include "Waldem/ECS/Components/SkeletalMeshComponent.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/Renderer/Renderer.h"
-#include "Waldem/Renderer/ResizableBuffer.h"
-#include "Waldem/Renderer/Shader.h"
+#include "Waldem/Renderer/Animation/AnimationClip.h"
+#include "Waldem/Time.h"
+#include "Waldem/Editor/EditorSimulation.h"
 
 namespace Waldem
 {
-    struct AnimationRootConstants
-    {
-        uint OriginalVertexBuffer;
-        uint VertexBuffer;
-        uint VertexOffset;
-        Matrix4 WorldTransform;
-    };
-    
     class WALDEM_API AnimationSystem : public ICoreSystem
     {
-        //Post process pass
-        Pipeline* AnimationPipeline = nullptr;
-        ComputeShader* AnimationComputeShader = nullptr;
-        Point3 NumThreads;
-        AnimationRootConstants RootConstants;
-        
     public:
-        AnimationSystem() {}
-        
         void Initialize() override
         {
-            AnimationComputeShader = Renderer::LoadComputeShader("Animation");
-            AnimationPipeline = Renderer::CreateComputePipeline("AnimationPipeline", AnimationComputeShader);
-            NumThreads = Renderer::GetNumThreadsPerGroup(AnimationComputeShader);
-            
-            ECS::World.system<MeshComponent, Transform, AnimationListener>().kind<ECS::OnDraw>().each([&](flecs::entity entity, MeshComponent& meshComponent, Transform& transform, AnimationListener)
-            {
-                if(!meshComponent.MeshRef.IsValid())
+            // Runs during OnDraw, before SkeletalMeshSkinningSystem dispatches the GPU compute.
+            ECS::World.system<AnimatorComponent, SkeletalMeshComponent>("AnimationSystem")
+                .kind<ECS::OnDraw>()
+                .each([](AnimatorComponent& animator, SkeletalMeshComponent& skeletalMeshComp)
                 {
-                    return;
+                    if (!EditorSimulation::ShouldRunRuntimeSystems())
+                        return;
+
+                    if (!animator.Started)
+                    {
+                        animator.Started = true;
+                        animator.IsPlaying = animator.PlayOnStart ? 1 : 0;
+                    }
+
+                    if (!animator.IsPlaying)
+                        return;
+
+                    if (!animator.ClipRef.IsValid())
+                    {
+                        if (!animator.ClipRef.Reference.empty() && animator.ClipRef.Reference != "Empty")
+                            animator.ClipRef.LoadAsset();
+                        if (!animator.ClipRef.IsValid())
+                            return;
+                    }
+
+                    if (!skeletalMeshComp.MeshRef.IsValid() || !skeletalMeshComp.BoneMatricesBuffer)
+                        return;
+
+                    const AnimationClip* clip = animator.ClipRef.Clip;
+                    const SkeletalMesh*  mesh = skeletalMeshComp.MeshRef.Mesh;
+                    int boneCount = mesh->BoneCount;
+
+                    if (boneCount == 0 || mesh->AnimationNodes.Num() == 0)
+                        return;
+
+                    // Advance time
+                    float ticksPerSec = clip->TicksPerSecond > 0.0f ? clip->TicksPerSecond : 25.0f;
+                    animator.CurrentTimeTicks += Time::DeltaTime * ticksPerSec * animator.PlaybackSpeed;
+
+                    if (animator.Loop)
+                        animator.CurrentTimeTicks = fmodf(animator.CurrentTimeTicks, clip->DurationTicks);
+                    else
+                        animator.CurrentTimeTicks = glm::min(animator.CurrentTimeTicks, clip->DurationTicks);
+
+                    const float t = animator.CurrentTimeTicks;
+
+                    // FK pass — AnimationNodes are in DFS pre-order so ParentIndex < own index.
+                    // Mirrors the canonical Assimp tutorial: traverse all relevant nodes, apply
+                    // GlobalInverseTransform, then multiply by the inverse bind pose.
+                    int nodeCount = (int)mesh->AnimationNodes.Num();
+                    WArray<Matrix4> globalTransforms;
+                    globalTransforms.Resize(nodeCount, Matrix4(1.0f));
+                    WArray<Matrix4> finalMatrices;
+                    finalMatrices.Resize(boneCount, Matrix4(1.0f));
+
+                    for (int i = 0; i < nodeCount; ++i)
+                    {
+                        const AnimationNode& node = mesh->AnimationNodes[i];
+
+                        Matrix4 localTransform = node.LocalTransform; // bind-pose fallback
+
+                        int ch = clip->FindChannel(node.Name);
+                        if (ch >= 0)
+                        {
+                            const AnimationChannel& chan = clip->Channels[ch];
+                            Vector3    pos   = SamplePosition(chan, t);
+                            Quaternion rot   = SampleRotation(chan, t);
+                            Vector3    scale = SampleScale(chan, t);
+
+                            localTransform = glm::translate(Matrix4(1.0f), pos)
+                                           * glm::mat4_cast(rot)
+                                           * glm::scale(Matrix4(1.0f), scale);
+                        }
+
+                        Matrix4 parentGlobal = (node.ParentIndex >= 0)
+                            ? globalTransforms[node.ParentIndex]
+                            : Matrix4(1.0f);
+
+                        globalTransforms[i] = parentGlobal * localTransform;
+
+                        if (node.BoneIndex >= 0)
+                        {
+                            finalMatrices[node.BoneIndex] =
+                                globalTransforms[i]
+                                * mesh->InverseBindPoseMatrices[node.BoneIndex];
+                        }
+                    }
+
+                    Renderer::UploadBuffer(
+                        skeletalMeshComp.BoneMatricesBuffer,
+                        finalMatrices.GetData(),
+                        (uint32_t)(boneCount * sizeof(Matrix4)));
+                });
+        }
+
+    private:
+        static Vector3 SamplePosition(const AnimationChannel& chan, float t)
+        {
+            uint n = (uint)chan.PositionKeys.Num();
+            if (n == 0) return Vector3(0.0f);
+            if (n == 1) return chan.PositionKeys[0].Value;
+            for (uint i = 0; i + 1 < n; ++i)
+            {
+                if (t < chan.PositionKeys[i + 1].Time)
+                {
+                    float dt = chan.PositionKeys[i + 1].Time - chan.PositionKeys[i].Time;
+                    float f  = (dt > 0.0f) ? (t - chan.PositionKeys[i].Time) / dt : 0.0f;
+                    return glm::mix(chan.PositionKeys[i].Value, chan.PositionKeys[i + 1].Value, f);
                 }
+            }
+            return chan.PositionKeys.Last().Value;
+        }
 
-                Renderer::ResourceBarrier(Renderer::RenderData.VertexBuffer.GetBuffer(), VERTEX_AND_CONSTANT_BUFFER, UNORDERED_ACCESS);
-                RootConstants.OriginalVertexBuffer = meshComponent.MeshRef.Mesh->VertexBuffer->GetIndex(SRV_CBV);
-                RootConstants.VertexBuffer = Renderer::RenderData.VertexBuffer.GetIndex(UAV);
-                RootConstants.WorldTransform = transform.Matrix;
-                RootConstants.VertexOffset = meshComponent.DrawCommand.BaseVertexLocation;
-                Renderer::SetPipeline(AnimationPipeline);
-                Renderer::PushConstants(&RootConstants, sizeof(AnimationRootConstants));
-                int verticesAmount = meshComponent.MeshRef.Mesh->VertexData.Num();
-                Point3 GroupCount = Point3((verticesAmount + NumThreads.x - 1) / NumThreads.x, 1, 1);
-                Renderer::Compute(GroupCount);
-                Renderer::ResourceBarrier(Renderer::RenderData.VertexBuffer.GetBuffer(), UNORDERED_ACCESS, NON_PIXEL_SHADER_RESOURCE);
+        static Quaternion SampleRotation(const AnimationChannel& chan, float t)
+        {
+            uint n = (uint)chan.RotationKeys.Num();
+            if (n == 0) return Quaternion(1, 0, 0, 0);
+            if (n == 1) return chan.RotationKeys[0].Value;
+            for (uint i = 0; i + 1 < n; ++i)
+            {
+                if (t < chan.RotationKeys[i + 1].Time)
+                {
+                    float dt = chan.RotationKeys[i + 1].Time - chan.RotationKeys[i].Time;
+                    float f  = (dt > 0.0f) ? (t - chan.RotationKeys[i].Time) / dt : 0.0f;
+                    return glm::normalize(glm::slerp(chan.RotationKeys[i].Value, chan.RotationKeys[i + 1].Value, f));
+                }
+            }
+            return chan.RotationKeys.Last().Value;
+        }
 
-                int index;
-                IdManager::GetId(entity, GlobalDrawIdType, index);
-                Renderer::RenderData.TLAS.UpdateGeometry(index, Renderer::RenderData.VertexBuffer, Renderer::RenderData.IndexBuffer, meshComponent.DrawCommand, verticesAmount);
-                Renderer::ResourceBarrier(Renderer::RenderData.VertexBuffer.GetBuffer(), NON_PIXEL_SHADER_RESOURCE, VERTEX_AND_CONSTANT_BUFFER);
-            });
+        static Vector3 SampleScale(const AnimationChannel& chan, float t)
+        {
+            uint n = (uint)chan.ScaleKeys.Num();
+            if (n == 0) return Vector3(1.0f);
+            if (n == 1) return chan.ScaleKeys[0].Value;
+            for (uint i = 0; i + 1 < n; ++i)
+            {
+                if (t < chan.ScaleKeys[i + 1].Time)
+                {
+                    float dt = chan.ScaleKeys[i + 1].Time - chan.ScaleKeys[i].Time;
+                    float f  = (dt > 0.0f) ? (t - chan.ScaleKeys[i].Time) / dt : 0.0f;
+                    return glm::mix(chan.ScaleKeys[i].Value, chan.ScaleKeys[i + 1].Value, f);
+                }
+            }
+            return chan.ScaleKeys.Last().Value;
         }
     };
 }

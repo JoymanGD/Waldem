@@ -18,20 +18,20 @@
             "z": 0
           },
           "Rotation": {
-            "x": 0,
-            "y": 0,
-            "z": 0
+            "x": -320.2767944336,
+            "y": 0.0000279367,
+            "z": 0.0000245416
           },
           "LocalScale": {
-            "x": 1,
-            "y": 1,
-            "z": 1
+            "x": 1.0000001192,
+            "y": 0.9999986291,
+            "z": 0.9999979138
           },
           "___RotationQuat": {
-            "x": 0,
-            "y": 0,
-            "z": 0,
-            "w": 1
+            "x": 0.2977049649,
+            "y": 0.057019148,
+            "z": -0.0991076007,
+            "w": 0.9477859735
           }
         },
         "Waldem.Light": {
@@ -57,15 +57,12 @@
     "scene_id": 1,
     "parent_scene_id": -1,
     "entity": {
-      "name": "Guy",
-      "tags": [
-        "Waldem.Selected"
-      ],
+      "name": "Floor",
       "components": {
         "SceneEntity": {
           "ParentId": 0,
           "HierarchyDepth": 0,
-          "HierarchySlot": 1,
+          "HierarchySlot": 2,
           "VisibleInHierarchy": true
         },
         "Waldem.Transform": {
@@ -90,6 +87,57 @@
             "z": 0,
             "w": 1
           }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Meshes\\Floor\\Floor.mesh",
+          "MaterialRef": "Meshes\\Mage\\Default.mat"
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 2,
+    "parent_scene_id": -1,
+    "entity": {
+      "name": "Guy",
+      "tags": [
+        "Waldem.Selected"
+      ],
+      "components": {
+        "SceneEntity": {
+          "ParentId": 0,
+          "HierarchyDepth": 0,
+          "HierarchySlot": 1,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 0,
+            "y": 1.0009089708,
+            "z": 0
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.AnimatorComponent": {
+          "ClipRef": "Models\\Silly Dancing\\mixamo.anim",
+          "PlaybackSpeed": 1,
+          "Loop": 1,
+          "IsPlaying": 0
         },
         "Waldem.SkeletalMeshComponent": {
           "MeshRef": "Models\\Silly Dancing\\Ch19.mesh",

@@ -13,8 +13,6 @@ namespace Waldem
         Vector3 SkyHorizonColor = Vector3(0.60f, 0.70f, 0.90f);
         FIELD()
         Vector3 GroundColor = Vector3(0.30f, 0.32f, 0.35f);
-        FIELD()
-        Vector3 SunDirection = Vector3(0.0f, 1.0f, 4.0f);
         
         Sky() {}
     };

@@ -139,20 +139,21 @@ namespace Waldem
             const auto& selectedPath = ContentBrowserWidget::GetSelectedAssetPath();
             const bool selectedMaterial = selectedPath.has_value() && selectedPath->extension() == ".mat";
 
-            if(!selectedMaterial)
+            if(selectedMaterial)
             {
-                UnloadMaterial();
+                if (!LoadedMaterial || LoadedPath != selectedPath.value())
+                {
+                    LoadMaterial(selectedPath.value());
+                }
+            }
+            else if(!LoadedMaterial)
+            {
                 return;
             }
 
             const bool isVisible = ImGui::Begin("Material Inspector###Material Inspector", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus);
             if (isVisible)
             {
-                if (!LoadedMaterial || LoadedPath != selectedPath.value())
-                {
-                    LoadMaterial(selectedPath.value());
-                }
-
                 if (!LoadedMaterial)
                 {
                     ImGui::TextUnformatted("Select a .mat asset in Content to inspect it.");
