@@ -333,11 +333,15 @@ namespace Waldem
                 if (assimpMesh->HasBones())
                 {
                     auto skeletalMesh = new SkeletalMesh(meshName);
-                    skeletalMesh->VertexBonesDatas.Reserve(vertexBufferData.Num());
+                    skeletalMesh->BoneCount = (int)assimpMesh->mNumBones;
+                    skeletalMesh->VertexBonesDatas.Resize(vertexBufferData.Num());
+                    skeletalMesh->InverseBindPoseMatrices.Resize(skeletalMesh->BoneCount);
 
                     for (int boneIdx = 0; boneIdx < assimpMesh->mNumBones; ++boneIdx)
                     {
                         auto& bone = assimpMesh->mBones[boneIdx];
+
+                        skeletalMesh->InverseBindPoseMatrices[boneIdx] = AssimpToMatrix4(bone->mOffsetMatrix);
 
                         if (bone->mNumWeights == 0)
                             continue;
@@ -357,6 +361,19 @@ namespace Waldem
                                 }
                             }
                         }
+                    }
+
+                    // Normalize weights per vertex so they always sum to 1.
+                    // Vertices with >4 influences have extras dropped, leaving a sum < 1.
+                    for (uint32_t vertexId = 0; vertexId < (uint32_t)skeletalMesh->VertexBonesDatas.Num(); ++vertexId)
+                    {
+                        auto& vb = skeletalMesh->VertexBonesDatas[vertexId];
+                        float sum = 0.0f;
+                        for (int i = 0; i < MAX_BONES_PER_VERTEX; ++i)
+                            sum += vb.Weights[i];
+                        if (sum > 0.0f)
+                            for (int i = 0; i < MAX_BONES_PER_VERTEX; ++i)
+                                vb.Weights[i] /= sum;
                     }
 
                     mesh = skeletalMesh;

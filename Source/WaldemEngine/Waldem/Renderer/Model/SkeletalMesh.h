@@ -29,5 +29,7 @@ namespace Waldem
 
         Buffer* VertexBonesBuffer = nullptr;
         WArray<VertexBones> VertexBonesDatas;
+        int BoneCount = 0;
+        WArray<Matrix4> InverseBindPoseMatrices;
     };
 }
