@@ -56,7 +56,7 @@ namespace Waldem
         return Instance->PlatformRenderer->GetNumThreadsPerGroup(computeShader);
     }
 
-    void Renderer::Draw(CMesh* mesh)
+    void Renderer::Draw(StaticMesh* mesh)
     {
         Instance->PlatformRenderer->Draw(mesh);
     }

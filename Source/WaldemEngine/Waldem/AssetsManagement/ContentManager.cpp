@@ -1,6 +1,6 @@
 #include "wdpch.h"
 #include "ContentManager.h"
-#include "Waldem/Renderer/Model/Mesh.h"
+#include "Waldem/Renderer/Model/StaticMesh.h"
 #include "Waldem/Utils/AssetUtils.h"
 #include "Waldem/Utils/DataUtils.h"
 

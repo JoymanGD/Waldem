@@ -1,7 +1,7 @@
 #include "wdpch.h"
 #include "ModelImporter.h"
 #include "Waldem/Renderer/Model/Material.h"
-#include "Waldem/Renderer/Model/Mesh.h"
+#include "Waldem/Renderer/Model/StaticMesh.h"
 #include "Waldem/Renderer/Model/Model.h"
 #include "Waldem/Renderer/Texture.h"
 #include "assimp/material.h"
@@ -17,6 +17,8 @@
     #define STB_IMAGE_IMPLEMENTATION
 #endif
 #include "stb_image.h"
+#include "Waldem/Renderer/Model/SkeletalMesh.h"
+
 namespace Waldem
 {
     Matrix4 AssimpToMatrix4(aiMatrix4x4 matrix)
@@ -243,6 +245,19 @@ namespace Waldem
                     continue;
                 }
 
+                WString meshName = SanitizeName(assimpMesh->mName.C_Str(), ("Mesh_" + std::to_string(meshIndex)).c_str());
+                meshName = MakeUniqueName(context, meshName);
+
+                Path materialRef = "Empty";
+                auto materialIt = context.MaterialRefByIndex.find(assimpMesh->mMaterialIndex);
+                if(materialIt != context.MaterialRefByIndex.end())
+                {
+                    materialRef = materialIt->second;
+                }
+
+                AABB meshAABB = BuildMeshAABB(assimpMesh);
+                ApplyUniformScaleToAABB(meshAABB, context.UniformScale);
+
                 WArray<uint32_t> indexBufferData;
                 for (unsigned int faceIdx = 0; faceIdx < assimpMesh->mNumFaces; ++faceIdx)
                 {
@@ -253,7 +268,9 @@ namespace Waldem
                     }
                 }
 
+                MeshBase* mesh;
                 WArray<Vertex> vertexBufferData;
+                    
                 vertexBufferData.Reserve(assimpMesh->mNumVertices);
 
                 for (unsigned int vertexIdx = 0; vertexIdx < assimpMesh->mNumVertices; ++vertexIdx)
@@ -313,30 +330,54 @@ namespace Waldem
                     vertexBufferData.Add(vertex);
                 }
 
-                WString meshName = SanitizeName(assimpMesh->mName.C_Str(), ("Mesh_" + std::to_string(meshIndex)).c_str());
-                meshName = MakeUniqueName(context, meshName);
-
-                Path materialRef = "Empty";
-                auto materialIt = context.MaterialRefByIndex.find(assimpMesh->mMaterialIndex);
-                if(materialIt != context.MaterialRefByIndex.end())
+                if (assimpMesh->HasBones())
                 {
-                    materialRef = materialIt->second;
+                    auto skeletalMesh = new SkeletalMesh(meshName);
+                    skeletalMesh->VertexBonesDatas.Reserve(vertexBufferData.Num());
+
+                    for (int boneIdx = 0; boneIdx < assimpMesh->mNumBones; ++boneIdx)
+                    {
+                        auto& bone = assimpMesh->mBones[boneIdx];
+
+                        if (bone->mNumWeights == 0)
+                            continue;
+
+                        for (uint32_t weightIndex = 0; weightIndex < bone->mNumWeights; weightIndex++)
+                        {
+                            uint32_t vertexId = bone->mWeights[weightIndex].mVertexId;
+                            float weight = bone->mWeights[weightIndex].mWeight;
+
+                            for (int i = 0; i < 4; i++)
+                            {
+                                if (skeletalMesh->VertexBonesDatas[vertexId].Joints[i] == -1)
+                                {
+                                    skeletalMesh->VertexBonesDatas[vertexId].Joints[i] = boneIdx;
+                                    skeletalMesh->VertexBonesDatas[vertexId].Weights[i] = weight;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    mesh = skeletalMesh;
                 }
+                else
+                {
+                    auto staticMesh = new StaticMesh(meshName);
 
-                AABB meshAABB = BuildMeshAABB(assimpMesh);
-                ApplyUniformScaleToAABB(meshAABB, context.UniformScale);
-
-                CMesh* mesh = new CMesh(meshName);
+                    mesh = staticMesh;
+                }
+                
                 mesh->VertexData = vertexBufferData;
-                mesh->IndexData = indexBufferData;
-                mesh->MaterialPath = materialRef;
-                mesh->BBox = meshAABB;
-                mesh->ObjectMatrix = Matrix4(1.0f);
                 mesh->Positions.Resize(mesh->VertexData.Num());
                 for (size_t positionIndex = 0; positionIndex < mesh->VertexData.Num(); ++positionIndex)
                 {
                     mesh->Positions[positionIndex] = Vector3(mesh->VertexData[positionIndex].Position);
                 }
+                mesh->IndexData = indexBufferData;
+                mesh->MaterialPath = materialRef;
+                mesh->BBox = meshAABB;
+                mesh->ObjectMatrix = Matrix4(1.0f);
 
                 context.Assets.Add(mesh);
                 context.MeshPathByIndex[meshIndex] = context.RelativeModelDir / (meshName.ToString() + ".mesh");

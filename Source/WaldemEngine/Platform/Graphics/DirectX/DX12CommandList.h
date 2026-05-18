@@ -2,7 +2,7 @@
 #include <d3d12.h>
 
 #include "Waldem/Renderer/Pipeline.h"
-#include "Waldem/Renderer/Model/Mesh.h"
+#include "Waldem/Renderer/Model/StaticMesh.h"
 #include "Waldem/Renderer/Shader.h"
 
 namespace Waldem
@@ -16,7 +16,7 @@ namespace Waldem
         void BeginInternal(SViewport& viewport, ID3D12DescriptorHeap* rtvHeap, ID3D12DescriptorHeap* dsvHeap);
         void EndInternal();
 
-        void Draw(CMesh* mesh);
+        void Draw(StaticMesh* mesh);
         void DrawIndexedInstanced(uint indexCount, uint instanceCount, uint startIndexLocation, int baseVertexLocation, uint startInstanceLocation);
         void Dispatch(Point3 groupCount);
         void TraceRays(Pipeline* rayTracingPipeline, Point3 numRays);

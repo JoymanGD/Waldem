@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Waldem/Renderer/Model/Mesh.h"
+#include "Waldem/Renderer/Model/StaticMesh.h"
 #include "Waldem/Utils/PhysicsUtils.h"
 
 namespace Waldem

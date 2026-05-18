@@ -1,5 +1,5 @@
 #pragma once
-#include "Mesh.h"
+#include "StaticMesh.h"
 #include "Waldem/Renderer/Renderer.h"
 
 namespace Waldem
@@ -13,7 +13,7 @@ namespace Waldem
         QuadVertex(Vector3 position, Vector2 uv) : Position(position), UV(uv) {}
     };
     
-    class WALDEM_API Quad : public CMesh
+    class WALDEM_API Quad : public StaticMesh
     {
     private:
         QuadVertex QuadVertices[4] =

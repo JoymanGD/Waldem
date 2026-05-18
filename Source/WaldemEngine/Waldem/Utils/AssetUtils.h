@@ -5,7 +5,7 @@
 
 namespace Waldem
 {
-    class CMesh;
+    class StaticMesh;
     class TextureDesc;
 
     template <typename T>
@@ -16,7 +16,7 @@ namespace Waldem
     }
 
     template<>
-    inline AssetType GetAssetType<CMesh>()
+    inline AssetType GetAssetType<StaticMesh>()
     {
         return AssetType::Mesh;
     }

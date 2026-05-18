@@ -1,11 +1,11 @@
 #include "wdpch.h"
-#include "Mesh.h"
+#include "StaticMesh.h"
 #include "Waldem/Engine.h"
 #include "Waldem/Utils/GeometryUtils.h"
 
 namespace Waldem
 {
-	CMesh::CMesh(WArray<Vertex> vertexData, WArray<uint> indexData, Path materialPath, AABB bBox, WString name, Matrix4 objectMatrix)
+	MeshBase::MeshBase(WArray<Vertex> vertexData, WArray<uint> indexData, Path materialPath, AABB bBox, WString name, Matrix4 objectMatrix)
 	{
 		MaterialPath = materialPath;
 		VertexData = vertexData;
@@ -19,7 +19,7 @@ namespace Waldem
 		Type = AssetType::Mesh;
 	}
 
-	void CMesh::Serialize(WDataBuffer& outData)
+	void MeshBase::Serialize(WDataBuffer& outData)
 	{
 		VertexData.Serialize(outData);
 		IndexData.Serialize(outData);
@@ -28,7 +28,7 @@ namespace Waldem
 		outData << ObjectMatrix;
 	}
 
-	void CMesh::Deserialize(WDataBuffer& inData)
+	void MeshBase::Deserialize(WDataBuffer& inData)
 	{
 		VertexData.Deserialize(inData);
 		IndexData.Deserialize(inData);

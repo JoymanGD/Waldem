@@ -12,7 +12,7 @@
 
 namespace Waldem
 {
-    class CMesh;
+    class StaticMesh;
     struct SViewport;
     struct CModel;
     enum ViewportType : uint;
@@ -32,7 +32,7 @@ namespace Waldem
         virtual void Begin(SViewport* viewport) = 0; 
         virtual void End(ResourceStates colorState) = 0;
         virtual void Present() = 0;
-        virtual void Draw(CMesh* mesh) = 0;
+        virtual void Draw(StaticMesh* mesh) = 0;
         virtual void DrawIndirect(uint numCommands, Buffer* indirectBuffer, bool isIndexed = true) = 0;
         virtual void SetIndexBuffer(Buffer* indexBuffer) = 0;
         virtual void SetVertexBuffers(Buffer* vertexBuffer, uint32 numBuffers, uint32 startIndex = 0) = 0;
@@ -99,7 +99,7 @@ namespace Waldem
         static void End(ResourceStates colorState = ALL_SHADER_RESOURCE);
         static void Present();
 
-        static void Draw(CMesh* mesh);
+        static void Draw(StaticMesh* mesh);
         static void DrawIndirect(uint numCommands, Buffer* indirectBuffer, bool isIndexed = true);
         static void DrawIndexedInstanced(uint indexCount, uint instanceCount, uint startIndexLocation, int baseVertexLocation, uint startInstanceLocation);
         static void SetIndexBuffer(Buffer* indexBuffer);
