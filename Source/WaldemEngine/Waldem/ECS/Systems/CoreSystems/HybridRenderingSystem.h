@@ -360,35 +360,49 @@ namespace Waldem
                         
                         if(meshComponent.MeshRef.IsValid())
                         {
-                            if(meshComponent.MaterialRef.Reference != meshComponent.MeshRef.Mesh->MaterialPath || !meshComponent.MaterialRef.IsLoaded)
+                            if(meshComponent.MaterialRef.Reference.empty() || meshComponent.MaterialRef.Reference == "Empty")
                             {
                                 meshComponent.MaterialRef.Reference = meshComponent.MeshRef.Mesh->MaterialPath;
+                                meshComponent.MaterialRef.IsLoaded = false;
+                            }
+
+                            if(!meshComponent.MaterialRef.IsLoaded)
+                            {
                                 meshComponent.MaterialRef.LoadAsset();
                             }
 
                             Material* activeMaterial = meshComponent.MaterialRef.Mat;
-
-                            meshComponent.DrawCommand = {
-                                (uint)meshComponent.MeshRef.Mesh->IndexData.Num(),
-                                1,
-                                (uint)IndicesCount,
-                                (int)VerticesCount,
-                                0
-                            };
-
                             uint vertexCount = meshComponent.MeshRef.Mesh->VertexData.Num();
-                            
-                            auto& command = BFCIndirectCommands[bfcDrawId];
-                            command.DrawId = globalDrawId;
-                            command.Command = meshComponent.DrawCommand;
 
-                            BFCIndirectBuffer.UpdateData(&command, sizeof(IndirectIndexedCommand), sizeof(IndirectIndexedCommand) * bfcDrawId);
+                            const bool isFirstAssignment = (meshComponent.DrawCommand.IndexCountPerInstance == 0);
 
-                            Renderer::RenderData.VertexBuffer.AddData(meshComponent.MeshRef.Mesh->VertexData.GetData(), meshComponent.MeshRef.Mesh->VertexData.GetSize());
-                            Renderer::RenderData.IndexBuffer.AddData(meshComponent.MeshRef.Mesh->IndexData.GetData(), meshComponent.MeshRef.Mesh->IndexData.GetSize());
+                            if(isFirstAssignment)
+                            {
+                                meshComponent.DrawCommand = {
+                                    (uint)meshComponent.MeshRef.Mesh->IndexData.Num(),
+                                    1,
+                                    (uint)IndicesCount,
+                                    (int)VerticesCount,
+                                    0
+                                };
 
-                            VerticesCount += vertexCount;
-                            IndicesCount += meshComponent.DrawCommand.IndexCountPerInstance;
+                                auto& command = BFCIndirectCommands[bfcDrawId];
+                                command.DrawId = globalDrawId;
+                                command.Command = meshComponent.DrawCommand;
+                                BFCIndirectBuffer.UpdateData(&command, sizeof(IndirectIndexedCommand), sizeof(IndirectIndexedCommand) * bfcDrawId);
+
+                                Renderer::RenderData.VertexBuffer.AddData(meshComponent.MeshRef.Mesh->VertexData.GetData(), meshComponent.MeshRef.Mesh->VertexData.GetSize());
+                                Renderer::RenderData.IndexBuffer.AddData(meshComponent.MeshRef.Mesh->IndexData.GetData(), meshComponent.MeshRef.Mesh->IndexData.GetSize());
+
+                                VerticesCount += vertexCount;
+                                IndicesCount += meshComponent.DrawCommand.IndexCountPerInstance;
+
+                                DrawCommandsBuffer.UpdateData(&meshComponent.DrawCommand, sizeof(DrawIndexedCommand), globalDrawId * sizeof(DrawIndexedCommand));
+
+                                auto& transform = entity.get<Transform>();
+                                Renderer::Wait();
+                                Renderer::RenderData.TLAS.SetData(globalDrawId, meshComponent.MeshRef.Mesh->Name, Renderer::RenderData.VertexBuffer, Renderer::RenderData.IndexBuffer, meshComponent.DrawCommand, vertexCount, transform);
+                            }
 
                             auto& materialAttribute = MaterialAttributes[globalDrawId];
 
@@ -403,14 +417,11 @@ namespace Waldem
                             materialAttribute.DiffuseTextureID = -1;
                             materialAttribute.NormalTextureID = -1;
                             materialAttribute.ORMTextureID = -1;
-                            
+
                             if(activeMaterial)
                             {
                                 if(activeMaterial->HasDiffuseTexture())
-                                {
                                     materialAttribute.DiffuseTextureID = activeMaterial->GetDiffuseTexture()->GetIndex(SRV_CBV);
-                                }
-
                                 if(activeMaterial->HasNormalTexture())
                                     materialAttribute.NormalTextureID = activeMaterial->GetNormalTexture()->GetIndex(SRV_CBV);
                                 if(activeMaterial->HasORMTexture())
@@ -418,13 +429,6 @@ namespace Waldem
                             }
 
                             MaterialAttributesBuffer.UpdateData(&materialAttribute, sizeof(MaterialShaderAttribute), globalDrawId * sizeof(MaterialShaderAttribute));
-
-                            DrawCommandsBuffer.UpdateData(&meshComponent.DrawCommand, sizeof(DrawIndexedCommand), globalDrawId * sizeof(DrawIndexedCommand));
-                            
-                            auto& transform = entity.get<Transform>();
-
-                            Renderer::Wait();
-                            Renderer::RenderData.TLAS.SetData(globalDrawId, meshComponent.MeshRef.Mesh->Name, Renderer::RenderData.VertexBuffer, Renderer::RenderData.IndexBuffer, meshComponent.DrawCommand, vertexCount, transform);
                         }
 
                     }
@@ -872,7 +876,6 @@ namespace Waldem
                 SkyPassSceneData.SkyZenithColor = Vector4(skybox.SkyZenithColor, 1.0f);
                 SkyPassSceneData.SkyHorizonColor = Vector4(skybox.SkyHorizonColor, 1.0f);
                 SkyPassSceneData.GroundColor = Vector4(skybox.GroundColor, 1.0f);
-                SkyPassSceneData.SunDirection = Vector4(skybox.SunDirection, 1.0f);
             });
 
             ECS::World.system("SkyColorClearingSystem").kind<ECS::OnDraw>().each([&]
@@ -885,6 +888,28 @@ namespace Waldem
             ECS::World.system<Sky>("SkyRenderingSystem").kind<ECS::OnDraw>().each([&](Sky& skybox)
             {
                 if(!Renderer::RenderData.FeatureToggles.EnableSkyPass)
+                {
+                    return;
+                }
+
+                auto q = ECS::World.query<Light, Transform>();
+
+                bool hasSun = false;
+                Vector3 sunDirection = Vector3(0, -1, 0);
+                
+                q.each([&hasSun, &sunDirection](ECS::Entity e, Light& light, Transform& transform)
+                {
+                    if (light.Type == LightType::Directional)
+                    {
+                        hasSun = true;
+                        
+                        sunDirection = -transform.GetForwardVector();
+
+                        return;
+                    }
+                });
+
+                if (!hasSun)
                 {
                     return;
                 }
@@ -909,7 +934,7 @@ namespace Waldem
                     SkyPassSceneData.SkyZenithColor = Vector4(skybox.SkyZenithColor, 1.0f);
                     SkyPassSceneData.SkyHorizonColor = Vector4(skybox.SkyHorizonColor, 1.0f);
                     SkyPassSceneData.GroundColor = Vector4(skybox.GroundColor, 1.0f);
-                    SkyPassSceneData.SunDirection = Vector4(skybox.SunDirection, 1.0f);
+                    SkyPassSceneData.SunDirection = Vector4(sunDirection, 1.0f);
                     SkyPassSceneData.CameraPosition = Vector4(transformComponent.Position, 1.0f);
                     
                     Renderer::UploadBuffer(SceneDataBuffer, &SkyPassSceneData, sizeof(SkySceneData));

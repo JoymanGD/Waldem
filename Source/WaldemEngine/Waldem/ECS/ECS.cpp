@@ -29,6 +29,8 @@
 #include "Waldem/Editor/AssetReference.h"
 #include "Waldem/Editor/AssetReference/AudioClipReference.h"
 #include "Waldem/Editor/AssetReference/MeshReference.h"
+#include "Waldem/Editor/AssetReference/SkeletalMeshReference.h"
+#include "Waldem/Editor/AssetReference/AnimationClipReference.h"
 #include "Waldem/Editor/AssetReference/TextureReference.h"
 #include "Waldem/Editor/AssetReference/MaterialReference.h"
 #include "Waldem/Editor/AssetReference/ScriptReference.h"
@@ -551,6 +553,20 @@ namespace Waldem
                     return 0;
                 })
                 .assign_string([](SkeletalMeshReference* data, const char *value)
+                {
+                    data->Reference = Path(value);
+                });
+
+            World.component<AnimationClipReference>()
+                .opaque(flecs::String)
+                .serialize([](const flecs::serializer *s, const AnimationClipReference *data)
+                {
+                    WString refStr = data->Reference.string();
+                    const char* cstr = refStr.C_Str();
+                    s->value(flecs::String, &cstr);
+                    return 0;
+                })
+                .assign_string([](AnimationClipReference* data, const char *value)
                 {
                     data->Reference = Path(value);
                 });

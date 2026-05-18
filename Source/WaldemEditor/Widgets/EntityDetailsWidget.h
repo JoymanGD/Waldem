@@ -7,6 +7,7 @@
 #include "Waldem/Editor/AssetReference/TextureReference.h"
 #include "Waldem/Editor/AssetReference/MeshReference.h"
 #include "Waldem/Editor/AssetReference/SkeletalMeshReference.h"
+#include "Waldem/Editor/AssetReference/AnimationClipReference.h"
 #include "Waldem/Editor/AssetReference/MaterialReference.h"
 #include "Waldem/Editor/AssetReference/ScriptReference.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
@@ -427,8 +428,9 @@ namespace Waldem
                         const auto stringId = ECS::World.id<WString>();
                         const auto textureRefId = ECS::World.id<TextureReference>();
                         const auto meshRefId = ECS::World.id<MeshReference>();
-                        const auto skeletalMeshRefId = ECS::World.id<SkeletalMeshReference>();
-                        const auto materialRefId = ECS::World.id<MaterialReference>();
+                        const auto skeletalMeshRefId   = ECS::World.id<SkeletalMeshReference>();
+                        const auto animClipRefId        = ECS::World.id<AnimationClipReference>();
+                        const auto materialRefId        = ECS::World.id<MaterialReference>();
                         const auto audioRefId = ECS::World.id<AudioClipReference>();
                         const auto scriptRefId = ECS::World.id<ScriptReference>();
                         const auto baseAssetRefId = ECS::World.id<AssetReference>();
@@ -455,6 +457,7 @@ namespace Waldem
                             op->type == textureRefId ||
                             op->type == meshRefId ||
                             op->type == skeletalMeshRefId ||
+                            op->type == animClipRefId ||
                             op->type == materialRefId ||
                             op->type == audioRefId ||
                             op->type == scriptRefId ||
@@ -468,6 +471,7 @@ namespace Waldem
                             if (op->type == textureRefId) assetType = AssetType::Texture;
                             else if (op->type == meshRefId) assetType = AssetType::Mesh;
                             else if (op->type == skeletalMeshRefId) assetType = AssetType::Mesh;
+                            else if (op->type == animClipRefId) assetType = AssetType::Animation;
                             else if (op->type == materialRefId) assetType = AssetType::Material;
                             else if (op->type == audioRefId) assetType = AssetType::Audio;
                             else if (op->type == scriptRefId) assetType = AssetType::Script;
@@ -526,11 +530,17 @@ namespace Waldem
                                 }
                                 else if (op && op->type == materialRefId)
                                 {
-                                    MaterialReference* matRef = static_cast<MaterialReference*>(reinterpret_cast<void*>(ECS_OFFSET(base, op->offset)));
-                                    if (matRef)
+                                    flecs::entity targetEntity = entity;
+                                    ECS::World.query<MeshComponent>().each([&](flecs::entity qe, MeshComponent& mc)
                                     {
-                                        matRef->Mat = nullptr;
-                                    }
+                                        if(qe.id() == targetEntity.id())
+                                        {
+                                            mc.MaterialRef.Mat = nullptr;
+                                            mc.MaterialRef.IsLoaded = false;
+                                            mc.MaterialRef.LoadAsset();
+                                            qe.modified<MeshComponent>();
+                                        }
+                                    });
                                 }
 
                                 entity.modified(id);

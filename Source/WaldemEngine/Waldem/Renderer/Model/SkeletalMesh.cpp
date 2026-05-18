@@ -13,6 +13,18 @@ namespace Waldem
 		VertexBonesDatas.Serialize(outData);
 		InverseBindPoseMatrices.Serialize(outData);
 		outData << BoneCount;
+		outData << GlobalInverseTransform;
+
+		uint nodeCount = (uint)AnimationNodes.Num();
+		outData << nodeCount;
+		for (uint i = 0; i < nodeCount; ++i)
+		{
+			AnimationNodes[i].Name.Serialize(outData);
+			outData << AnimationNodes[i].ParentIndex;
+			outData << AnimationNodes[i].BoneIndex;
+			outData << AnimationNodes[i].LocalTransform;
+		}
+
 		outData << MaterialPath;
 		outData << BBox;
 		outData << ObjectMatrix;
@@ -25,6 +37,19 @@ namespace Waldem
 		VertexBonesDatas.Deserialize(inData);
 		InverseBindPoseMatrices.Deserialize(inData);
 		inData >> BoneCount;
+		inData >> GlobalInverseTransform;
+
+		uint nodeCount = 0;
+		inData >> nodeCount;
+		AnimationNodes.Resize(nodeCount);
+		for (uint i = 0; i < nodeCount; ++i)
+		{
+			AnimationNodes[i].Name.Deserialize(inData);
+			inData >> AnimationNodes[i].ParentIndex;
+			inData >> AnimationNodes[i].BoneIndex;
+			inData >> AnimationNodes[i].LocalTransform;
+		}
+
 		inData >> MaterialPath;
 		inData >> BBox;
 		inData >> ObjectMatrix;

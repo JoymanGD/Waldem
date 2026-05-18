@@ -4,10 +4,13 @@
 #include "Waldem/Renderer/Model/StaticMesh.h"
 #include "Waldem/Renderer/Model/Model.h"
 #include "Waldem/Renderer/Texture.h"
+#include "Waldem/Renderer/Animation/AnimationClip.h"
 #include "assimp/material.h"
 #include "assimp/scene.h"
+#include "assimp/config.h"
 #include <filesystem>
 #include <unordered_map>
+#include <unordered_set>
 #include <unordered_set>
 #include "Waldem/Engine.h"
 #include "Waldem/Renderer/TextureType.h"
@@ -74,12 +77,7 @@ namespace Waldem
             return outName;
         }
 
-        Path GetTextureRef(
-            ImportContext& context,
-            aiMaterial* assimpMaterial,
-            aiTextureType textureType,
-            const WString& materialName,
-            const WString& usageSuffix)
+        Path GetTextureRef(ImportContext& context, aiMaterial* assimpMaterial, aiTextureType textureType, const WString& materialName, const WString& usageSuffix)
         {
             aiString texturePath;
             if(assimpMaterial == nullptr || assimpMaterial->GetTexture(textureType, 0, &texturePath) != aiReturn_SUCCESS)
@@ -342,6 +340,12 @@ namespace Waldem
                         auto& bone = assimpMesh->mBones[boneIdx];
 
                         skeletalMesh->InverseBindPoseMatrices[boneIdx] = AssimpToMatrix4(bone->mOffsetMatrix);
+                        if (context.UniformScale != 1.0f)
+                        {
+                            skeletalMesh->InverseBindPoseMatrices[boneIdx][3].x *= context.UniformScale;
+                            skeletalMesh->InverseBindPoseMatrices[boneIdx][3].y *= context.UniformScale;
+                            skeletalMesh->InverseBindPoseMatrices[boneIdx][3].z *= context.UniformScale;
+                        }
 
                         if (bone->mNumWeights == 0)
                             continue;
@@ -375,6 +379,59 @@ namespace Waldem
                             for (int i = 0; i < MAX_BONES_PER_VERTEX; ++i)
                                 vb.Weights[i] /= sum;
                     }
+
+                    // Build the full AnimationNodes sub-tree (bones + their non-bone ancestors)
+                    // in DFS pre-order so that parents always have a lower index than children.
+                    // This mirrors the canonical Assimp animation traversal.
+
+                    std::unordered_map<std::string, int> boneNameToIdx;
+                    for (int i = 0; i < assimpMesh->mNumBones; ++i)
+                        boneNameToIdx[assimpMesh->mBones[i]->mName.C_Str()] = i;
+
+                    // Mark all nodes that must be included: each bone + every ancestor up to root
+                    std::unordered_set<std::string> relevantNodeNames;
+                    for (int i = 0; i < assimpMesh->mNumBones; ++i)
+                    {
+                        const aiNode* n = context.Scene->mRootNode->FindNode(
+                            aiString(assimpMesh->mBones[i]->mName.C_Str()));
+                        while (n)
+                        {
+                            relevantNodeNames.insert(n->mName.C_Str());
+                            n = n->mParent;
+                        }
+                    }
+
+                    // DFS pre-order traversal — only visit relevant nodes
+                    std::unordered_map<std::string, int> nodeNameToAnimIdx;
+                    std::function<void(const aiNode*, int)> buildNodes = [&](const aiNode* node, int parentAnimIdx)
+                    {
+                        const std::string nodeName = node->mName.C_Str();
+                        int myAnimIdx = parentAnimIdx; // skip non-relevant nodes transparently
+
+                        if (relevantNodeNames.count(nodeName))
+                        {
+                            myAnimIdx = (int)skeletalMesh->AnimationNodes.Num();
+                            nodeNameToAnimIdx[nodeName] = myAnimIdx;
+
+                            AnimationNode animNode;
+                            animNode.Name          = nodeName.c_str();
+                            animNode.ParentIndex   = parentAnimIdx;
+                            animNode.LocalTransform = AssimpToMatrix4(node->mTransformation);
+
+                            auto boneIt = boneNameToIdx.find(nodeName);
+                            animNode.BoneIndex = (boneIt != boneNameToIdx.end()) ? boneIt->second : -1;
+
+                            skeletalMesh->AnimationNodes.Add(animNode);
+                        }
+
+                        for (unsigned int c = 0; c < node->mNumChildren; ++c)
+                            buildNodes(node->mChildren[c], myAnimIdx);
+                    };
+                    buildNodes(context.Scene->mRootNode, -1);
+
+                    // GlobalInverseTransform = inverse of scene root's local transform
+                    skeletalMesh->GlobalInverseTransform =
+                        glm::inverse(AssimpToMatrix4(context.Scene->mRootNode->mTransformation));
 
                     mesh = skeletalMesh;
                 }
@@ -445,6 +502,70 @@ namespace Waldem
             BuildModelNodeRecursive(context, model, context.Scene->mRootNode, -1);
             return model;
         }
+
+        void BuildAnimations(ImportContext& context)
+        {
+            if (!context.Scene->HasAnimations())
+                return;
+
+            for (unsigned int animIdx = 0; animIdx < context.Scene->mNumAnimations; ++animIdx)
+            {
+                const aiAnimation* aiAnim = context.Scene->mAnimations[animIdx];
+
+                WString animName = SanitizeName(aiAnim->mName.C_Str(),
+                    ("Animation_" + std::to_string(animIdx)).c_str());
+                animName = MakeUniqueName(context, animName);
+
+                auto* clip = new AnimationClip(animName);
+                clip->DurationTicks   = (float)aiAnim->mDuration;
+                clip->TicksPerSecond  = (aiAnim->mTicksPerSecond > 0.0)
+                    ? (float)aiAnim->mTicksPerSecond : 25.0f;
+
+                clip->Channels.Resize(aiAnim->mNumChannels);
+
+                for (unsigned int ch = 0; ch < aiAnim->mNumChannels; ++ch)
+                {
+                    const aiNodeAnim* aiChan = aiAnim->mChannels[ch];
+                    AnimationChannel& channel = clip->Channels[ch];
+
+                    channel.BoneName = aiChan->mNodeName.C_Str();
+
+                    channel.PositionKeys.Resize(aiChan->mNumPositionKeys);
+                    for (unsigned int k = 0; k < aiChan->mNumPositionKeys; ++k)
+                    {
+                        auto& key = aiChan->mPositionKeys[k];
+                        channel.PositionKeys[k] = {
+                            (float)key.mTime,
+                            Vector3(key.mValue.x, key.mValue.y, key.mValue.z) * context.UniformScale
+                        };
+                    }
+
+                    channel.RotationKeys.Resize(aiChan->mNumRotationKeys);
+                    for (unsigned int k = 0; k < aiChan->mNumRotationKeys; ++k)
+                    {
+                        auto& key = aiChan->mRotationKeys[k];
+                        // glm::quat constructor: (w, x, y, z)
+                        channel.RotationKeys[k] = {
+                            (float)key.mTime,
+                            Quaternion(key.mValue.w, key.mValue.x, key.mValue.y, key.mValue.z)
+                        };
+                    }
+
+                    channel.ScaleKeys.Resize(aiChan->mNumScalingKeys);
+                    for (unsigned int k = 0; k < aiChan->mNumScalingKeys; ++k)
+                    {
+                        auto& key = aiChan->mScalingKeys[k];
+                        channel.ScaleKeys[k] = {
+                            (float)key.mTime,
+                            Vector3(key.mValue.x, key.mValue.y, key.mValue.z)
+                        };
+                    }
+                }
+
+                clip->BuildLookup();
+                context.Assets.Add(clip);
+            }
+        }
     }
 
     WArray<Asset*> CModelImporter::ImportTo(const Path& from, const Path& to, bool relative)
@@ -477,12 +598,20 @@ namespace Waldem
 
         BuildMaterials(context);
         BuildMeshes(context);
+        BuildAnimations(context);
         context.Assets.Add(BuildModelAsset(context));
         return context.Assets;
     }
 
     const aiScene* CModelImporter::ImportInternal(const Path& path, ModelImportFlags importFlags, bool relative)
     {
+        // Bake pre/post rotation pivots into node transforms so animation channels
+        // and node local transforms live in the same space. Without this Blender FBX
+        // exports produce extra $AssimpFbx$_PreRotation nodes whose per-bone axis
+        // corrections are not reflected in the animation channels, causing limbs to
+        // point in wrong directions.
+        AssimpImporter.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
+
         return AssimpImporter.ReadFile(path.string(), (unsigned)importFlags);
     }
 }

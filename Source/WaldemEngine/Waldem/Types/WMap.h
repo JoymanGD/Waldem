@@ -98,13 +98,24 @@ namespace Waldem
                 if (Data[i].key == key)
                 {
                     if constexpr (std::is_pointer_v<T2>)
-                    {
                         return Data[i].value;
-                    }
                     else
-                    {
                         return &Data[i].value;
-                    }
+                }
+            }
+            return nullptr;
+        }
+
+        const T2* Find(const T1& key) const
+        {
+            for (size_t i = 0; i < Data.Num(); ++i)
+            {
+                if (Data[i].key == key)
+                {
+                    if constexpr (std::is_pointer_v<T2>)
+                        return Data[i].value;
+                    else
+                        return &Data[i].value;
                 }
             }
             return nullptr;
