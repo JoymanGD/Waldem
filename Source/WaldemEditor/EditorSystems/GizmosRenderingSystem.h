@@ -9,7 +9,7 @@
 #include "Waldem/ECS/IdManager.h"
 #include "Waldem/ECS/Components/ParticleSystemComponent.h"
 #include "Waldem/Renderer/GBuffer.h"
-#include "Waldem/Renderer/Model/Mesh.h"
+#include "Waldem/Renderer/Model/StaticMesh.h"
 #include "Waldem/Renderer/Viewport/Viewport.h"
 #include "Waldem/Renderer/Viewport/ViewportManager.h"
 #include "Waldem/Utils/ImageUtils.h"

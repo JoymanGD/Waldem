@@ -153,7 +153,7 @@ namespace Waldem
         Pipeline* PathTracingPipeline = nullptr;
         RayTracingShader* PathTracingShader = nullptr;
         WArray<AccelerationStructure*> BLAS;
-        WMap<CMesh*, AccelerationStructure*> BLASToUpdate;
+        WMap<StaticMesh*, AccelerationStructure*> BLASToUpdate;
         SRayTracingSceneData RayTracingSceneData;
         ResizableBuffer LightsBuffer;
         ResizableBuffer LightTransformsBuffer;

@@ -4,7 +4,7 @@
 #include "Waldem/Coach/TinyCuda/NIV/NIVCoach.h"
 #include "Waldem/Renderer/Renderer.h"
 #include "Waldem/Renderer/Viewport/ViewportManager.h"
-#include "Waldem/Renderer/Model/Mesh.h"
+#include "Waldem/Renderer/Model/StaticMesh.h"
 #include "Waldem/Types/BasicTypes.h"
 #include "Waldem/Types/String.h"
 #include <fstream>

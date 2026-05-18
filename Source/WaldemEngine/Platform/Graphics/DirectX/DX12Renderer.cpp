@@ -659,7 +659,7 @@ namespace Waldem
         ImGui::DestroyContext();
     }
 
-    void DX12Renderer::Draw(CMesh* mesh)
+    void DX12Renderer::Draw(StaticMesh* mesh)
     {
         SetRenderTargets();
         

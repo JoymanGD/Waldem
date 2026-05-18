@@ -96,7 +96,7 @@ namespace Waldem
         CurrentExecutableShader = nullptr;
     }
 
-    void DX12CommandList::Draw(CMesh* mesh)
+    void DX12CommandList::Draw(StaticMesh* mesh)
     {
         //Draw mesh
         if(mesh->VertexBuffer)

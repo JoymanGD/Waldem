@@ -27,7 +27,7 @@ namespace Waldem
         void Initialize(CWindow* window) override;
         void InitializeUI() override;
         void DeinitializeUI() override;
-        void Draw(CMesh* mesh) override;
+        void Draw(StaticMesh* mesh) override;
         void DrawIndexedInstanced(uint indicesCount, uint instancesCount, uint startIndex, int baseVertex, uint startInstance) override;
         void DrawIndirect(uint numCommands, Buffer* indirectBuffer, bool isIndexed = true) override;
         void SetIndexBuffer(Buffer* indexBuffer) override;

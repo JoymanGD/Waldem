@@ -1,6 +1,6 @@
 #pragma once
 #include "ComponentBase.h"
-#include "Waldem/Renderer/Model/Mesh.h"
+#include "Waldem/Renderer/Model/StaticMesh.h"
 #include "Waldem/Renderer/Model/TerrainMesh.h"
 
 namespace Waldem

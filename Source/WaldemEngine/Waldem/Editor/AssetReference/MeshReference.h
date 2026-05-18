@@ -1,20 +1,20 @@
 #pragma once
 #include "Waldem/AssetsManagement/ContentManager.h"
 #include "Waldem/Editor/AssetReference.h"
-#include "Waldem/Renderer/Model/Mesh.h"
+#include "Waldem/Renderer/Model/StaticMesh.h"
 
 namespace Waldem
 {
     struct MeshReference : AssetReference
     {
-        CMesh* Mesh = nullptr;
+        StaticMesh* Mesh = nullptr;
 
         MeshReference(Path reference = "Empty") : AssetReference(reference) {}
-        MeshReference(CMesh* mesh) : Mesh(mesh) {}
+        MeshReference(StaticMesh* mesh) : Mesh(mesh) {}
         
         void LoadAsset() override
         {
-            Mesh = CContentManager::LoadAsset<CMesh>(Reference);
+            Mesh = CContentManager::LoadAsset<StaticMesh>(Reference);
         }
 
         AssetType GetType() override { return AssetType::Mesh; }

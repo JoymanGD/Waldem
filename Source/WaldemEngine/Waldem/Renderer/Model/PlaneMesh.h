@@ -1,11 +1,11 @@
 #pragma once
-#include "Mesh.h"
+#include "StaticMesh.h"
 #include "Waldem/Renderer/Renderer.h"
 #include "Waldem/Utils/GeometryUtils.h"
 
 namespace Waldem
 {
-    class WALDEM_API PlaneMesh : public CMesh
+    class WALDEM_API PlaneMesh : public StaticMesh
     {
         float DEFAULT_UNIT_SIZE = 100.0f;
     public:
