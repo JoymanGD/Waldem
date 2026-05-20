@@ -51,12 +51,16 @@
     <Compile Include="..\..\Content\Scripts\TestScript.cs">
       <Link>Content\Scripts\TestScript.cs</Link>
     </Compile>
+    <Compile Include="AnimatorComponent.cs" />
     <Compile Include="CSharpTesting.cs" />
     <Compile Include="CameraComponent.cs" />
     <Compile Include="Component.cs" />
+    <Compile Include="Debug.cs" />
     <Compile Include="Entity.cs" />
     <Compile Include="Input.cs" />
+    <Compile Include="InternalCalls.Animator.cs" />
     <Compile Include="InternalCalls.Camera.cs" />
+    <Compile Include="InternalCalls.Debug.cs" />
     <Compile Include="InternalCalls.Entity.cs" />
     <Compile Include="InternalCalls.Input.cs" />
     <Compile Include="InternalCalls.Light.cs" />
@@ -83,4 +87,10 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
+    <PostBuildEvent>xcopy /Y "$(SolutionDir)Build\Debug\ScriptEngine\ScriptEngine.dll" "$(SolutionDir)Build\Debug\WaldemEditor\"</PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <PostBuildEvent>xcopy /Y "$(SolutionDir)Build\Release\ScriptEngine\ScriptEngine.dll" "$(SolutionDir)Build\Release\WaldemEditor\"</PostBuildEvent>
+  </PropertyGroup>
 </Project>

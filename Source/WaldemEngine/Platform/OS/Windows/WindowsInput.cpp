@@ -15,8 +15,18 @@ namespace Waldem
     
     bool WindowsInput::IsKeyPressedImpl(int keycode)
     {
+        SDL_Keymod modState = SDL_GetModState();
+        if (keycode == SDLK_LSHIFT)   return (modState & KMOD_LSHIFT) != 0;
+        if (keycode == SDLK_RSHIFT)   return (modState & KMOD_RSHIFT) != 0;
+        if (keycode == SDLK_LCTRL)    return (modState & KMOD_LCTRL)  != 0;
+        if (keycode == SDLK_RCTRL)    return (modState & KMOD_RCTRL)  != 0;
+        if (keycode == SDLK_LALT)     return (modState & KMOD_LALT)   != 0;
+        if (keycode == SDLK_RALT)     return (modState & KMOD_RALT)   != 0;
+        if (keycode == SDLK_LGUI)     return (modState & KMOD_LGUI)   != 0;
+        if (keycode == SDLK_RGUI)     return (modState & KMOD_RGUI)   != 0;
+        if (keycode == SDLK_CAPSLOCK) return (modState & KMOD_CAPS)   != 0;
+
         const uint8_t* state = SDL_GetKeyboardState(NULL);
-        
         return state[SDL_GetScancodeFromKey(keycode)] != 0;
     }
 

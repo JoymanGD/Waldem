@@ -38,6 +38,13 @@ namespace Waldem::Bindings
             out->x = v.x; out->y = v.y; out->z = v.z;
         }
 
+        void Transform_SetForward(uint64_t entityId, Vector3 forward)
+        {
+            ECS::Entity entity = GetEntityChecked(entityId);
+            if(!entity.is_alive() || !entity.has<Transform>()) { return; }
+            entity.get_mut<Transform>().SetForwardVector(forward);
+        }
+
         void Transform_GetRight(uint64_t entityId, ScriptVector3* out)
         {
             if(out == nullptr) return;
@@ -120,6 +127,7 @@ namespace Waldem::Bindings
         BIND(runtime, Transform_GetPosition);
         BIND(runtime, Transform_SetPosition);
         BIND(runtime, Transform_GetForward);
+        BIND(runtime, Transform_SetForward);
         BIND(runtime, Transform_GetRight);
         BIND(runtime, Transform_GetUp);
         BIND(runtime, Transform_Translate);

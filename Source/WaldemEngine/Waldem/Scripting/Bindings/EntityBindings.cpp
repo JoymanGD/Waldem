@@ -2,6 +2,7 @@
 #include "EntityBindings.h"
 #include "ScriptBindings.h"
 #include "Waldem/Scripting/Mono.h"
+#include "Waldem/ECS/Components/AnimatorComponent.h"
 #include "Waldem/ECS/Components/Camera.h"
 #include "Waldem/ECS/Components/Light.h"
 #include "Waldem/ECS/Components/RigidBody.h"
@@ -17,7 +18,8 @@ namespace Waldem::Bindings
             Transform = 1,
             Camera = 2,
             RigidBody = 3,
-            Light = 4
+            Light = 4,
+            Animator = 5
         };
 
         bool Entity_HasComponent(uint64_t entityId, int32_t componentKind)
@@ -32,6 +34,7 @@ namespace Waldem::Bindings
             case ScriptComponentKind::Camera:    return entity.has<Camera>();
             case ScriptComponentKind::RigidBody: return entity.has<RigidBody>();
             case ScriptComponentKind::Light:     return entity.has<Light>();
+            case ScriptComponentKind::Animator:  return entity.has<AnimatorComponent>();
             default: return false;
             }
         }

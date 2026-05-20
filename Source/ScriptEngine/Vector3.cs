@@ -10,6 +10,8 @@ namespace Waldem
         public float y;
         public float z;
 
+        public double magnitude => Length();
+
         public Vector3(float x, float y, float z)
         {
             this.x = x;
@@ -43,6 +45,11 @@ namespace Waldem
                 y /= magnitude;
                 z /= magnitude;
             }
+        }
+
+        public double Length()
+        {
+            return Math.Sqrt(x * x + y * y + z * z);
         }
     }
 }
