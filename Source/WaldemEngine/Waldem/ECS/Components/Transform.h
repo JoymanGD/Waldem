@@ -35,6 +35,7 @@ namespace Waldem
         Transform(Matrix4 matrix);
         
         Vector3 GetForwardVector() const { return Vector3(Matrix * Vector4(0, 0, 1, 0)); }
+        Vector3 SetForwardVector(Vector3 forwardVector);
         Vector3 GetRightVector() const { return Vector3(Matrix * Vector4(1, 0, 0, 0)); }
         Vector3 GetUpVector() const { return Vector3(Matrix * Vector4(0, 1, 0, 0)); }
 

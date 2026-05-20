@@ -327,3 +327,8 @@ project "ScriptEngine"
         SourceDir .. "/ScriptEngine/**.cs",
         "Content/Scripts/**.cs"
     }
+
+    postbuildcommands
+    {
+        'xcopy /Y "%{wks.location}Build\\%{cfg.buildcfg}\\ScriptEngine\\ScriptEngine.dll" "%{wks.location}Build\\%{cfg.buildcfg}\\WaldemEditor\\"'
+    }

@@ -8,7 +8,8 @@ namespace Waldem
         Transform = 1,
         Camera = 2,
         RigidBody = 3,
-        Light = 4
+        Light = 4,
+        Animator = 5
     }
 
     public class Entity
@@ -41,6 +42,7 @@ namespace Waldem
         public CameraComponent    Camera      => GetComponent<CameraComponent>();
         public RigidBodyComponent RigidBody   => GetComponent<RigidBodyComponent>();
         public LightComponent     Light       => GetComponent<LightComponent>();
+        public AnimatorComponent  Animator    => GetComponent<AnimatorComponent>();
 
         private static ComponentKind GetComponentKind(Type type)
         {
@@ -48,6 +50,7 @@ namespace Waldem
             if (type == typeof(CameraComponent))     return ComponentKind.Camera;
             if (type == typeof(RigidBodyComponent))  return ComponentKind.RigidBody;
             if (type == typeof(LightComponent))      return ComponentKind.Light;
+            if (type == typeof(AnimatorComponent))   return ComponentKind.Animator;
 
             return ComponentKind.None;
         }

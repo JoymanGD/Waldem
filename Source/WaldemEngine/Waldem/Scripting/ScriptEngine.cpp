@@ -16,7 +16,9 @@
 #include <vector>
 #include "Waldem/ECS/Components/ScriptComponent.h"
 #include "Waldem/Utils/FileUtils.h"
+#include "Bindings/AnimatorBindings.h"
 #include "Bindings/CameraBindings.h"
+#include "Bindings/DebugBindings.h"
 #include "Bindings/EntityBindings.h"
 #include "Bindings/InputBindings.h"
 #include "Bindings/LightBindings.h"
@@ -825,6 +827,8 @@ namespace Waldem
 
     void ScriptEngine::RegisterInternalCalls()
     {
+        Bindings::RegisterAnimatorCalls(Runtime);
+        Bindings::RegisterDebugCalls(Runtime);
         Bindings::RegisterEntityCalls(Runtime);
         Bindings::RegisterInputCalls(Runtime);
         Bindings::RegisterTimeCalls(Runtime);

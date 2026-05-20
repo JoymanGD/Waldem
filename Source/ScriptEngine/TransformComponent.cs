@@ -22,6 +22,10 @@ namespace Waldem
                 InternalCalls.Transform_GetForward(EntityId, out Vector3 forward);
                 return forward;
             }
+            set
+            {
+                InternalCalls.Transform_SetForward(EntityId, value);
+            }
         }
         
         public Vector3 Up

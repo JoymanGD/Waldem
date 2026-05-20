@@ -14,6 +14,9 @@ namespace Waldem
         internal static extern void Transform_GetForward(ulong entityId, out Vector3 forward);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Transform_SetForward(ulong entityId, Vector3 forward);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern void Transform_GetUp(ulong entityId, out Vector3 up);
 
         [MethodImpl(MethodImplOptions.InternalCall)]

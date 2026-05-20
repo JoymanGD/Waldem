@@ -25,7 +25,7 @@
           "LocalScale": {
             "x": 1.0000001192,
             "y": 0.9999986291,
-            "z": 0.9999979138
+            "z": 0.9999978542
           },
           "___RotationQuat": {
             "x": 0.2977049649,
@@ -133,11 +133,16 @@
             "w": 1
           }
         },
+        "Waldem.ScriptComponent": {
+          "Script": "Scripts\\TestScript.cs",
+          "Enabled": true,
+          "___FieldOverrides": ""
+        },
         "Waldem.AnimatorComponent": {
-          "ClipRef": "Models\\Silly Dancing\\mixamo.anim",
+          "ClipRef": "Models\\Silly Dancing\\Drunk Run Forward\\mixamo.anim",
           "PlaybackSpeed": 1,
           "Loop": 1,
-          "IsPlaying": 0
+          "PlayOnStart": false
         },
         "Waldem.SkeletalMeshComponent": {
           "MeshRef": "Models\\Silly Dancing\\Ch19.mesh",

@@ -27,6 +27,17 @@ namespace Waldem
         SetMatrix(matrix);
     }
 
+    Vector3 Transform::SetForwardVector(Vector3 forwardVector)
+    {
+        float len = glm::length(forwardVector);
+        if (len < 1e-6f)
+            return GetForwardVector();
+        forwardVector /= len;
+        Vector3 adjustedUp = glm::abs(dot(forwardVector, Vector3(0, 1, 0))) > 0.99f ? Vector3(0, 0, 1) : Vector3(0, 1, 0);
+        SetRotation(quatLookAt(forwardVector, adjustedUp));
+        return forwardVector;
+    }
+
     void Transform::SetPosition(Vector3 newPosition)
     {
         Position = newPosition;
