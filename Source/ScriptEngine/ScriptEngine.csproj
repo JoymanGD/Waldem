@@ -52,7 +52,6 @@
       <Link>Content\Scripts\TestScript.cs</Link>
     </Compile>
     <Compile Include="AnimatorComponent.cs" />
-    <Compile Include="CSharpTesting.cs" />
     <Compile Include="CameraComponent.cs" />
     <Compile Include="Component.cs" />
     <Compile Include="Debug.cs" />
@@ -88,9 +87,11 @@
   </Target>
   -->
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
-    <PostBuildEvent>xcopy /Y "$(SolutionDir)Build\Debug\ScriptEngine\ScriptEngine.dll" "$(SolutionDir)Build\Debug\WaldemEditor\"</PostBuildEvent>
+    <PostBuildEvent>xcopy /Y "$(SolutionDir)Build\Debug\ScriptEngine\ScriptEngine.dll" "$(SolutionDir)Build\Debug\WaldemEditor\"
+xcopy /Y "$(SolutionDir)Build\Debug\ScriptEngine\ScriptEngine.pdb" "$(SolutionDir)Build\Debug\WaldemEditor\"</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
-    <PostBuildEvent>xcopy /Y "$(SolutionDir)Build\Release\ScriptEngine\ScriptEngine.dll" "$(SolutionDir)Build\Release\WaldemEditor\"</PostBuildEvent>
+    <PostBuildEvent>xcopy /Y "$(SolutionDir)Build\Release\ScriptEngine\ScriptEngine.dll" "$(SolutionDir)Build\Release\WaldemEditor\"
+xcopy /Y "$(SolutionDir)Build\Release\ScriptEngine\ScriptEngine.pdb" "$(SolutionDir)Build\Release\WaldemEditor\"</PostBuildEvent>
   </PropertyGroup>
 </Project>

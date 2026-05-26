@@ -99,6 +99,19 @@ local function SetupCommonCppProject()
     filter {}
 end
 
+local function EnsureTinyCudaNN()
+    local tcnnDir  = "%{wks.location}Vendor\\tinycudann"
+    local buildDir = tcnnDir .. "\\build"
+    prebuildcommands
+    {
+        'if not exist "' .. buildDir .. '\\Release\\tiny-cuda-nn.lib" (' ..
+        ' cmake -S "' .. tcnnDir .. '" -B "' .. buildDir .. '"' ..
+        ' -DTCNN_BUILD_BENCHMARK=OFF -DTCNN_BUILD_EXAMPLES=OFF -DTCNN_HALF_PRECISION=ON -DTCNN_MIN_GPU_ARCH=75' ..
+        ' && cmake --build "' .. buildDir .. '" --config Release --target tiny-cuda-nn' ..
+        ')'
+    }
+end
+
 local function SetupPostBuild(prjName)
     postbuildcommands
     {
@@ -114,6 +127,7 @@ local function SetupPostBuild(prjName)
 
         'xcopy /Y "%{wks.location}Build\\%{cfg.buildcfg}\\WaldemEngine\\WaldemEngine.dll" "%{cfg.targetdir}\\"',
         'xcopy /Y "%{wks.location}Build\\%{cfg.buildcfg}\\ScriptEngine\\ScriptEngine.dll" "%{cfg.targetdir}\\"',
+        'xcopy /Y "%{wks.location}Build\\%{cfg.buildcfg}\\ScriptEngine\\ScriptEngine.pdb" "%{cfg.targetdir}\\"',
         'xcopy /Y "%{wks.location}Build\\%{cfg.buildcfg}\\flecs\\flecs.dll" "%{cfg.targetdir}\\"',
         'xcopy /Y "%{wks.location}Build\\%{cfg.buildcfg}\\imgui\\imgui.dll" "%{cfg.targetdir}\\"',
         'xcopy /Y "%{wks.location}Build\\%{cfg.buildcfg}\\ImGuizmo\\ImGuizmo.dll" "%{cfg.targetdir}\\"',
@@ -192,6 +206,7 @@ project "WaldemEngine"
         "fmt",
         "cuda",
         "cudart",
+        "nvrtc",
         "%{cfg.objdir}/NIVCoach.obj",
     }
 
@@ -204,6 +219,8 @@ project "WaldemEngine"
         "TCNN_HALF_PRECISION=1",
         "TCNN_MIN_GPU_ARCH=75",
     }
+
+    EnsureTinyCudaNN()
 
     prebuildcommands
     {
@@ -330,5 +347,6 @@ project "ScriptEngine"
 
     postbuildcommands
     {
-        'xcopy /Y "%{wks.location}Build\\%{cfg.buildcfg}\\ScriptEngine\\ScriptEngine.dll" "%{wks.location}Build\\%{cfg.buildcfg}\\WaldemEditor\\"'
+        'xcopy /Y "%{wks.location}Build\\%{cfg.buildcfg}\\ScriptEngine\\ScriptEngine.dll" "%{wks.location}Build\\%{cfg.buildcfg}\\WaldemEditor\\"',
+        'xcopy /Y "%{wks.location}Build\\%{cfg.buildcfg}\\ScriptEngine\\ScriptEngine.pdb" "%{wks.location}Build\\%{cfg.buildcfg}\\WaldemEditor\\"'
     }
