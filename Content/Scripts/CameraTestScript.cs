@@ -8,6 +8,7 @@ namespace Waldem
         
         protected override void OnUpdate(float dt)
         {
+            
             if (Input.IsKeyPressed(KeyCode.R))
             {
                 var camera = GetComponent<CameraComponent>();
@@ -18,6 +19,9 @@ namespace Waldem
                 var camera = GetComponent<CameraComponent>();
                 camera.FieldOfView -= dt * ZoomSpeed;
             }
+            
+            var transform = GetComponent<TransformComponent>();
+            transform.Forward = new Vector3(0, 0, 1);
         }
     }
 }

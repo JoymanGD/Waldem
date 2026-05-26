@@ -18,6 +18,7 @@
 #include "Waldem/Editor/UIStyles.h"
 #include "Waldem/Renderer/Model/Quad.h"
 #include "Waldem/Renderer/Viewport/ViewportManager.h"
+#include "Waldem/Utils/FileUtils.h"
 #include <filesystem>
 
 struct ImGuiIO;
@@ -152,6 +153,7 @@ namespace Waldem
 
         InitializeBindless();
         InitializeUI();
+        LastShaderWriteTime = GetLatestShaderWriteTime();
     }
 
     void DX12Renderer::InitializeBindless()
@@ -200,6 +202,123 @@ namespace Waldem
         args[1].Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED;
         commandSigDesc.ByteStride = sizeof(IndirectIndexedCommand);
         Device->CreateCommandSignature(&commandSigDesc, GeneralRootSignature, IID_PPV_ARGS(&IndexedCommandSignature));
+    }
+
+    std::filesystem::file_time_type DX12Renderer::GetLatestShaderWriteTime() const
+    {
+        std::filesystem::file_time_type latestWriteTime = std::filesystem::file_time_type::min();
+
+        std::error_code errorCode;
+        for(const Path& shaderRoot : GetShaderSearchRoots())
+        {
+            if(!std::filesystem::exists(shaderRoot, errorCode))
+            {
+                errorCode.clear();
+                continue;
+            }
+
+            for(const auto& entry : std::filesystem::recursive_directory_iterator(shaderRoot, errorCode))
+            {
+                if(errorCode)
+                {
+                    errorCode.clear();
+                    break;
+                }
+
+                if(!entry.is_regular_file())
+                {
+                    continue;
+                }
+
+                if(entry.path().extension() != ".hlsl")
+                {
+                    continue;
+                }
+
+                const auto writeTime = std::filesystem::last_write_time(entry.path(), errorCode);
+                if(errorCode)
+                {
+                    errorCode.clear();
+                    continue;
+                }
+
+                if(writeTime > latestWriteTime)
+                {
+                    latestWriteTime = writeTime;
+                }
+            }
+        }
+
+        return latestWriteTime;
+    }
+
+    void DX12Renderer::UpdateShaderHotReload()
+    {
+        const auto latestWriteTime = GetLatestShaderWriteTime();
+        if(latestWriteTime == std::filesystem::file_time_type::min() || latestWriteTime <= LastShaderWriteTime)
+        {
+            return;
+        }
+
+        WD_CORE_INFO("Shader source change detected. Reloading registered shaders and pipelines...");
+        ReloadShaders();
+        LastShaderWriteTime = latestWriteTime;
+    }
+
+    bool DX12Renderer::ReloadShaders()
+    {
+        Flush();
+        Wait();
+
+        bool allShadersReloaded = true;
+        for(Shader* shader : RegisteredShaders)
+        {
+            if(shader == nullptr)
+            {
+                continue;
+            }
+
+            if(!shader->Reload())
+            {
+                allShadersReloaded = false;
+            }
+        }
+
+        if(!allShadersReloaded)
+        {
+            LastShaderReloadStatus = "Shader compilation failed. Keeping previous pipeline state.";
+            WD_CORE_WARN("{0}", LastShaderReloadStatus);
+            return false;
+        }
+
+        bool allPipelinesReloaded = true;
+        for(Pipeline* pipeline : RegisteredPipelines)
+        {
+            if(pipeline == nullptr)
+            {
+                continue;
+            }
+
+            if(!pipeline->Reload())
+            {
+                WD_CORE_ERROR("Failed to rebuild pipeline '{0}' after shader change.", pipeline->GetName().C_Str());
+                allPipelinesReloaded = false;
+            }
+        }
+
+        if(allPipelinesReloaded)
+        {
+            LastShaderReloadStatus = "Shader hot reload completed successfully.";
+            WD_CORE_INFO("{0}", LastShaderReloadStatus);
+        }
+        else
+        {
+            LastShaderReloadStatus = "Shaders recompiled, but one or more pipelines failed to rebuild.";
+            WD_CORE_WARN("{0}", LastShaderReloadStatus);
+        }
+
+        LastShaderWriteTime = GetLatestShaderWriteTime();
+        return allPipelinesReloaded;
     }
 
     void DX12Renderer::CreateGeneralRootSignature()
@@ -1185,17 +1304,23 @@ namespace Waldem
 
     PixelShader* DX12Renderer::LoadPixelShader(const Path& shaderName, WString entryPoint)
     {
-        return new DX12PixelShader(shaderName, entryPoint);
+        PixelShader* shader = new DX12PixelShader(shaderName, entryPoint);
+        RegisteredShaders.push_back(shader);
+        return shader;
     }
 
     ComputeShader* DX12Renderer::LoadComputeShader(const Path& shaderName, WString entryPoint)
     {
-        return new DX12ComputeShader(shaderName, entryPoint);
+        ComputeShader* shader = new DX12ComputeShader(shaderName, entryPoint);
+        RegisteredShaders.push_back(shader);
+        return shader;
     }
 
     RayTracingShader* DX12Renderer::LoadRayTracingShader(const Path& shaderName)
     {
-        return new DX12RayTracingShader(shaderName);
+        RayTracingShader* shader = new DX12RayTracingShader(shaderName);
+        RegisteredShaders.push_back(shader);
+        return shader;
     }
 
     void DX12Renderer::SetPipeline(Pipeline* pipeline)
@@ -1246,17 +1371,23 @@ namespace Waldem
 
     Pipeline* DX12Renderer::CreateGraphicPipeline(const WString& name, PixelShader* shader, WArray<TextureFormat> RTFormats, TextureFormat depthFormat, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, BlendDesc blendDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout)
     {
-        return new DX12GraphicPipeline(name, Device, GeneralRootSignature, shader, RTFormats, depthFormat, rasterizerDesc, depthStencilDesc, blendDesc, primitiveTopologyType, inputLayout);
+        Pipeline* pipeline = new DX12GraphicPipeline(name, Device, GeneralRootSignature, shader, RTFormats, depthFormat, rasterizerDesc, depthStencilDesc, blendDesc, primitiveTopologyType, inputLayout);
+        RegisteredPipelines.push_back(pipeline);
+        return pipeline;
     }
 
     Pipeline* DX12Renderer::CreateComputePipeline(const WString& name, ComputeShader* shader)
     {
-        return new DX12ComputePipeline(name, Device, GeneralRootSignature, shader);
+        Pipeline* pipeline = new DX12ComputePipeline(name, Device, GeneralRootSignature, shader);
+        RegisteredPipelines.push_back(pipeline);
+        return pipeline;
     }
 
     Pipeline* DX12Renderer::CreateRayTracingPipeline(const WString& name, RayTracingShader* shader)
     {
-        return new DX12RayTracingPipeline(name, Device, GeneralRootSignature, shader);
+        Pipeline* pipeline = new DX12RayTracingPipeline(name, Device, GeneralRootSignature, shader);
+        RegisteredPipelines.push_back(pipeline);
+        return pipeline;
     }
 
     Texture2D* DX12Renderer::CreateTexture2D(WString name, int width, int height, TextureFormat format, uint8_t* data)

@@ -1,6 +1,6 @@
 #include "PBR.hlsl"
 
-#define AMBIENT 0.07f
+#define AMBIENT 0.3f
 
 float3 GetDiffuseColor(float3 lightDir, float3 normal, float4 albedo, float4 orm, float4 reflection, float3 viewDirection)
 {

@@ -1,12 +1,26 @@
 #include "wdpch.h"
 #include <d3dcompiler.h>
+#include "DX12Shader.h"
 #include "DX12RayTracingShader.h"
 #include "DX12Helper.h"
 #include "Waldem/Utils/FileUtils.h"
 #include <regex>
 
 namespace Waldem
-{    
+{
+    namespace
+    {
+        template<typename T>
+        void ReleaseCom(T*& object)
+        {
+            if(object != nullptr)
+            {
+                object->Release();
+                object = nullptr;
+            }
+        }
+    }
+
     DX12RayTracingShader::DX12RayTracingShader(const Path& name) : RayTracingShader(name)
     {
         HRESULT hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&DxcUtils));
@@ -34,18 +48,35 @@ namespace Waldem
     {
     }
 
+    void DX12RayTracingShader::Destroy()
+    {
+        ReleaseCom(ShaderBlob);
+        ReleaseCom(ErrorBlob);
+        ReleaseCom(Source);
+        ReleaseCom(DxcIncludeHandler);
+        ReleaseCom(DxcCompiler);
+        ReleaseCom(DxcUtils);
+    }
+
+    bool DX12RayTracingShader::Reload()
+    {
+        try
+        {
+            return CompileFromFile(Name);
+        }
+        catch(const std::exception& exception)
+        {
+            WD_CORE_ERROR("Failed to hot reload ray tracing shader '{0}': {1}", Name.string(), exception.what());
+            return false;
+        }
+    }
+
     bool DX12RayTracingShader::CompileFromFile(const Path& path)
     {
-        auto currentPath = GetCurrentFolder();
-        
-        std::wstring wCurrentPath = currentPath;
-        std::wstring wShaderFolder = path.parent_path();
-        std::wstring wShaderName = path.filename();
-
-        std::wstring pathToShaders = wCurrentPath + L"\\" + L"Shaders";
-        pathToShaders = std::regex_replace(pathToShaders, std::wregex(L"[\\/\\\\]"), L"\\\\");
-        std::wstring currentShaderFolderPath = pathToShaders + L"\\\\" + wShaderFolder;
-        std::wstring shaderPath = currentShaderFolderPath + (wShaderFolder.empty() ? L"" : L"\\\\") + wShaderName + L".rtx.hlsl";
+        const Path rayTracingShaderPath = ResolveShaderFilePath(path, L".rtx.hlsl");
+        const std::wstring pathToShaders = rayTracingShaderPath.parent_path().wstring();
+        const std::wstring currentShaderFolderPath = rayTracingShaderPath.parent_path().wstring();
+        std::wstring shaderPath = rayTracingShaderPath.wstring();
 
         HRESULT hr = DxcUtils->LoadFile(shaderPath.c_str(), nullptr, &Source);
 
@@ -95,11 +126,15 @@ namespace Waldem
             throw std::runtime_error("Shader compilation failed.");
         }
 
-        hr = result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&ShaderBlob), nullptr);
+        IDxcBlob* compiledShaderBlob = nullptr;
+        hr = result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&compiledShaderBlob), nullptr);
         if (FAILED(hr))
         {
             throw std::runtime_error("Failed to retrieve compiled shader.");
         }
+
+        ReleaseCom(ShaderBlob);
+        ShaderBlob = compiledShaderBlob;
 
         return true;
     }

@@ -80,6 +80,8 @@ namespace Waldem
         virtual void DeinitializeUI() = 0;
         virtual void BeginUI() = 0;
         virtual void EndUI() = 0;
+        virtual bool ReloadShaders() = 0;
+        virtual const char* GetLastShaderReloadStatus() const = 0;
         virtual void Destroy(GraphicResource* resource) = 0;
         virtual void DestroyImmediate(GraphicResource* resource) = 0;
         virtual void* GetPlatformResource(GraphicResource* resource) = 0;
@@ -149,6 +151,8 @@ namespace Waldem
         static void InitializeUI();
         static void BeginUI();
         static void EndUI();
+        static bool ReloadShaders();
+        static const char* GetLastShaderReloadStatus();
         static void Destroy(GraphicResource* resource);
         static void DestroyImmediate(GraphicResource* resource);
         static void* GetPlatformResource(GraphicResource* resource);

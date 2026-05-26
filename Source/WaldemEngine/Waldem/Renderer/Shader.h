@@ -16,9 +16,10 @@ namespace Waldem
         Shader(const Path& name) : Name(name) {}
         virtual ~Shader() = default;
         virtual void Destroy() = 0;
+        virtual bool Reload() = 0;
         virtual bool CompileFromFile(const Path& filepath, const WString& entryPoint) { throw std::runtime_error("Compilation with a single entry point is not implemented for this type of shader"); }
         virtual bool CompileFromFile(const Path& filepath, const WArray<WString> entryPoints) { throw std::runtime_error("Compilation with multiple entry points is not implemented for this type of shader"); }
-        Path GetName() { return Name; }
+        const Path& GetName() const { return Name; }
     protected:
         Path Name;
     };

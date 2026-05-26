@@ -6,6 +6,8 @@
 #include "DX12CommandList.h"
 #include "Waldem/Renderer/Pipeline.h"
 #include "Waldem/Renderer/Viewport/Viewport.h"
+#include <filesystem>
+#include <vector>
 
 namespace Waldem
 {
@@ -27,6 +29,8 @@ namespace Waldem
         void Initialize(CWindow* window) override;
         void InitializeUI() override;
         void DeinitializeUI() override;
+        bool ReloadShaders() override;
+        const char* GetLastShaderReloadStatus() const override { return LastShaderReloadStatus.c_str(); }
         void Draw(StaticMesh* mesh) override;
         void DrawIndexedInstanced(uint indicesCount, uint instancesCount, uint startIndex, int baseVertex, uint startInstance) override;
         void DrawIndirect(uint numCommands, Buffer* indirectBuffer, bool isIndexed = true) override;
@@ -86,6 +90,8 @@ namespace Waldem
     private:
         void InitializeBindless();
         void CreateGeneralRootSignature();
+        void UpdateShaderHotReload();
+        std::filesystem::file_time_type GetLatestShaderWriteTime() const;
         RenderTarget* CreateRenderTarget(WString name, int width, int height, TextureFormat format, ID3D12DescriptorHeap* externalHeap, uint slot);
         RenderTarget* CreateRenderTarget(WString name, int width, int height, TextureFormat format, ID3D12Resource* resource);
         void SetRenderTargets();
@@ -129,5 +135,10 @@ namespace Waldem
 
         //viewport
         SViewport* CurrentViewport;
+
+        std::vector<Shader*> RegisteredShaders;
+        std::vector<Pipeline*> RegisteredPipelines;
+        std::filesystem::file_time_type LastShaderWriteTime = std::filesystem::file_time_type::min();
+        std::string LastShaderReloadStatus = "Shader hot reload not run yet.";
     };
 }

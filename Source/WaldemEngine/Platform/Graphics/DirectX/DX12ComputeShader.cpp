@@ -1,5 +1,6 @@
 #include "wdpch.h"
 #include <d3dcompiler.h>
+#include "DX12Shader.h"
 #include "DX12ComputeShader.h"
 #include "DX12Helper.h"
 #include "Waldem/Utils/FileUtils.h"
@@ -7,7 +8,20 @@
 
 namespace Waldem
 {
-    DX12ComputeShader::DX12ComputeShader(const Path& name, const WString& entryPoint) : ComputeShader(name, entryPoint)
+    namespace
+    {
+        template<typename T>
+        void ReleaseCom(T*& object)
+        {
+            if(object != nullptr)
+            {
+                object->Release();
+                object = nullptr;
+            }
+        }
+    }
+
+    DX12ComputeShader::DX12ComputeShader(const Path& name, const WString& entryPoint) : ComputeShader(name, entryPoint), EntryPoint(entryPoint)
     {
         HRESULT hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&DxcUtils));
         if (FAILED(hr))
@@ -34,18 +48,35 @@ namespace Waldem
     {
     }
 
+    void DX12ComputeShader::Destroy()
+    {
+        ReleaseCom(ShaderBlob);
+        ReleaseCom(ErrorBlob);
+        ReleaseCom(Source);
+        ReleaseCom(DxcIncludeHandler);
+        ReleaseCom(DxcCompiler);
+        ReleaseCom(DxcUtils);
+    }
+
+    bool DX12ComputeShader::Reload()
+    {
+        try
+        {
+            return CompileFromFile(Name, EntryPoint);
+        }
+        catch(const std::exception& exception)
+        {
+            WD_CORE_ERROR("Failed to hot reload compute shader '{0}': {1}", Name.string(), exception.what());
+            return false;
+        }
+    }
+
     bool DX12ComputeShader::CompileFromFile(const Path& path, const WString& entryPoint)
     {
-        auto currentPath = GetCurrentFolder();
-        
-        std::wstring wCurrentPath = currentPath;
-        std::wstring wShaderFolder = path.parent_path();
-        std::wstring wShaderName = path.filename();
-
-        std::wstring pathToShaders = wCurrentPath + L"\\" + L"Shaders";
-        pathToShaders = std::regex_replace(pathToShaders, std::wregex(L"[\\/\\\\]"), L"\\\\");
-        std::wstring currentShaderFolderPath = pathToShaders + L"\\\\" + wShaderFolder;
-        std::wstring shaderPath = currentShaderFolderPath + (wShaderFolder.empty() ? L"" : L"\\\\") + wShaderName + L".comp.hlsl";
+        const Path computeShaderPath = ResolveShaderFilePath(path, L".comp.hlsl");
+        const std::wstring pathToShaders = computeShaderPath.parent_path().wstring();
+        const std::wstring currentShaderFolderPath = computeShaderPath.parent_path().wstring();
+        std::wstring shaderPath = computeShaderPath.wstring();
 
         HRESULT hr = DxcUtils->LoadFile(shaderPath.c_str(), nullptr, &Source);
 
@@ -96,11 +127,15 @@ namespace Waldem
             throw std::runtime_error("Shader compilation failed.");
         }
 
-        hr = result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&ShaderBlob), nullptr);
+        IDxcBlob* compiledShaderBlob = nullptr;
+        hr = result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&compiledShaderBlob), nullptr);
         if (FAILED(hr))
         {
             throw std::runtime_error("Failed to retrieve compiled shader.");
         }
+
+        ReleaseCom(ShaderBlob);
+        ShaderBlob = compiledShaderBlob;
 
         return true;
     }

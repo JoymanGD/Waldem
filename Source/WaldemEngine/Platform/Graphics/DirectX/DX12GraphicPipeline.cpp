@@ -63,48 +63,85 @@ namespace Waldem
     DX12GraphicPipeline::DX12GraphicPipeline(const WString& name, ID3D12Device* device, ID3D12RootSignature* rootSignature, PixelShader* shader, WArray<TextureFormat> RTFormats, TextureFormat depthFormat, RasterizerDesc rasterizerDesc, DepthStencilDesc depthStencilDesc, BlendDesc blendDesc, PrimitiveTopologyType primitiveTopologyType, const WArray<InputLayoutDesc>& inputLayout) : Pipeline(name)
     {
         CurrentPipelineType = PipelineType::Graphics;
-        
-        IDxcBlob* VertexShaderBlob = (IDxcBlob*)shader->GetVS();
-        IDxcBlob* PixelShaderBlob = (IDxcBlob*)shader->GetPS();
-        
-        PsoDesc = {};
-        PsoDesc.pRootSignature = rootSignature;
-        PsoDesc.VS = { VertexShaderBlob->GetBufferPointer(), VertexShaderBlob->GetBufferSize() };
-        PsoDesc.PS = { PixelShaderBlob->GetBufferPointer(), PixelShaderBlob->GetBufferSize() };
-        FillRasterizerState(PsoDesc.RasterizerState, rasterizerDesc);
-        FillDepthStencilState(PsoDesc.DepthStencilState, depthStencilDesc);
-        FillBlendState(PsoDesc.BlendState, blendDesc);
-        PsoDesc.DSVFormat = (DXGI_FORMAT)depthFormat;
-        PsoDesc.SampleMask = UINT_MAX;
-        PsoDesc.PrimitiveTopologyType = (D3D12_PRIMITIVE_TOPOLOGY_TYPE)primitiveTopologyType;
-        PsoDesc.NumRenderTargets = RTFormats.Num();
-        // PsoDesc.RTVFormats[0] = renderTarget ? (DXGI_FORMAT)renderTarget->GetFormat() : DXGI_FORMAT_R8G8B8A8_UNORM;
-
-        for (uint32_t i = 0; i < RTFormats.Num(); ++i)
-        {
-            PsoDesc.RTVFormats[i] = (DXGI_FORMAT)RTFormats[i];
-        }
-        
-        PsoDesc.SampleDesc.Count = 1;
-        WArray<D3D12_INPUT_ELEMENT_DESC> inputElementDescs;
-
-        for (auto& input : inputLayout)
-        {
-            inputElementDescs.Add({ input.SemanticName.C_Str(), input.SemanticIndex, (DXGI_FORMAT)input.Format, input.InputSlot, input.AlignedByteOffset, (D3D12_INPUT_CLASSIFICATION)input.InputSlotClass, input.InstanceDataStepRate });
-        }
-        
-        PsoDesc.InputLayout = { inputElementDescs.GetData(), (UINT)inputElementDescs.Num() };
-        HRESULT hr = device->CreateGraphicsPipelineState(&PsoDesc, IID_PPV_ARGS(&NativePipeline));
-
-        if(FAILED(hr))
+        Device = device;
+        RootSignature = rootSignature;
+        ShaderObject = shader;
+        this->RTFormats = RTFormats;
+        this->DepthFormat = depthFormat;
+        RasterizerStateDesc = rasterizerDesc;
+        DepthStencilStateDesc = depthStencilDesc;
+        BlendStateDesc = blendDesc;
+        PrimitiveTopology = primitiveTopologyType;
+        InputLayoutDescs = inputLayout;
+        if(!Reload())
         {
             throw std::runtime_error("Failed to create pipeline state!");
         }
-        
-        NativePipeline->SetName(DX12Helper::WFromMB(name));
     }
 
     DX12GraphicPipeline::~DX12GraphicPipeline()
     {
+    }
+
+    void DX12GraphicPipeline::Destroy()
+    {
+        if(NativePipeline != nullptr)
+        {
+            NativePipeline->Release();
+            NativePipeline = nullptr;
+        }
+    }
+
+    bool DX12GraphicPipeline::Reload()
+    {
+        IDxcBlob* vertexShaderBlob = (IDxcBlob*)ShaderObject->GetVS();
+        IDxcBlob* pixelShaderBlob = (IDxcBlob*)ShaderObject->GetPS();
+        if(vertexShaderBlob == nullptr || pixelShaderBlob == nullptr)
+        {
+            return false;
+        }
+
+        D3D12_GRAPHICS_PIPELINE_STATE_DESC newDesc = {};
+        newDesc.pRootSignature = RootSignature;
+        newDesc.VS = { vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize() };
+        newDesc.PS = { pixelShaderBlob->GetBufferPointer(), pixelShaderBlob->GetBufferSize() };
+        FillRasterizerState(newDesc.RasterizerState, RasterizerStateDesc);
+        FillDepthStencilState(newDesc.DepthStencilState, DepthStencilStateDesc);
+        FillBlendState(newDesc.BlendState, BlendStateDesc);
+        newDesc.DSVFormat = (DXGI_FORMAT)DepthFormat;
+        newDesc.SampleMask = UINT_MAX;
+        newDesc.PrimitiveTopologyType = (D3D12_PRIMITIVE_TOPOLOGY_TYPE)PrimitiveTopology;
+        newDesc.NumRenderTargets = RTFormats.Num();
+
+        for(uint32_t i = 0; i < RTFormats.Num(); ++i)
+        {
+            newDesc.RTVFormats[i] = (DXGI_FORMAT)RTFormats[i];
+        }
+
+        newDesc.SampleDesc.Count = 1;
+        WArray<D3D12_INPUT_ELEMENT_DESC> inputElementDescs;
+        for(auto& input : InputLayoutDescs)
+        {
+            inputElementDescs.Add({ input.SemanticName.C_Str(), input.SemanticIndex, (DXGI_FORMAT)input.Format, input.InputSlot, input.AlignedByteOffset, (D3D12_INPUT_CLASSIFICATION)input.InputSlotClass, input.InstanceDataStepRate });
+        }
+
+        newDesc.InputLayout = { inputElementDescs.GetData(), (UINT)inputElementDescs.Num() };
+
+        ID3D12PipelineState* newPipeline = nullptr;
+        HRESULT hr = Device->CreateGraphicsPipelineState(&newDesc, IID_PPV_ARGS(&newPipeline));
+        if(FAILED(hr))
+        {
+            return false;
+        }
+
+        if(NativePipeline != nullptr)
+        {
+            NativePipeline->Release();
+        }
+
+        NativePipeline = newPipeline;
+        PsoDesc = newDesc;
+        NativePipeline->SetName(DX12Helper::WFromMB(Name));
+        return true;
     }
 }

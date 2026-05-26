@@ -10,20 +10,21 @@ namespace Waldem
     public:
         DX12RayTracingShader(const Path& name); 
         ~DX12RayTracingShader() override;
+        bool Reload() override;
 
     private:
         bool CompileFromFile(const Path& filepath) override;
 
     public:
         void* GetPlatformData() override { return ShaderBlob; }
-        void Destroy() override { if (ShaderBlob) ShaderBlob->Release(); if (DxcUtils) DxcUtils->Release(); if (DxcCompiler) DxcCompiler->Release(); if (DxcIncludeHandler) DxcIncludeHandler->Release(); }
+        void Destroy() override;
 
     private:
-        IDxcBlob* ShaderBlob;
-        IDxcBlobUtf8* ErrorBlob;
-        IDxcUtils* DxcUtils;
-        IDxcCompiler3* DxcCompiler;
-        IDxcIncludeHandler* DxcIncludeHandler;
-        IDxcBlobEncoding* Source;
+        IDxcBlob* ShaderBlob = nullptr;
+        IDxcBlobUtf8* ErrorBlob = nullptr;
+        IDxcUtils* DxcUtils = nullptr;
+        IDxcCompiler3* DxcCompiler = nullptr;
+        IDxcIncludeHandler* DxcIncludeHandler = nullptr;
+        IDxcBlobEncoding* Source = nullptr;
     };
 }
