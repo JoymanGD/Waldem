@@ -20,7 +20,7 @@ namespace Waldem
 			SDL_AudioSpec desiredSpec;
 			SDL_zero(desiredSpec);
 
-			desiredSpec.freq = 44100;
+			desiredSpec.freq = 44100; 
 			desiredSpec.format = AUDIO_F32;
 			desiredSpec.channels = 2;
 			desiredSpec.samples = 1024;
@@ -34,11 +34,6 @@ namespace Waldem
 				&Spec,
 				0
 			);
-
-			if (Device == 0)
-			{
-				WD_CORE_ERROR("Failed to open audio device: {0}", SDL_GetError());
-			}
         
 			SDL_PauseAudioDevice(Device, 0);
 

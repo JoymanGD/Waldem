@@ -7,13 +7,78 @@
 #include <mono/metadata/class.h>
 #include <mono/metadata/debug-helpers.h>
 #include <mono/metadata/mono-gc.h>
+#include <mono/metadata/mono-debug.h>
 
 #include "Waldem/Utils/FileUtils.h"
 
 namespace Waldem
 {
+    namespace
+    {
+        bool ShouldSuspendMonoDebugger()
+        {
+#if WD_DEBUG
+            size_t valueLength = 0;
+            if(getenv_s(&valueLength, nullptr, 0, "WD_MONO_SUSPEND") != 0 || valueLength == 0)
+            {
+                return false;
+            }
+
+            char* envValue = nullptr;
+            if(_dupenv_s(&envValue, &valueLength, "WD_MONO_SUSPEND") != 0 || envValue == nullptr)
+            {
+                return false;
+            }
+
+            const bool shouldSuspend = envValue[0] == '1' || envValue[0] == 't' || envValue[0] == 'T' || envValue[0] == 'y' || envValue[0] == 'Y';
+            free(envValue);
+            return shouldSuspend;
+#else
+            return false;
+#endif
+        }
+
+        void CreateDebugDomain(MonoDomain* domain)
+        {
+#if WD_DEBUG
+            if(domain != nullptr)
+            {
+                mono_debug_domain_create(domain);
+            }
+#else
+            (void)domain;
+#endif
+        }
+
+        void UnloadDebugDomain(MonoDomain* domain)
+        {
+#if WD_DEBUG
+            if(domain != nullptr)
+            {
+                mono_debug_domain_unload(domain);
+            }
+#else
+            (void)domain;
+#endif
+        }
+    }
+
     void Mono::Initialize()
     {
+#if WD_DEBUG
+        const bool suspendForDebugger = ShouldSuspendMonoDebugger();
+        const char* options[] = {
+            "--soft-breakpoints",
+            suspendForDebugger
+                ? "--debugger-agent=transport=dt_socket,address=127.0.0.1:55555,server=y,suspend=y"
+                : "--debugger-agent=transport=dt_socket,address=127.0.0.1:55555,server=y,suspend=n"
+        };
+
+        mono_jit_parse_options(2, (char**)options);
+        mono_debug_init(MONO_DEBUG_FORMAT_MONO);
+        WD_CORE_INFO("Mono debugger agent listening on 127.0.0.1:55555 (suspend={0})", suspendForDebugger ? "y" : "n");
+#endif
+
         const Path currentPath = GetCurrentFolder();
         const Path monoLibPath = currentPath / "mono" / "lib" / "4.5";
         
@@ -28,8 +93,11 @@ namespace Waldem
             return;
         }
 
+        CreateDebugDomain(MonoRootDomain);
+
         // Create an App Domain
         MonoAppDomain = mono_domain_create_appdomain((char*)"WaldemAppDomain", nullptr);
+        CreateDebugDomain(MonoAppDomain);
         mono_domain_set(MonoAppDomain, true);
     }
 
@@ -38,6 +106,7 @@ namespace Waldem
         if(MonoAppDomain != nullptr)
         {
             mono_domain_set(MonoRootDomain, false);
+            UnloadDebugDomain(MonoAppDomain);
             mono_domain_unload(MonoAppDomain);
             MonoAppDomain = nullptr;
         }
@@ -47,6 +116,10 @@ namespace Waldem
             mono_jit_cleanup(MonoRootDomain);
             MonoRootDomain = nullptr;
         }
+
+#if WD_DEBUG
+        mono_debug_cleanup();
+#endif
     }
 
     bool Mono::ReloadAppDomain()
@@ -59,6 +132,7 @@ namespace Waldem
         if(MonoAppDomain != nullptr)
         {
             mono_domain_set(MonoRootDomain, false);
+            UnloadDebugDomain(MonoAppDomain);
             mono_domain_unload(MonoAppDomain);
             MonoAppDomain = nullptr;
         }
@@ -70,6 +144,7 @@ namespace Waldem
             return false;
         }
 
+        CreateDebugDomain(MonoAppDomain);
         mono_domain_set(MonoAppDomain, true);
         return true;
     }
@@ -104,30 +179,46 @@ namespace Waldem
     
     MonoAssembly* Mono::LoadCSharpAssembly(const Path& assemblyPath)
     {
-        uint32_t fileSize = 0;
-        char* fileData = ReadBytes(assemblyPath, &fileSize);
-        if(fileData == nullptr || fileSize == 0)
-        {
-            WD_CORE_ERROR("Failed to read assembly bytes from {0}", assemblyPath.string());
-            return nullptr;
-        }
-
-        // NOTE: We can't use this image for anything other than loading the assembly because this image doesn't have a reference to the assembly
         MonoImageOpenStatus status;
-        MonoImage* image = mono_image_open_from_data_full(fileData, fileSize, 1, &status, 0);
-
-        if (status != MONO_IMAGE_OK)
+        MonoAssembly* assembly = mono_assembly_open_full(assemblyPath.string().c_str(), &status, 0);
+        if(assembly == nullptr || status != MONO_IMAGE_OK)
         {
             const char* errorMessage = mono_image_strerror(status);
-            WD_CORE_ERROR("Failed to load assembly: {0}", errorMessage);
+            WD_CORE_ERROR("Failed to load assembly from file {0}: {1}",
+                assemblyPath.string(),
+                errorMessage != nullptr ? errorMessage : "unknown");
             return nullptr;
         }
 
-        MonoAssembly* assembly = mono_assembly_load_from_full(image, assemblyPath.string().c_str(), &status, 0);
-        mono_image_close(image);
-    
-        // Don't forget to free the file data
-        delete[] fileData;
+#if WD_DEBUG
+        WD_CORE_INFO("Loaded managed assembly for debugging: {0}", assemblyPath.string());
+
+        Path pdbPath = assemblyPath;
+        pdbPath.replace_extension(".pdb");
+        if(exists(pdbPath))
+        {
+            uint32_t pdbSize = 0;
+            char* pdbData = ReadBytes(pdbPath, &pdbSize);
+            if(pdbData != nullptr && pdbSize > 0)
+            {
+                MonoImage* assemblyImage = mono_assembly_get_image(assembly);
+                if(assemblyImage != nullptr)
+                {
+                    mono_debug_open_image_from_memory(assemblyImage, (const mono_byte*)pdbData, (int)pdbSize);
+                    WD_CORE_INFO("Loaded managed debug symbols: {0}", pdbPath.string());
+                }
+                delete[] pdbData;
+            }
+            else
+            {
+                WD_CORE_WARN("Failed to read debug symbols from {0}", pdbPath.string());
+            }
+        }
+        else
+        {
+            WD_CORE_WARN("No debug symbols found for managed assembly: {0}", pdbPath.string());
+        }
+#endif
 
         return assembly;
     }
