@@ -10,6 +10,8 @@ namespace Waldem
     public:
         Pipeline(const WString& name) : Name(name) {}
         virtual ~Pipeline() = default;
+        const WString& GetName() const { return Name; }
+        virtual bool Reload() = 0;
         PipelineType CurrentPipelineType; 
     protected:
         WString Name;

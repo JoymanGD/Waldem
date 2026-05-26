@@ -347,6 +347,6 @@ project "ScriptEngine"
 
     postbuildcommands
     {
-        'xcopy /Y "%{wks.location}Build\\%{cfg.buildcfg}\\ScriptEngine\\ScriptEngine.dll" "%{wks.location}Build\\%{cfg.buildcfg}\\WaldemEditor\\"',
-        'xcopy /Y "%{wks.location}Build\\%{cfg.buildcfg}\\ScriptEngine\\ScriptEngine.pdb" "%{wks.location}Build\\%{cfg.buildcfg}\\WaldemEditor\\"'
+        'xcopy /Y "$(MSBuildProjectDirectory)\\..\\..\\Build\\%{cfg.buildcfg}\\ScriptEngine\\ScriptEngine.dll" "$(MSBuildProjectDirectory)\\..\\..\\Build\\%{cfg.buildcfg}\\WaldemEditor\\"',
+        'xcopy /Y "$(MSBuildProjectDirectory)\\..\\..\\Build\\%{cfg.buildcfg}\\ScriptEngine\\ScriptEngine.pdb" "$(MSBuildProjectDirectory)\\..\\..\\Build\\%{cfg.buildcfg}\\WaldemEditor\\"'
     }

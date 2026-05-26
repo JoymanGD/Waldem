@@ -16,6 +16,7 @@ namespace Waldem
     public:
         DX12PixelShader(const Path& name, const WString& entryPoint);
         ~DX12PixelShader() override;
+        bool Reload() override;
 
     private:
         bool CompileFromFile(const Path& filepath, const WString& entryPoint) override;
@@ -23,15 +24,16 @@ namespace Waldem
     public:
         void* GetVS() override { return VertexShaderBlob; }
         void* GetPS() override { return PixelShaderBlob; }
-        void Destroy() override { if (VertexShaderBlob) VertexShaderBlob->Release(); if (PixelShaderBlob) PixelShaderBlob->Release(); if (DxcUtils) DxcUtils->Release(); if (DxcCompiler) DxcCompiler->Release(); if (DxcIncludeHandler) DxcIncludeHandler->Release(); }
+        void Destroy() override;
 
     private:
-        IDxcBlob* VertexShaderBlob;
-        IDxcBlob* PixelShaderBlob;
-        IDxcBlobUtf8* ErrorBlob;
-        IDxcUtils* DxcUtils;
-        IDxcCompiler3* DxcCompiler;
-        IDxcIncludeHandler* DxcIncludeHandler;
-        IDxcBlobEncoding* Source;
+        WString EntryPoint;
+        IDxcBlob* VertexShaderBlob = nullptr;
+        IDxcBlob* PixelShaderBlob = nullptr;
+        IDxcBlobUtf8* ErrorBlob = nullptr;
+        IDxcUtils* DxcUtils = nullptr;
+        IDxcCompiler3* DxcCompiler = nullptr;
+        IDxcIncludeHandler* DxcIncludeHandler = nullptr;
+        IDxcBlobEncoding* Source = nullptr;
     };
 }

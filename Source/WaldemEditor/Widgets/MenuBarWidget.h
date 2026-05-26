@@ -4,6 +4,7 @@
 #include "Widget.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/Editor/EditorSimulation.h"
+#include "Waldem/Renderer/Renderer.h"
 #include "Waldem/SceneManagement/SceneManager.h"
 #include "Waldem/Scripting/ScriptEngine.h"
 #include "Waldem/Utils/FileUtils.h"
@@ -27,8 +28,6 @@ namespace Waldem
         };
 
         ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
-        Path CurrentScenePath;
-
         uint64_t GetBindingKey(const ShortcutBinding& binding) const
         {
             uint64_t key = (uint64_t)(uint32)binding.Key;
@@ -44,6 +43,7 @@ namespace Waldem
             {
                 { A, "A" }, { B, "B" }, { C, "C" }, { D, "D" }, { E, "E" }, { F, "F" }, { G, "G" }, { H, "H" }, { I, "I" }, { J, "J" }, { K, "K" }, { L, "L" }, { M, "M" },
                 { N, "N" }, { O, "O" }, { P, "P" }, { Q, "Q" }, { R, "R" }, { S, "S" }, { T, "T" }, { U, "U" }, { V, "V" }, { W, "W" }, { X, "X" }, { Y, "Y" }, { Z, "Z" },
+                { PERIOD, "." },
                 { F1, "F1" }, { F2, "F2" }, { F3, "F3" }, { F4, "F4" }, { F5, "F5" }, { F6, "F6" }, { F7, "F7" }, { F8, "F8" }, { F9, "F9" }, { F10, "F10" }, { F11, "F11" }, { F12, "F12" },
                 { KEY_DELETE, "Delete" },
                 { SPACE, "Space" }
@@ -127,6 +127,14 @@ namespace Waldem
             {
                 ScriptEngine::ReloadScripts(true);
             });
+
+            inputManager->SubscribeToDynamicShortcut([]
+            {
+                return EditorShortcuts::GetShortcut(EditorShortcutAction::ReloadShaders);
+            }, []
+            {
+                Renderer::ReloadShaders();
+            });
         }
 
         void ExportScene(Path& path)
@@ -151,30 +159,35 @@ namespace Waldem
                     }
                     if (ImGui::MenuItem("Open scene", "Ctrl+O"))
                     {
-                        if(OpenFile(CurrentScenePath))
+                        Path selectedScenePath;
+                        if(OpenFile(selectedScenePath))
                         {
                             EditorCommandHistory::Get().Clear();
-                            SceneManager::LoadScene(CurrentScenePath);
+                            SceneManager::LoadScene(selectedScenePath);
                         }
                     }
                     if (ImGui::MenuItem("Save scene"))
                     {
+                        Path scenePath = SceneManager::GetCurrentScenePath();
                         bool save = true;
-                        if(CurrentScenePath.empty())
+                        if(scenePath.empty())
                         {
-                            save = SaveFile(CurrentScenePath);
+                            save = SaveFile(scenePath);
                         }
 
                         if(save)
                         {
-                            ExportScene(CurrentScenePath);
+                            ExportScene(scenePath);
+                            SceneManager::SetCurrentScenePath(scenePath);
                         }
                     }
                     if (ImGui::MenuItem("Save scene as..."))
                     {
-                        if(SaveFile(CurrentScenePath))
+                        Path scenePath = SceneManager::GetCurrentScenePath();
+                        if(SaveFile(scenePath))
                         {
-                            ExportScene(CurrentScenePath);
+                            ExportScene(scenePath);
+                            SceneManager::SetCurrentScenePath(scenePath);
                         }
                     }
             
@@ -243,15 +256,21 @@ namespace Waldem
                     ImGui::EndMenu();
                 }
 
-                if (ImGui::BeginMenu("Scripts"))
+                if (ImGui::BeginMenu("Hot Reloading"))
                 {
-                    if (ImGui::MenuItem("Reload Scripts"))
+                    if (ImGui::MenuItem("Scripts"))
                     {
                         ScriptEngine::ReloadScripts(true);
                     }
 
+                    if (ImGui::MenuItem("Shaders"))
+                    {
+                        Renderer::ReloadShaders();
+                    }
+
                     ImGui::Separator();
-                    ImGui::TextWrapped("%s", ScriptEngine::GetLastReloadStatus());
+                    ImGui::TextWrapped("Scripts: %s", ScriptEngine::GetLastReloadStatus());
+                    ImGui::TextWrapped("Shaders: %s", Renderer::GetLastShaderReloadStatus());
 
                     ImGui::EndMenu();
                 }

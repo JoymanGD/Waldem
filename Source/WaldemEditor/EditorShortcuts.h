@@ -22,6 +22,7 @@ namespace Waldem
         GizmoScale,
         GizmoToggleMode,
         ReloadScripts,
+        ReloadShaders,
         Count
     };
 
@@ -153,7 +154,8 @@ namespace Waldem
             "Gizmo Rotate",
             "Gizmo Scale",
             "Gizmo Toggle Mode",
-            "Reload Scripts"
+            "Reload Scripts",
+            "Reload Shaders"
         };
 
         inline static const std::array<ShortcutBinding, (int)EditorShortcutAction::Count> DefaultBindings =
@@ -167,7 +169,8 @@ namespace Waldem
             ShortcutBinding{ false, false, false, E },
             ShortcutBinding{ false, false, false, R },
             ShortcutBinding{ false, false, false, Q },
-            ShortcutBinding{ true, false, true, F11 }
+            ShortcutBinding{ true, false, true, F11 },
+            ShortcutBinding{ true, true, false, PERIOD }
         };
 
         inline static std::array<ShortcutBinding, (int)EditorShortcutAction::Count> Bindings = DefaultBindings;

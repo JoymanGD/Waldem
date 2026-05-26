@@ -8,12 +8,15 @@ namespace Waldem
     {
     public:
         static GameScene* GetCurrentScene() { return CurrentScene; }
+        static const Path& GetCurrentScenePath() { return CurrentScenePath; }
+        static void SetCurrentScenePath(const Path& path) { CurrentScenePath = path; }
 
         static void NewScene()
         {
             UnloadScene();
             CurrentScene = new GameScene();
             CurrentScene->Initialize();
+            CurrentScenePath.clear();
         }
 
         static void UnloadScene()
@@ -36,6 +39,7 @@ namespace Waldem
 
         static void LoadScene(Path& path)
         {
+            CurrentScenePath = path;
             PendingPath = path;
             LoadProgress = 0.0f;
             LoadInProgress = true;
@@ -45,6 +49,7 @@ namespace Waldem
 
         static void LoadSceneImmediate(const Path& path)
         {
+            CurrentScenePath = path;
             PendingPath = path;
             NeedToDeserializeScene = false;
             LoadInProgress = false;
@@ -97,6 +102,7 @@ namespace Waldem
         }
     private:
         inline static GameScene* CurrentScene = nullptr;
+        inline static Path CurrentScenePath = "";
         inline static bool NeedToDeserializeScene = false;
         inline static bool LoadInProgress = false;
         inline static float LoadProgress = 0.0f;

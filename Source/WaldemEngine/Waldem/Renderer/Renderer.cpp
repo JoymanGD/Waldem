@@ -325,6 +325,16 @@ namespace Waldem
         Instance->PlatformRenderer->EndUI();
     }
 
+    bool Renderer::ReloadShaders()
+    {
+        return Instance->PlatformRenderer->ReloadShaders();
+    }
+
+    const char* Renderer::GetLastShaderReloadStatus()
+    {
+        return Instance->PlatformRenderer->GetLastShaderReloadStatus();
+    }
+
     void Renderer::Destroy(GraphicResource* resource)
     {
         Instance->PlatformRenderer->Destroy(resource);
