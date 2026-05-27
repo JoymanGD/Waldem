@@ -159,9 +159,9 @@ namespace Waldem
 	bool Engine::OnWindowClose(WindowCloseEvent& e)
 	{
 		IsRunning = false;
+		ECS::Shutdown();
 		ScriptEngine::Shutdown();
 		MonoRuntime.Shutdown();
-		ECS::Shutdown();
 		return true;
 	}
 

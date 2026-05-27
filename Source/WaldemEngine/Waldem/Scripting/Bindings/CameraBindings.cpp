@@ -3,6 +3,8 @@
 #include "ScriptBindings.h"
 #include "Waldem/Scripting/Mono.h"
 #include "Waldem/ECS/Components/Camera.h"
+#include "Waldem/Renderer/Viewport/Viewport.h"
+#include "Waldem/Renderer/Viewport/ViewportManager.h"
 
 namespace Waldem::Bindings
 {
@@ -55,6 +57,22 @@ namespace Waldem::Bindings
             cam.UpdateProjectionMatrix(cam.FieldOfView, cam.AspectRatio, cam.NearPlane, farPlane);
             entity.modified<Camera>();
         }
+        
+        uint64_t Camera_GetMainEntity()
+        {
+            SViewport* gameViewport = ViewportManager::GetGameViewport();
+            if(gameViewport == nullptr)
+                return 0;
+
+            ECS::Entity cameraEntity;
+            if(!gameViewport->TryGetLinkedCamera(cameraEntity))
+                return 0;
+
+            if(!cameraEntity.is_alive() || !cameraEntity.has<Camera>())
+                return 0;
+
+            return cameraEntity.id();
+        }
     }
 
     void RegisterCameraCalls(Mono* runtime)
@@ -65,5 +83,6 @@ namespace Waldem::Bindings
         BIND(runtime, Camera_SetNearPlane);
         BIND(runtime, Camera_GetFarPlane);
         BIND(runtime, Camera_SetFarPlane);
+        BIND(runtime, Camera_GetMainEntity);
     }
 }

@@ -21,5 +21,8 @@ namespace Waldem
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern void Camera_SetFarPlane(ulong entityId, float farPlane);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern ulong Camera_GetMainEntity();
     }
 }

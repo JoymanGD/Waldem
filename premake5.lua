@@ -167,7 +167,7 @@ project "WaldemEngine"
     pchheader "wdpch.h"
     pchsource (SourceDir .. "/WaldemEngine/wdpch.cpp")
 
-    dependson { "WaldemHeaderTool" }
+    dependson { "WaldemHeaderTool", "ScriptEngine" }
 
     includedirs
     {
@@ -284,6 +284,8 @@ project "WaldemEditor"
     SetDefaultPaths()
     debugdir ("Build/" .. OutputDir .. "/%{prj.name}")
     SetupCommonCppProject()
+
+    dependson { "ScriptEngine" }
 
     files
     {

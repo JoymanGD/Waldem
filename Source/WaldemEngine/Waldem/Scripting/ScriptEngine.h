@@ -8,6 +8,7 @@
 #include <mono/metadata/object.h>
 
 #include "Waldem/ECS/ECS.h"
+#include "Waldem/ECS/Components/ColliderComponent.h"
 
 namespace Waldem
 {
@@ -54,6 +55,9 @@ namespace Waldem
         static void DestroyEntityInstance(ECS::EntityT entityId);
         static void OnUpdate(ECS::Entity entity, const ScriptComponent& scriptComponent, float deltaTime);
         static void OnFixedUpdate(ECS::Entity entity, const ScriptComponent& scriptComponent, float fixedDeltaTime);
+        static void OnCollisionEnter(ECS::Entity entity, ECS::Entity other, const ScriptComponent& scriptComponent, const ContactsManifold& contacts);
+        static void OnCollisionStay(ECS::Entity entity, ECS::Entity other, const ScriptComponent& scriptComponent, const ContactsManifold& contacts);
+        static void OnCollisionExit(ECS::Entity entity, ECS::Entity other, const ScriptComponent& scriptComponent, const ContactsManifold& contacts);
 
     private:
         struct ScriptInstance
@@ -64,6 +68,9 @@ namespace Waldem
             MonoMethod* OnUpdateMethod = nullptr;
             MonoMethod* OnFixedUpdateMethod = nullptr;
             MonoMethod* OnDestroyMethod = nullptr;
+            MonoMethod* OnCollisionEnterMethod = nullptr;
+            MonoMethod* OnCollisionStayMethod = nullptr;
+            MonoMethod* OnCollisionExitMethod = nullptr;
             uint32_t GCHandle = 0;
         };
 

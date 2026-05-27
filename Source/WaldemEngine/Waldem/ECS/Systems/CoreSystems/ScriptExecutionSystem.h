@@ -14,50 +14,60 @@ namespace Waldem
 
         void Initialize() override
         {
-            ECS::World.observer<ScriptComponent>("ScriptComponentChanged")
-                .event(flecs::OnSet)
-                .each([&](ECS::Entity entity, ScriptComponent& scriptComponent)
+            ECS::World.observer<ScriptComponent>("ScriptComponentChanged").event(flecs::OnSet).each([&](ECS::Entity entity, ScriptComponent& scriptComponent)
+            {
+                if(EditorSimulation::ShouldRunRuntimeSystems())
                 {
-                    if(EditorSimulation::ShouldRunRuntimeSystems())
-                    {
-                        ScriptEngine::CreateEntityInstance(entity, scriptComponent);
-                    }
-                    else
-                    {
-                        ScriptEngine::DestroyEntityInstance(entity.id());
-                    }
-                });
-
-            ECS::World.observer<ScriptComponent>("ScriptComponentRemoved")
-                .event(flecs::OnRemove)
-                .each([&](ECS::Entity entity, ScriptComponent&)
+                    ScriptEngine::CreateEntityInstance(entity, scriptComponent);
+                }
+                else
                 {
                     ScriptEngine::DestroyEntityInstance(entity.id());
-                });
+                }
+            });
 
-            ECS::World.system<ScriptComponent>("ScriptUpdateSystem")
-                .kind(flecs::OnUpdate)
-                .each([&](ECS::Entity entity, ScriptComponent& scriptComponent)
+            ECS::World.observer<ScriptComponent>("ScriptComponentRemoved").event(flecs::OnRemove).each([&](ECS::Entity entity, ScriptComponent&)
+            {
+                ScriptEngine::DestroyEntityInstance(entity.id());
+            });
+
+            ECS::World.system<ScriptComponent>("ScriptUpdateSystem").kind(flecs::OnUpdate).each([&](ECS::Entity entity, ScriptComponent& scriptComponent)
+            {
+                if(!EditorSimulation::ShouldRunRuntimeSystems())
                 {
-                    if(!EditorSimulation::ShouldRunRuntimeSystems())
-                    {
-                        return;
-                    }
+                    return;
+                }
 
-                    ScriptEngine::OnUpdate(entity, scriptComponent, Time::DeltaTime);
-                });
+                ScriptEngine::OnUpdate(entity, scriptComponent, Time::DeltaTime);
+            });
 
-            ECS::World.system<ScriptComponent>("ScriptFixedUpdateSystem")
-                .kind<ECS::OnFixedUpdate>()
-                .each([&](ECS::Entity entity, ScriptComponent& scriptComponent)
+            ECS::World.system<ScriptComponent>("ScriptFixedUpdateSystem").kind<ECS::OnFixedUpdate>().each([&](ECS::Entity entity, ScriptComponent& scriptComponent)
+            {
+                if(!EditorSimulation::ShouldRunRuntimeSystems())
                 {
-                    if(!EditorSimulation::ShouldRunRuntimeSystems())
-                    {
-                        return;
-                    }
+                    return;
+                }
 
-                    ScriptEngine::OnFixedUpdate(entity, scriptComponent, Time::FixedDeltaTime);
-                });
+                ScriptEngine::OnFixedUpdate(entity, scriptComponent, Time::FixedDeltaTime);
+            });
+
+            ECS::World.observer<ScriptComponent, ColliderComponent>("ScriptColliderEvents").event(ECS::OnSet).each([&](ECS::Entity entity, ScriptComponent& scriptComponent, ColliderComponent& collider)
+            {
+                collider.OnCollisionEnter = [entity, scriptComponent](ECS::Entity other, const ContactsManifold& contacts)
+                {
+                    ScriptEngine::OnCollisionEnter(entity, other, scriptComponent, contacts);
+                };
+                
+                collider.OnCollisionStay = [entity, scriptComponent](ECS::Entity other, const ContactsManifold& contacts)
+                {
+                    ScriptEngine::OnCollisionStay(entity, other, scriptComponent, contacts);
+                };
+                
+                collider.OnCollisionExit = [entity, scriptComponent](ECS::Entity other, const ContactsManifold& contacts)
+                {
+                    ScriptEngine::OnCollisionExit(entity, other, scriptComponent, contacts);
+                };
+            });
         }
     };
 }

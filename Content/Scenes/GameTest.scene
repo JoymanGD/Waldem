@@ -146,53 +146,6 @@
     "scene_id": 3,
     "parent_scene_id": -1,
     "entity": {
-      "name": "RotatingMage",
-      "components": {
-        "SceneEntity": {
-          "ParentId": 0,
-          "HierarchyDepth": 0,
-          "HierarchySlot": 4,
-          "VisibleInHierarchy": true
-        },
-        "Waldem.Transform": {
-          "Position": {
-            "x": -5.6939764023,
-            "y": 0.0176940057,
-            "z": 3.9696831703
-          },
-          "Rotation": {
-            "x": 90.2219314575,
-            "y": 0,
-            "z": 0
-          },
-          "LocalScale": {
-            "x": 1,
-            "y": 0.9999999404,
-            "z": 0.9999999404
-          },
-          "___RotationQuat": {
-            "x": 0.7084749341,
-            "y": 0,
-            "z": 0,
-            "w": 0.7057359815
-          }
-        },
-        "Waldem.MeshComponent": {
-          "MeshRef": "Meshes\\Mage\\Mage_LP.mesh",
-          "MaterialRef": "Meshes\\Mage\\Default"
-        },
-        "Waldem.ScriptComponent": {
-          "Script": "Scripts\\RotatingObject.cs",
-          "Enabled": true,
-          "___FieldOverrides": ""
-        }
-      }
-    }
-  },
-  {
-    "scene_id": 4,
-    "parent_scene_id": -1,
-    "entity": {
       "name": "RotatingMage_Clone",
       "components": {
         "SceneEntity": {
@@ -237,7 +190,260 @@
     }
   },
   {
+    "scene_id": 4,
+    "parent_scene_id": -1,
+    "entity": {
+      "name": "RotatingMage",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 0,
+          "HierarchyDepth": 0,
+          "HierarchySlot": 4,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": -5.6939764023,
+            "y": 0.0176940057,
+            "z": 3.9696831703
+          },
+          "Rotation": {
+            "x": 90.2219314575,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 0.9999999404,
+            "z": 0.9999999404
+          },
+          "___RotationQuat": {
+            "x": 0.7084749341,
+            "y": 0,
+            "z": 0,
+            "w": 0.7057359815
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Meshes\\Mage\\Mage_LP.mesh",
+          "MaterialRef": "Meshes\\Mage\\Default"
+        },
+        "Waldem.ScriptComponent": {
+          "Script": "Scripts\\RotatingObject.cs",
+          "Enabled": true,
+          "___FieldOverrides": ""
+        }
+      }
+    }
+  },
+  {
     "scene_id": 5,
+    "parent_scene_id": -1,
+    "entity": {
+      "name": "Camera",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 0,
+          "HierarchyDepth": 0,
+          "HierarchySlot": 2,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": -0.8378375769,
+            "y": 25.1759624481,
+            "z": -16.1703147888
+          },
+          "Rotation": {
+            "x": 55.3319587708,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 0.9999996424,
+            "z": 0.9999996424
+          },
+          "___RotationQuat": {
+            "x": 0.4643166363,
+            "y": 0,
+            "z": 0,
+            "w": 0.885669291
+          }
+        },
+        "Waldem.Camera": {
+          "FieldOfView": 60,
+          "AspectRatio": 0.7963737845,
+          "NearPlane": 0.001,
+          "FarPlane": 1000
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 6,
+    "parent_scene_id": -1,
+    "entity": {
+      "name": "Trigger_Clone_Clone",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 0,
+          "HierarchyDepth": 0,
+          "HierarchySlot": 9,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": -5.9727110863,
+            "y": 1.7923973799,
+            "z": -2.3751540184
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.ColliderComponent": {
+          "BoxSize": {
+            "x": 2,
+            "y": 2,
+            "z": 2
+          },
+          "BoxOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "SphereRadius": 1,
+          "CapsuleHeight": 1,
+          "Type": "Box",
+          "IsTrigger": true
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 7,
+    "parent_scene_id": -1,
+    "entity": {
+      "name": "Trigger_Clone",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 0,
+          "HierarchyDepth": 0,
+          "HierarchySlot": 8,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 5.0788559914,
+            "y": 1.7923964262,
+            "z": -0.3110476732
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.ColliderComponent": {
+          "BoxSize": {
+            "x": 2,
+            "y": 2,
+            "z": 2
+          },
+          "BoxOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "SphereRadius": 1,
+          "CapsuleHeight": 1,
+          "Type": "Box",
+          "IsTrigger": true
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 8,
+    "parent_scene_id": -1,
+    "entity": {
+      "name": "Trigger",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 0,
+          "HierarchyDepth": 0,
+          "HierarchySlot": 7,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": -0.8841705918,
+            "y": 1.792396307,
+            "z": 5.6081342697
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.ColliderComponent": {
+          "BoxSize": {
+            "x": 2,
+            "y": 2,
+            "z": 2
+          },
+          "BoxOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "SphereRadius": 1,
+          "CapsuleHeight": 1,
+          "Type": "Box",
+          "IsTrigger": true
+        }
+      }
+    }
+  },
+  {
+    "scene_id": 9,
     "parent_scene_id": -1,
     "entity": {
       "name": "Mage",
@@ -278,55 +484,26 @@
           "MeshRef": "Meshes\\Mage\\Mage_LP.mesh",
           "MaterialRef": "Meshes\\Mage\\Default"
         },
+        "Waldem.ColliderComponent": {
+          "BoxSize": {
+            "x": 1,
+            "y": 1,
+            "z": 4.1999998093
+          },
+          "BoxOffset": {
+            "x": 0,
+            "y": 0,
+            "z": -2.0999999046
+          },
+          "SphereRadius": 1,
+          "CapsuleHeight": 1,
+          "Type": "Box",
+          "IsTrigger": false
+        },
         "Waldem.ScriptComponent": {
           "Script": "Scripts\\TestScript.cs",
           "Enabled": true,
           "___FieldOverrides": ""
-        }
-      }
-    }
-  },
-  {
-    "scene_id": 6,
-    "parent_scene_id": 5,
-    "entity": {
-      "parent": "Mage",
-      "name": "Camera",
-      "components": {
-        "SceneEntity": {
-          "ParentId": "8589935361",
-          "HierarchyDepth": 1,
-          "HierarchySlot": 2,
-          "VisibleInHierarchy": true
-        },
-        "Waldem.Transform": {
-          "Position": {
-            "x": 3.027885437,
-            "y": 5.7699327469,
-            "z": -10.9502325058
-          },
-          "Rotation": {
-            "x": 17.699054718,
-            "y": 0,
-            "z": 0
-          },
-          "LocalScale": {
-            "x": 1,
-            "y": 1,
-            "z": 1
-          },
-          "___RotationQuat": {
-            "x": 0.1538400054,
-            "y": 0,
-            "z": 0,
-            "w": 0.9880957603
-          }
-        },
-        "Waldem.Camera": {
-          "FieldOfView": 60,
-          "AspectRatio": 0.7963737845,
-          "NearPlane": 0.001,
-          "FarPlane": 1000
         }
       }
     }

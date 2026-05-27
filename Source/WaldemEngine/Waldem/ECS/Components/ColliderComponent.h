@@ -84,6 +84,16 @@ namespace Waldem
         }
     };
 
+    struct ContactPointSimplified
+    {
+        Vector3 Position;
+        Vector3 PositionA;
+        Vector3 PositionB;
+        Vector3 Normal;
+        float Penetration;
+        uint64 OtherEntityId;
+    };
+
     struct ContactsManifold
     {
         WArray<ContactPoint> Points;

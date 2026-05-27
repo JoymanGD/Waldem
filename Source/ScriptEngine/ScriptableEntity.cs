@@ -17,5 +17,50 @@ namespace Waldem
         protected virtual void OnDestroy()
         {
         }
+ 
+        private void OnCollisionEnterInternal(ContactPoint contact)
+        {
+            Entity otherEntity = new Entity();
+            otherEntity.__SetEntityId(contact.OtherEntityId);
+            
+            Collision collision = new Collision();
+            collision.Contact = contact;
+            collision.Other = otherEntity;
+            OnCollisionEnter(collision);
+        }
+ 
+        private void OnCollisionStayInternal(ContactPoint contact)
+        {
+            Entity otherEntity = new Entity();
+            otherEntity.__SetEntityId(contact.OtherEntityId);
+            
+            Collision collision = new Collision();
+            collision.Contact = contact;
+            collision.Other = otherEntity;
+            OnCollisionStay(collision);
+        }
+ 
+        private void OnCollisionExitInternal(ContactPoint contact)
+        {
+            Entity otherEntity = new Entity();
+            otherEntity.__SetEntityId(contact.OtherEntityId);
+            
+            Collision collision = new Collision();
+            collision.Contact = contact;
+            collision.Other = otherEntity;
+            OnCollisionExit(collision);
+        }
+ 
+        protected virtual void OnCollisionEnter(Collision collision)
+        {
+        }
+ 
+        protected virtual void OnCollisionStay(Collision collision)
+        {
+        }
+ 
+        protected virtual void OnCollisionExit(Collision collision)
+        {
+        }
     }
 }

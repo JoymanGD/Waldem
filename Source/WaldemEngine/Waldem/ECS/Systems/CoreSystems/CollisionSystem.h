@@ -353,16 +353,6 @@ namespace Waldem
                 auto& entityA = Entities[idA];
                 auto& entityB = Entities[idB];
 
-                if(!entityA.has<Transform>() || !entityA.has<RigidBody>() || !entityB.has<Transform>() || !entityB.has<RigidBody>())
-                {
-                    continue;
-                }
-                
-                Transform& worldTransformA = entityA.get_mut<Transform>();
-                Transform& worldTransformB = entityB.get_mut<Transform>();
-                RigidBody& rigidBodyA = entityA.get_mut<RigidBody>();
-                RigidBody& rigidBodyB = entityB.get_mut<RigidBody>();
-
                 // Try to find existing cached collision.ContactData
                 PersistentContact* cached = nullptr;
                 for (auto& entry : ContactCache)
@@ -396,13 +386,28 @@ namespace Waldem
 
                 TriggerCollisionEvent(entityA, entityB, collision.Manifold, eventType);
 
-                if(!rigidBodyA.IsKinematic || !rigidBodyB.IsKinematic)
+                if(!entityA.has<Transform>() || !entityB.has<Transform>() || !entityA.has<RigidBody>() || !entityB.has<RigidBody>())
                 {
-                    if (rigidBodyA.IsSleeping && rigidBodyB.IsSleeping)
-                        continue;
-
-                    ResolveCollisionSimplified(worldTransformA, worldTransformB, rigidBodyA, rigidBodyB, collision.Manifold);
+                    continue;
                 }
+                
+                Transform& worldTransformA = entityA.get_mut<Transform>();
+                Transform& worldTransformB = entityB.get_mut<Transform>();
+                ColliderComponent& colliderA = entityA.get_mut<ColliderComponent>();
+                ColliderComponent& colliderB = entityB.get_mut<ColliderComponent>();
+                RigidBody& rigidBodyA = entityA.get_mut<RigidBody>();
+                RigidBody& rigidBodyB = entityB.get_mut<RigidBody>();
+                
+                if(rigidBodyA.IsKinematic && rigidBodyB.IsKinematic)
+                    continue;
+                
+                if (rigidBodyA.IsSleeping && rigidBodyB.IsSleeping)
+                    continue;
+                
+                if (colliderA.IsTrigger || colliderB.IsTrigger)
+                    continue;
+
+                ResolveCollisionSimplified(worldTransformA, worldTransformB, rigidBodyA, rigidBodyB, collision.Manifold);
             }
         }
 
@@ -535,8 +540,6 @@ namespace Waldem
                 Vector3 ra = contactPosition - transformA.Position;
                 Vector3 rb = contactPosition - transformB.Position;
                 
-                // Vector3 velA = rigidBodyA.Velocity + cross(rigidBodyA.AngularVelocity, ra);
-                // Vector3 velB = rigidBodyB.Velocity + cross(rigidBodyB.AngularVelocity, rb);
                 Vector3 velA = rigidBodyA.Velocity;
                 Vector3 velB = rigidBodyB.Velocity;
                 
@@ -547,28 +550,6 @@ namespace Waldem
                 
                 if (!hasPenetration)
                     continue;
-                
-                // Matrix3 R = Matrix3(transformA.RotationQuat);
-                // Matrix3 inTensorA = R * rigidBodyA.InertiaTensor * transpose(R);
-                // R = Matrix3(transformB.RotationQuat);
-                // Matrix3 inTensorB = R * rigidBodyB.InertiaTensor * transpose(R);
-                
-                // float invMassSum = totalMass;
-                // if (!rigidBodyA.IsKinematic)
-                // {
-                //     Vector3 rxn = cross(ra, normal);
-                //     Vector3 raInertia = inTensorA * rxn;
-                //     invMassSum += dot(rxn, raInertia);
-                // }
-                // if (!rigidBodyB.IsKinematic)
-                // {
-                //     Vector3 rxn = cross(rb, normal);
-                //     Vector3 rbInertia = inTensorB * rxn;
-                //     invMassSum += dot(rxn, rbInertia);
-                // }
-                //
-                // if (invMassSum == 0.0f)
-                //     continue;
                 
                 float bounciness = (rigidBodyA.Bounciness + rigidBodyB.Bounciness) * 0.5f;
                 
@@ -581,7 +562,6 @@ namespace Waldem
                     continue;
                 
                 float j = -(1.0f + restitution) * contactVelocity;
-                // j /= invMassSum;
                 j *= perPointScale;
                 
                 if (fabs(j) < 1e-5f)
@@ -593,60 +573,11 @@ namespace Waldem
                 if (!rigidBodyA.IsKinematic && !rigidBodyA.IsSleeping)
                 {
                     rigidBodyA.Velocity -= impulse * massA;
-                    // rigidBodyA.AngularVelocity -= inTensorA * cross(ra, impulse);
                 }
                 if (!rigidBodyB.IsKinematic && !rigidBodyB.IsSleeping)
                 {
                     rigidBodyB.Velocity += impulse * massB;
-                    // rigidBodyB.AngularVelocity += inTensorB * cross(rb, impulse);
                 }
-                
-                // // --- Friction ---
-                // Vector3 raVel = cross(rigidBodyA.AngularVelocity, ra);
-                // Vector3 rbVel = cross(rigidBodyB.AngularVelocity, rb);
-                // Vector3 relVel = (rigidBodyB.Velocity + rbVel) - (rigidBodyA.Velocity + raVel);
-                //
-                // Vector3 tangent = relVel - normal * dot(relVel, normal);
-                // float tangentLen = length(tangent);
-                // if (tangentLen > 1e-6f)
-                //     tangent /= tangentLen;
-                // else
-                //     tangent = Vector3(0);
-                //
-                // float tangentMass = totalMass;
-                // if (!rigidBodyA.IsKinematic)
-                // {
-                //     Vector3 rxt = cross(ra, tangent);
-                //     tangentMass += dot(rxt, inTensorA * rxt);
-                // }
-                // if (!rigidBodyB.IsKinematic)
-                // {
-                //     Vector3 rxt = cross(rb, tangent);
-                //     tangentMass += dot(rxt, inTensorB * rxt);
-                // }
-                //
-                // if (tangentMass > 0.0f)
-                // {
-                //     float jt = -dot(relVel, tangent) / tangentMass;
-                //
-                //     float mu = (rigidBodyA.Friction + rigidBodyB.Friction) * 0.5f;
-                //     float maxFriction = fabs(j) * mu;
-                //     jt = glm::clamp(jt, -maxFriction, maxFriction);
-                //
-                //     Vector3 frictionImpulse = tangent * jt;
-                //     frictionImpulse *= perPointScale;
-                //
-                //     if (!rigidBodyA.IsKinematic)
-                //     {
-                //         rigidBodyA.Velocity -= frictionImpulse * massA;
-                //         rigidBodyA.AngularVelocity -= inTensorA * cross(ra, frictionImpulse);
-                //     }
-                //     if (!rigidBodyB.IsKinematic)
-                //     {
-                //         rigidBodyB.Velocity += frictionImpulse * massB;
-                //         rigidBodyB.AngularVelocity += inTensorB * cross(rb, frictionImpulse);
-                //     }
-                // }
 
                 if (contactPoint.Penetration > 0)
                 {
@@ -723,7 +654,6 @@ namespace Waldem
                 }
             });
             
-            // ECS::World.system().kind(flecs::OnUpdate).each([&]
             ECS::World.system().kind<ECS::OnFixedUpdate>().each([&]
             {
                 if(!EditorSimulation::ShouldRunRuntimeSystems()) return;
