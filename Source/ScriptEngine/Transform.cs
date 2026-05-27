@@ -1,6 +1,6 @@
 namespace Waldem
 {
-    public sealed class TransformComponent : Component
+    public sealed class Transform : Component
     {
         public Vector3 Position
         {

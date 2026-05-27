@@ -8,5 +8,15 @@ namespace Waldem
         {
             EntityId = entityId;
         }
+
+        public Entity Entity
+        {
+            get
+            {
+                Entity entity = new Entity();
+                entity.__SetEntityId(EntityId);
+                return entity;
+            }
+        }
     }
 }

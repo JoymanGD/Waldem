@@ -38,16 +38,16 @@ namespace Waldem
             return component;
         }
 
-        public TransformComponent Transform   => GetComponent<TransformComponent>();
-        public CameraComponent    Camera      => GetComponent<CameraComponent>();
+        public Transform Transform   => GetComponent<Transform>();
+        public Camera    Camera      => GetComponent<Camera>();
         public RigidBodyComponent RigidBody   => GetComponent<RigidBodyComponent>();
         public LightComponent     Light       => GetComponent<LightComponent>();
         public AnimatorComponent  Animator    => GetComponent<AnimatorComponent>();
 
         private static ComponentKind GetComponentKind(Type type)
         {
-            if (type == typeof(TransformComponent))  return ComponentKind.Transform;
-            if (type == typeof(CameraComponent))     return ComponentKind.Camera;
+            if (type == typeof(Transform))  return ComponentKind.Transform;
+            if (type == typeof(Camera))     return ComponentKind.Camera;
             if (type == typeof(RigidBodyComponent))  return ComponentKind.RigidBody;
             if (type == typeof(LightComponent))      return ComponentKind.Light;
             if (type == typeof(AnimatorComponent))   return ComponentKind.Animator;

@@ -1,6 +1,6 @@
 namespace Waldem
 {
-    public sealed class CameraComponent : Component
+    public sealed class Camera : Component
     {
         public float FieldOfView
         {
@@ -19,5 +19,26 @@ namespace Waldem
             get { return InternalCalls.Camera_GetFarPlane(EntityId); }
             set { InternalCalls.Camera_SetFarPlane(EntityId, value); }
         }
+        
+        public static Camera Main
+        {
+            get
+            {
+                if (main == null)
+                {
+                    ulong entityId = InternalCalls.Camera_GetMainEntity();
+                    if (entityId == 0)
+                        return null;
+
+                    var camera = new Camera();
+                    camera.Attach(entityId);
+                    main = camera;
+                }
+                
+                return main;
+            }
+        }
+
+        private static Camera main;
     }
 }

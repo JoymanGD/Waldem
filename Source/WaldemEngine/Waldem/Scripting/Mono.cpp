@@ -4,10 +4,12 @@
 #include <fstream>
 #include <mono/jit/jit.h>
 #include <mono/metadata/assembly.h>
+#include <mono/metadata/appdomain.h>
 #include <mono/metadata/class.h>
 #include <mono/metadata/debug-helpers.h>
 #include <mono/metadata/mono-gc.h>
 #include <mono/metadata/mono-debug.h>
+#include <mono/metadata/threads.h>
 
 #include "Waldem/Utils/FileUtils.h"
 
@@ -61,6 +63,7 @@ namespace Waldem
             (void)domain;
 #endif
         }
+
     }
 
     void Mono::Initialize()
@@ -106,8 +109,6 @@ namespace Waldem
         if(MonoAppDomain != nullptr)
         {
             mono_domain_set(MonoRootDomain, false);
-            UnloadDebugDomain(MonoAppDomain);
-            mono_domain_unload(MonoAppDomain);
             MonoAppDomain = nullptr;
         }
 
@@ -131,13 +132,14 @@ namespace Waldem
 
         if(MonoAppDomain != nullptr)
         {
+            mono_thread_attach(MonoRootDomain);
             mono_domain_set(MonoRootDomain, false);
-            UnloadDebugDomain(MonoAppDomain);
-            mono_domain_unload(MonoAppDomain);
             MonoAppDomain = nullptr;
         }
 
-        MonoAppDomain = mono_domain_create_appdomain((char*)"WaldemAppDomain", nullptr);
+        static int domainCounter = 0;
+        std::string domainName = "WaldemAppDomain_" + std::to_string(++domainCounter);
+        MonoAppDomain = mono_domain_create_appdomain((char*)domainName.c_str(), nullptr);
         if(MonoAppDomain == nullptr)
         {
             WD_CORE_ERROR("Failed to recreate Mono app domain");
@@ -146,6 +148,7 @@ namespace Waldem
 
         CreateDebugDomain(MonoAppDomain);
         mono_domain_set(MonoAppDomain, true);
+        WD_CORE_WARN("Reloaded scripts by creating a fresh Mono app domain without unloading the previous one");
         return true;
     }
 

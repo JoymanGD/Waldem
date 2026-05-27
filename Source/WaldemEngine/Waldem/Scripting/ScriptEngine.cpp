@@ -40,6 +40,8 @@ namespace Waldem
         using ScriptFieldType = ScriptEngine::ScriptFieldType;
         using ScriptFieldValue = ScriptEngine::ScriptFieldValue;
         using ScriptFieldDescriptor = ScriptEngine::ScriptFieldDescriptor;
+        Path CurrentRuntimeAssemblyPath;
+        uint64_t RuntimeAssemblyVersion = 0;
 
         std::string ToUtf8Path(const Path& path)
         {
@@ -346,37 +348,21 @@ namespace Waldem
 
         Path ResolveScriptAssemblyPath()
         {
+            if(!CurrentRuntimeAssemblyPath.empty() && exists(CurrentRuntimeAssemblyPath))
+            {
+                return CurrentRuntimeAssemblyPath;
+            }
+
             const Path currentFolder = GetCurrentFolder();
             const Path localAssemblyPath = currentFolder / "ScriptEngine.dll";
             const Path siblingAssemblyPath = currentFolder.parent_path() / "ScriptEngine" / "ScriptEngine.dll";
 
-            const bool hasLocalAssembly = exists(localAssemblyPath);
-            const bool hasSiblingAssembly = exists(siblingAssemblyPath);
-
-            if(hasLocalAssembly && hasSiblingAssembly)
+            if(exists(localAssemblyPath))
             {
-                std::error_code errorCode;
-                const auto localWriteTime = last_write_time(localAssemblyPath, errorCode);
-                if(errorCode)
-                {
-                    return localAssemblyPath;
-                }
-
-                const auto siblingWriteTime = last_write_time(siblingAssemblyPath, errorCode);
-                if(errorCode)
-                {
-                    return localAssemblyPath;
-                }
-
-                return siblingWriteTime > localWriteTime ? siblingAssemblyPath : localAssemblyPath;
+                return localAssemblyPath;
             }
 
-            if(hasSiblingAssembly)
-            {
-                return siblingAssemblyPath;
-            }
-
-            return localAssemblyPath;
+            return siblingAssemblyPath;
         }
 
         std::string ReadCommandOutput(const std::string& command)
@@ -508,6 +494,7 @@ namespace Waldem
         Runtime = runtime;
         AssemblyCache.clear();
         EntityInstances.clear();
+        CurrentRuntimeAssemblyPath.clear();
 
         if(Runtime == nullptr)
         {
@@ -533,6 +520,7 @@ namespace Waldem
         EntityInstances.clear();
         AssemblyCache.clear();
         CoreAssembly = nullptr;
+        CurrentRuntimeAssemblyPath.clear();
         Runtime = nullptr;
     }
 
@@ -578,8 +566,10 @@ namespace Waldem
         const Path configuration = GetCurrentFolder().parent_path().filename();
         const Path sourceAssemblyPath = ResolveProjectRootPath() / "Build" / configuration / "ScriptEngine" / "ScriptEngine.dll";
         const Path sourcePdbPath = sourceAssemblyPath.parent_path() / "ScriptEngine.pdb";
-        const Path targetAssemblyPath = GetCurrentFolder() / "ScriptEngine.dll";
-        const Path targetPdbPath = GetCurrentFolder() / "ScriptEngine.pdb";
+        const Path runtimeFolder = GetCurrentFolder();
+        const std::string versionSuffix = ".reload_" + std::to_string(++RuntimeAssemblyVersion);
+        const Path targetAssemblyPath = runtimeFolder / ("ScriptEngine" + versionSuffix + ".dll");
+        const Path targetPdbPath = runtimeFolder / ("ScriptEngine" + versionSuffix + ".pdb");
 
         std::error_code errorCode;
         copy_file(sourceAssemblyPath, targetAssemblyPath, std::filesystem::copy_options::overwrite_existing, errorCode);
@@ -595,6 +585,8 @@ namespace Waldem
             errorCode.clear();
             copy_file(sourcePdbPath, targetPdbPath, std::filesystem::copy_options::overwrite_existing, errorCode);
         }
+
+        CurrentRuntimeAssemblyPath = targetAssemblyPath;
 
         return true;
     }
@@ -614,6 +606,16 @@ namespace Waldem
             scriptedEntities.push_back(entity.id());
         });
 
+        if(rebuildAssembly && !RebuildScriptAssembly())
+        {
+            return false;
+        }
+
+        if(!CopyAssemblyToRuntimeFolder())
+        {
+            return false;
+        }
+
         for(auto& [entityId, instance] : EntityInstances)
         {
             InvokeNoArgs(instance, instance.OnDestroyMethod);
@@ -626,16 +628,6 @@ namespace Waldem
         EntityInstances.clear();
         AssemblyCache.clear();
         CoreAssembly = nullptr;
-
-        if(rebuildAssembly && !RebuildScriptAssembly())
-        {
-            return false;
-        }
-
-        if(!CopyAssemblyToRuntimeFolder())
-        {
-            return false;
-        }
 
         if(!Runtime->ReloadAppDomain())
         {
@@ -928,6 +920,9 @@ namespace Waldem
         instance.OnUpdateMethod = Runtime->GetMethod(klass, "OnUpdate", 1);
         instance.OnFixedUpdateMethod = Runtime->GetMethod(klass, "OnFixedUpdate", 1);
         instance.OnDestroyMethod = Runtime->GetMethod(klass, "OnDestroy", 0);
+        instance.OnCollisionEnterMethod = Runtime->GetMethod(klass, "OnCollisionEnterInternal", 1);
+        instance.OnCollisionStayMethod = Runtime->GetMethod(klass, "OnCollisionStayInternal", 1);
+        instance.OnCollisionExitMethod = Runtime->GetMethod(klass, "OnCollisionExitInternal", 1);
         instance.GCHandle = mono_gchandle_new(instanceObject, true);
 
         EntityInstances[entity.id()] = instance;
@@ -1040,5 +1035,146 @@ namespace Waldem
         }
 
         InvokeSingleFloat(*instance, instance->OnFixedUpdateMethod, fixedDeltaTime);
+    }
+
+    void ScriptEngine::OnCollisionEnter(ECS::Entity entity, ECS::Entity other, const ScriptComponent& scriptComponent, const ContactsManifold& contacts)
+    {
+        ScriptInstance* instance = GetInstance(entity.id());
+        if(instance == nullptr)
+        {
+            if(!CreateEntityInstance(entity, scriptComponent))
+            {
+                return;
+            }
+
+            instance = GetInstance(entity.id());
+            if(instance == nullptr)
+            {
+                return;
+            }
+        }
+        
+        if(instance->OnCollisionEnterMethod == nullptr)
+        {
+            return;
+        }
+
+        MonoObject* managedInstance = GetManagedInstance(*instance);
+        if(managedInstance == nullptr)
+        {
+            return;
+        }
+
+        if(contacts.Points.Num() <= 0)
+        {
+            return;
+        }
+
+        const ContactPoint& firstContactPoint = contacts.Points.First();
+        
+        ContactPointSimplified contactPoint;
+        contactPoint.Position = firstContactPoint.Position;
+        contactPoint.PositionA = firstContactPoint.PositionA;
+        contactPoint.PositionB = firstContactPoint.PositionB;
+        contactPoint.Normal = firstContactPoint.Normal;
+        contactPoint.Penetration = firstContactPoint.Penetration;
+        contactPoint.OtherEntityId = other.id();
+
+        void* params[1] = { &contactPoint };
+        Runtime->InvokeMethod(managedInstance, instance->OnCollisionEnterMethod, params);
+    }
+
+    void ScriptEngine::OnCollisionStay(ECS::Entity entity, ECS::Entity other, const ScriptComponent& scriptComponent, const ContactsManifold& contacts)
+    {
+        ScriptInstance* instance = GetInstance(entity.id());
+        if(instance == nullptr)
+        {
+            if(!CreateEntityInstance(entity, scriptComponent))
+            {
+                return;
+            }
+
+            instance = GetInstance(entity.id());
+            if(instance == nullptr)
+            {
+                return;
+            }
+        }
+        
+        if(instance->OnCollisionStayMethod == nullptr)
+        {
+            return;
+        }
+
+        MonoObject* managedInstance = GetManagedInstance(*instance);
+        if(managedInstance == nullptr)
+        {
+            return;
+        }
+
+        if(contacts.Points.Num() <= 0)
+        {
+            return;
+        }
+
+        const ContactPoint& firstContactPoint = contacts.Points.First();
+        
+        ContactPointSimplified contactPoint;
+        contactPoint.Position = firstContactPoint.Position;
+        contactPoint.PositionA = firstContactPoint.PositionA;
+        contactPoint.PositionB = firstContactPoint.PositionB;
+        contactPoint.Normal = firstContactPoint.Normal;
+        contactPoint.Penetration = firstContactPoint.Penetration;
+        contactPoint.OtherEntityId = other.id();
+
+        void* params[1] = { &contactPoint };
+        Runtime->InvokeMethod(managedInstance, instance->OnCollisionStayMethod, params);
+    }
+
+    void ScriptEngine::OnCollisionExit(ECS::Entity entity, ECS::Entity other, const ScriptComponent& scriptComponent, const ContactsManifold& contacts)
+    {
+        ScriptInstance* instance = GetInstance(entity.id());
+        if(instance == nullptr)
+        {
+            if(!CreateEntityInstance(entity, scriptComponent))
+            {
+                return;
+            }
+
+            instance = GetInstance(entity.id());
+            if(instance == nullptr)
+            {
+                return;
+            }
+        }
+        
+        if(instance->OnCollisionExitMethod == nullptr)
+        {
+            return;
+        }
+
+        MonoObject* managedInstance = GetManagedInstance(*instance);
+        if(managedInstance == nullptr)
+        {
+            return;
+        }
+
+        if(contacts.Points.Num() <= 0)
+        {
+            return;
+        }
+
+        const ContactPoint& firstContactPoint = contacts.Points.First();
+        
+        ContactPointSimplified contactPoint;
+        contactPoint.Position = firstContactPoint.Position;
+        contactPoint.PositionA = firstContactPoint.PositionA;
+        contactPoint.PositionB = firstContactPoint.PositionB;
+        contactPoint.Normal = firstContactPoint.Normal;
+        contactPoint.Penetration = firstContactPoint.Penetration;
+        contactPoint.OtherEntityId = other.id();
+
+        void* params[1] = { &contactPoint };
+        Runtime->InvokeMethod(managedInstance, instance->OnCollisionExitMethod, params);
     }
 }

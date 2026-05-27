@@ -8,19 +8,18 @@ namespace Waldem
         
         protected override void OnUpdate(float dt)
         {
-            
             if (Input.IsKeyPressed(KeyCode.R))
             {
-                var camera = GetComponent<CameraComponent>();
+                var camera = GetComponent<Camera>();
                 camera.FieldOfView += dt * ZoomSpeed;
             }
             if (Input.IsKeyPressed(KeyCode.F))
             {
-                var camera = GetComponent<CameraComponent>();
+                var camera = GetComponent<Camera>();
                 camera.FieldOfView -= dt * ZoomSpeed;
             }
             
-            var transform = GetComponent<TransformComponent>();
+            var transform = GetComponent<Transform>();
             transform.Forward = new Vector3(0, 0, 1);
         }
     }
