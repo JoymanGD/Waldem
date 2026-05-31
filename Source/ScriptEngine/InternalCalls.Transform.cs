@@ -35,9 +35,27 @@ namespace Waldem
         internal static extern void Transform_Rotate(ulong entityId, ref Vector3 rotationDelta);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Transform_GetRotationQuaternion(ulong entityId, out Quaternion rotation);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Transform_SetRotationQuaternion(ulong entityId, ref Quaternion rotation);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Transform_RotateQuaternion(ulong entityId, ref Quaternion rotationDelta);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern void Transform_GetScale(ulong entityId, out Vector3 scale);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern void Transform_SetScale(ulong entityId, ref Vector3 scale);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Transform_LookAt(ulong entityId, ref Vector3 target);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Transform_LookAtWithUp(ulong entityId, ref Vector3 target, ref Vector3 up);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Transform_RotateAround(ulong entityId, ref Vector3 point, ref Vector3 axis, float angleDegrees);
     }
 }

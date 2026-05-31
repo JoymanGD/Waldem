@@ -3,6 +3,7 @@
 
 #include "Waldem/AssetsManagement/ContentManager.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
+#include "Waldem/ECS/Components/SkeletalMeshComponent.h"
 #include "Waldem/ECS/Components/Transform.h"
 #include "Waldem/Renderer/Model/Model.h"
 
@@ -96,9 +97,23 @@ namespace Waldem::ModelSpawner
                     }
                 }
 
-                MeshComponent meshComponent;
-                meshComponent.MeshRef.Reference = node.MeshPaths[meshIdx];
-                targetEntity.set<MeshComponent>(meshComponent);
+                const MeshAssetKind meshKind = CContentManager::GetMeshAssetKind(node.MeshPaths[meshIdx]);
+                if (meshKind == MeshAssetKind::Skeletal)
+                {
+                    SkeletalMeshComponent skeletalMeshComponent;
+                    skeletalMeshComponent.MeshRef.Reference = node.MeshPaths[meshIdx];
+                    targetEntity.set<SkeletalMeshComponent>(skeletalMeshComponent);
+                }
+                else if (meshKind == MeshAssetKind::Static)
+                {
+                    MeshComponent meshComponent;
+                    meshComponent.MeshRef.Reference = node.MeshPaths[meshIdx];
+                    targetEntity.set<MeshComponent>(meshComponent);
+                }
+                else
+                {
+                    WD_CORE_ERROR("Failed to determine mesh type for model node asset {0}.", node.MeshPaths[meshIdx].string());
+                }
             }
         }
 

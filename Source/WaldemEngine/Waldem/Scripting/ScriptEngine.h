@@ -24,7 +24,8 @@ namespace Waldem
             Float,
             Int,
             Bool,
-            Vector3
+            Vector3,
+            Quaternion
         };
 
         struct ScriptFieldValue
@@ -34,6 +35,7 @@ namespace Waldem
             int32_t IntValue = 0;
             bool BoolValue = false;
             Vector3 Vector3Value = { 0, 0, 0 };
+            Quaternion QuaternionValue = { 1, 0, 0, 0 };
         };
 
         struct ScriptFieldDescriptor
@@ -55,9 +57,8 @@ namespace Waldem
         static void DestroyEntityInstance(ECS::EntityT entityId);
         static void OnUpdate(ECS::Entity entity, const ScriptComponent& scriptComponent, float deltaTime);
         static void OnFixedUpdate(ECS::Entity entity, const ScriptComponent& scriptComponent, float fixedDeltaTime);
-        static void OnCollisionEnter(ECS::Entity entity, ECS::Entity other, const ScriptComponent& scriptComponent, const ContactsManifold& contacts);
-        static void OnCollisionStay(ECS::Entity entity, ECS::Entity other, const ScriptComponent& scriptComponent, const ContactsManifold& contacts);
-        static void OnCollisionExit(ECS::Entity entity, ECS::Entity other, const ScriptComponent& scriptComponent, const ContactsManifold& contacts);
+        static void OnCollisionEvent(CollisionEventType eventType, ECS::Entity entity, ECS::Entity other, const ScriptComponent& scriptComponent, const ContactsManifold& contacts);
+        static void OnTriggerEvent(CollisionEventType eventType, ECS::Entity entity, ECS::Entity other, const ScriptComponent& scriptComponent);
 
     private:
         struct ScriptInstance
@@ -71,6 +72,9 @@ namespace Waldem
             MonoMethod* OnCollisionEnterMethod = nullptr;
             MonoMethod* OnCollisionStayMethod = nullptr;
             MonoMethod* OnCollisionExitMethod = nullptr;
+            MonoMethod* OnTriggerEnterMethod = nullptr;
+            MonoMethod* OnTriggerStayMethod = nullptr;
+            MonoMethod* OnTriggerExitMethod = nullptr;
             uint32_t GCHandle = 0;
         };
 

@@ -7,3 +7,7 @@
 [submodule "Vendor/tinycudann"]
 	path = Vendor/tinycudann
 	url = https://github.com/NVlabs/tiny-cuda-nn.git
+[submodule "Vendor/PhysX"]
+	path = Vendor/PhysX
+	url = https://github.com/NVIDIA-Omniverse/PhysX.git
+	branch = release/110.0

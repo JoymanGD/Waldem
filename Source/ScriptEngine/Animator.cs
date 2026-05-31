@@ -1,6 +1,6 @@
 namespace Waldem
 {
-    public sealed class AnimatorComponent : Component
+    public sealed class Animator : Component
     {
         public void Play()
         {

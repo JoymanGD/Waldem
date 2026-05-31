@@ -55,17 +55,32 @@ namespace Waldem
             {
                 collider.OnCollisionEnter = [entity, scriptComponent](ECS::Entity other, const ContactsManifold& contacts)
                 {
-                    ScriptEngine::OnCollisionEnter(entity, other, scriptComponent, contacts);
+                    ScriptEngine::OnCollisionEvent(CollisionEventType::Enter, entity, other, scriptComponent, contacts);
                 };
                 
                 collider.OnCollisionStay = [entity, scriptComponent](ECS::Entity other, const ContactsManifold& contacts)
                 {
-                    ScriptEngine::OnCollisionStay(entity, other, scriptComponent, contacts);
+                    ScriptEngine::OnCollisionEvent(CollisionEventType::Stay, entity, other, scriptComponent, contacts);
                 };
                 
                 collider.OnCollisionExit = [entity, scriptComponent](ECS::Entity other, const ContactsManifold& contacts)
                 {
-                    ScriptEngine::OnCollisionExit(entity, other, scriptComponent, contacts);
+                    ScriptEngine::OnCollisionEvent(CollisionEventType::Exit, entity, other, scriptComponent, contacts);
+                };
+                
+                collider.OnTriggerEnter = [entity, scriptComponent](ECS::Entity other)
+                {
+                    ScriptEngine::OnTriggerEvent(CollisionEventType::Enter, entity, other, scriptComponent);
+                };
+                
+                collider.OnTriggerStay = [entity, scriptComponent](ECS::Entity other)
+                {
+                    ScriptEngine::OnTriggerEvent(CollisionEventType::Stay, entity, other, scriptComponent);
+                };
+                
+                collider.OnTriggerExit = [entity, scriptComponent](ECS::Entity other)
+                {
+                    ScriptEngine::OnTriggerEvent(CollisionEventType::Exit, entity, other, scriptComponent);
                 };
             });
         }

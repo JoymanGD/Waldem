@@ -1,6 +1,6 @@
 namespace Waldem
 {
-    public sealed class LightComponent : Component
+    public sealed class Light : Component
     {
         public Vector3 Color
         {

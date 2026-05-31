@@ -38,10 +38,21 @@ namespace Waldem::Bindings
             default: return false;
             }
         }
+
+        void Entity_Destroy(uint64_t entityId)
+        {
+            ECS::Entity entity = GetEntityChecked(entityId);
+
+            if(entity.is_alive())
+            {
+                entity.destruct();
+            }
+        }
     }
 
     void RegisterEntityCalls(Mono* runtime)
     {
         BIND(runtime, Entity_HasComponent);
+        BIND(runtime, Entity_Destroy);
     }
 }

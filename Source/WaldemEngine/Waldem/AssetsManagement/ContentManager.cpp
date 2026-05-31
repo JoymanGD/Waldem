@@ -6,6 +6,43 @@
 
 namespace Waldem
 {
+    namespace
+    {
+        Path ResolveAssetPath(const Path& inPath)
+        {
+            if (inPath.is_relative())
+            {
+                return Path(CONTENT_PATH) / inPath;
+            }
+
+            return inPath;
+        }
+
+        bool ReadMeshUInt32(const unsigned char* data, size_t dataSize, size_t& offset, uint32_t& outValue)
+        {
+            if (offset + sizeof(uint32_t) > dataSize)
+            {
+                return false;
+            }
+
+            memcpy(&outValue, data + offset, sizeof(uint32_t));
+            offset += sizeof(uint32_t);
+            return true;
+        }
+
+        bool ReadMeshUInt64(const unsigned char* data, size_t dataSize, size_t& offset, uint64_t& outValue)
+        {
+            if (offset + sizeof(uint64_t) > dataSize)
+            {
+                return false;
+            }
+
+            memcpy(&outValue, data + offset, sizeof(uint64_t));
+            offset += sizeof(uint64_t);
+            return true;
+        }
+    }
+
     WArray<Asset*> CContentManager::ImportInternal(const Path& from, Path& to, const ModelImportSettings* modelImportSettings)
     {
         auto extension = from.extension().string();
@@ -192,6 +229,103 @@ namespace Waldem
         std::lock_guard<std::mutex> lock(ImportLabelMutex);
         outLabel = ImportLabel;
         return inProgress;
+    }
+
+    MeshAssetKind CContentManager::GetMeshAssetKind(const Path& inPath)
+    {
+        Path finalPath = ResolveAssetPath(inPath);
+        if (!exists(finalPath))
+        {
+            WD_CORE_ERROR("Failed to inspect mesh asset: {0}", finalPath.string());
+            return MeshAssetKind::Unknown;
+        }
+
+        std::ifstream inFile(finalPath.c_str(), std::ios::binary | std::ios::ate);
+        if (!inFile.is_open())
+        {
+            WD_CORE_ERROR("Failed to open mesh asset for inspection: {0}", finalPath.string());
+            return MeshAssetKind::Unknown;
+        }
+
+        std::streamsize streamSize = inFile.tellg();
+        if (streamSize <= 0)
+        {
+            WD_CORE_ERROR("Mesh asset is empty: {0}", finalPath.string());
+            return MeshAssetKind::Unknown;
+        }
+
+        inFile.seekg(0, std::ios::beg);
+
+        std::vector<unsigned char> buffer((size_t)streamSize);
+        if (!inFile.read((char*)buffer.data(), streamSize))
+        {
+            WD_CORE_ERROR("Failed to read mesh asset for inspection: {0}", finalPath.string());
+            return MeshAssetKind::Unknown;
+        }
+
+        const size_t dataSize = buffer.size();
+        if (dataSize < sizeof(uint64_t) + sizeof(uint32_t) * 2 + sizeof(uint64_t) + sizeof(AABB) + sizeof(Matrix4))
+        {
+            WD_CORE_ERROR("Mesh asset is too small to inspect: {0}", finalPath.string());
+            return MeshAssetKind::Unknown;
+        }
+
+        size_t offset = sizeof(uint64_t); // Skip asset hash header.
+
+        uint32_t vertexCount = 0;
+        if (!ReadMeshUInt32(buffer.data(), dataSize, offset, vertexCount))
+        {
+            return MeshAssetKind::Unknown;
+        }
+
+        const size_t vertexBytes = (size_t)vertexCount * sizeof(Vertex);
+        if (vertexCount > 0 && vertexBytes / sizeof(Vertex) != vertexCount)
+        {
+            return MeshAssetKind::Unknown;
+        }
+
+        if (offset + vertexBytes > dataSize)
+        {
+            return MeshAssetKind::Unknown;
+        }
+        offset += vertexBytes;
+
+        uint32_t indexCount = 0;
+        if (!ReadMeshUInt32(buffer.data(), dataSize, offset, indexCount))
+        {
+            return MeshAssetKind::Unknown;
+        }
+
+        const size_t indexBytes = (size_t)indexCount * sizeof(uint32_t);
+        if (indexCount > 0 && indexBytes / sizeof(uint32_t) != indexCount)
+        {
+            return MeshAssetKind::Unknown;
+        }
+
+        if (offset + indexBytes > dataSize)
+        {
+            return MeshAssetKind::Unknown;
+        }
+        offset += indexBytes;
+
+        uint64_t pathLength = 0;
+        if (!ReadMeshUInt64(buffer.data(), dataSize, offset, pathLength))
+        {
+            return MeshAssetKind::Unknown;
+        }
+
+        const size_t staticTailSize = sizeof(AABB) + sizeof(Matrix4);
+        if (offset > dataSize || dataSize - offset < staticTailSize)
+        {
+            return MeshAssetKind::Unknown;
+        }
+
+        const size_t remainingAfterLength = dataSize - offset;
+        const bool isStaticMesh =
+            pathLength <= remainingAfterLength &&
+            pathLength + staticTailSize == remainingAfterLength;
+
+        return isStaticMesh ? MeshAssetKind::Static : MeshAssetKind::Skeletal;
     }
 
     template<typename T>

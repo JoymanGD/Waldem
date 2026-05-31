@@ -74,7 +74,11 @@ namespace Waldem
             }, [&]
             {
                 DeleteSelectedEntity = true;
-            }, [] { return EditorShortcutContexts::Has(EditorShortcutContext::Hierarchy); });
+            }, []
+            {
+                return EditorShortcutContexts::Has(EditorShortcutContext::Hierarchy)
+                    || EditorShortcutContexts::Has(EditorShortcutContext::EditorViewport);
+            });
 
             inputManager->SubscribeToDynamicShortcut([]
             {
@@ -105,7 +109,11 @@ namespace Waldem
                     auto cloneEntity = ECS::World.entity(cloneCommandPtr->GetCloneId());
                     cloneEntity.add<Selected>();
                 }
-            }, [] { return EditorShortcutContexts::Has(EditorShortcutContext::Hierarchy); });
+            }, []
+            {
+                return EditorShortcutContexts::Has(EditorShortcutContext::Hierarchy)
+                    || EditorShortcutContexts::Has(EditorShortcutContext::EditorViewport);
+            });
 
             inputManager->SubscribeToDynamicShortcut([]
             {

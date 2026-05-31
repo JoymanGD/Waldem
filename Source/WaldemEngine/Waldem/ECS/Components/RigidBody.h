@@ -29,11 +29,25 @@ namespace Waldem
         FIELD()
         Vector3 Torque = Vector3(0);
         FIELD()
+        Vector3 Impulse = Vector3(0);
+        FIELD()
         float Bounciness = 0.f;
         FIELD()
         float Friction = 1.f;
         FIELD()
         float MaxAngularSpeed = 10.f;
+        FIELD()
+        bool FreezePositionX = false;
+        FIELD()
+        bool FreezePositionY = false;
+        FIELD()
+        bool FreezePositionZ = false;
+        FIELD()
+        bool FreezeRotationX = false;
+        FIELD()
+        bool FreezeRotationY = false;
+        FIELD()
+        bool FreezeRotationZ = false;
         Matrix3 InertiaTensor = Matrix3(0);
         Matrix3 InvInertiaTensor = Matrix3(0);
         uint SleepCounter = 0;
@@ -50,9 +64,14 @@ namespace Waldem
             Torque += cross(deltaPos, f);
         }
 
+        void ApplyImpulse(const Vector3& impulse)
+        {
+            Impulse += impulse;
+        }
+
         void Reset()
         {
-            Force = Torque = Vector3(0);
+            Force = Torque = Impulse = Vector3(0);
         }
 
         float GetInvMass() { return IsKinematic ? 0.f : 1.0f / Mass; }

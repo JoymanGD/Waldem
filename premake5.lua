@@ -28,6 +28,32 @@ IncludeDir["Generated"] = "Intermediate/Generated"
 IncludeDir["TinyCudaNN"] = "Vendor/tinycudann/include"
 IncludeDir["TinyCudaNNDep"] = "Vendor/tinycudann/dependencies"
 
+local DefaultPhysXRoot = path.getabsolute(path.join(rootDir, "Vendor/PhysX/physx"))
+local DefaultPhysXIncludeDir = path.join(DefaultPhysXRoot, "include")
+local DefaultPhysXLibDir = path.join(DefaultPhysXRoot, "bin/win.x86_64.vc143.md/release")
+
+local PhysXRootDir = os.getenv("PHYSX_ROOT_DIR")
+if PhysXRootDir == nil or PhysXRootDir == "" then
+    PhysXRootDir = DefaultPhysXRoot
+end
+
+local PhysXIncludeDir = os.getenv("PHYSX_INCLUDE_DIR")
+if PhysXIncludeDir == nil or PhysXIncludeDir == "" then
+    PhysXIncludeDir = DefaultPhysXIncludeDir
+end
+
+local PhysXLibDir = os.getenv("PHYSX_LIB_DIR")
+if PhysXLibDir == nil or PhysXLibDir == "" then
+    PhysXLibDir = DefaultPhysXLibDir
+end
+
+local PhysXBinDir = os.getenv("PHYSX_BIN_DIR")
+if PhysXBinDir == nil or PhysXBinDir == "" then
+    PhysXBinDir = PhysXLibDir
+end
+
+local HasPhysX = os.isdir(PhysXIncludeDir) and os.isfile(path.join(PhysXLibDir, "PhysX_64.lib"))
+
 local function SetDefaultPaths()
     targetdir ("Build/" .. OutputDir .. "/%{prj.name}")
     objdir ("Intermediate/" .. OutputDir .. "/%{prj.name}")
@@ -81,6 +107,12 @@ local function SetupCommonCppProject()
         'CONTENT_PATH=L"' .. contentPath .. '"'
     }
 
+    if HasPhysX then
+        defines { "WD_WITH_PHYSX=1" }
+    else
+        defines { "WD_WITH_PHYSX=0" }
+    end
+
     filter "system:windows"
         systemversion "latest"
         defines { "WD_PLATFORM_WINDOWS" }
@@ -88,11 +120,14 @@ local function SetupCommonCppProject()
 
     filter "configurations:Debug"
         defines { "WD_DEBUG", "_ALLOW_ITERATOR_DEBUG_LEVEL_MISMATCH", "_ALLOW_RUNTIME_LIBRARY_MISMATCH" }
+        if HasPhysX then
+            defines { "NDEBUG" }
+        end
         runtime "Release"
         symbols "on"
 
     filter "configurations:Release"
-        defines { "WD_RELEASE" }
+        defines { "WD_RELEASE", "NDEBUG" }
         runtime "Release"
         optimize "on"
 
@@ -138,6 +173,13 @@ local function SetupPostBuild(prjName)
         'xcopy /Y "%{wks.location}Vendor\\dxc\\bin\\x64\\dxil.dll" "%{cfg.targetdir}\\"',
         'xcopy /Y "%{wks.location}Vendor\\assimp\\lib\\assimp-vc142-mt.dll" "%{cfg.targetdir}\\"'
     }
+
+    if HasPhysX and PhysXBinDir ~= nil and PhysXBinDir ~= "" then
+        postbuildcommands
+        {
+            'if exist "' .. PhysXBinDir .. '\\*.dll" xcopy /Y "' .. PhysXBinDir .. '\\*.dll" "%{cfg.targetdir}\\"'
+        }
+    end
 end
 
 group "Vendor"
@@ -167,7 +209,7 @@ project "WaldemEngine"
     pchheader "wdpch.h"
     pchsource (SourceDir .. "/WaldemEngine/wdpch.cpp")
 
-    dependson { "WaldemHeaderTool", "ScriptEngine" }
+    dependson { "WaldemHeaderTool" }
 
     includedirs
     {
@@ -177,6 +219,28 @@ project "WaldemEngine"
         "%{IncludeDir.TinyCudaNNDep}",
         "%{IncludeDir.TinyCudaNNDep}/fmt/include",
     }
+
+    if HasPhysX then
+        includedirs
+        {
+            PhysXIncludeDir
+        }
+
+        libdirs
+        {
+            PhysXLibDir
+        }
+
+        links
+        {
+            "PhysX_64.lib",
+            "PhysXCommon_64.lib",
+            "PhysXFoundation_64.lib",
+            "PhysXCooking_64.lib",
+            "PhysXExtensions_static_64.lib",
+            "PhysXPvdSDK_static_64.lib",
+        }
+    end
 
     files
     {

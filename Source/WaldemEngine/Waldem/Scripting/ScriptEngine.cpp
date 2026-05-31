@@ -22,6 +22,7 @@
 #include "Bindings/EntityBindings.h"
 #include "Bindings/InputBindings.h"
 #include "Bindings/LightBindings.h"
+#include "Bindings/QuaternionBindings.h"
 #include "Bindings/RigidBodyBindings.h"
 #include "Bindings/TimeBindings.h"
 #include "Bindings/TransformBindings.h"
@@ -32,6 +33,14 @@ namespace Waldem
     {
         struct ScriptVector3
         {
+            float x = 0.0f;
+            float y = 0.0f;
+            float z = 0.0f;
+        };
+
+        struct ScriptQuaternion
+        {
+            float w = 1.0f;
             float x = 0.0f;
             float y = 0.0f;
             float z = 0.0f;
@@ -84,6 +93,13 @@ namespace Waldem
                     strcmp(className, "Vector3") == 0)
                 {
                     return ScriptFieldType::Vector3;
+                }
+
+                if(classNamespace != nullptr && className != nullptr &&
+                    strcmp(classNamespace, "Waldem") == 0 &&
+                    strcmp(className, "Quaternion") == 0)
+                {
+                    return ScriptFieldType::Quaternion;
                 }
 
                 return ScriptFieldType::None;
@@ -139,6 +155,13 @@ namespace Waldem
                 value.Vector3Value = Vector3(vectorValue.x, vectorValue.y, vectorValue.z);
                 break;
             }
+            case ScriptFieldType::Quaternion:
+            {
+                ScriptQuaternion quaternionValue;
+                mono_field_get_value(instanceObject, field, &quaternionValue);
+                value.QuaternionValue = Quaternion(quaternionValue.w, quaternionValue.x, quaternionValue.y, quaternionValue.z);
+                break;
+            }
             default:
                 break;
             }
@@ -166,6 +189,16 @@ namespace Waldem
                 vectorValue.y = value.Vector3Value.y;
                 vectorValue.z = value.Vector3Value.z;
                 mono_field_set_value(instanceObject, field, &vectorValue);
+                break;
+            }
+            case ScriptFieldType::Quaternion:
+            {
+                ScriptQuaternion quaternionValue;
+                quaternionValue.w = value.QuaternionValue.w;
+                quaternionValue.x = value.QuaternionValue.x;
+                quaternionValue.y = value.QuaternionValue.y;
+                quaternionValue.z = value.QuaternionValue.z;
+                mono_field_set_value(instanceObject, field, &quaternionValue);
                 break;
             }
             default:
@@ -235,6 +268,24 @@ namespace Waldem
                         }
                     }
                     break;
+                case ScriptFieldType::Quaternion:
+                    if(entry.HasMember("quaternion") && entry["quaternion"].IsObject())
+                    {
+                        const auto& quaternionObject = entry["quaternion"];
+                        if(quaternionObject.HasMember("w") && quaternionObject["w"].IsNumber() &&
+                            quaternionObject.HasMember("x") && quaternionObject["x"].IsNumber() &&
+                            quaternionObject.HasMember("y") && quaternionObject["y"].IsNumber() &&
+                            quaternionObject.HasMember("z") && quaternionObject["z"].IsNumber())
+                        {
+                            value.QuaternionValue = Quaternion(
+                                quaternionObject["w"].GetFloat(),
+                                quaternionObject["x"].GetFloat(),
+                                quaternionObject["y"].GetFloat(),
+                                quaternionObject["z"].GetFloat());
+                            outValues[fieldName] = value;
+                        }
+                    }
+                    break;
                 default:
                     break;
                 }
@@ -280,6 +331,19 @@ namespace Waldem
                     writer.Double(value.Vector3Value.y);
                     writer.Key("z");
                     writer.Double(value.Vector3Value.z);
+                    writer.EndObject();
+                    break;
+                case ScriptFieldType::Quaternion:
+                    writer.Key("quaternion");
+                    writer.StartObject();
+                    writer.Key("w");
+                    writer.Double(value.QuaternionValue.w);
+                    writer.Key("x");
+                    writer.Double(value.QuaternionValue.x);
+                    writer.Key("y");
+                    writer.Double(value.QuaternionValue.y);
+                    writer.Key("z");
+                    writer.Double(value.QuaternionValue.z);
                     writer.EndObject();
                     break;
                 default:
@@ -549,7 +613,7 @@ namespace Waldem
 
         const std::wstring commandLine =
             L"\"" + Path(msbuildPathString).wstring() + L"\" \"" + csprojPath.wstring() +
-            L"\" /t:Build /p:Configuration=" + configuration + L" /p:Platform=x64 /nologo";
+            L"\" /t:Build /p:Configuration=" + configuration + L" /p:Platform=x64 /p:PostBuildEvent= /nologo";
 
         if(!RunProcessBlocking(commandLine, projectRoot))
         {
@@ -824,6 +888,7 @@ namespace Waldem
         Bindings::RegisterEntityCalls(Runtime);
         Bindings::RegisterInputCalls(Runtime);
         Bindings::RegisterTimeCalls(Runtime);
+        Bindings::RegisterQuaternionCalls(Runtime);
         Bindings::RegisterTransformCalls(Runtime);
         Bindings::RegisterRigidBodyCalls(Runtime);
         Bindings::RegisterCameraCalls(Runtime);
@@ -923,6 +988,9 @@ namespace Waldem
         instance.OnCollisionEnterMethod = Runtime->GetMethod(klass, "OnCollisionEnterInternal", 1);
         instance.OnCollisionStayMethod = Runtime->GetMethod(klass, "OnCollisionStayInternal", 1);
         instance.OnCollisionExitMethod = Runtime->GetMethod(klass, "OnCollisionExitInternal", 1);
+        instance.OnTriggerEnterMethod = Runtime->GetMethod(klass, "OnTriggerEnterInternal", 1);
+        instance.OnTriggerStayMethod = Runtime->GetMethod(klass, "OnTriggerStayInternal", 1);
+        instance.OnTriggerExitMethod = Runtime->GetMethod(klass, "OnTriggerExitInternal", 1);
         instance.GCHandle = mono_gchandle_new(instanceObject, true);
 
         EntityInstances[entity.id()] = instance;
@@ -1037,7 +1105,7 @@ namespace Waldem
         InvokeSingleFloat(*instance, instance->OnFixedUpdateMethod, fixedDeltaTime);
     }
 
-    void ScriptEngine::OnCollisionEnter(ECS::Entity entity, ECS::Entity other, const ScriptComponent& scriptComponent, const ContactsManifold& contacts)
+    void ScriptEngine::OnCollisionEvent(CollisionEventType eventType, ECS::Entity entity, ECS::Entity other, const ScriptComponent& scriptComponent, const ContactsManifold& contacts)
     {
         ScriptInstance* instance = GetInstance(entity.id());
         if(instance == nullptr)
@@ -1053,8 +1121,24 @@ namespace Waldem
                 return;
             }
         }
+
+        MonoMethod* method = nullptr;
+
+        switch (eventType)
+        {
+        case CollisionEventType::Enter:
+            method = instance->OnCollisionEnterMethod;
+            break;
+        case CollisionEventType::Stay:
+            method = instance->OnCollisionStayMethod;
+            break;
+        case CollisionEventType::Exit:
+            method = instance->OnCollisionExitMethod;
+            break;
+        default: ;
+        }
         
-        if(instance->OnCollisionEnterMethod == nullptr)
+        if(method == nullptr)
         {
             return;
         }
@@ -1081,10 +1165,10 @@ namespace Waldem
         contactPoint.OtherEntityId = other.id();
 
         void* params[1] = { &contactPoint };
-        Runtime->InvokeMethod(managedInstance, instance->OnCollisionEnterMethod, params);
+        Runtime->InvokeMethod(managedInstance, method, params);
     }
 
-    void ScriptEngine::OnCollisionStay(ECS::Entity entity, ECS::Entity other, const ScriptComponent& scriptComponent, const ContactsManifold& contacts)
+    void ScriptEngine::OnTriggerEvent(CollisionEventType eventType, ECS::Entity entity, ECS::Entity other, const ScriptComponent& scriptComponent)
     {
         ScriptInstance* instance = GetInstance(entity.id());
         if(instance == nullptr)
@@ -1100,8 +1184,24 @@ namespace Waldem
                 return;
             }
         }
+
+        MonoMethod* method = nullptr;
+
+        switch (eventType)
+        {
+        case CollisionEventType::Enter:
+            method = instance->OnTriggerEnterMethod;
+            break;
+        case CollisionEventType::Stay:
+            method = instance->OnTriggerStayMethod;
+            break;
+        case CollisionEventType::Exit:
+            method = instance->OnTriggerExitMethod;
+            break;
+        default: ;
+        }
         
-        if(instance->OnCollisionStayMethod == nullptr)
+        if(method == nullptr)
         {
             return;
         }
@@ -1112,69 +1212,8 @@ namespace Waldem
             return;
         }
 
-        if(contacts.Points.Num() <= 0)
-        {
-            return;
-        }
-
-        const ContactPoint& firstContactPoint = contacts.Points.First();
-        
-        ContactPointSimplified contactPoint;
-        contactPoint.Position = firstContactPoint.Position;
-        contactPoint.PositionA = firstContactPoint.PositionA;
-        contactPoint.PositionB = firstContactPoint.PositionB;
-        contactPoint.Normal = firstContactPoint.Normal;
-        contactPoint.Penetration = firstContactPoint.Penetration;
-        contactPoint.OtherEntityId = other.id();
-
-        void* params[1] = { &contactPoint };
-        Runtime->InvokeMethod(managedInstance, instance->OnCollisionStayMethod, params);
-    }
-
-    void ScriptEngine::OnCollisionExit(ECS::Entity entity, ECS::Entity other, const ScriptComponent& scriptComponent, const ContactsManifold& contacts)
-    {
-        ScriptInstance* instance = GetInstance(entity.id());
-        if(instance == nullptr)
-        {
-            if(!CreateEntityInstance(entity, scriptComponent))
-            {
-                return;
-            }
-
-            instance = GetInstance(entity.id());
-            if(instance == nullptr)
-            {
-                return;
-            }
-        }
-        
-        if(instance->OnCollisionExitMethod == nullptr)
-        {
-            return;
-        }
-
-        MonoObject* managedInstance = GetManagedInstance(*instance);
-        if(managedInstance == nullptr)
-        {
-            return;
-        }
-
-        if(contacts.Points.Num() <= 0)
-        {
-            return;
-        }
-
-        const ContactPoint& firstContactPoint = contacts.Points.First();
-        
-        ContactPointSimplified contactPoint;
-        contactPoint.Position = firstContactPoint.Position;
-        contactPoint.PositionA = firstContactPoint.PositionA;
-        contactPoint.PositionB = firstContactPoint.PositionB;
-        contactPoint.Normal = firstContactPoint.Normal;
-        contactPoint.Penetration = firstContactPoint.Penetration;
-        contactPoint.OtherEntityId = other.id();
-
-        void* params[1] = { &contactPoint };
-        Runtime->InvokeMethod(managedInstance, instance->OnCollisionExitMethod, params);
+        auto id = other.id();
+        void* params[1] = { &id };
+        Runtime->InvokeMethod(managedInstance, method, params);
     }
 }

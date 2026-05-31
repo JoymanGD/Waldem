@@ -1,5 +1,8 @@
 #pragma once
 #include "GameScene.h"
+#include "Waldem/ECS/IdManager.h"
+#include "Waldem/ECS/Systems/CoreSystems/HybridRenderingSystem.h"
+#include "Waldem/Renderer/Renderer.h"
 #include <string>
 
 namespace Waldem
@@ -21,6 +24,8 @@ namespace Waldem
 
         static void UnloadScene()
         {
+            Renderer::Wait();
+
             WArray<flecs::entity> to_remove;
             auto q = ECS::World.query_builder<SceneEntity>().build();
             q.each([&](flecs::entity e, SceneEntity)
@@ -29,6 +34,10 @@ namespace Waldem
             });
             for (auto& e : to_remove)
                 e.destruct();
+
+            IdManager::Reset();
+            HybridRenderingSystem::ResetSceneRuntimeData();
+            Renderer::Wait();
             
             if(CurrentScene)
             {

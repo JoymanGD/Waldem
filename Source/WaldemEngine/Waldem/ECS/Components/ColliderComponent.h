@@ -151,6 +151,9 @@ namespace Waldem
         std::function<void(ECS::Entity, const ContactsManifold&)> OnCollisionEnter;
         std::function<void(ECS::Entity, const ContactsManifold&)> OnCollisionStay;
         std::function<void(ECS::Entity, const ContactsManifold&)> OnCollisionExit;
+        std::function<void(ECS::Entity)> OnTriggerEnter;
+        std::function<void(ECS::Entity)> OnTriggerStay;
+        std::function<void(ECS::Entity)> OnTriggerExit;
         
         ColliderComponent() {}
 

@@ -24,17 +24,17 @@ namespace Waldem
         {
             get
             {
-                if (main == null)
-                {
-                    ulong entityId = InternalCalls.Camera_GetMainEntity();
-                    if (entityId == 0)
-                        return null;
+                ulong entityId = InternalCalls.Camera_GetMainEntity();
+                if (entityId == 0)
+                    return null;
 
+                if (main == null || main.EntityId != entityId)
+                {
                     var camera = new Camera();
                     camera.Attach(entityId);
                     main = camera;
                 }
-                
+
                 return main;
             }
         }

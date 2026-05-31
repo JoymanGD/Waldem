@@ -384,7 +384,7 @@ namespace Waldem
                     ContactCache.Add(newEntry);
                 }
 
-                TriggerCollisionEvent(entityA, entityB, collision.Manifold, eventType);
+                InvokeCollisionEvent(entityA, entityB, collision.Manifold, eventType);
 
                 if(!entityA.has<Transform>() || !entityB.has<Transform>() || !entityA.has<RigidBody>() || !entityB.has<RigidBody>())
                 {
@@ -592,7 +592,7 @@ namespace Waldem
             }
         }
 
-        void TriggerCollisionEvent(ECS::Entity& entityA, ECS::Entity& entityB, const ContactsManifold& manifold, CollisionEventType type)
+        void InvokeCollisionEvent(ECS::Entity& entityA, ECS::Entity& entityB, const ContactsManifold& manifold, CollisionEventType type)
         {
             auto& colliderA = entityA.get_mut<ColliderComponent>();
             auto& colliderB = entityB.get_mut<ColliderComponent>();
@@ -616,6 +616,30 @@ namespace Waldem
             }
         }
 
+        void InvokeTriggerEvent(ECS::Entity& entityA, ECS::Entity& entityB, CollisionEventType type)
+        {
+            auto& colliderA = entityA.get_mut<ColliderComponent>();
+            auto& colliderB = entityB.get_mut<ColliderComponent>();
+
+            switch (type)
+            {
+            case CollisionEventType::Enter:
+                if (colliderA.OnTriggerEnter) colliderA.OnTriggerEnter(entityB);
+                if (colliderB.OnTriggerEnter) colliderB.OnTriggerEnter(entityA);
+                break;
+
+            case CollisionEventType::Stay:
+                if (colliderA.OnTriggerStay) colliderA.OnTriggerStay(entityB);
+                if (colliderB.OnTriggerStay) colliderB.OnTriggerStay(entityA);
+                break;
+
+            case CollisionEventType::Exit:
+                if (colliderA.OnTriggerExit) colliderA.OnTriggerExit(entityB);
+                if (colliderB.OnTriggerExit) colliderB.OnTriggerExit(entityA);
+                break;
+            }
+        }
+
         void HandleCachedContacts()
         {
             // Handle exit events
@@ -626,7 +650,7 @@ namespace Waldem
                 {
                     auto& entityA = Entities[contact.ColliderA];
                     auto& entityB = Entities[contact.ColliderB];
-                    TriggerCollisionEvent(entityA, entityB, contact.Manifold, CollisionEventType::Exit);
+                    InvokeCollisionEvent(entityA, entityB, contact.Manifold, CollisionEventType::Exit);
                     ContactCache.RemoveAt(i);
                 }
             }

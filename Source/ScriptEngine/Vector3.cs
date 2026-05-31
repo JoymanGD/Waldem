@@ -11,6 +11,7 @@ namespace Waldem
         public float z;
 
         public double magnitude => Length();
+        public float magnitudeF => (float)Length();
 
         public Vector3(float x, float y, float z)
         {
@@ -20,6 +21,9 @@ namespace Waldem
         }
 
         public static Vector3 Zero => new Vector3(0.0f, 0.0f, 0.0f);
+        public static Vector3 Up => new Vector3(0.0f, 1.0f, 0.0f);
+        public static Vector3 Forward => new Vector3(0.0f, 0.0f, 1.0f);
+        public static Vector3 Right => new Vector3(1.0f, 0.0f, 0.0f);
 
         public static Vector3 operator +(Vector3 left, Vector3 right)
         {
@@ -38,7 +42,7 @@ namespace Waldem
 
         public void Normalize()
         {
-            float magnitude = (float)Math.Sqrt(x * x + y * y + z * z);
+            float magnitude = (float)System.Math.Sqrt(x * x + y * y + z * z);
             if (magnitude > 0.0001f)
             {
                 x /= magnitude;
@@ -49,7 +53,7 @@ namespace Waldem
 
         public double Length()
         {
-            return Math.Sqrt(x * x + y * y + z * z);
+            return System.Math.Sqrt(x * x + y * y + z * z);
         }
     }
 }

@@ -6,5 +6,7 @@ namespace Waldem
     {
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern bool Entity_HasComponent(ulong entityId, int componentKind);
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern bool Entity_Destroy(ulong entityId);
     }
 }
