@@ -29,6 +29,7 @@
 #include "Commands/EditorCommands.h"
 #include "EditorShortcutContext.h"
 #include "EditorShortcuts.h"
+#include "Widgets/CreateProjectWidget.h"
 
 namespace Waldem
 {
@@ -73,6 +74,7 @@ namespace Waldem
             Widgets.Add(new EntityDetailsWidget());
             Widgets.Add(new MaterialInspectorWidget());
             Widgets.Add(new CoachWidget());
+            Widgets.Add(new CreateProjectWidget());
             Widgets.Add(new ContentBrowserWidget());
             
             //do it after all entities set up
