@@ -64,6 +64,19 @@ namespace Waldem
             }
         }
 
+        public Quaternion RotationQuaternion
+        {
+            get
+            {
+                InternalCalls.Transform_GetRotationQuaternion(EntityId, out Quaternion rotation);
+                return rotation;
+            }
+            set
+            {
+                InternalCalls.Transform_SetRotationQuaternion(EntityId, ref value);
+            }
+        }
+
         public Vector3 Scale
         {
             get
@@ -80,6 +93,26 @@ namespace Waldem
         public void Rotate(Vector3 rotationDelta)
         {
             InternalCalls.Transform_Rotate(EntityId, ref rotationDelta);
+        }
+
+        public void Rotate(Quaternion rotationDelta)
+        {
+            InternalCalls.Transform_RotateQuaternion(EntityId, ref rotationDelta);
+        }
+
+        public void LookAt(Vector3 target)
+        {
+            InternalCalls.Transform_LookAt(EntityId, ref target);
+        }
+
+        public void LookAt(Vector3 target, Vector3 up)
+        {
+            InternalCalls.Transform_LookAtWithUp(EntityId, ref target, ref up);
+        }
+
+        public void RotateAround(Vector3 point, Vector3 axis, float angleDegrees)
+        {
+            InternalCalls.Transform_RotateAround(EntityId, ref point, ref axis, angleDegrees);
         }
     }
 }

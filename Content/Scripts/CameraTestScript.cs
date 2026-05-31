@@ -8,12 +8,12 @@ namespace Waldem
         
         protected override void OnUpdate(float dt)
         {
-            if (Input.IsKeyPressed(KeyCode.R))
+            if (Input.GetKey(KeyCode.R))
             {
                 var camera = GetComponent<Camera>();
                 camera.FieldOfView += dt * ZoomSpeed;
             }
-            if (Input.IsKeyPressed(KeyCode.F))
+            if (Input.GetKey(KeyCode.F))
             {
                 var camera = GetComponent<Camera>();
                 camera.FieldOfView -= dt * ZoomSpeed;

@@ -43,3 +43,7 @@
 #define WD_BIND_EVENT_FN(fn) std::bind(&fn, this, std::placeholders::_1)
 
 #define GLM_FORCE_LEFT_HANDED
+
+#ifndef WD_WITH_PHYSX
+    #define WD_WITH_PHYSX 0
+#endif

@@ -45,6 +45,7 @@ namespace Waldem
                 
                 rigidBody.Velocity += rigidBody.Acceleration;
                 rigidBody.Velocity += rigidBody.GravityAcceleration;
+                rigidBody.Velocity += rigidBody.Impulse * rigidBody.GetInvMass();
                 
                 auto R = Matrix3(transform.RotationQuat);
                 auto transformedInertiaTensor = R * rigidBody.InertiaTensor * transpose(R);

@@ -11,6 +11,7 @@
 #include "Components/RigidBody.h"
 #include "Components/Selected.h"
 #include "Components/ScriptComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Components/Sky.h"
 #include "Components/Sprite.h"
 #include "Components/Transform.h"
@@ -19,6 +20,7 @@
 #include "Systems/CoreSystems/CollisionSystem.h"
 #include "Systems/CoreSystems/HybridRenderingSystem.h"
 #include "Systems/CoreSystems/ParticleSystem.h"
+#include "Systems/CoreSystems/PhysXSystem.h"
 #include "Systems\CoreSystems\PhysicsAccumulationSystem.h"
 #include "Systems\CoreSystems\PhysicsIntegrationSystem.h"
 #include "Systems/CoreSystems/PostProcessSystem.h"
@@ -120,6 +122,25 @@ namespace Waldem
                 }
 
                 LocalTransformMatrices[entity.id()] = localMatrix;
+            }
+
+            void ResetCloneRuntimeState(Entity clone)
+            {
+                if(clone.has<MeshComponent>())
+                {
+                    auto& meshComponent = clone.get_mut<MeshComponent>();
+                    meshComponent.DrawCommand = {};
+                    clone.modified<MeshComponent>();
+                }
+
+                if(clone.has<SkeletalMeshComponent>())
+                {
+                    auto& skeletalMeshComponent = clone.get_mut<SkeletalMeshComponent>();
+                    skeletalMeshComponent.DrawCommand = {};
+                    skeletalMeshComponent.BoneMatricesBuffer = nullptr;
+                    skeletalMeshComponent.BoneCount = 0;
+                    clone.modified<SkeletalMeshComponent>();
+                }
             }
 
             void RefreshHierarchyDepths()
@@ -345,9 +366,13 @@ namespace Waldem
             World.system("HierarchyTransformPropagationDraw").kind<OnDraw>().run(propagateHierarchyTransforms);
             
             // Systems.Add(OceanSimulationSystem());
+#if WD_WITH_PHYSX
+            Systems.Add(new PhysXSystem());
+#else
             Systems.Add(new PhysicsAccumulationSystem());
             Systems.Add(new PhysicsIntegrationSystem());
             Systems.Add(new CollisionSystem());
+#endif
             Systems.Add(new SpatialAudioSystem());
             Systems.Add(new ScriptExecutionSystem());
             Systems.Add(new TerrainSystem());
@@ -644,6 +669,7 @@ namespace Waldem
             FormatName(cloneEntityName);
             
             clone.set_name(cloneEntityName.C_Str());
+            ResetCloneRuntimeState(clone);
             
             return clone;
         }

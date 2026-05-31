@@ -121,6 +121,7 @@ namespace Waldem
 			SceneManager::CheckRequests();
 			
 			Window->Begin();
+			Input::Update();
 			
 			auto currentFrameTime = std::chrono::high_resolution_clock::now();
 			std::chrono::duration<float> deltaTimeDuration = currentFrameTime - lastFrameTime;

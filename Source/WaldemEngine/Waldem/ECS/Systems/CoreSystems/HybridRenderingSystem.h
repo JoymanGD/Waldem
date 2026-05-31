@@ -132,6 +132,8 @@ namespace Waldem
     
     class WALDEM_API HybridRenderingSystem : public ICoreSystem
     {
+        inline static HybridRenderingSystem* ActiveInstance = nullptr;
+
         //Sky pass
         Pipeline* SkyPipeline = nullptr;
         PixelShader* SkyPixelShader = nullptr;
@@ -219,6 +221,7 @@ namespace Waldem
     public:
         HybridRenderingSystem()
         {
+            ActiveInstance = this;
             SpriteVertices =
             {
                 { {Vector4(-0.5f, -0.5f, 0, 1)}, {Vector4(1,1,1,1)}, {Vector4(0,0,1,0)}, {Vector4(0,1,0,0)}, {Vector4(1,0,0,0)}, {Vector2(0,1)} },
@@ -230,6 +233,40 @@ namespace Waldem
 
             SpriteVertexBuffer = Renderer::CreateBuffer("SpriteVertexBuffer", BufferType::VertexBuffer, SpriteVertices.GetSize(), sizeof(Vertex), SpriteVertices.GetData());
             SpriteIndexBuffer = Renderer::CreateBuffer("SpriteIndexBuffer", BufferType::IndexBuffer, SpriteIndices.GetSize(), sizeof(uint32_t), SpriteIndices.GetData());
+        }
+
+        static void ResetSceneRuntimeData()
+        {
+            if(ActiveInstance == nullptr)
+            {
+                return;
+            }
+
+            auto& instance = *ActiveInstance;
+
+            instance.BFCIndirectCommands.Clear();
+            instance.NCIndirectCommands.Clear();
+            instance.MaterialAttributes.Clear();
+            instance.LightsIndices.Clear();
+            instance.LightTransforms.Clear();
+            instance.SkeletalSkinningData.Clear();
+
+            instance.VerticesCount = 0;
+            instance.IndicesCount = 0;
+            instance.PathTracingFrameIndex = 0;
+            instance.PathTracingHistoryValid = false;
+
+            instance.DrawCommandsBuffer.Size = 0;
+            instance.BFCIndirectBuffer.Size = 0;
+            instance.NCIndirectBuffer.Size = 0;
+            instance.WorldTransformsBuffer.Size = 0;
+            instance.MaterialAttributesBuffer.Size = 0;
+            instance.LightsBuffer.Size = 0;
+            instance.LightTransformsBuffer.Size = 0;
+            instance.LightsIndicesBuffer.Size = 0;
+
+            Renderer::RenderData.VertexBuffer.Size = 0;
+            Renderer::RenderData.IndexBuffer.Size = 0;
         }
         
         void Initialize() override

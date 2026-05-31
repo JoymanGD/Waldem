@@ -62,5 +62,41 @@ namespace Waldem
         protected virtual void OnCollisionExit(Collision collision)
         {
         }
+        
+        private void OnTriggerEnterInternal(ulong otherEntityId)
+        {
+            Entity otherEntity = new Entity();
+            otherEntity.__SetEntityId(otherEntityId);
+            
+            OnTriggerEnter(otherEntity);
+        }
+ 
+        private void OnTriggerStayInternal(ulong otherEntityId)
+        {
+            Entity otherEntity = new Entity();
+            otherEntity.__SetEntityId(otherEntityId);
+            
+            OnTriggerStay(otherEntity);
+        }
+ 
+        private void OnTriggerExitInternal(ulong otherEntityId)
+        {
+            Entity otherEntity = new Entity();
+            otherEntity.__SetEntityId(otherEntityId);
+            
+            OnTriggerExit(otherEntity);
+        }
+ 
+        protected virtual void OnTriggerEnter(Entity other)
+        {
+        }
+ 
+        protected virtual void OnTriggerStay(Entity other)
+        {
+        }
+ 
+        protected virtual void OnTriggerExit(Entity other)
+        {
+        }
     }
 }

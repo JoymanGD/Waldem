@@ -12,6 +12,13 @@
 namespace Waldem
 {
     using FileDroppedEventHandler = std::function<void(Path)>;
+
+    enum class MeshAssetKind
+    {
+        Unknown = 0,
+        Static,
+        Skeletal
+    };
     
     class WALDEM_API CContentManager
     {
@@ -19,6 +26,7 @@ namespace Waldem
         static bool ImportTo(const Path& from, Path& to);
         static bool ImportTo(const Path& from, Path& to, const ModelImportSettings& modelImportSettings);
         static bool GetImportStatus(float& outProgress, std::string& outLabel);
+        static MeshAssetKind GetMeshAssetKind(const Path& inPath);
 
         template <class T>
         static T* LoadAsset(const Path& inPath)
@@ -46,8 +54,23 @@ namespace Waldem
                     
                         asset = new T();
                         asset->Type = ExtensionToAssetType(finalPath.extension().string());
-                        inData >> asset->Hash;
-                        asset->Deserialize(inData);
+                        try
+                        {
+                            inData >> asset->Hash;
+                            asset->Deserialize(inData);
+                        }
+                        catch (const std::exception& e)
+                        {
+                            WD_CORE_ERROR("Failed to deserialize asset {0}: {1}", finalPath.string(), e.what());
+                            delete asset;
+                            asset = nullptr;
+                        }
+                        catch (...)
+                        {
+                            WD_CORE_ERROR("Failed to deserialize asset {0}: unknown error", finalPath.string());
+                            delete asset;
+                            asset = nullptr;
+                        }
                     }
                     else
                     {

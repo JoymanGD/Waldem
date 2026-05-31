@@ -1,4 +1,5 @@
 #pragma once
+#include <stdexcept>
 
 namespace Waldem
 {
@@ -86,6 +87,11 @@ namespace Waldem
         template <typename T>
         WDataBuffer& operator>>(T& value)
         {
+            if (Cursor + sizeof(T) > Size)
+            {
+                throw std::runtime_error("WDataBuffer read past end of buffer.");
+            }
+
             Read(&value, sizeof(T));
             return *this;
         }
@@ -127,6 +133,12 @@ namespace Waldem
         {
             size_t length;
             *this >> length;            // read length first
+
+            if (length > Size - Cursor)
+            {
+                throw std::runtime_error("WDataBuffer string length exceeds remaining bytes.");
+            }
+
             str.resize(length);
             Read(str.data(), length);   // read raw chars
             return *this;

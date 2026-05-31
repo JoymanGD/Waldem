@@ -45,13 +45,16 @@
     <Compile Include="..\..\Content\Scripts\CameraTestScript.cs">
       <Link>Content\Scripts\CameraTestScript.cs</Link>
     </Compile>
+    <Compile Include="..\..\Content\Scripts\Collectable.cs">
+      <Link>Content\Scripts\Collectable.cs</Link>
+    </Compile>
     <Compile Include="..\..\Content\Scripts\RotatingObject.cs">
       <Link>Content\Scripts\RotatingObject.cs</Link>
     </Compile>
     <Compile Include="..\..\Content\Scripts\TestScript.cs">
       <Link>Content\Scripts\TestScript.cs</Link>
     </Compile>
-    <Compile Include="AnimatorComponent.cs" />
+    <Compile Include="Animator.cs" />
     <Compile Include="Camera.cs" />
     <Compile Include="Collider.cs" />
     <Compile Include="Component.cs" />
@@ -64,14 +67,17 @@
     <Compile Include="InternalCalls.Entity.cs" />
     <Compile Include="InternalCalls.Input.cs" />
     <Compile Include="InternalCalls.Light.cs" />
+    <Compile Include="InternalCalls.Quaternion.cs" />
     <Compile Include="InternalCalls.RigidBody.cs" />
     <Compile Include="InternalCalls.Time.cs" />
     <Compile Include="InternalCalls.Transform.cs" />
     <Compile Include="InternalCalls.cs" />
     <Compile Include="KeyCode.cs" />
-    <Compile Include="LightComponent.cs" />
+    <Compile Include="Light.cs" />
+    <Compile Include="Math.cs" />
     <Compile Include="MouseButton.cs" />
-    <Compile Include="RigidBodyComponent.cs" />
+    <Compile Include="Quaternion.cs" />
+    <Compile Include="RigidBody.cs" />
     <Compile Include="ScriptableEntity.cs" />
     <Compile Include="Time.cs" />
     <Compile Include="Transform.cs" />

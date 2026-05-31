@@ -7,6 +7,7 @@
 #include "Waldem/Renderer/Renderer.h"
 #include "Waldem/SceneManagement/SceneManager.h"
 #include "Waldem/Scripting/ScriptEngine.h"
+#include "Waldem/ECS/Systems/CoreSystems/PhysXSystem.h"
 #include "Waldem/Utils/FileUtils.h"
 #include "Commands/EditorCommands.h"
 #include "../EditorShortcuts.h"
@@ -283,6 +284,21 @@ namespace Waldem
                         CoachWidget::SetVisible(showCoach);
                     }
 
+                    ImGui::EndMenu();
+                }
+
+                if (ImGui::BeginMenu("Physics"))
+                {
+                    Vector3 gravity = PhysXSystem::GetGravity();
+                    float gravityValues[3] = { gravity.x, gravity.y, gravity.z };
+                    if (ImGui::DragFloat3("World Gravity", gravityValues, 0.1f))
+                    {
+                        PhysXSystem::SetGravity(Vector3(gravityValues[0], gravityValues[1], gravityValues[2]));
+                    }
+
+                    ImGui::Separator();
+                    ImGui::TextWrapped("Use RigidBody.MaxSlope to control what counts as walkable ground.");
+                    ImGui::TextWrapped("Steeper contacts are now rejected so bodies don't climb box faces as easily.");
                     ImGui::EndMenu();
                 }
 

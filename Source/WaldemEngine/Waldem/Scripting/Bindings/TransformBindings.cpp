@@ -9,6 +9,7 @@ namespace Waldem::Bindings
     namespace
     {
         struct ScriptVector3 { float x = 0.0f, y = 0.0f, z = 0.0f; };
+        struct ScriptQuaternion { float w = 1.0f, x = 0.0f, y = 0.0f, z = 0.0f; };
 
         void Transform_GetPosition(uint64_t entityId, ScriptVector3* out)
         {
@@ -102,6 +103,38 @@ namespace Waldem::Bindings
             entity.modified<Transform>();
         }
 
+        void Transform_GetRotationQuaternion(uint64_t entityId, ScriptQuaternion* out)
+        {
+            if(out == nullptr) return;
+            ECS::Entity entity = GetEntityChecked(entityId);
+            if(!entity.is_alive() || !entity.has<Transform>()) { *out = { 1.0f, 0.0f, 0.0f, 0.0f }; return; }
+            const auto& rotation = entity.get<Transform>().RotationQuat;
+            out->w = rotation.w;
+            out->x = rotation.x;
+            out->y = rotation.y;
+            out->z = rotation.z;
+        }
+
+        void Transform_SetRotationQuaternion(uint64_t entityId, ScriptQuaternion* rotation)
+        {
+            if(rotation == nullptr) return;
+            ECS::Entity entity = GetEntityChecked(entityId);
+            if(!entity.is_alive() || !entity.has<Transform>()) return;
+            auto& t = entity.get_mut<Transform>();
+            t.SetRotation(Quaternion(rotation->w, rotation->x, rotation->y, rotation->z));
+            entity.modified<Transform>();
+        }
+
+        void Transform_RotateQuaternion(uint64_t entityId, ScriptQuaternion* rotationDelta)
+        {
+            if(rotationDelta == nullptr) return;
+            ECS::Entity entity = GetEntityChecked(entityId);
+            if(!entity.is_alive() || !entity.has<Transform>()) return;
+            auto& t = entity.get_mut<Transform>();
+            t.Rotate(Quaternion(rotationDelta->w, rotationDelta->x, rotationDelta->y, rotationDelta->z));
+            entity.modified<Transform>();
+        }
+
         void Transform_GetScale(uint64_t entityId, ScriptVector3* out)
         {
             if(out == nullptr) return;
@@ -120,6 +153,36 @@ namespace Waldem::Bindings
             t.SetScale(scale->x, scale->y, scale->z);
             entity.modified<Transform>();
         }
+
+        void Transform_LookAt(uint64_t entityId, ScriptVector3* target)
+        {
+            if(target == nullptr) return;
+            ECS::Entity entity = GetEntityChecked(entityId);
+            if(!entity.is_alive() || !entity.has<Transform>()) return;
+            auto& t = entity.get_mut<Transform>();
+            t.LookAt(Vector3(target->x, target->y, target->z));
+            entity.modified<Transform>();
+        }
+
+        void Transform_LookAtWithUp(uint64_t entityId, ScriptVector3* target, ScriptVector3* up)
+        {
+            if(target == nullptr || up == nullptr) return;
+            ECS::Entity entity = GetEntityChecked(entityId);
+            if(!entity.is_alive() || !entity.has<Transform>()) return;
+            auto& t = entity.get_mut<Transform>();
+            t.LookAt(Vector3(target->x, target->y, target->z), Vector3(up->x, up->y, up->z));
+            entity.modified<Transform>();
+        }
+
+        void Transform_RotateAround(uint64_t entityId, ScriptVector3* point, ScriptVector3* axis, float angleDegrees)
+        {
+            if(point == nullptr || axis == nullptr) return;
+            ECS::Entity entity = GetEntityChecked(entityId);
+            if(!entity.is_alive() || !entity.has<Transform>()) return;
+            auto& t = entity.get_mut<Transform>();
+            t.RotateAround(Vector3(point->x, point->y, point->z), Vector3(axis->x, axis->y, axis->z), angleDegrees);
+            entity.modified<Transform>();
+        }
     }
 
     void RegisterTransformCalls(Mono* runtime)
@@ -134,7 +197,13 @@ namespace Waldem::Bindings
         BIND(runtime, Transform_GetRotation);
         BIND(runtime, Transform_SetRotation);
         BIND(runtime, Transform_Rotate);
+        BIND(runtime, Transform_GetRotationQuaternion);
+        BIND(runtime, Transform_SetRotationQuaternion);
+        BIND(runtime, Transform_RotateQuaternion);
         BIND(runtime, Transform_GetScale);
         BIND(runtime, Transform_SetScale);
+        BIND(runtime, Transform_LookAt);
+        BIND(runtime, Transform_LookAtWithUp);
+        BIND(runtime, Transform_RotateAround);
     }
 }
