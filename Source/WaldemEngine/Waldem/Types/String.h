@@ -490,6 +490,20 @@ namespace Waldem
 			return ptr ? WString(ptr) : WString();
 		}
 
+		std::wstring ToWString() const
+	    {
+	    	if (!Data) return {};
+
+#ifdef _WIN32
+	    	int size = MultiByteToWideChar(CP_UTF8, 0, Data, -1, nullptr, 0);
+	    	std::wstring result(size - 1, L'\0');
+	    	MultiByteToWideChar(CP_UTF8, 0, Data, -1, result.data(), size);
+	    	return result;
+#else
+	    	return std::wstring(Data, Data + strlen(Data));
+#endif
+	    }
+
 	    FORCEINLINE WString GetFileExtension() const { return FindLast('.').Substr(1).ToLower(); }
 	};
 

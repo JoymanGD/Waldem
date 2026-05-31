@@ -15,6 +15,8 @@ project "imgui"
         "imgui_tables.cpp",
         "imgui_widgets.cpp",
         "imgui_demo.cpp",
+        "imgui_stdlib.cpp",
+        "imgui_stdlib.h",
         "backends/imgui_impl_dx12.cpp",
         "backends/imgui_impl_sdl2.cpp",
         "imgui.h",
