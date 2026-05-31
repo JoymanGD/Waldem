@@ -59,12 +59,8 @@ namespace Waldem
 
     void Transform::Rotate(Quaternion rotation)
     {
-        RotationQuat = rotation * RotationQuat;
-        
-        auto pitch = glm::pitch(rotation);
-        auto yaw = glm::yaw(rotation);
-        auto roll = glm::roll(rotation);
-        Rotation += degrees(Vector3(pitch, yaw, roll));
+        RotationQuat = normalize(rotation * RotationQuat);
+        Rotation = degrees(eulerAngles(RotationQuat));
         LastRotation = Rotation;
         
         Update();
@@ -94,6 +90,46 @@ namespace Waldem
         Vector3 adjustedUp = glm::abs(dot(direction, Vector3(0, 1, 0))) > 0.99f ? Vector3(0, 0, 1) : Vector3(0, 1, 0);
         
         SetRotation(quatLookAt(direction, adjustedUp));
+    }
+
+    void Transform::LookAt(Vector3 target, Vector3 up)
+    {
+        Vector3 direction = target - Position;
+        if(length(direction) < 1e-6f)
+        {
+            return;
+        }
+
+        if(length(up) < 1e-6f)
+        {
+            up = Vector3(0, 1, 0);
+        }
+
+        direction = normalize(direction);
+        up = normalize(up);
+
+        if(glm::abs(dot(direction, up)) > 0.99f)
+        {
+            up = glm::abs(dot(direction, Vector3(0, 1, 0))) > 0.99f ? Vector3(0, 0, 1) : Vector3(0, 1, 0);
+        }
+
+        SetRotation(quatLookAt(direction, up));
+    }
+
+    void Transform::RotateAround(Vector3 point, Vector3 axis, float angleDegrees)
+    {
+        if(length(axis) < 1e-6f)
+        {
+            return;
+        }
+
+        Quaternion rotation = angleAxis(glm::radians(angleDegrees), normalize(axis));
+        Position = point + (rotation * (Position - point));
+        RotationQuat = normalize(rotation * RotationQuat);
+        Rotation = degrees(eulerAngles(RotationQuat));
+        LastRotation = Rotation;
+
+        Update();
     }
 
     void Transform::Move(Vector3 delta, TransformSpace space)
@@ -128,13 +164,8 @@ namespace Waldem
 
     void Transform::SetRotation(Quaternion newRotation)
     {
-        Quaternion deltaQuat = RotationQuat * inverse(newRotation);
-        RotationQuat = newRotation;
-        
-        auto pitch = glm::pitch(deltaQuat);
-        auto yaw = glm::yaw(deltaQuat);
-        auto roll = glm::roll(deltaQuat);
-        Rotation += degrees(Vector3(pitch, yaw, roll));
+        RotationQuat = normalize(newRotation);
+        Rotation = degrees(eulerAngles(RotationQuat));
         LastRotation = Rotation;
 
         Update();
