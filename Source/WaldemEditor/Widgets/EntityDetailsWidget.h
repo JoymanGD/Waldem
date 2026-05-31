@@ -112,6 +112,27 @@ namespace Waldem
                         }
                         break;
                     }
+                    case ScriptEngine::ScriptFieldType::Quaternion:
+                    {
+                        float quaternionValues[4] = {
+                            value.QuaternionValue.w,
+                            value.QuaternionValue.x,
+                            value.QuaternionValue.y,
+                            value.QuaternionValue.z
+                        };
+                        if(ImGui::DragFloat4(uniqueId.c_str(), quaternionValues, 0.01f))
+                        {
+                            value.QuaternionValue = Quaternion(
+                                quaternionValues[0],
+                                quaternionValues[1],
+                                quaternionValues[2],
+                                quaternionValues[3]);
+                            ScriptEngine::SetScriptFieldValue(scriptComponent, field.Name, value);
+                            entity.modified(id);
+                            PushComponentStateCommand(entity, id, before, &scriptComponent);
+                        }
+                        break;
+                    }
                     default:
                         ImGui::TextDisabled("<unsupported>");
                         break;
