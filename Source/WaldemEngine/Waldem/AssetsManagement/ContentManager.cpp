@@ -12,7 +12,7 @@ namespace Waldem
         {
             if (inPath.is_relative())
             {
-                return Path(CONTENT_PATH) / inPath;
+                return Path(PROJECT_CONTENT_PATH) / inPath;
             }
 
             return inPath;

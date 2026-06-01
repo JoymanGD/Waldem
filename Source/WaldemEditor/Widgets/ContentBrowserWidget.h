@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "imgui_internal.h"
+#include "Waldem/ProjectManagement/ProjectManager.h"
 
 namespace Waldem
 {
@@ -30,7 +31,7 @@ namespace Waldem
         static constexpr const char* HierarchyDragPayloadType = "WALDEM_HIERARCHY_ENTITY";
         ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
         char SearchBuffer[128] = "";
-        Path CurrentPath = CONTENT_PATH;
+        Path CurrentPath = PROJECT_CONTENT_PATH;
         std::optional<Path> HoveredDropTargetFolder;
         std::optional<Path> SelectedFolderTreePath;
         std::optional<Path> SelectedAssetListPath;
@@ -42,7 +43,7 @@ namespace Waldem
         bool ModelImportPending = false;
         bool ImportTaskRunning = false;
         Path PendingModelImportSourcePath;
-        Path PendingModelImportTargetPath = CONTENT_PATH;
+        Path PendingModelImportTargetPath = PROJECT_CONTENT_PATH;
         float PendingModelImportScale = 1.0f;
         Path LastImportTargetPath;
         std::future<bool> ImportTask;
@@ -255,7 +256,7 @@ namespace Waldem
                 {
                     return pathIn;
                 }
-                return Path(CONTENT_PATH) / pathIn;
+                return Path(PROJECT_CONTENT_PATH) / pathIn;
             };
 
             Path candidate = makeAbsolute(inPath);
@@ -779,7 +780,7 @@ namespace Waldem
             if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) && ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !ImGui::IsAnyItemHovered())
             {
                 SelectedFolderTreePath.reset();
-                CurrentPath = CONTENT_PATH;
+                CurrentPath = PROJECT_CONTENT_PATH;
                 InvalidateAssetEntries();
             }
         }
@@ -847,7 +848,7 @@ namespace Waldem
                     }
 
                     std::error_code relEc;
-                    const std::string relativePath = std::filesystem::relative(entry.path(), CONTENT_PATH, relEc).string();
+                    const std::string relativePath = std::filesystem::relative(entry.path(), PROJECT_CONTENT_PATH, relEc).string();
                     if (!relEc)
                     {
                         if (ToLower(relativePath).find(searchLower) == std::string::npos)
@@ -974,7 +975,7 @@ namespace Waldem
 
             if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
             {
-                std::string relativePath = std::filesystem::relative(entryPath, CONTENT_PATH).string();
+                std::string relativePath = std::filesystem::relative(entryPath, PROJECT_CONTENT_PATH).string();
                 ImGui::SetDragDropPayload(ExtensionToAssetString(extension), relativePath.c_str(), relativePath.size() + 1);
                 ImGui::Text("%s", itemName.c_str());
                 ImGui::EndDragDropSource();
@@ -1034,7 +1035,7 @@ namespace Waldem
 
         void RenderAssetsList()
         {
-            const bool showParentEntry = (CurrentPath != CONTENT_PATH);
+            const bool showParentEntry = (CurrentPath != PROJECT_CONTENT_PATH);
             if (showParentEntry)
             {
                 ImGui::Selectable("..");
@@ -1191,91 +1192,94 @@ namespace Waldem
             PollImportTask();
             ThumbnailsCreatedThisFrame = 0;
 
-            const bool isVisible = ImGui::Begin("Content###Content", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus);
-            if (isVisible)
+            if(exists(PROJECT_CONTENT_PATH))
             {
-                ProcessFocusRequest();
-                HoveredDropTargetFolder.reset();
-
-                float importProgress = 0.0f;
-                std::string importLabel;
-                if (CContentManager::GetImportStatus(importProgress, importLabel))
+                const bool isVisible = ImGui::Begin("Content###Content", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus);
+                if (isVisible)
                 {
-                    std::string label = importLabel.empty() ? "Importing..." : ("Importing " + importLabel + "...");
-                    ImGui::TextUnformatted(label.c_str());
-                    ImGui::ProgressBar(importProgress, ImVec2(ImGui::GetContentRegionAvail().x, 0.0f));
+                    ProcessFocusRequest();
+                    HoveredDropTargetFolder.reset();
+
+                    float importProgress = 0.0f;
+                    std::string importLabel;
+                    if (CContentManager::GetImportStatus(importProgress, importLabel))
+                    {
+                        std::string label = importLabel.empty() ? "Importing..." : ("Importing " + importLabel + "...");
+                        ImGui::TextUnformatted(label.c_str());
+                        ImGui::ProgressBar(importProgress, ImVec2(ImGui::GetContentRegionAvail().x, 0.0f));
+                        ImGui::Separator();
+                    }
+                    
+                    //search bar
+                    if (ImGui::Button("Create"))
+                    {
+                        ImGui::OpenPopup("ContentCreatePopup");
+                    }
+                    if (ImGui::BeginPopup("ContentCreatePopup"))
+                    {
+                        if (ImGui::MenuItem("Material"))
+                        {
+                            CreateMaterialAsset(CurrentPath);
+                        }
+                        ImGui::EndPopup();
+                    }
+
+                    ImGui::SameLine();
+                    if (ImGui::InputTextWithHint("##Search", "Search...", SearchBuffer, IM_ARRAYSIZE(SearchBuffer)))
+                    {
+                        InvalidateAssetEntries();
+                    }
                     ImGui::Separator();
-                }
-                
-                //search bar
-                if (ImGui::Button("Create"))
-                {
-                    ImGui::OpenPopup("ContentCreatePopup");
-                }
-                if (ImGui::BeginPopup("ContentCreatePopup"))
-                {
-                    if (ImGui::MenuItem("Material"))
+
+                    //folders tree
+                    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(4.0f, 4.0f));
+                    ImGui::BeginChild("FoldersTree", ImVec2(240, 0), true, ImGuiWindowFlags_None);
+                    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4.0f, 2.0f));
+                    RenderFolderTree(PROJECT_CONTENT_PATH);
+                    ImGui::PopStyleVar();
+                    ImGui::EndChild();
+                    ImGui::PopStyleVar();
+
+                    ImGui::SameLine();
+
+                    //assets list
+                    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.0f, 6.0f));
+                    ImGui::BeginChild("AssetList", ImVec2(0, 0), true, ImGuiWindowFlags_None);
+                    RenderAssetsList();
+                    ImGui::EndChild();
+                    ImGui::PopStyleVar();
+
+                    const bool contentFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
+                    EditorShortcutContexts::SetActive(EditorShortcutContext::ContentBrowser, contentFocused);
+                    if (RenameSelectedAssetRequested && contentFocused)
                     {
-                        CreateMaterialAsset(CurrentPath);
+                        if (SelectedAssetListPath.has_value())
+                        {
+                            BeginRenamePath(SelectedAssetListPath.value());
+                        }
+                        else if (SelectedFolderTreePath.has_value())
+                        {
+                            BeginRenamePath(SelectedFolderTreePath.value());
+                        }
                     }
-                    ImGui::EndPopup();
-                }
 
-                ImGui::SameLine();
-                if (ImGui::InputTextWithHint("##Search", "Search...", SearchBuffer, IM_ARRAYSIZE(SearchBuffer)))
-                {
-                    InvalidateAssetEntries();
-                }
-                ImGui::Separator();
-
-                //folders tree
-                ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(4.0f, 4.0f));
-                ImGui::BeginChild("FoldersTree", ImVec2(240, 0), true, ImGuiWindowFlags_None);
-                ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4.0f, 2.0f));
-                RenderFolderTree(CONTENT_PATH);
-                ImGui::PopStyleVar();
-                ImGui::EndChild();
-                ImGui::PopStyleVar();
-
-                ImGui::SameLine();
-
-                //assets list
-                ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.0f, 6.0f));
-                ImGui::BeginChild("AssetList", ImVec2(0, 0), true, ImGuiWindowFlags_None);
-                RenderAssetsList();
-                ImGui::EndChild();
-                ImGui::PopStyleVar();
-
-                const bool contentFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
-                EditorShortcutContexts::SetActive(EditorShortcutContext::ContentBrowser, contentFocused);
-                if (RenameSelectedAssetRequested && contentFocused)
-                {
-                    if (SelectedAssetListPath.has_value())
+                    if (DeleteSelectedAssetRequested && contentFocused)
                     {
-                        BeginRenamePath(SelectedAssetListPath.value());
+                        DeleteSelectedAssetOrFolder();
                     }
-                    else if (SelectedFolderTreePath.has_value())
-                    {
-                        BeginRenamePath(SelectedFolderTreePath.value());
-                    }
-                }
 
-                if (DeleteSelectedAssetRequested && contentFocused)
+                    DrawRenamePopup();
+                    DrawModelImportPopup();
+                }
+                else
                 {
-                    DeleteSelectedAssetOrFolder();
+                    EditorShortcutContexts::SetActive(EditorShortcutContext::ContentBrowser, false);
                 }
 
-                DrawRenamePopup();
-                DrawModelImportPopup();
+                RenameSelectedAssetRequested = false;
+                DeleteSelectedAssetRequested = false;
+                ImGui::End();
             }
-            else
-            {
-                EditorShortcutContexts::SetActive(EditorShortcutContext::ContentBrowser, false);
-            }
-
-            RenameSelectedAssetRequested = false;
-            DeleteSelectedAssetRequested = false;
-            ImGui::End();
         }
     };
 }

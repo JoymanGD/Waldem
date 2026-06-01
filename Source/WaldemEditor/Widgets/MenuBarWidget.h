@@ -155,6 +155,19 @@ namespace Waldem
 
                 if (ImGui::BeginMenu("File"))
                 {
+                    if (ImGui::MenuItem("Open project", "Ctrl+O"))
+                    {
+                        Path selectedScenePath;
+                        if(OpenFile(selectedScenePath, "Project Files (*.wproject)\0*.wproject\0All Files (*.*)\0*.*\0"))
+                        {
+                            if(ProjectManager::LoadProject(selectedScenePath))
+                            {
+                                Path scenePath = ProjectManager::CurrentProject.ProjectPath / "Content" / ProjectManager::CurrentProject.StartupScene;
+                                SceneManager::LoadScene(scenePath);
+                            }
+                        }
+                    }
+                    
                     bool showCreateProject = CreateProjectWidget::IsVisible();
                     if (ImGui::MenuItem("Create project", nullptr, &showCreateProject))
                     {
@@ -168,36 +181,38 @@ namespace Waldem
                     // if (ImGui::MenuItem("Open scene", "Ctrl+O"))
                     // {
                     //     Path selectedScenePath;
-                    //     if(OpenFile(selectedScenePath))
+                    //     if(OpenFile(selectedScenePath, "Scene Files (*.scene)\0*.scene\0All Files (*.*)\0*.*\0"))
                     //     {
                     //         EditorCommandHistory::Get().Clear();
                     //         SceneManager::LoadScene(selectedScenePath);
                     //     }
                     // }
-                    // if (ImGui::MenuItem("Save scene"))
-                    // {
-                    //     Path scenePath = SceneManager::GetCurrentScenePath();
-                    //     bool save = true;
-                    //     if(scenePath.empty())
-                    //     {
-                    //         save = SaveFile(scenePath, ".scene", "Scene Files (*.scene)\0*.scene\0All Files (*.*)\0*.*\0");
-                    //     }
-                    //
-                    //     if(save)
-                    //     {
-                    //         ExportScene(scenePath);
-                    //         SceneManager::SetCurrentScenePath(scenePath);
-                    //     }
-                    // }
-                    // if (ImGui::MenuItem("Save scene as..."))
-                    // {
-                    //     Path scenePath = SceneManager::GetCurrentScenePath();
-                    //     if(SaveFile(scenePath, ".scene", "Scene Files (*.scene)\0*.scene\0All Files (*.*)\0*.*\0"))
-                    //     {
-                    //         ExportScene(scenePath);
-                    //         SceneManager::SetCurrentScenePath(scenePath);
-                    //     }
-                    // }
+                    
+                    if (ImGui::MenuItem("Save scene"))
+                    {
+                        Path scenePath = SceneManager::GetCurrentScenePath();
+                        bool save = true;
+                        if(scenePath.empty())
+                        {
+                            save = SaveFile(scenePath, ".scene", "Scene Files (*.scene)\0*.scene\0All Files (*.*)\0*.*\0");
+                        }
+                    
+                        if(save)
+                        {
+                            ExportScene(scenePath);
+                            SceneManager::SetCurrentScenePath(scenePath);
+                        }
+                    }
+                    
+                    if (ImGui::MenuItem("Save scene as..."))
+                    {
+                        Path scenePath = SceneManager::GetCurrentScenePath();
+                        if(SaveFile(scenePath, ".scene", "Scene Files (*.scene)\0*.scene\0All Files (*.*)\0*.*\0"))
+                        {
+                            ExportScene(scenePath);
+                            SceneManager::SetCurrentScenePath(scenePath);
+                        }
+                    }
             
                     ImGui::Separator();
 					       

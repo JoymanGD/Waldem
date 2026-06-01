@@ -94,7 +94,7 @@ namespace Waldem
                 }
             }
 
-            return std::filesystem::absolute(std::filesystem::path(CONTENT_PATH)).lexically_normal();
+            return std::filesystem::absolute(std::filesystem::path(PROJECT_CONTENT_PATH)).lexically_normal();
         }
 
         std::filesystem::path ResolveContentPath(const std::string& path) const

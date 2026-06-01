@@ -51,7 +51,7 @@ namespace Waldem
     {
     public:
         static bool TryLoadTexture(const Path& path, Texture2D*& outTexture, bool relative = true);
-        static Texture2D* LoadTexture(const Path& path);
-        static bool TryLoadTextureDesc(const Path& path, TextureDesc*& outTexture, bool relative = true);
+        static Texture2D* LoadTexture(const Path& path, bool engineContent = false);
+        static bool TryLoadTextureDesc(const Path& path, TextureDesc*& outTexture, bool engineContent = false);
     };
 }

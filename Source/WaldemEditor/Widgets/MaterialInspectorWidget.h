@@ -40,7 +40,7 @@ namespace Waldem
             if (loadPath.is_relative())
             {
                 std::error_code ec;
-                Path rel = std::filesystem::relative(loadPath, CONTENT_PATH, ec);
+                Path rel = std::filesystem::relative(loadPath, PROJECT_CONTENT_PATH, ec);
                 if (!ec && !rel.empty() && rel.string().find("..") != 0)
                 {
                     loadPath = rel;
@@ -86,7 +86,7 @@ namespace Waldem
                 path.replace_extension(".mat");
                 if (path.is_relative())
                 {
-                    path = Path(CONTENT_PATH) / path;
+                    path = Path(PROJECT_CONTENT_PATH) / path;
                 }
 
                 std::error_code ec;

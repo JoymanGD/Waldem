@@ -240,7 +240,7 @@ namespace Waldem
                         return;
                     }
 
-                    Path prefabPath = Path(CONTENT_PATH) / Path(relativePrefabPath);
+                    Path prefabPath = Path(PROJECT_CONTENT_PATH) / Path(relativePrefabPath);
                     if(prefabPath.extension() != ".prefab")
                     {
                         return;
@@ -261,7 +261,7 @@ namespace Waldem
                         return;
                     }
 
-                    Path modelPath = Path(CONTENT_PATH) / Path(relativeModelPath);
+                    Path modelPath = Path(PROJECT_CONTENT_PATH) / Path(relativeModelPath);
                     if(modelPath.extension() != ".model")
                     {
                         return;

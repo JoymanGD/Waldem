@@ -46,7 +46,7 @@ namespace Waldem
         return false;
     }
 
-    inline bool OpenFile(Path& outPath)
+    inline bool OpenFile(Path& outPath, WString filter)
     {
         OPENFILENAMEW ofn;
         wchar_t szFile[MAX_PATH] = L"";
@@ -56,7 +56,7 @@ namespace Waldem
         ofn.hwndOwner = CWindow::Instance->GetWindowsHandle();
         ofn.lpstrFile = szFile;
         ofn.nMaxFile = MAX_PATH;
-        ofn.lpstrFilter = L"Scene Files (*.scene)\0*.scene\0All Files (*.*)\0*.*\0";
+        ofn.lpstrFilter = filter.ToWString().c_str();
         ofn.nFilterIndex = 1;
         ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 

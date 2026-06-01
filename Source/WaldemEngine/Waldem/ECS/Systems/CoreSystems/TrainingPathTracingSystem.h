@@ -113,7 +113,7 @@ namespace Waldem
                 return outputPath;
             }
 
-            Path contentRoot = Path(CONTENT_PATH);
+            Path contentRoot = Path(PROJECT_CONTENT_PATH);
             std::error_code ec;
             Path current = std::filesystem::current_path(ec);
             if(!ec)

@@ -128,12 +128,14 @@ void Waldem::ProjectManager::CreateProject(WString name, Path path)
     
     ProjectData newProject = {};
     newProject.Name = name;
+    newProject.ProjectPath = projectFolder;
     
     rapidjson::Document projectDoc;
     projectDoc.SetObject();
 
     auto& allocator = projectDoc.GetAllocator();
     projectDoc.AddMember("name", rapidjson::Value(newProject.Name.GetData(), allocator), allocator);
+    projectDoc.AddMember("projectpath", rapidjson::Value(newProject.ProjectPath.string().c_str(), allocator), allocator);
     projectDoc.AddMember("startupscene", rapidjson::Value(newProject.StartupScene.string().c_str(), allocator), allocator);
     rapidjson::StringBuffer buffer;
     rapidjson::Writer writer(buffer);
@@ -147,4 +149,40 @@ void Waldem::ProjectManager::CreateProject(WString name, Path path)
     }
     
     file << buffer.GetString();
+
+    CurrentProject = newProject;
+}
+
+bool Waldem::ProjectManager::LoadProject(Path path)
+{
+    std::ifstream file(path);
+
+    if (!file)
+    {
+      WD_CORE_ERROR("Failed to open scene file");
+      return false;
+    }
+
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+
+    std::string json = buffer.str();
+
+    rapidjson::Document doc;
+    doc.Parse(json.c_str());
+
+    if (doc.HasParseError())
+    {
+        WD_CORE_ERROR("Failed to parse scene file");
+        return false;
+    }
+    ProjectData project;
+
+    project.Name = doc["name"].GetString();
+    project.ProjectPath = doc["projectpath"].GetString();
+    project.StartupScene = doc["startupscene"].GetString();
+
+    CurrentProject = project;
+
+    return true;
 }
