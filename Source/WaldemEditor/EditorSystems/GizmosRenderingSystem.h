@@ -98,11 +98,11 @@ namespace Waldem
         void Initialize(InputManager* inputManager) override
         {
             // Load gizmo icons
-            CameraGizmo = ImageUtils::LoadTexture("Icons/Camera");
-            SunGizmo = ImageUtils::LoadTexture("Icons/Sun");
-            PointLightGizmo = ImageUtils::LoadTexture("Icons/PointLight");
-            SpotLightGizmo = ImageUtils::LoadTexture("Icons/SpotLight");
-            ParticleSystemGizmo = ImageUtils::LoadTexture("Icons/ParticleSystem");
+            CameraGizmo = ImageUtils::LoadTexture("Icons/Camera", true);
+            SunGizmo = ImageUtils::LoadTexture("Icons/Sun", true);
+            PointLightGizmo = ImageUtils::LoadTexture("Icons/PointLight", true);
+            SpotLightGizmo = ImageUtils::LoadTexture("Icons/SpotLight", true);
+            ParticleSystemGizmo = ImageUtils::LoadTexture("Icons/ParticleSystem", true);
 
             // Pipeline state
             DepthStencilDesc noDepth = DEFAULT_DEPTH_STENCIL_DESC;

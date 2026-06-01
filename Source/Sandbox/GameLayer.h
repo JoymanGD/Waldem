@@ -6,6 +6,7 @@
 #include "GameSystems/PlayerControllerSystem.h"
 #include "Waldem/Input/InputManager.h"
 #include "Waldem/Layers/Layer.h"
+#include "Waldem/ProjectManagement/ProjectManager.h"
 #include "Waldem/Renderer/Viewport/ViewportManager.h"
 #include "Waldem/SceneManagement/SceneManager.h"
 
@@ -110,7 +111,7 @@ namespace Waldem
 			
 			if(!SceneLoaded)
 			{
-				Path path = CONTENT_PATH;
+				Path path = PROJECT_CONTENT_PATH;
 				path /= "Scenes/Reflections_Test.scene";
 				SceneManager::LoadScene(path);
 				SceneLoaded = true;

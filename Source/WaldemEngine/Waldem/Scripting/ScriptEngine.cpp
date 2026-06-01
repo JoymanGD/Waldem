@@ -495,7 +495,7 @@ namespace Waldem
             Path scriptPath = scriptReference.Reference;
             if(scriptPath.is_relative())
             {
-                scriptPath = Path(CONTENT_PATH) / scriptPath;
+                scriptPath = Path(PROJECT_CONTENT_PATH) / scriptPath;
             }
 
             return scriptPath;

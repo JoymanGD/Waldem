@@ -1,6 +1,8 @@
 #include "wdpch.h"
 #include "ImageUtils.h"
 #include <stb_image.h>
+
+#include "Waldem/ProjectManagement/ProjectManager.h"
 #include "Waldem/Renderer/Renderer.h"
 #include "Waldem/Types/String.h"
 #include "Waldem/Renderer/Texture.h"
@@ -13,12 +15,12 @@ namespace Waldem
         return outTexture != nullptr;
     }
 
-    Texture2D* ImageUtils::LoadTexture(const Path& path)
+    Texture2D* ImageUtils::LoadTexture(const Path& path, bool engineContent)
     {
         Texture2D* outTexture = nullptr;
         TextureDesc* outTextureDesc = nullptr;
 
-        if(TryLoadTextureDesc(path, outTextureDesc))
+        if(TryLoadTextureDesc(path, outTextureDesc, engineContent))
         {
             outTexture = Renderer::CreateTexture2D(outTextureDesc->Name, outTextureDesc->Width, outTextureDesc->Height, outTextureDesc->Format, outTextureDesc->Data);
             delete outTextureDesc;
@@ -27,7 +29,7 @@ namespace Waldem
         return outTexture;
     }
 
-    bool ImageUtils::TryLoadTextureDesc(const Path& path, TextureDesc*& outTexture, bool relative)
+    bool ImageUtils::TryLoadTextureDesc(const Path& path, TextureDesc*& outTexture, bool engineContent)
     {
         WString fileName = path.filename().string();
         
@@ -37,7 +39,7 @@ namespace Waldem
         
         if(finalPath.is_relative())
         {
-            finalPath = Path(CONTENT_PATH) / finalPath;
+            finalPath = Path(engineContent ? CONTENT_PATH : PROJECT_CONTENT_PATH) / finalPath;
         }
 
         if(!finalPath.has_extension())

@@ -587,7 +587,7 @@ namespace Waldem
         context.DestinationPath = to;
         context.UniformScale = Settings.UniformScale;
 
-        context.RelativeModelDir = std::filesystem::relative(to, CONTENT_PATH).string();
+        context.RelativeModelDir = std::filesystem::relative(to, PROJECT_CONTENT_PATH).string();
         context.RelativeModelDir /= from.stem();
 
         if(context.Scene == nullptr)

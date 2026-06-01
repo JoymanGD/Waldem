@@ -31,6 +31,9 @@ IncludeDir["TinyCudaNNDep"] = "Vendor/tinycudann/dependencies"
 local DefaultPhysXRoot = path.getabsolute(path.join(rootDir, "Vendor/PhysX/physx"))
 local DefaultPhysXIncludeDir = path.join(DefaultPhysXRoot, "include")
 local DefaultPhysXLibDir = path.join(DefaultPhysXRoot, "bin/win.x86_64.vc143.md/release")
+if not os.isfile(path.join(DefaultPhysXLibDir, "PhysX_64.lib")) then
+    DefaultPhysXLibDir = path.join(DefaultPhysXRoot, "bin/win.x86_64.vc143.mt/release")
+end
 
 local PhysXRootDir = os.getenv("PHYSX_ROOT_DIR")
 if PhysXRootDir == nil or PhysXRootDir == "" then

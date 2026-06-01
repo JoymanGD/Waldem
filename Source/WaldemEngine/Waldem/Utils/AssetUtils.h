@@ -1,6 +1,7 @@
 #pragma once
 #include <filesystem>
 
+#include "Waldem/ProjectManagement/ProjectManager.h"
 #include "Waldem/Serialization/Asset.h"
 
 namespace Waldem
@@ -29,7 +30,7 @@ namespace Waldem
     
     inline Path GetPathForAsset(AssetType type)
     {
-        Path curentFolder = CONTENT_PATH;
+        Path curentFolder = PROJECT_CONTENT_PATH;
         
         switch (type)
         {

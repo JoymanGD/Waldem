@@ -9,6 +9,8 @@
 #include <mutex>
 #include <string>
 
+#include "Waldem/ProjectManagement/ProjectManager.h"
+
 namespace Waldem
 {
     using FileDroppedEventHandler = std::function<void(Path)>;
@@ -36,7 +38,7 @@ namespace Waldem
 
             if (finalPath.is_relative())
             {
-                finalPath = Path(CONTENT_PATH) / finalPath;
+                finalPath = Path(PROJECT_CONTENT_PATH) / finalPath;
             }
 
             if(exists(finalPath))
