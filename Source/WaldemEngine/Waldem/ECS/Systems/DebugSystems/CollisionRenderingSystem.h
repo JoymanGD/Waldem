@@ -91,6 +91,10 @@ namespace Waldem
             ECS::World.system("CollisionRenderingSystem").kind<ECS::OnDraw>().each([&]
             {
                 auto viewport = Renderer::GetCurrentViewport();
+                
+                if(viewport->Type != EditorViewport)
+                    return;
+                
                 ECS::Entity linkedCamera;
                 if (!viewport->TryGetLinkedCamera(linkedCamera))
                     return;

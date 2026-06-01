@@ -46,7 +46,7 @@ namespace Waldem
             }
         }
 
-        static void LoadScene(Path& path)
+        static void LoadScene(const Path& path)
         {
             CurrentScenePath = path;
             PendingPath = path;

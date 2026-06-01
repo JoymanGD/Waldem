@@ -95,10 +95,14 @@
   -->
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
     <PostBuildEvent>xcopy /Y "$(MSBuildProjectDirectory)\..\..\Build\Debug\ScriptEngine\ScriptEngine.dll" "$(MSBuildProjectDirectory)\..\..\Build\Debug\WaldemEditor\"
-xcopy /Y "$(MSBuildProjectDirectory)\..\..\Build\Debug\ScriptEngine\ScriptEngine.pdb" "$(MSBuildProjectDirectory)\..\..\Build\Debug\WaldemEditor\"</PostBuildEvent>
+xcopy /Y "$(MSBuildProjectDirectory)\..\..\Build\Debug\ScriptEngine\ScriptEngine.pdb" "$(MSBuildProjectDirectory)\..\..\Build\Debug\WaldemEditor\"
+xcopy /Y "$(MSBuildProjectDirectory)\..\..\Build\Debug\ScriptEngine\ScriptEngine.dll" "$(MSBuildProjectDirectory)\..\..\Build\Debug\Sandbox\"
+xcopy /Y "$(MSBuildProjectDirectory)\..\..\Build\Debug\ScriptEngine\ScriptEngine.pdb" "$(MSBuildProjectDirectory)\..\..\Build\Debug\Sandbox\"</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
     <PostBuildEvent>xcopy /Y "$(MSBuildProjectDirectory)\..\..\Build\Release\ScriptEngine\ScriptEngine.dll" "$(MSBuildProjectDirectory)\..\..\Build\Release\WaldemEditor\"
-xcopy /Y "$(MSBuildProjectDirectory)\..\..\Build\Release\ScriptEngine\ScriptEngine.pdb" "$(MSBuildProjectDirectory)\..\..\Build\Release\WaldemEditor\"</PostBuildEvent>
+xcopy /Y "$(MSBuildProjectDirectory)\..\..\Build\Release\ScriptEngine\ScriptEngine.pdb" "$(MSBuildProjectDirectory)\..\..\Build\Release\WaldemEditor\"
+xcopy /Y "$(MSBuildProjectDirectory)\..\..\Build\Release\ScriptEngine\ScriptEngine.dll" "$(MSBuildProjectDirectory)\..\..\Build\Release\Sandbox\"
+xcopy /Y "$(MSBuildProjectDirectory)\..\..\Build\Release\ScriptEngine\ScriptEngine.pdb" "$(MSBuildProjectDirectory)\..\..\Build\Release\Sandbox\"</PostBuildEvent>
   </PropertyGroup>
 </Project>
