@@ -7,13 +7,28 @@ namespace Waldem
     struct ProjectData
     {
         WString Name = "NewProject";
-        Path ProjectPath = "C:/WaldemGames/NewProject";
+        Path ProjectFilePath = "";
+        Path ProjectPath = "";
         Path StartupScene = "Scenes/Default.scene";
 
-        Path GetContentPath()
+        Path GetContentPath() const
         {
-            Path contenPath = ProjectPath / "Content";
-            return contenPath;
+            return ProjectPath / "Content";
+        }
+
+        Path GetStartupScenePath() const
+        {
+            return GetContentPath() / StartupScene;
+        }
+
+        Path GetScriptsPath() const
+        {
+            return GetContentPath() / "Scripts";
+        }
+
+        bool IsValid() const
+        {
+            return !ProjectPath.empty() && !Name.IsEmpty();
         }
     };
     
@@ -22,6 +37,7 @@ namespace Waldem
     public:
         static void CreateProject(WString name, Path path);
         static bool LoadProject(Path path);
+        static bool HasProject() { return CurrentProject.IsValid(); }
         static inline ProjectData CurrentProject;
     };
 }

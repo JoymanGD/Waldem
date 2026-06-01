@@ -15,6 +15,7 @@
 #include <regex>
 #include <vector>
 #include "Waldem/ECS/Components/ScriptComponent.h"
+#include "Waldem/ProjectManagement/ProjectManager.h"
 #include "Waldem/Utils/FileUtils.h"
 #include "Bindings/AnimatorBindings.h"
 #include "Bindings/CameraBindings.h"
@@ -60,7 +61,17 @@ namespace Waldem
         Path ResolveProjectRootPath()
         {
             Path currentFolder = GetCurrentFolder();
-            return currentFolder.parent_path().parent_path().parent_path();
+            for(int i = 0; i < 8 && !currentFolder.empty(); ++i)
+            {
+                if(exists(currentFolder / "Waldem.sln"))
+                {
+                    return currentFolder;
+                }
+
+                currentFolder = currentFolder.parent_path();
+            }
+
+            return {};
         }
 
         ScriptFieldType GetScriptFieldType(MonoType* monoType)
@@ -591,6 +602,12 @@ namespace Waldem
     bool ScriptEngine::RebuildScriptAssembly()
     {
         const Path projectRoot = ResolveProjectRootPath();
+        if(projectRoot.empty())
+        {
+            LastReloadStatus = "Failed to locate engine root";
+            return false;
+        }
+
         const Path vsWherePath = Path("C:/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe");
         if(!exists(vsWherePath))
         {
@@ -610,10 +627,14 @@ namespace Waldem
 
         const std::wstring configuration = GetCurrentFolder().parent_path().filename().wstring();
         const Path csprojPath = projectRoot / "Source" / "ScriptEngine" / "ScriptEngine.csproj";
+        const Path projectScriptsPath = ProjectManager::HasProject()
+            ? ProjectManager::CurrentProject.GetScriptsPath()
+            : (projectRoot / "Content" / "Scripts");
 
         const std::wstring commandLine =
             L"\"" + Path(msbuildPathString).wstring() + L"\" \"" + csprojPath.wstring() +
-            L"\" /t:Build /p:Configuration=" + configuration + L" /p:Platform=x64 /p:PostBuildEvent= /nologo";
+            L"\" /t:Build /p:Configuration=" + configuration + L" /p:Platform=x64 /p:PostBuildEvent= /p:WaldemProjectScriptsDir=\"" +
+            projectScriptsPath.wstring() + L"\" /nologo";
 
         if(!RunProcessBlocking(commandLine, projectRoot))
         {
@@ -628,7 +649,14 @@ namespace Waldem
     bool ScriptEngine::CopyAssemblyToRuntimeFolder()
     {
         const Path configuration = GetCurrentFolder().parent_path().filename();
-        const Path sourceAssemblyPath = ResolveProjectRootPath() / "Build" / configuration / "ScriptEngine" / "ScriptEngine.dll";
+        const Path projectRoot = ResolveProjectRootPath();
+        if(projectRoot.empty())
+        {
+            LastReloadStatus = "Failed to locate engine root";
+            return false;
+        }
+
+        const Path sourceAssemblyPath = projectRoot / "Build" / configuration / "ScriptEngine" / "ScriptEngine.dll";
         const Path sourcePdbPath = sourceAssemblyPath.parent_path() / "ScriptEngine.pdb";
         const Path runtimeFolder = GetCurrentFolder();
         const std::string versionSuffix = ".reload_" + std::to_string(++RuntimeAssemblyVersion);

@@ -2,6 +2,7 @@
 #include "ProjectManager.h"
 
 #include <fstream>
+#include <sstream>
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
@@ -10,7 +11,7 @@
 void Waldem::ProjectManager::CreateProject(WString name, Path path)
 {
     //create project folder
-    Path projectFolder = path.append(name.GetData());
+    Path projectFolder = path / name.GetData();
     create_directories(projectFolder);
 
     //create project file
@@ -24,6 +25,10 @@ void Waldem::ProjectManager::CreateProject(WString name, Path path)
     //create scenes folder
     Path scenesFolder = contentFolder / "Scenes";
     create_directories(scenesFolder);
+
+    //create scripts folder
+    Path scriptsFolder = contentFolder / "Scripts";
+    create_directories(scriptsFolder);
 
     //create default scene
     const char* defaultScene = R"([
@@ -128,6 +133,7 @@ void Waldem::ProjectManager::CreateProject(WString name, Path path)
     
     ProjectData newProject = {};
     newProject.Name = name;
+    newProject.ProjectFilePath = projectFile;
     newProject.ProjectPath = projectFolder;
     
     rapidjson::Document projectDoc;
@@ -135,7 +141,6 @@ void Waldem::ProjectManager::CreateProject(WString name, Path path)
 
     auto& allocator = projectDoc.GetAllocator();
     projectDoc.AddMember("name", rapidjson::Value(newProject.Name.GetData(), allocator), allocator);
-    projectDoc.AddMember("projectpath", rapidjson::Value(newProject.ProjectPath.string().c_str(), allocator), allocator);
     projectDoc.AddMember("startupscene", rapidjson::Value(newProject.StartupScene.string().c_str(), allocator), allocator);
     rapidjson::StringBuffer buffer;
     rapidjson::Writer writer(buffer);
@@ -159,7 +164,7 @@ bool Waldem::ProjectManager::LoadProject(Path path)
 
     if (!file)
     {
-      WD_CORE_ERROR("Failed to open scene file");
+      WD_CORE_ERROR("Failed to open project file");
       return false;
     }
 
@@ -173,13 +178,22 @@ bool Waldem::ProjectManager::LoadProject(Path path)
 
     if (doc.HasParseError())
     {
-        WD_CORE_ERROR("Failed to parse scene file");
+        WD_CORE_ERROR("Failed to parse project file");
         return false;
     }
+
+    if(!doc.IsObject() || !doc.HasMember("name") || !doc["name"].IsString() ||
+        !doc.HasMember("startupscene") || !doc["startupscene"].IsString())
+    {
+        WD_CORE_ERROR("Project file is missing required fields");
+        return false;
+    }
+
     ProjectData project;
 
     project.Name = doc["name"].GetString();
-    project.ProjectPath = doc["projectpath"].GetString();
+    project.ProjectFilePath = std::filesystem::absolute(path).lexically_normal();
+    project.ProjectPath = project.ProjectFilePath.parent_path();
     project.StartupScene = doc["startupscene"].GetString();
 
     CurrentProject = project;

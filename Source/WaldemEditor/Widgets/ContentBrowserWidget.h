@@ -66,6 +66,7 @@ namespace Waldem
         Path CachedEntriesPath;
         std::string CachedSearchQuery;
         bool AssetEntriesDirty = true;
+        Path LastProjectContentRoot;
         inline static std::optional<Path> SharedSelectedAssetPath = std::nullopt;
         inline static std::optional<Path> SharedFocusAssetPath = std::nullopt;
         std::optional<Path> PendingScrollToAssetPath = std::nullopt;
@@ -1192,94 +1193,124 @@ namespace Waldem
             PollImportTask();
             ThumbnailsCreatedThisFrame = 0;
 
-            if(exists(PROJECT_CONTENT_PATH))
+            if(!ProjectManager::HasProject())
             {
-                const bool isVisible = ImGui::Begin("Content###Content", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus);
-                if (isVisible)
-                {
-                    ProcessFocusRequest();
-                    HoveredDropTargetFolder.reset();
-
-                    float importProgress = 0.0f;
-                    std::string importLabel;
-                    if (CContentManager::GetImportStatus(importProgress, importLabel))
-                    {
-                        std::string label = importLabel.empty() ? "Importing..." : ("Importing " + importLabel + "...");
-                        ImGui::TextUnformatted(label.c_str());
-                        ImGui::ProgressBar(importProgress, ImVec2(ImGui::GetContentRegionAvail().x, 0.0f));
-                        ImGui::Separator();
-                    }
-                    
-                    //search bar
-                    if (ImGui::Button("Create"))
-                    {
-                        ImGui::OpenPopup("ContentCreatePopup");
-                    }
-                    if (ImGui::BeginPopup("ContentCreatePopup"))
-                    {
-                        if (ImGui::MenuItem("Material"))
-                        {
-                            CreateMaterialAsset(CurrentPath);
-                        }
-                        ImGui::EndPopup();
-                    }
-
-                    ImGui::SameLine();
-                    if (ImGui::InputTextWithHint("##Search", "Search...", SearchBuffer, IM_ARRAYSIZE(SearchBuffer)))
-                    {
-                        InvalidateAssetEntries();
-                    }
-                    ImGui::Separator();
-
-                    //folders tree
-                    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(4.0f, 4.0f));
-                    ImGui::BeginChild("FoldersTree", ImVec2(240, 0), true, ImGuiWindowFlags_None);
-                    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4.0f, 2.0f));
-                    RenderFolderTree(PROJECT_CONTENT_PATH);
-                    ImGui::PopStyleVar();
-                    ImGui::EndChild();
-                    ImGui::PopStyleVar();
-
-                    ImGui::SameLine();
-
-                    //assets list
-                    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.0f, 6.0f));
-                    ImGui::BeginChild("AssetList", ImVec2(0, 0), true, ImGuiWindowFlags_None);
-                    RenderAssetsList();
-                    ImGui::EndChild();
-                    ImGui::PopStyleVar();
-
-                    const bool contentFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
-                    EditorShortcutContexts::SetActive(EditorShortcutContext::ContentBrowser, contentFocused);
-                    if (RenameSelectedAssetRequested && contentFocused)
-                    {
-                        if (SelectedAssetListPath.has_value())
-                        {
-                            BeginRenamePath(SelectedAssetListPath.value());
-                        }
-                        else if (SelectedFolderTreePath.has_value())
-                        {
-                            BeginRenamePath(SelectedFolderTreePath.value());
-                        }
-                    }
-
-                    if (DeleteSelectedAssetRequested && contentFocused)
-                    {
-                        DeleteSelectedAssetOrFolder();
-                    }
-
-                    DrawRenamePopup();
-                    DrawModelImportPopup();
-                }
-                else
-                {
-                    EditorShortcutContexts::SetActive(EditorShortcutContext::ContentBrowser, false);
-                }
-
+                LastProjectContentRoot.clear();
+                CurrentPath.clear();
+                PendingModelImportTargetPath.clear();
+                SelectedFolderTreePath.reset();
+                SelectedAssetListPath.reset();
+                HoveredDropTargetFolder.reset();
+                EditorShortcutContexts::SetActive(EditorShortcutContext::ContentBrowser, false);
                 RenameSelectedAssetRequested = false;
                 DeleteSelectedAssetRequested = false;
-                ImGui::End();
+                return;
             }
+
+            const Path projectContentRoot = PROJECT_CONTENT_PATH;
+            if(projectContentRoot != LastProjectContentRoot || CurrentPath.empty() || !exists(CurrentPath) || !IsPathInside(CurrentPath, projectContentRoot))
+            {
+                LastProjectContentRoot = projectContentRoot;
+                CurrentPath = projectContentRoot;
+                PendingModelImportTargetPath = projectContentRoot;
+                SelectedFolderTreePath.reset();
+                SelectedAssetListPath.reset();
+                InvalidateAssetEntries();
+            }
+
+            if(!exists(projectContentRoot))
+            {
+                EditorShortcutContexts::SetActive(EditorShortcutContext::ContentBrowser, false);
+                RenameSelectedAssetRequested = false;
+                DeleteSelectedAssetRequested = false;
+                return;
+            }
+
+            const bool isVisible = ImGui::Begin("Content###Content", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus);
+            if (isVisible)
+            {
+                ProcessFocusRequest();
+                HoveredDropTargetFolder.reset();
+
+                float importProgress = 0.0f;
+                std::string importLabel;
+                if (CContentManager::GetImportStatus(importProgress, importLabel))
+                {
+                    std::string label = importLabel.empty() ? "Importing..." : ("Importing " + importLabel + "...");
+                    ImGui::TextUnformatted(label.c_str());
+                    ImGui::ProgressBar(importProgress, ImVec2(ImGui::GetContentRegionAvail().x, 0.0f));
+                    ImGui::Separator();
+                }
+                
+                //search bar
+                if (ImGui::Button("Create"))
+                {
+                    ImGui::OpenPopup("ContentCreatePopup");
+                }
+                if (ImGui::BeginPopup("ContentCreatePopup"))
+                {
+                    if (ImGui::MenuItem("Material"))
+                    {
+                        CreateMaterialAsset(CurrentPath);
+                    }
+                    ImGui::EndPopup();
+                }
+
+                ImGui::SameLine();
+                if (ImGui::InputTextWithHint("##Search", "Search...", SearchBuffer, IM_ARRAYSIZE(SearchBuffer)))
+                {
+                    InvalidateAssetEntries();
+                }
+                ImGui::Separator();
+
+                //folders tree
+                ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(4.0f, 4.0f));
+                ImGui::BeginChild("FoldersTree", ImVec2(240, 0), true, ImGuiWindowFlags_None);
+                ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4.0f, 2.0f));
+                RenderFolderTree(projectContentRoot);
+                ImGui::PopStyleVar();
+                ImGui::EndChild();
+                ImGui::PopStyleVar();
+
+                ImGui::SameLine();
+
+                //assets list
+                ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.0f, 6.0f));
+                ImGui::BeginChild("AssetList", ImVec2(0, 0), true, ImGuiWindowFlags_None);
+                RenderAssetsList();
+                ImGui::EndChild();
+                ImGui::PopStyleVar();
+
+                const bool contentFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
+                EditorShortcutContexts::SetActive(EditorShortcutContext::ContentBrowser, contentFocused);
+                if (RenameSelectedAssetRequested && contentFocused)
+                {
+                    if (SelectedAssetListPath.has_value())
+                    {
+                        BeginRenamePath(SelectedAssetListPath.value());
+                    }
+                    else if (SelectedFolderTreePath.has_value())
+                    {
+                        BeginRenamePath(SelectedFolderTreePath.value());
+                    }
+                }
+
+                if (DeleteSelectedAssetRequested && contentFocused)
+                {
+                    DeleteSelectedAssetOrFolder();
+                }
+
+                DrawRenamePopup();
+                DrawModelImportPopup();
+            }
+            else
+            {
+                EditorShortcutContexts::SetActive(EditorShortcutContext::ContentBrowser, false);
+            }
+
+            RenameSelectedAssetRequested = false;
+            DeleteSelectedAssetRequested = false;
+            ImGui::End();
         }
     };
 }

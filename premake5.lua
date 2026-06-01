@@ -377,7 +377,7 @@ project "WaldemEditor"
 
 project "Sandbox"
     location (SourceDir .. "/Sandbox")
-    kind "ConsoleApp"
+    kind "WindowedApp"
     SetDefaultPaths()
     debugdir ("Build/" .. OutputDir .. "/%{prj.name}")
     SetupCommonCppProject()
@@ -417,5 +417,7 @@ project "ScriptEngine"
     postbuildcommands
     {
         'xcopy /Y "$(MSBuildProjectDirectory)\\..\\..\\Build\\%{cfg.buildcfg}\\ScriptEngine\\ScriptEngine.dll" "$(MSBuildProjectDirectory)\\..\\..\\Build\\%{cfg.buildcfg}\\WaldemEditor\\"',
-        'xcopy /Y "$(MSBuildProjectDirectory)\\..\\..\\Build\\%{cfg.buildcfg}\\ScriptEngine\\ScriptEngine.pdb" "$(MSBuildProjectDirectory)\\..\\..\\Build\\%{cfg.buildcfg}\\WaldemEditor\\"'
+        'xcopy /Y "$(MSBuildProjectDirectory)\\..\\..\\Build\\%{cfg.buildcfg}\\ScriptEngine\\ScriptEngine.pdb" "$(MSBuildProjectDirectory)\\..\\..\\Build\\%{cfg.buildcfg}\\WaldemEditor\\"',
+        'xcopy /Y "$(MSBuildProjectDirectory)\\..\\..\\Build\\%{cfg.buildcfg}\\ScriptEngine\\ScriptEngine.dll" "$(MSBuildProjectDirectory)\\..\\..\\Build\\%{cfg.buildcfg}\\Sandbox\\"',
+        'xcopy /Y "$(MSBuildProjectDirectory)\\..\\..\\Build\\%{cfg.buildcfg}\\ScriptEngine\\ScriptEngine.pdb" "$(MSBuildProjectDirectory)\\..\\..\\Build\\%{cfg.buildcfg}\\Sandbox\\"'
     }

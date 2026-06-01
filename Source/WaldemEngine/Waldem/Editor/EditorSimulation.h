@@ -22,6 +22,14 @@ namespace Waldem
         static bool IsPlaying() { return State == EditorSimulationState::Play || State == EditorSimulationState::Pause; }
         static bool IsPaused() { return State == EditorSimulationState::Pause; }
         static bool ShouldRunRuntimeSystems() { return State == EditorSimulationState::Play; }
+        static void SetState(EditorSimulationState state)
+        {
+            State = state;
+            if(state != EditorSimulationState::Play)
+            {
+                SnapshotPath.clear();
+            }
+        }
 
         static bool Play()
         {

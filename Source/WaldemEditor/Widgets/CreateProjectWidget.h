@@ -66,12 +66,11 @@ namespace Waldem
             if (ImGui::Button("Create"))
             {
                 ProjectManager::CreateProject(WString(NameBuffer), Path(PathBuffer));
-
-                Path scenePath(PathBuffer);
-                scenePath.append(NameBuffer);
-                scenePath /= "Content/Scenes/Default.scene";
-
-                SceneManager::LoadScene(scenePath);
+                if(ProjectManager::HasProject())
+                {
+                    Path startupScenePath = ProjectManager::CurrentProject.GetStartupScenePath();
+                    SceneManager::LoadScene(startupScenePath);
+                }
                 
                 Visible = false;
             }

@@ -35,6 +35,12 @@ namespace Waldem
 
 		void Initialize() override
 		{
+			if(auto viewport = ViewportManager::GetGameViewport())
+			{
+				viewport->IsFocused = true;
+				viewport->IsMouseOver = true;
+			}
+
 			for (ISystem* system : UISystems)
 			{
 				system->Initialize(&InputManager);
@@ -111,10 +117,12 @@ namespace Waldem
 			
 			if(!SceneLoaded)
 			{
-				Path path = PROJECT_CONTENT_PATH;
-				path /= "Scenes/Reflections_Test.scene";
-				SceneManager::LoadScene(path);
-				SceneLoaded = true;
+				if(ProjectManager::HasProject())
+				{
+					const Path startupScenePath = ProjectManager::CurrentProject.GetStartupScenePath();
+					SceneManager::LoadScene(startupScenePath);
+					SceneLoaded = true;
+				}
 			}
 		}
 

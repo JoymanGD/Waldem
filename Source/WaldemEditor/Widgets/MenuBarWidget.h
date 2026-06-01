@@ -8,6 +8,7 @@
 #include "Waldem/SceneManagement/SceneManager.h"
 #include "Waldem/Scripting/ScriptEngine.h"
 #include "Waldem/ECS/Systems/CoreSystems/PhysXSystem.h"
+#include "Waldem/ProjectManagement/ProjectBuilder.h"
 #include "Waldem/Utils/FileUtils.h"
 #include "Commands/EditorCommands.h"
 #include "../EditorShortcuts.h"
@@ -23,6 +24,7 @@ namespace Waldem
     {
     private:
         inline static float SecondaryBarHeight = 0.0f;
+        Path LastBuildDirectory = "";
 
         struct KeyOption
         {
@@ -145,6 +147,25 @@ namespace Waldem
             SceneManager::GetCurrentScene()->Serialize(path);
         }
 
+        void BuildProject(ProjectBuildConfiguration configuration)
+        {
+            Path outputDirectory = LastBuildDirectory;
+            if(outputDirectory.empty())
+            {
+                outputDirectory = ProjectManager::HasProject()
+                    ? ProjectManager::CurrentProject.ProjectPath.parent_path()
+                    : GetCurrentFolder();
+            }
+
+            if(!SelectFolder(outputDirectory))
+            {
+                return;
+            }
+
+            LastBuildDirectory = outputDirectory;
+            ProjectBuilder::BuildCurrentProject(outputDirectory, configuration);
+        }
+
         void OnDraw(float deltaTime) override
         {
             if (ImGui::BeginMainMenuBar())
@@ -162,8 +183,8 @@ namespace Waldem
                         {
                             if(ProjectManager::LoadProject(selectedScenePath))
                             {
-                                Path scenePath = ProjectManager::CurrentProject.ProjectPath / "Content" / ProjectManager::CurrentProject.StartupScene;
-                                SceneManager::LoadScene(scenePath);
+                                Path startupScenePath = ProjectManager::CurrentProject.GetStartupScenePath();
+                                SceneManager::LoadScene(startupScenePath);
                             }
                         }
                     }
@@ -212,6 +233,11 @@ namespace Waldem
                             ExportScene(scenePath);
                             SceneManager::SetCurrentScenePath(scenePath);
                         }
+                    }
+
+                    if (ImGui::MenuItem("Build project"))
+                    {
+                        BuildProject(ProjectBuildConfiguration::Release);
                     }
             
                     ImGui::Separator();
@@ -295,6 +321,21 @@ namespace Waldem
                     ImGui::TextWrapped("Scripts: %s", ScriptEngine::GetLastReloadStatus());
                     ImGui::TextWrapped("Shaders: %s", Renderer::GetLastShaderReloadStatus());
 
+                    ImGui::EndMenu();
+                }
+
+                if (ImGui::BeginMenu("Build"))
+                {
+                    if (ImGui::MenuItem("Package Release"))
+                    {
+                        BuildProject(ProjectBuildConfiguration::Release);
+                    }
+
+                    ImGui::TextWrapped("%s", ProjectBuilder::GetLastBuildStatus());
+                    if(!ProjectBuilder::GetLastBuildOutputPath().empty())
+                    {
+                        ImGui::TextWrapped("%s", ProjectBuilder::GetLastBuildOutputPath().string().c_str());
+                    }
                     ImGui::EndMenu();
                 }
 
