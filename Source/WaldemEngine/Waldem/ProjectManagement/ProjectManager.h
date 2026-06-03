@@ -37,6 +37,7 @@ namespace Waldem
     public:
         static void CreateProject(WString name, Path path);
         static bool LoadProject(Path path);
+        static bool GenerateProjectFiles();
         static bool HasProject() { return CurrentProject.IsValid(); }
         static inline ProjectData CurrentProject;
     };

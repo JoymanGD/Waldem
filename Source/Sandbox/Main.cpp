@@ -6,6 +6,7 @@
 #include "Waldem/Input/KeyCodes.h"
 #include "Waldem/ProjectManagement/ProjectManager.h"
 #include "Waldem/Editor/EditorSimulation.h"
+#include "Waldem/Scripting/ScriptEngine.h"
 #include "Waldem/Utils/FileUtils.h"
 #include "GameLayer.h"
 #include "Waldem/ECS/ECS.h"
@@ -48,6 +49,11 @@ namespace
         auto gameLayer = new Waldem::GameLayer(engine->GetWindow());
         gameLayer->Initialize();
         engine->PushLayer(gameLayer);
+
+        if(Waldem::ProjectManager::HasProject())
+        {
+            Waldem::ScriptEngine::ReloadScripts(true);
+        }
     
         engine->Run();
         delete engine;

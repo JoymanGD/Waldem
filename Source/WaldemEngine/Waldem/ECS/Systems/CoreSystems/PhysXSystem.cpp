@@ -39,7 +39,7 @@ namespace Waldem
             std::unordered_map<uint64, Vector3> PreviousPositions;
             std::unordered_set<uint64> DirtyEntities;
             bool IsSynchronizing = false;
-            Vector3 Gravity = Vector3(0.0f, -9.81f, 0.0f);
+            Vector3 Gravity = Vector3(0.0f, -30.00f, 0.0f);
         };
 
         PhysXState& GetState()
@@ -926,11 +926,14 @@ namespace Waldem
 
             Transform& transform = entity.get_mut<Transform>();
             const PxTransform pose = actor.getGlobalPose();
+            const Vector3 actorPosition = FromPx(pose.p);
+            const Quaternion actorRotation = FromPx(pose.q);
             auto& state = GetState();
             const bool previousSynchronizing = state.IsSynchronizing;
             state.IsSynchronizing = true;
-            transform.Position = FromPx(pose.p);
-            transform.RotationQuat = FromPx(pose.q);
+            transform.PushPhysicsInterpolationState(actorPosition, actorRotation);
+            transform.Position = actorPosition;
+            transform.RotationQuat = actorRotation;
             transform.Matrix = translate(Matrix4(1.0f), transform.Position) * mat4_cast(transform.RotationQuat) * scale(Matrix4(1.0f), transform.LocalScale);
             transform.DecompileMatrix();
             entity.modified<Transform>();

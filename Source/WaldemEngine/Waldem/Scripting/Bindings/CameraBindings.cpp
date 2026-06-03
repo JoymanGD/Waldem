@@ -3,6 +3,7 @@
 #include "ScriptBindings.h"
 #include "Waldem/Scripting/Mono.h"
 #include "Waldem/ECS/Components/Camera.h"
+#include "Waldem/ECS/Components/EditorComponent.h"
 #include "Waldem/Renderer/Viewport/Viewport.h"
 #include "Waldem/Renderer/Viewport/ViewportManager.h"
 
@@ -65,8 +66,28 @@ namespace Waldem::Bindings
                 return 0;
 
             ECS::Entity cameraEntity;
-            if(!gameViewport->TryGetLinkedCamera(cameraEntity))
-                return 0;
+            const auto resolveFallbackCamera = [&]() -> ECS::Entity
+            {
+                auto cameraQuery = ECS::World.query_builder<Camera>().without<EditorComponent>().build();
+                cameraQuery.each([&](flecs::entity entity, Camera&)
+                {
+                    if(!cameraEntity.is_alive())
+                    {
+                        cameraEntity = entity;
+                    }
+                });
+
+                return cameraEntity;
+            };
+
+            if(!gameViewport->TryGetLinkedCamera(cameraEntity) || !cameraEntity.has<Camera>() || cameraEntity.has<EditorComponent>())
+            {
+                cameraEntity = resolveFallbackCamera();
+                if(!cameraEntity.is_alive())
+                    return 0;
+
+                gameViewport->LinkCamera(cameraEntity);
+            }
 
             if(!cameraEntity.is_alive() || !cameraEntity.has<Camera>())
                 return 0;

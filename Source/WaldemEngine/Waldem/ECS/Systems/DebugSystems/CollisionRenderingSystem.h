@@ -64,7 +64,7 @@ namespace Waldem
                 auto& boxMesh = ColliderMeshes[entity];
 
                 Vector4 color = Vector4(0.0f, 1.0f, 0.0f, 1.0f);
-                auto boxLines = GetBoxColliderLines(collider.BoxSize, collider.BoxOffset, transform.Matrix, color);
+                auto boxLines = GetBoxColliderLines(collider.BoxSize, collider.BoxOffset, transform.RenderMatrix, color);
 
                 Renderer::UploadBuffer(boxMesh.VertexBuffer, boxLines.GetData(), boxLines.GetSize());
             });
@@ -75,7 +75,7 @@ namespace Waldem
                 
                 uint collisions = CollisionCounts.Contains(id) ? CollisionCounts[id] : 0;
                 Vector4 color = collisions > 0 ? Vector4(1, 0, 0, 1) : Vector4(0, 1, 0, 1);
-                auto boxLines = GetBoxColliderLines(collider.BoxSize, collider.BoxOffset, transform.Matrix, color);
+                auto boxLines = GetBoxColliderLines(collider.BoxSize, collider.BoxOffset, transform.RenderMatrix, color);
                 Renderer::UploadBuffer(ColliderMeshes[entity].VertexBuffer, boxLines.GetData(), boxLines.GetSize());
             });
             

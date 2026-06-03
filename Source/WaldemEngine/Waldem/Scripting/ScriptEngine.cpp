@@ -53,6 +53,40 @@ namespace Waldem
         Path CurrentRuntimeAssemblyPath;
         uint64_t RuntimeAssemblyVersion = 0;
 
+        bool IsReloadArtifactPath(const Path& path)
+        {
+            const std::string filename = path.filename().string();
+            return filename.rfind("ScriptEngine.reload_", 0) == 0 &&
+                (path.extension() == ".dll" || path.extension() == ".pdb");
+        }
+
+        void CleanupReloadArtifacts(const Path& runtimeFolder, const Path& preserveAssemblyPath = {}, const Path& preservePdbPath = {})
+        {
+            std::error_code errorCode;
+            for(const auto& entry : std::filesystem::directory_iterator(runtimeFolder, std::filesystem::directory_options::skip_permission_denied, errorCode))
+            {
+                if(errorCode || !entry.is_regular_file())
+                {
+                    continue;
+                }
+
+                const Path artifactPath = entry.path();
+                if(!IsReloadArtifactPath(artifactPath))
+                {
+                    continue;
+                }
+
+                if((!preserveAssemblyPath.empty() && artifactPath == preserveAssemblyPath) ||
+                    (!preservePdbPath.empty() && artifactPath == preservePdbPath))
+                {
+                    continue;
+                }
+
+                std::error_code removeError;
+                std::filesystem::remove(artifactPath, removeError);
+            }
+        }
+
         std::string ToUtf8Path(const Path& path)
         {
             return path.string();
@@ -595,6 +629,7 @@ namespace Waldem
         EntityInstances.clear();
         AssemblyCache.clear();
         CoreAssembly = nullptr;
+        CleanupReloadArtifacts(GetCurrentFolder());
         CurrentRuntimeAssemblyPath.clear();
         Runtime = nullptr;
     }
@@ -662,6 +697,14 @@ namespace Waldem
         const std::string versionSuffix = ".reload_" + std::to_string(++RuntimeAssemblyVersion);
         const Path targetAssemblyPath = runtimeFolder / ("ScriptEngine" + versionSuffix + ".dll");
         const Path targetPdbPath = runtimeFolder / ("ScriptEngine" + versionSuffix + ".pdb");
+        Path currentRuntimePdbPath;
+        if(!CurrentRuntimeAssemblyPath.empty())
+        {
+            currentRuntimePdbPath = CurrentRuntimeAssemblyPath;
+            currentRuntimePdbPath.replace_extension(".pdb");
+        }
+
+        CleanupReloadArtifacts(runtimeFolder, CurrentRuntimeAssemblyPath, currentRuntimePdbPath);
 
         std::error_code errorCode;
         copy_file(sourceAssemblyPath, targetAssemblyPath, std::filesystem::copy_options::overwrite_existing, errorCode);
@@ -690,13 +733,6 @@ namespace Waldem
             LastReloadStatus = "Script runtime is not initialized";
             return false;
         }
-
-        std::vector<ECS::EntityT> scriptedEntities;
-        auto query = ECS::World.query_builder<ScriptComponent>().build();
-        query.each([&](ECS::Entity entity, ScriptComponent&)
-        {
-            scriptedEntities.push_back(entity.id());
-        });
 
         if(rebuildAssembly && !RebuildScriptAssembly())
         {
@@ -736,6 +772,44 @@ namespace Waldem
             return false;
         }
 
+        int recreatedCount = RecreateEntityInstances();
+
+        Path currentRuntimePdbPath = CurrentRuntimeAssemblyPath;
+        if(!currentRuntimePdbPath.empty())
+        {
+            currentRuntimePdbPath.replace_extension(".pdb");
+        }
+        CleanupReloadArtifacts(GetCurrentFolder(), CurrentRuntimeAssemblyPath, currentRuntimePdbPath);
+
+        LastReloadStatus = "Reloaded " + std::to_string(recreatedCount) + " script instance(s)";
+        WD_CORE_INFO("{0}", LastReloadStatus);
+        return true;
+    }
+
+    int ScriptEngine::RecreateEntityInstances()
+    {
+        if(Runtime == nullptr)
+        {
+            return 0;
+        }
+
+        std::vector<ECS::EntityT> scriptedEntities;
+        auto query = ECS::World.query_builder<ScriptComponent>().build();
+        query.each([&](ECS::Entity entity, ScriptComponent&)
+        {
+            scriptedEntities.push_back(entity.id());
+        });
+
+        for(auto& [entityId, instance] : EntityInstances)
+        {
+            InvokeNoArgs(instance, instance.OnDestroyMethod);
+            if(instance.GCHandle != 0)
+            {
+                mono_gchandle_free(instance.GCHandle);
+            }
+        }
+        EntityInstances.clear();
+
         int recreatedCount = 0;
         for(ECS::EntityT entityId : scriptedEntities)
         {
@@ -752,9 +826,7 @@ namespace Waldem
             }
         }
 
-        LastReloadStatus = "Reloaded " + std::to_string(recreatedCount) + " script instance(s)";
-        WD_CORE_INFO("{0}", LastReloadStatus);
-        return true;
+        return recreatedCount;
     }
 
     bool ScriptEngine::GetScriptFieldDescriptors(const ScriptComponent& scriptComponent, std::vector<ScriptFieldDescriptor>& outFields)
@@ -1012,6 +1084,7 @@ namespace Waldem
         instance.OnCreateMethod = Runtime->GetMethod(klass, "OnCreate", 0);
         instance.OnUpdateMethod = Runtime->GetMethod(klass, "OnUpdate", 1);
         instance.OnFixedUpdateMethod = Runtime->GetMethod(klass, "OnFixedUpdate", 1);
+        instance.OnLateUpdateMethod = Runtime->GetMethod(klass, "OnLateUpdate", 1);
         instance.OnDestroyMethod = Runtime->GetMethod(klass, "OnDestroy", 0);
         instance.OnCollisionEnterMethod = Runtime->GetMethod(klass, "OnCollisionEnterInternal", 1);
         instance.OnCollisionStayMethod = Runtime->GetMethod(klass, "OnCollisionStayInternal", 1);
@@ -1131,6 +1204,31 @@ namespace Waldem
         }
 
         InvokeSingleFloat(*instance, instance->OnFixedUpdateMethod, fixedDeltaTime);
+    }
+
+    void ScriptEngine::OnLateUpdate(ECS::Entity entity, const ScriptComponent& scriptComponent, float deltaTime)
+    {
+        if(!entity.is_alive() || !scriptComponent.Enabled || !scriptComponent.Script.IsValid())
+        {
+            return;
+        }
+
+        ScriptInstance* instance = GetInstance(entity.id());
+        if(instance == nullptr)
+        {
+            if(!CreateEntityInstance(entity, scriptComponent))
+            {
+                return;
+            }
+
+            instance = GetInstance(entity.id());
+            if(instance == nullptr)
+            {
+                return;
+            }
+        }
+
+        InvokeSingleFloat(*instance, instance->OnLateUpdateMethod, deltaTime);
     }
 
     void ScriptEngine::OnCollisionEvent(CollisionEventType eventType, ECS::Entity entity, ECS::Entity other, const ScriptComponent& scriptComponent, const ContactsManifold& contacts)

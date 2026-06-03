@@ -10,6 +10,7 @@
 #include "Waldem/Utils/DataUtils.h"
 #include "Waldem/ECS/Components/SceneEntity.h"
 #include "Waldem/SceneManagement/Prefab.h"
+#include "Waldem/Scripting/ScriptEngine.h"
 #include "../EditorShortcuts.h"
 #include <unordered_map>
 #include <fstream>
@@ -19,6 +20,8 @@
 #include <future>
 #include <chrono>
 #include <vector>
+#include <regex>
+#include <cstdlib>
 
 #include "imgui_internal.h"
 #include "Waldem/ProjectManagement/ProjectManager.h"
@@ -37,6 +40,7 @@ namespace Waldem
         std::optional<Path> SelectedAssetListPath;
         std::optional<Path> PendingRenameTarget;
         bool OpenRenamePopup = false;
+        bool FocusRenameInput = false;
         bool RenameSelectedAssetRequested = false;
         bool DeleteSelectedAssetRequested = false;
         bool OpenModelImportPopup = false;
@@ -149,7 +153,9 @@ namespace Waldem
 
             SelectedAssetListPath = prefabPath;
             SharedSelectedAssetPath = prefabPath;
+            PendingScrollToAssetPath = prefabPath;
             InvalidateAssetEntries();
+            BeginRenamePath(prefabPath);
             return true;
         }
 
@@ -185,7 +191,58 @@ namespace Waldem
 
             SelectedAssetListPath = materialPath;
             SharedSelectedAssetPath = materialPath;
+            PendingScrollToAssetPath = materialPath;
             InvalidateAssetEntries();
+            BeginRenamePath(materialPath);
+            return true;
+        }
+
+        bool CreateScriptAsset(const Path& folder)
+        {
+            Path targetFolder = folder;
+            if (targetFolder.empty())
+            {
+                targetFolder = CurrentPath;
+            }
+
+            std::error_code ec;
+            std::filesystem::create_directories(targetFolder, ec);
+
+            Path scriptPath = MakeUniqueAssetPath(targetFolder, "NewScript", ".cs");
+            std::string scriptName = scriptPath.stem().string();
+
+            std::ofstream outFile(scriptPath.c_str(), std::ios::binary | std::ios::trunc);
+            if (!outFile.is_open())
+            {
+                return false;
+            }
+
+            const std::string defaultScriptCode =
+                "using Waldem;\n\n"
+                "namespace Waldem\n"
+                "{\n"
+                "    public class " + scriptName + " : ScriptableEntity\n"
+                "    {\n"
+                "        public Vector3 SomeVectorField = new Vector3(1, 2, 3);\n\n"
+                "        protected override void OnUpdate(float dt)\n"
+                "        {\n"
+                "            Debug.Log(\"Updating!\");\n"
+                "        }\n"
+                "    }\n"
+                "}\n"; 
+
+            outFile.write(defaultScriptCode.c_str(), (std::streamsize)defaultScriptCode.size());
+            outFile.close();
+
+            SelectedAssetListPath = scriptPath;
+            SharedSelectedAssetPath = scriptPath;
+            PendingScrollToAssetPath = scriptPath;
+            InvalidateAssetEntries();
+            BeginRenamePath(scriptPath);
+            if(ProjectManager::GenerateProjectFiles() && ScriptEngine::IsInitialized())
+            {
+                ScriptEngine::ReloadScripts(true);
+            }
             return true;
         }
 
@@ -283,6 +340,191 @@ namespace Waldem
             return {};
         }
 
+        bool IsPathInsideScripts(const Path& path) const
+        {
+            if(!ProjectManager::HasProject())
+            {
+                return false;
+            }
+
+            const Path scriptsPath = ProjectManager::CurrentProject.GetScriptsPath();
+            return path == scriptsPath || IsPathInside(path, scriptsPath);
+        }
+
+        void RefreshScriptsAfterAssetChange(const Path& path)
+        {
+            if(!IsPathInsideScripts(path))
+            {
+                return;
+            }
+
+            if(ProjectManager::GenerateProjectFiles() && ScriptEngine::IsInitialized())
+            {
+                ScriptEngine::ReloadScripts(true);
+            }
+        }
+
+        void UpdateScriptClassNameIfNeeded(const Path& oldPath, const Path& newPath)
+        {
+            if(oldPath.extension() != ".cs" || newPath.extension() != ".cs")
+            {
+                return;
+            }
+
+            const std::string oldName = oldPath.stem().string();
+            const std::string newName = newPath.stem().string();
+            if(oldName.empty() || newName.empty() || oldName == newName)
+            {
+                return;
+            }
+
+            std::ifstream inFile(newPath);
+            if(!inFile.is_open())
+            {
+                return;
+            }
+
+            std::stringstream buffer;
+            buffer << inFile.rdbuf();
+            std::string source = buffer.str();
+            inFile.close();
+
+            const std::regex classPattern("\\bclass\\s+" + oldName + "\\b");
+            const std::string updated = std::regex_replace(source, classPattern, "class " + newName, std::regex_constants::format_first_only);
+            if(updated == source)
+            {
+                return;
+            }
+
+            std::ofstream outFile(newPath, std::ios::trunc);
+            if(!outFile.is_open())
+            {
+                return;
+            }
+
+            outFile << updated;
+        }
+
+        Path FindRiderExecutable() const
+        {
+            static Path cachedPath;
+            if(!cachedPath.empty())
+            {
+                return cachedPath;
+            }
+
+            const char* pathEnv = std::getenv("PATH");
+            if(pathEnv != nullptr)
+            {
+                std::stringstream pathStream(pathEnv);
+                std::string segment;
+                while(std::getline(pathStream, segment, ';'))
+                {
+                    if(segment.empty())
+                    {
+                        continue;
+                    }
+
+                    Path riderExe = Path(segment) / "rider64.exe";
+                    if(std::filesystem::exists(riderExe))
+                    {
+                        cachedPath = riderExe;
+                        return cachedPath;
+                    }
+
+                    Path riderBat = Path(segment) / "rider.bat";
+                    if(std::filesystem::exists(riderBat))
+                    {
+                        cachedPath = riderBat;
+                        return cachedPath;
+                    }
+                }
+            }
+
+            const Path jetBrainsRoot = "C:/Program Files/JetBrains";
+            std::error_code ec;
+            if(std::filesystem::exists(jetBrainsRoot))
+            {
+                for(const auto& entry : std::filesystem::recursive_directory_iterator(jetBrainsRoot, std::filesystem::directory_options::skip_permission_denied, ec))
+                {
+                    if(ec)
+                    {
+                        break;
+                    }
+
+                    if(!entry.is_regular_file())
+                    {
+                        continue;
+                    }
+
+                    const std::string filename = ToLower(entry.path().filename().string());
+                    if(filename == "rider64.exe" || filename == "rider.bat")
+                    {
+                        cachedPath = entry.path();
+                        return cachedPath;
+                    }
+                }
+            }
+
+            return {};
+        }
+
+        bool OpenScriptInRider(const Path& scriptPath) const
+        {
+            const Path riderExecutable = FindRiderExecutable();
+            if(riderExecutable.empty())
+            {
+                return false;
+            }
+
+            Path projectToOpen;
+            Path current = GetCurrentFolder();
+            for(int i = 0; i < 8 && !current.empty(); ++i)
+            {
+                const Path solutionPath = current / "Waldem.sln";
+                if(std::filesystem::exists(solutionPath))
+                {
+                    projectToOpen = solutionPath;
+                    break;
+                }
+
+                current = current.parent_path();
+            }
+
+            std::wstring commandLine = L"\"" + riderExecutable.wstring() + L"\"";
+            if(!projectToOpen.empty())
+            {
+                commandLine += L" \"" + projectToOpen.wstring() + L"\"";
+            }
+            commandLine += L" \"" + std::filesystem::absolute(scriptPath).wstring() + L"\"";
+
+            STARTUPINFOW startupInfo = {};
+            startupInfo.cb = sizeof(startupInfo);
+            PROCESS_INFORMATION processInfo = {};
+
+            std::vector<wchar_t> mutableCommandLine(commandLine.begin(), commandLine.end());
+            mutableCommandLine.push_back(L'\0');
+
+            if(!CreateProcessW(
+                nullptr,
+                mutableCommandLine.data(),
+                nullptr,
+                nullptr,
+                FALSE,
+                0,
+                nullptr,
+                nullptr,
+                &startupInfo,
+                &processInfo))
+            {
+                return false;
+            }
+
+            CloseHandle(processInfo.hThread);
+            CloseHandle(processInfo.hProcess);
+            return true;
+        }
+
         void ProcessFocusRequest()
         {
             if (!SharedFocusAssetPath.has_value())
@@ -314,6 +556,7 @@ namespace Waldem
             }
 
             const Path targetPath = SelectedAssetListPath.value();
+            const bool shouldRefreshScripts = IsPathInsideScripts(targetPath);
             std::error_code ec;
             if (std::filesystem::is_directory(targetPath))
             {
@@ -338,6 +581,10 @@ namespace Waldem
                 }
                 TextureThumbnails.clear();
                 InvalidateAssetEntries();
+                if(shouldRefreshScripts)
+                {
+                    RefreshScriptsAfterAssetChange(targetPath);
+                }
             }
         }
 
@@ -385,7 +632,23 @@ namespace Waldem
             memset(RenameBuffer, 0, sizeof(RenameBuffer));
             strncpy_s(RenameBuffer, initialName.c_str(), sizeof(RenameBuffer) - 1);
 
-            OpenRenamePopup = true;
+            FocusRenameInput = true;
+            OpenRenamePopup = targetPath.parent_path() != CurrentPath;
+        }
+
+        std::string GetDisplayNameForEntry(const Path& entryPath, bool isFolder) const
+        {
+            if (isFolder)
+            {
+                return entryPath.filename().string();
+            }
+
+            if (entryPath.extension() == ".cs")
+            {
+                return entryPath.stem().string();
+            }
+
+            return entryPath.filename().string();
         }
 
         bool CommitRename()
@@ -463,12 +726,21 @@ namespace Waldem
             }
             TextureThumbnails.clear();
             PendingRenameTarget.reset();
+            FocusRenameInput = false;
+            UpdateScriptClassNameIfNeeded(oldPath, newPath);
             InvalidateAssetEntries();
+            RefreshScriptsAfterAssetChange(oldPath);
+            RefreshScriptsAfterAssetChange(newPath);
             return true;
         }
 
         void DrawRenamePopup()
         {
+            if(PendingRenameTarget.has_value() && PendingRenameTarget->parent_path() == CurrentPath)
+            {
+                OpenRenamePopup = false;
+            }
+
             if (OpenRenamePopup)
             {
                 ImGui::OpenPopup("RenameAssetOrFolderPopup");
@@ -497,6 +769,7 @@ namespace Waldem
                 if (ImGui::Button("Cancel"))
                 {
                     PendingRenameTarget.reset();
+                    FocusRenameInput = false;
                     ImGui::CloseCurrentPopup();
                 }
 
@@ -570,18 +843,12 @@ namespace Waldem
 
         void Initialize(InputManager* inputManager) override
         {
-            inputManager->SubscribeToDynamicShortcut([]
-            {
-                return EditorShortcuts::GetShortcut(EditorShortcutAction::RenameEntity);
-            }, [&]
+            inputManager->SubscribeToEditorShortcut(EditorShortcutAction::RenameEntity, [&]
             {
                 RenameSelectedAssetRequested = true;
             }, [] { return EditorShortcutContexts::Has(EditorShortcutContext::ContentBrowser); });
 
-            inputManager->SubscribeToDynamicShortcut([]
-            {
-                return EditorShortcuts::GetShortcut(EditorShortcutAction::DeleteEntity);
-            }, [&]
+            inputManager->SubscribeToEditorShortcut(EditorShortcutAction::DeleteEntity, [&]
             {
                 DeleteSelectedAssetRequested = true;
             }, [] { return EditorShortcutContexts::Has(EditorShortcutContext::ContentBrowser); });
@@ -750,6 +1017,10 @@ namespace Waldem
                             {
                                 CreateMaterialAsset(entry.path());
                             }
+                            if (ImGui::MenuItem("Script"))
+                            {
+                                CreateScriptAsset(entry.path());
+                            }
                             ImGui::EndMenu();
                         }
 
@@ -787,7 +1058,7 @@ namespace Waldem
         }
 
 
-        std::string ToLower(const std::string& str)
+        std::string ToLower(const std::string& str) const
         {
             std::string result = str;
             std::transform(result.begin(), result.end(), result.begin(), [](unsigned char c){ return std::tolower(c); });
@@ -954,6 +1225,10 @@ namespace Waldem
                     Path scenePath = entryPath;
                     SceneManager::LoadScene(scenePath);
                 }
+                else if (extension == ".cs")
+                {
+                    OpenScriptInRider(entryPath);
+                }
             }
 
             if (isFolder && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup))
@@ -962,6 +1237,7 @@ namespace Waldem
             }
 
             const std::string itemName = entryPath.filename().string();
+            const std::string displayBaseName = GetDisplayNameForEntry(entryPath, isFolder);
 
             if (ImGui::BeginDragDropTarget())
             {
@@ -984,11 +1260,18 @@ namespace Waldem
 
             if (ImGui::BeginPopupContextItem())
             {
+                SelectedAssetListPath = entryPath;
+                SharedSelectedAssetPath = entryPath;
+
                 if (isFolder && ImGui::BeginMenu("Create"))
                 {
                     if (ImGui::MenuItem("Material"))
                     {
                         CreateMaterialAsset(entryPath);
+                    }
+                    if (ImGui::MenuItem("Script"))
+                    {
+                        CreateScriptAsset(entryPath);
                     }
                     ImGui::EndMenu();
                 }
@@ -1013,23 +1296,49 @@ namespace Waldem
                 ImGui::EndPopup();
             }
 
-            std::string displayName = itemName;
-            if (ImGui::CalcTextSize(displayName.c_str()).x > CellSize)
+            const bool isRenamingThisEntry = PendingRenameTarget.has_value() && PendingRenameTarget.value() == entryPath && !OpenRenamePopup;
+            if (isRenamingThisEntry)
             {
-                const char* ellipsis = "...";
-                size_t len = displayName.size();
-                while (len > 0)
+                ImGui::SetNextItemWidth(CellSize);
+                if (FocusRenameInput)
                 {
-                    std::string candidate = displayName.substr(0, len) + ellipsis;
-                    if (ImGui::CalcTextSize(candidate.c_str()).x <= CellSize)
-                    {
-                        displayName = candidate;
-                        break;
-                    }
-                    --len;
+                    ImGui::SetKeyboardFocusHere();
+                    FocusRenameInput = false;
+                }
+
+                const std::string renameId = "##Rename_" + entryPath.string();
+                const bool submit = ImGui::InputText(renameId.c_str(), RenameBuffer, IM_ARRAYSIZE(RenameBuffer), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll);
+                const bool deactivate = ImGui::IsItemDeactivatedAfterEdit();
+                if (submit || deactivate)
+                {
+                    CommitRename();
                 }
             }
-            ImGui::TextUnformatted(displayName.c_str());
+            else
+            {
+                std::string displayName = displayBaseName;
+                if (ImGui::CalcTextSize(displayName.c_str()).x > CellSize)
+                {
+                    const char* ellipsis = "...";
+                    size_t len = displayName.size();
+                    while (len > 0)
+                    {
+                        std::string candidate = displayName.substr(0, len) + ellipsis;
+                        if (ImGui::CalcTextSize(candidate.c_str()).x <= CellSize)
+                        {
+                            displayName = candidate;
+                            break;
+                        }
+                        --len;
+                    }
+                }
+                ImGui::TextUnformatted(displayName.c_str());
+            }
+
+            if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled | ImGuiHoveredFlags_DelayShort))
+            {
+                ImGui::SetTooltip("%s", displayBaseName.c_str());
+            }
 
             ImGui::EndGroup();
         }
@@ -1059,20 +1368,19 @@ namespace Waldem
             {
                 if (ImGui::BeginMenu("Create"))
                 {
-                    if (ImGui::MenuItem("Material"))
-                    {
-                        CreateMaterialAsset(CurrentPath);
-                    }
                     if (ImGui::MenuItem("Folder"))
                     {
                         openCreateNewFolderPopup = true;
                     }
+                    if (ImGui::MenuItem("Material"))
+                    {
+                        CreateMaterialAsset(CurrentPath);
+                    }
+                    if (ImGui::MenuItem("Script"))
+                    {
+                        CreateScriptAsset(CurrentPath);
+                    }
                     ImGui::EndMenu();
-                }
-
-                if (ImGui::MenuItem("Create Folder"))
-                {
-                    openCreateNewFolderPopup = true;
                 }
                 
                 ImGui::EndPopup();
@@ -1098,7 +1406,11 @@ namespace Waldem
                         if (!std::filesystem::exists(newFolderPath))
                         {
                             std::filesystem::create_directory(newFolderPath);
+                            SelectedAssetListPath = newFolderPath;
+                            SharedSelectedAssetPath = newFolderPath;
+                            PendingScrollToAssetPath = newFolderPath;
                             InvalidateAssetEntries();
+                            BeginRenamePath(newFolderPath);
                         }
                     }
 
@@ -1252,6 +1564,10 @@ namespace Waldem
                     if (ImGui::MenuItem("Material"))
                     {
                         CreateMaterialAsset(CurrentPath);
+                    }
+                    if (ImGui::MenuItem("Script"))
+                    {
+                        CreateScriptAsset(CurrentPath);
                     }
                     ImGui::EndPopup();
                 }

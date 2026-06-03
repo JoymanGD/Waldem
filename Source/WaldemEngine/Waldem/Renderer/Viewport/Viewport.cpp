@@ -40,11 +40,13 @@ namespace Waldem
 
     bool SViewport::TryGetLinkedCamera(ECS::Entity& outCamera)
     {
-        if (LinkedCamera.is_valid())
+        if (LinkedCamera.is_alive())
         {
             outCamera = LinkedCamera;
             return true;
         }
+
+        LinkedCamera = {};
         return false;
     }
 
@@ -96,11 +98,15 @@ namespace Waldem
             }
         }
 
-        if(LinkedCamera)
+        if(LinkedCamera.is_alive())
         {
             auto& camera = LinkedCamera.get_mut<Camera>();
             camera.UpdateProjectionMatrix(camera.FieldOfView, size.x/(float)size.y, camera.NearPlane, camera.FarPlane);
             LinkedCamera.modified<Camera>(); 
+        }
+        else
+        {
+            LinkedCamera = {};
         }
     }
 

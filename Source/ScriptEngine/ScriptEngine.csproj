@@ -42,19 +42,12 @@
   <ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\Content\Scripts\CameraTestScript.cs">
-      <Link>Content\Scripts\CameraTestScript.cs</Link>
-    </Compile>
-    <Compile Include="..\..\Content\Scripts\Collectable.cs">
-      <Link>Content\Scripts\Collectable.cs</Link>
-    </Compile>
-    <Compile Include="..\..\Content\Scripts\RotatingObject.cs">
-      <Link>Content\Scripts\RotatingObject.cs</Link>
-    </Compile>
-    <Compile Include="..\..\Content\Scripts\TestScript.cs">
-      <Link>Content\Scripts\TestScript.cs</Link>
-    </Compile>
     <Compile Include="Animator.cs" />
+    <Compile Include="C:\Users\Joyman\Desktop\WaldemGames\FirstPersonController\Content\Scripts\CameraTestScript.cs" />
+    <Compile Include="C:\Users\Joyman\Desktop\WaldemGames\FirstPersonController\Content\Scripts\Collectable.cs" />
+    <Compile Include="C:\Users\Joyman\Desktop\WaldemGames\FirstPersonController\Content\Scripts\FirstPersonController.cs" />
+    <Compile Include="C:\Users\Joyman\Desktop\WaldemGames\FirstPersonController\Content\Scripts\RotatingObject.cs" />
+    <Compile Include="C:\Users\Joyman\Desktop\WaldemGames\FirstPersonController\Content\Scripts\TestScript.cs" />
     <Compile Include="Camera.cs" />
     <Compile Include="Collider.cs" />
     <Compile Include="Component.cs" />

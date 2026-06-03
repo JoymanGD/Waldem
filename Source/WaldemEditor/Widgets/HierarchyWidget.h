@@ -68,30 +68,20 @@ namespace Waldem
 
         void Initialize(InputManager* inputManager) override
         {
-            inputManager->SubscribeToDynamicShortcut([]
-            {
-                return EditorShortcuts::GetShortcut(EditorShortcutAction::DeleteEntity);
-            }, [&]
+            inputManager->SubscribeToEditorShortcut(EditorShortcutAction::DeleteEntity, [&]
             {
                 DeleteSelectedEntity = true;
             }, []
             {
-                return EditorShortcutContexts::Has(EditorShortcutContext::Hierarchy)
-                    || EditorShortcutContexts::Has(EditorShortcutContext::EditorViewport);
+                return EditorShortcutContexts::Has(EditorShortcutContext::Hierarchy) || EditorShortcutContexts::Has(EditorShortcutContext::EditorViewport);
             });
 
-            inputManager->SubscribeToDynamicShortcut([]
-            {
-                return EditorShortcuts::GetShortcut(EditorShortcutAction::RenameEntity);
-            }, [&]
+            inputManager->SubscribeToEditorShortcut(EditorShortcutAction::RenameEntity, [&]
             {
                 RenameSelectedEntity = true;
             }, [] { return EditorShortcutContexts::Has(EditorShortcutContext::Hierarchy); });
 
-            inputManager->SubscribeToDynamicShortcut([]
-            {
-                return EditorShortcuts::GetShortcut(EditorShortcutAction::DuplicateEntity);
-            }, [&]
+            inputManager->SubscribeToEditorShortcut(EditorShortcutAction::DuplicateEntity, [&]
             {
                 WArray<ECS::Entity> selectedEntities;
                 ECS::World.query<Selected>().each([&](ECS::Entity selectedEntity, Selected)
@@ -111,22 +101,15 @@ namespace Waldem
                 }
             }, []
             {
-                return EditorShortcutContexts::Has(EditorShortcutContext::Hierarchy)
-                    || EditorShortcutContexts::Has(EditorShortcutContext::EditorViewport);
+                return EditorShortcutContexts::Has(EditorShortcutContext::Hierarchy) || EditorShortcutContexts::Has(EditorShortcutContext::EditorViewport);
             });
 
-            inputManager->SubscribeToDynamicShortcut([]
-            {
-                return EditorShortcuts::GetShortcut(EditorShortcutAction::Undo);
-            }, [&]
+            inputManager->SubscribeToEditorShortcut(EditorShortcutAction::Undo, [&]
             {
                 EditorCommandHistory::Get().Undo();
             });
 
-            inputManager->SubscribeToDynamicShortcut([]
-            {
-                return EditorShortcuts::GetShortcut(EditorShortcutAction::Redo);
-            }, [&]
+            inputManager->SubscribeToEditorShortcut(EditorShortcutAction::Redo, [&]
             {
                 EditorCommandHistory::Get().Redo();
             });

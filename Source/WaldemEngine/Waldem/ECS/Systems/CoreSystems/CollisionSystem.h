@@ -371,7 +371,7 @@ namespace Waldem
                     eventType = CollisionEventType::Stay;
                     cached->Manifold = collision.Manifold;
                     cached->WasUpdatedThisFrame = true;
-                    cached->FramesAlive++;
+                    cached->FramesAlive++; 
                 }
                 else
                 {

@@ -71,6 +71,18 @@ void Waldem::GameScene::Serialize(Path& outPath)
                 }
             }
 
+            // Scene files rebuild hierarchy from scene-local ids, so don't
+            // persist Flecs' name-based parent link or runtime entity ids.
+            tmpDoc.RemoveMember("parent");
+            if(tmpDoc.HasMember("components") && tmpDoc["components"].IsObject())
+            {
+                auto& components = tmpDoc["components"];
+                if(components.HasMember("SceneEntity") && components["SceneEntity"].IsObject())
+                {
+                    components["SceneEntity"]["ParentId"].SetUint64(0);
+                }
+            }
+
             writer.StartObject();
             writer.Key("scene_id");
             writer.Int(sceneIdByEntityId[entityId]);
@@ -110,6 +122,7 @@ void Waldem::GameScene::Deserialize(Path& inPath)
 
     std::unordered_map<int, flecs::entity_t> entityBySceneId;
     std::vector<std::pair<flecs::entity_t, int>> pendingParentLinks;
+    std::vector<std::pair<flecs::entity_t, std::string>> pendingNames;
 
     // Iterate over each entity object in the array
     for (auto& entVal : doc.GetArray())
@@ -120,6 +133,7 @@ void Waldem::GameScene::Deserialize(Path& inPath)
         rapidjson::Value* entityJsonValue = &entVal;
         int sceneId = -1;
         int parentSceneId = -1;
+        std::string entityName;
 
         if (entVal.HasMember("entity") && entVal["entity"].IsObject())
         {
@@ -133,6 +147,11 @@ void Waldem::GameScene::Deserialize(Path& inPath)
             if (entVal.HasMember("parent_scene_id") && entVal["parent_scene_id"].IsInt())
             {
                 parentSceneId = entVal["parent_scene_id"].GetInt();
+            }
+
+            if(entityJsonValue->HasMember("name") && (*entityJsonValue)["name"].IsString())
+            {
+                entityName = (*entityJsonValue)["name"].GetString();
             }
         }
 
@@ -149,6 +168,11 @@ void Waldem::GameScene::Deserialize(Path& inPath)
         {
             entityBySceneId[sceneId] = entity.id();
             pendingParentLinks.emplace_back(entity.id(), parentSceneId);
+        }
+
+        if(!entityName.empty())
+        {
+            pendingNames.emplace_back(entity.id(), entityName);
         }
 
         if (entity.has<Transform>())
@@ -186,4 +210,13 @@ void Waldem::GameScene::Deserialize(Path& inPath)
     }
 
     ECS::RebuildParentRelations();
+
+    for(const auto& [entityId, entityName] : pendingNames)
+    {
+        auto entity = ECS::World.entity(entityId);
+        if(entity.is_alive())
+        {
+            entity.set_name(entityName.c_str());
+        }
+    }
 }

@@ -47,6 +47,7 @@ namespace Waldem
         static void Initialize(Mono* runtime);
         static void Shutdown();
         static bool ReloadScripts(bool rebuildAssembly = true);
+        static int RecreateEntityInstances();
         static const char* GetLastReloadStatus() { return LastReloadStatus.c_str(); }
         static bool GetScriptFieldDescriptors(const ScriptComponent& scriptComponent, std::vector<ScriptFieldDescriptor>& outFields);
         static bool GetScriptFieldValue(const ScriptComponent& scriptComponent, const std::string& fieldName, ScriptFieldValue& outValue);
@@ -57,6 +58,7 @@ namespace Waldem
         static void DestroyEntityInstance(ECS::EntityT entityId);
         static void OnUpdate(ECS::Entity entity, const ScriptComponent& scriptComponent, float deltaTime);
         static void OnFixedUpdate(ECS::Entity entity, const ScriptComponent& scriptComponent, float fixedDeltaTime);
+        static void OnLateUpdate(ECS::Entity entity, const ScriptComponent& scriptComponent, float deltaTime);
         static void OnCollisionEvent(CollisionEventType eventType, ECS::Entity entity, ECS::Entity other, const ScriptComponent& scriptComponent, const ContactsManifold& contacts);
         static void OnTriggerEvent(CollisionEventType eventType, ECS::Entity entity, ECS::Entity other, const ScriptComponent& scriptComponent);
 
@@ -68,6 +70,7 @@ namespace Waldem
             MonoMethod* OnCreateMethod = nullptr;
             MonoMethod* OnUpdateMethod = nullptr;
             MonoMethod* OnFixedUpdateMethod = nullptr;
+            MonoMethod* OnLateUpdateMethod = nullptr;
             MonoMethod* OnDestroyMethod = nullptr;
             MonoMethod* OnCollisionEnterMethod = nullptr;
             MonoMethod* OnCollisionStayMethod = nullptr;

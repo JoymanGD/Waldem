@@ -51,6 +51,16 @@ namespace Waldem
                 ScriptEngine::OnFixedUpdate(entity, scriptComponent, Time::FixedDeltaTime);
             });
 
+            ECS::World.system<ScriptComponent>("ScriptLateUpdateSystem").kind<ECS::OnLateUpdate>().each([&](ECS::Entity entity, ScriptComponent& scriptComponent)
+            {
+                if(!EditorSimulation::ShouldRunRuntimeSystems())
+                {
+                    return;
+                }
+
+                ScriptEngine::OnLateUpdate(entity, scriptComponent, Time::DeltaTime);
+            });
+
             ECS::World.observer<ScriptComponent, ColliderComponent>("ScriptColliderEvents").event(ECS::OnSet).each([&](ECS::Entity entity, ScriptComponent& scriptComponent, ColliderComponent& collider)
             {
                 collider.OnCollisionEnter = [entity, scriptComponent](ECS::Entity other, const ContactsManifold& contacts)

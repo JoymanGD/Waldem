@@ -12,6 +12,7 @@ namespace Waldem
     namespace ECS
     {
         struct OnFixedUpdate {};
+        struct OnLateUpdate {};
         struct OnDraw {};
         struct OnGUI {};
         
@@ -32,6 +33,7 @@ namespace Waldem
         extern WALDEM_API flecs::world World;
         extern WALDEM_API EntityT UpdatePipeline;
         extern WALDEM_API EntityT FixedUpdatePipeline;
+        extern WALDEM_API EntityT LateUpdatePipeline;
         extern WALDEM_API EntityT DrawPipeline; 
         extern WALDEM_API EntityT GUIPipeline;
         extern WALDEM_API WMap<WString, Entity> RegisteredComponents;
@@ -47,6 +49,11 @@ namespace Waldem
             World.run_pipeline(FixedUpdatePipeline, fixedDeltaTime);
         }
 
+        inline void RunLateUpdatePipeline(float deltaTime)
+        {
+            World.run_pipeline(LateUpdatePipeline, deltaTime);
+        }
+
         inline void RunDrawPipeline(float deltaTime)
         {
             World.run_pipeline(DrawPipeline, deltaTime);
@@ -56,6 +63,8 @@ namespace Waldem
         {
             World.run_pipeline(GUIPipeline, deltaTime);
         }
+
+        void WALDEM_API UpdateRenderTransforms(float interpolationAlpha);
         
         inline int GetEntitiesCount() { return World.query<SceneEntity>().count(); }
 

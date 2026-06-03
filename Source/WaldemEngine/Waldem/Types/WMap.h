@@ -131,9 +131,6 @@ namespace Waldem
                 }
             }
             
-            WD_CORE_ERROR("Key not found in WMap");
-
-            // If key not found, insert default-constructed value
             Data.Add(WPair<T1, T2>(key, T2{}));
             return Data.Last().value;
         }

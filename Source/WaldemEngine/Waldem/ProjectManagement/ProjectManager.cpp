@@ -3,10 +3,67 @@
 
 #include <fstream>
 #include <sstream>
+#include <vector>
+#include "Waldem/Utils/FileUtils.h"
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
 
+namespace Waldem
+{
+    namespace
+    {
+        Path FindEngineRoot()
+        {
+            Path current = GetCurrentFolder();
+            for(int i = 0; i < 8 && !current.empty(); ++i)
+            {
+                if(exists(current / "Waldem.sln"))
+                {
+                    return current;
+                }
+
+                current = current.parent_path();
+            }
+
+            return {};
+        }
+
+        bool RunProcessBlocking(const std::wstring& commandLine, const Path& workingDirectory)
+        {
+            std::vector<wchar_t> mutableCommandLine(commandLine.begin(), commandLine.end());
+            mutableCommandLine.push_back(L'\0');
+
+            STARTUPINFOW startupInfo = {};
+            startupInfo.cb = sizeof(startupInfo);
+            PROCESS_INFORMATION processInfo = {};
+
+            if(!CreateProcessW(
+                nullptr,
+                mutableCommandLine.data(),
+                nullptr,
+                nullptr,
+                FALSE,
+                0,
+                nullptr,
+                workingDirectory.empty() ? nullptr : workingDirectory.c_str(),
+                &startupInfo,
+                &processInfo))
+            {
+                return false;
+            }
+
+            WaitForSingleObject(processInfo.hProcess, INFINITE);
+
+            DWORD exitCode = 0;
+            GetExitCodeProcess(processInfo.hProcess, &exitCode);
+
+            CloseHandle(processInfo.hThread);
+            CloseHandle(processInfo.hProcess);
+            return exitCode == 0;
+        }
+    }
+}
 
 void Waldem::ProjectManager::CreateProject(WString name, Path path)
 {
@@ -156,6 +213,7 @@ void Waldem::ProjectManager::CreateProject(WString name, Path path)
     file << buffer.GetString();
 
     CurrentProject = newProject;
+    GenerateProjectFiles();
 }
 
 bool Waldem::ProjectManager::LoadProject(Path path)
@@ -197,6 +255,40 @@ bool Waldem::ProjectManager::LoadProject(Path path)
     project.StartupScene = doc["startupscene"].GetString();
 
     CurrentProject = project;
+    GenerateProjectFiles();
+
+    return true;
+}
+
+bool Waldem::ProjectManager::GenerateProjectFiles()
+{
+    const Path engineRoot = FindEngineRoot();
+    if(engineRoot.empty())
+    {
+        WD_CORE_ERROR("Failed to locate engine root for Premake generation");
+        return false;
+    }
+
+    const Path premakePath = engineRoot / "Vendor" / "premake" / "premake5.exe";
+    if(!exists(premakePath))
+    {
+        WD_CORE_ERROR("Premake executable was not found");
+        return false;
+    }
+
+    std::wstring commandLine = L"\"" + premakePath.wstring() + L"\" vs2022";
+    if(HasProject())
+    {
+        commandLine += L" --gameproject=\"";
+        commandLine += std::filesystem::absolute(CurrentProject.ProjectPath).wstring();
+        commandLine += L"\"";
+    }
+
+    if(!RunProcessBlocking(commandLine, engineRoot))
+    {
+        WD_CORE_ERROR("Premake generation failed");
+        return false;
+    }
 
     return true;
 }

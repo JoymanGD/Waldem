@@ -130,7 +130,7 @@ namespace Waldem
         instance.InstanceContributionToHitGroupIndex = 0;
         instance.Flags = 0;
         instance.AccelerationStructure = blas->GetGPUAddress();
-        auto transposedMatrix = transpose(transform.Matrix);
+        auto transposedMatrix = transpose(transform.RenderMatrix);
         memcpy(instance.Transform, &transposedMatrix, sizeof(Matrix3x4));
         
         InstanceBuffer->UpdateOrAdd(&instance, sizeof(RayTracingInstance), id * sizeof(RayTracingInstance));
@@ -178,7 +178,7 @@ namespace Waldem
             return;
         }
 
-        auto transposedMatrix = transpose(transform.Matrix);
+        auto transposedMatrix = transpose(transform.RenderMatrix);
         InstanceBuffer->UpdateData(&transposedMatrix, sizeof(Matrix3x4), id * sizeof(RayTracingInstance));
 
         const int instanceCount = GetBuildInstanceCount();

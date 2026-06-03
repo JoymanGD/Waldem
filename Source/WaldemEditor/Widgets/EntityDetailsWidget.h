@@ -181,11 +181,19 @@ namespace Waldem
                 });
 
                 bool multiSelection = selected.Num() > 1;
-
-                for (auto entity : selected)
+                if(selected.IsEmpty())
                 {
-                    if (!multiSelection)
-                        DrawComponents(entity);
+                    ImGui::TextDisabled("No entity selected");
+                }
+                else if(multiSelection)
+                {
+                    ImGui::TextDisabled("Multiple entities selected");
+                    ImGui::TextDisabled("Select a single entity to inspect or add components.");
+                }
+                else
+                {
+                    ECS::Entity entity = selected[0];
+                    DrawComponents(entity);
 
                     if (ImGui::Button("Add component"))
                         ImGui::OpenPopup("AddComponentPopup");
@@ -201,6 +209,9 @@ namespace Waldem
                             auto comp = ECS::RegisteredComponents[i].value;
 
                             if (comp.has<EditorComponent>())
+                                continue;
+
+                            if (entity.has(comp))
                                 continue;
 
                             if (strstr(compName, searchBuffer) != nullptr)

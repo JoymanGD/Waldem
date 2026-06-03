@@ -51,6 +51,7 @@ namespace Waldem
         WALDEM_API flecs::world World{};
         WALDEM_API EntityT UpdatePipeline{};
         WALDEM_API EntityT FixedUpdatePipeline{};
+        WALDEM_API EntityT LateUpdatePipeline{};
         WALDEM_API EntityT DrawPipeline{};
         WALDEM_API EntityT GUIPipeline{};
         WALDEM_API WMap<WString, Entity> RegisteredComponents{};
@@ -246,7 +247,8 @@ namespace Waldem
         {
             World = flecs::world();
             UpdatePipeline = World.pipeline().with(flecs::System).with(flecs::OnUpdate).build();
-            FixedUpdatePipeline = World.pipeline().with(flecs::System).with<OnFixedUpdate>().build();
+            FixedUpdatePipeline = World.pipeline().with(flecs::System).with<OnFixedUpdate>().build(); 
+            LateUpdatePipeline = World.pipeline().with(flecs::System).with<OnLateUpdate>().build();
             DrawPipeline = World.pipeline().with(flecs::System).with<OnDraw>().build();
             GUIPipeline = World.pipeline().with(flecs::System).with<OnGUI>().build();
             RegisteredComponents = {};
@@ -727,6 +729,50 @@ namespace Waldem
 
                 ApplyParent(child, parent, true);
             }
+        }
+
+        void UpdateRenderTransforms(float interpolationAlpha)
+        {
+            const float alpha = glm::clamp(interpolationAlpha, 0.0f, 1.0f);
+
+            World.each<Transform>([&](flecs::entity entity, Transform& transform)
+            {
+                bool shouldInterpolatePhysics = false;
+
+                if(entity.has<RigidBody>())
+                {
+                    const auto& rigidBody = entity.get<RigidBody>();
+                    shouldInterpolatePhysics = !rigidBody.IsKinematic && transform.HasPhysicsInterpolationState;
+                }
+
+                if(shouldInterpolatePhysics)
+                {
+                    transform.ApplyPhysicsInterpolation(alpha);
+                }
+                else
+                {
+                    transform.SyncRenderStateFromSimulation();
+                }
+            });
+
+            if(HierarchyTransformQuery)
+            {
+                HierarchyTransformQuery->each([&](flecs::entity entity, Transform& transform, const Transform& parentTransform)
+                {
+                    auto localTransformIt = LocalTransformMatrices.find(entity.id());
+                    Matrix4 localMatrix = localTransformIt == LocalTransformMatrices.end()
+                        ? inverse(parentTransform.Matrix) * transform.Matrix
+                        : localTransformIt->second;
+
+                    transform.SetRenderMatrix(parentTransform.RenderMatrix * localMatrix);
+                });
+            }
+
+            auto cameraQuery = World.query_builder<Camera, Transform>().build();
+            cameraQuery.each([&](Camera& camera, Transform& transform)
+            {
+                camera.SetViewMatrix(inverse(transform.RenderMatrix));
+            });
         }
 
         void Shutdown()

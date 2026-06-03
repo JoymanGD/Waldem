@@ -361,7 +361,7 @@ namespace Waldem
                     BFCIndirectBuffer.UpdateOrAdd(nullptr, sizeof(IndirectIndexedCommand), bfcDrawId * sizeof(IndirectIndexedCommand));
                 }
                 
-                WorldTransformsBuffer.UpdateOrAdd(&transform.Matrix, sizeof(Matrix4), globalDrawId * sizeof(Matrix4));
+                WorldTransformsBuffer.UpdateOrAdd(&transform.RenderMatrix, sizeof(Matrix4), globalDrawId * sizeof(Matrix4));
 
                 if(globalDrawId >= MaterialAttributes.Num())
                 {
@@ -526,7 +526,7 @@ namespace Waldem
                     BFCIndirectBuffer.UpdateOrAdd(nullptr, sizeof(IndirectIndexedCommand), bfcDrawId * sizeof(IndirectIndexedCommand));
                 }
 
-                WorldTransformsBuffer.UpdateOrAdd(&transform.Matrix, sizeof(Matrix4), globalDrawId * sizeof(Matrix4));
+                WorldTransformsBuffer.UpdateOrAdd(&transform.RenderMatrix, sizeof(Matrix4), globalDrawId * sizeof(Matrix4));
 
                 if(globalDrawId >= MaterialAttributes.Num())
                 {
@@ -731,7 +731,7 @@ namespace Waldem
                     NCIndirectBuffer.UpdateOrAdd(nullptr, sizeof(IndirectIndexedCommand), ncDrawId * sizeof(IndirectIndexedCommand));
                 }
                 
-                WorldTransformsBuffer.UpdateOrAdd(&transform.Matrix, sizeof(Matrix4), globalDrawId * sizeof(Matrix4));
+                WorldTransformsBuffer.UpdateOrAdd(&transform.RenderMatrix, sizeof(Matrix4), globalDrawId * sizeof(Matrix4));
 
                 if(globalDrawId >= MaterialAttributes.Num())
                 {
@@ -854,7 +854,7 @@ namespace Waldem
 
                 if(IdManager::GetId(entity, GlobalDrawIdType, globalDrawId))
                 {
-                    WorldTransformsBuffer.UpdateData(&transform.Matrix, sizeof(Matrix4), globalDrawId * sizeof(Matrix4));
+                    WorldTransformsBuffer.UpdateData(&transform.RenderMatrix, sizeof(Matrix4), globalDrawId * sizeof(Matrix4));
                     
                     Renderer::RenderData.TLAS.UpdateTransform(globalDrawId, transform);
                 }
@@ -865,7 +865,7 @@ namespace Waldem
 
                     if(IdManager::GetId(entity, LightIdType, lightId))
                     {
-                        LightTransformsBuffer.UpdateData(&transform.Matrix, sizeof(Matrix4), sizeof(Matrix4) * lightId);
+                        LightTransformsBuffer.UpdateData(&transform.RenderMatrix, sizeof(Matrix4), sizeof(Matrix4) * lightId);
                     }
                 }
             });
@@ -875,11 +875,30 @@ namespace Waldem
                 auto lightId = IdManager::AddId(entity, LightIdType);
 
                 LightsBuffer.UpdateOrAdd(&light, sizeof(Light), sizeof(Light) * lightId);
-                LightTransformsBuffer.UpdateOrAdd(&transform.Matrix, sizeof(Matrix4), sizeof(Matrix4) * lightId);
+                LightTransformsBuffer.UpdateOrAdd(&transform.RenderMatrix, sizeof(Matrix4), sizeof(Matrix4) * lightId);
                 LightsIndices.Add(lightId);
                 LightsIndicesBuffer.UpdateOrAdd(LightsIndices.GetData(), LightsIndices.GetSize(), 0);
                 
                 RayTracingSceneData.NumLights++;
+            });
+
+            ECS::World.system<Transform>("HybridRenderingTransformSyncSystem").kind<ECS::OnDraw>().each([&](flecs::entity entity, Transform& transform)
+            {
+                int globalDrawId;
+                if(IdManager::GetId(entity, GlobalDrawIdType, globalDrawId))
+                {
+                    WorldTransformsBuffer.UpdateData(&transform.RenderMatrix, sizeof(Matrix4), globalDrawId * sizeof(Matrix4));
+                    Renderer::RenderData.TLAS.UpdateTransform(globalDrawId, transform);
+                }
+
+                if(entity.has<Light>())
+                {
+                    int lightId;
+                    if(IdManager::GetId(entity, LightIdType, lightId))
+                    {
+                        LightTransformsBuffer.UpdateData(&transform.RenderMatrix, sizeof(Matrix4), sizeof(Matrix4) * lightId);
+                    }
+                }
             });
             
             ECS::World.observer<Light>().event(flecs::OnSet).each([&](flecs::entity entity, Light& light)
@@ -966,13 +985,13 @@ namespace Waldem
                     auto& transformComponent = linkedCamera.get<Transform>();
 
                     SkyPassSceneData.InverseProjection = inverse(cameraComponent.ProjectionMatrix);
-                    SkyPassSceneData.InverseView = transformComponent.Matrix;
-                    SkyPassSceneData.ViewProjection = cameraComponent.ProjectionMatrix * inverse(transformComponent.Matrix);
+                    SkyPassSceneData.InverseView = transformComponent.RenderMatrix;
+                    SkyPassSceneData.ViewProjection = cameraComponent.ProjectionMatrix * inverse(transformComponent.RenderMatrix);
                     SkyPassSceneData.SkyZenithColor = Vector4(skybox.SkyZenithColor, 1.0f);
                     SkyPassSceneData.SkyHorizonColor = Vector4(skybox.SkyHorizonColor, 1.0f);
                     SkyPassSceneData.GroundColor = Vector4(skybox.GroundColor, 1.0f);
                     SkyPassSceneData.SunDirection = Vector4(sunDirection, 1.0f);
-                    SkyPassSceneData.CameraPosition = Vector4(transformComponent.Position, 1.0f);
+                    SkyPassSceneData.CameraPosition = Vector4(transformComponent.RenderPosition, 1.0f);
                     
                     Renderer::UploadBuffer(SceneDataBuffer, &SkyPassSceneData, sizeof(SkySceneData));
                     Renderer::ResourceBarrier(skyColor, ALL_SHADER_RESOURCE, RENDER_TARGET);
@@ -1069,8 +1088,8 @@ namespace Waldem
                     auto& transformComponent = linkedCamera.get<Transform>();
                     
                     GBufferSceneData.ProjectionMatrix = cameraComponent.ProjectionMatrix;
-                    GBufferSceneData.ViewMatrix = inverse(transformComponent.Matrix);
-                    GBufferSceneData.WorldMatrix = transformComponent.Matrix;
+                    GBufferSceneData.ViewMatrix = inverse(transformComponent.RenderMatrix);
+                    GBufferSceneData.WorldMatrix = transformComponent.RenderMatrix;
                     GBufferSceneData.InverseProjectionMatrix = inverse(cameraComponent.ProjectionMatrix);
                     
                     Renderer::UploadBuffer(GBufferSceneDataBuffer, &GBufferSceneData, sizeof(SGBufferSceneData));
@@ -1137,8 +1156,8 @@ namespace Waldem
                     auto& cameraComponent = linkedCamera.get<Camera>();
                     auto& transformComponent = linkedCamera.get<Transform>();
 
-                    RayTracingSceneData.CameraPosition = transformComponent.Position;
-                    RayTracingSceneData.InvViewMatrix = transformComponent.Matrix;
+                    RayTracingSceneData.CameraPosition = transformComponent.RenderPosition;
+                    RayTracingSceneData.InvViewMatrix = transformComponent.RenderMatrix;
                     RayTracingSceneData.InvProjectionMatrix = inverse(cameraComponent.ProjectionMatrix);
                     Renderer::UploadBuffer(RayTracingSceneDataBuffer, &RayTracingSceneData, sizeof(SRayTracingSceneData));
 

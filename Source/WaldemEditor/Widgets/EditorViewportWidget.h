@@ -43,10 +43,7 @@ namespace Waldem
                 CanModifyManipulationSettings = !isPressed;
             });
 
-            inputManager->SubscribeToDynamicShortcut([]
-            {
-                return EditorShortcuts::GetShortcut(EditorShortcutAction::GizmoTranslate);
-            }, [&]
+            inputManager->SubscribeToEditorShortcut(EditorShortcutAction::GizmoTranslate, [&]
             {
                 if(CanModifyManipulationSettings)
                 {
@@ -54,10 +51,7 @@ namespace Waldem
                 }
             }, [] { return EditorShortcutContexts::Has(EditorShortcutContext::EditorViewport); });
 
-            inputManager->SubscribeToDynamicShortcut([]
-            {
-                return EditorShortcuts::GetShortcut(EditorShortcutAction::GizmoRotate);
-            }, [&]
+            inputManager->SubscribeToEditorShortcut(EditorShortcutAction::GizmoRotate, [&]
             {
                 if(CanModifyManipulationSettings)
                 {
@@ -65,10 +59,7 @@ namespace Waldem
                 }
             }, [] { return EditorShortcutContexts::Has(EditorShortcutContext::EditorViewport); });
 
-            inputManager->SubscribeToDynamicShortcut([]
-            {
-                return EditorShortcuts::GetShortcut(EditorShortcutAction::GizmoScale);
-            }, [&]
+            inputManager->SubscribeToEditorShortcut(EditorShortcutAction::GizmoScale, [&]
             {
                 if(CanModifyManipulationSettings)
                 {
@@ -76,10 +67,7 @@ namespace Waldem
                 }
             }, [] { return EditorShortcutContexts::Has(EditorShortcutContext::EditorViewport); });
 
-            inputManager->SubscribeToDynamicShortcut([]
-            {
-                return EditorShortcuts::GetShortcut(EditorShortcutAction::GizmoToggleMode);
-            }, [&]
+            inputManager->SubscribeToEditorShortcut(EditorShortcutAction::GizmoToggleMode, [&]
             {
                 if(CanModifyManipulationSettings)
                 {

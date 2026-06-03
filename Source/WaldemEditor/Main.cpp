@@ -7,6 +7,7 @@
 #include "Waldem/Input/KeyCodes.h"
 #include "Waldem/ProjectManagement/ProjectManager.h"
 #include "Waldem/SceneManagement/SceneManager.h"
+#include "Waldem/Scripting/ScriptEngine.h"
 #include "EditorLayer.h"
 #include "Waldem/ECS/ECS.h"
 
@@ -30,6 +31,7 @@ int main(int argc, char** argv)
 
     if(Waldem::ProjectManager::HasProject())
     {
+        Waldem::ScriptEngine::ReloadScripts(true);
         Waldem::Path startupScenePath = Waldem::ProjectManager::CurrentProject.GetStartupScenePath();
         Waldem::SceneManager::LoadScene(startupScenePath);
     }
