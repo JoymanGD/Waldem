@@ -139,7 +139,15 @@ namespace Waldem
 				accumulatedTime -= Time::FixedDeltaTime;
 			}
 
+			Time::FixedInterpolationAlpha = Time::FixedDeltaTime > 0.0f
+				? glm::clamp(accumulatedTime / Time::FixedDeltaTime, 0.0f, 1.0f)
+				: 0.0f;
+
 			ECS::RunUpdatePipeline(Time::DeltaTime);
+			
+			ECS::RunLateUpdatePipeline(Time::DeltaTime);
+
+			ECS::UpdateRenderTransforms(Time::FixedInterpolationAlpha);
 
 			for (auto layer : LayerStack)
 			{

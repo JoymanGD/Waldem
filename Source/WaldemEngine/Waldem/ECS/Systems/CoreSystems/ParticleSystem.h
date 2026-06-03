@@ -138,7 +138,7 @@ namespace Waldem
                 
                 auto index = ParticleBuffersMap[(uint)particleSystemId].GetIndex(SRV_CBV);
                 ParticleBuffersIndicesBuffer.UpdateOrAdd(&index, sizeof(uint), particleSystemId * sizeof(uint));
-                WorldTransformsBuffer.UpdateOrAdd(&transform.Matrix, sizeof(Matrix4), particleSystemId * sizeof(Matrix4));
+                WorldTransformsBuffer.UpdateOrAdd(&transform.RenderMatrix, sizeof(Matrix4), particleSystemId * sizeof(Matrix4));
             });
 
             ECS::World.observer<ParticleSystemComponent>().event(flecs::OnSet).each([&](flecs::entity entity, ParticleSystemComponent& particleSystem)
@@ -211,7 +211,7 @@ namespace Waldem
 
                     if(IdManager::GetId(entity, ParticleSystemIdType, particleSystemId))
                     {
-                        WorldTransformsBuffer.UpdateData(&transform.Matrix, sizeof(Matrix4), particleSystemId * sizeof(Matrix4));
+                        WorldTransformsBuffer.UpdateData(&transform.RenderMatrix, sizeof(Matrix4), particleSystemId * sizeof(Matrix4));
                     }
                 }
             });
@@ -222,6 +222,7 @@ namespace Waldem
 
                 if(IdManager::GetId(entity, ParticleSystemIdType, particleSystemId))
                 {
+                    WorldTransformsBuffer.UpdateData(&transform.RenderMatrix, sizeof(Matrix4), particleSystemId * sizeof(Matrix4));
                     RootConstants.WorldTransformsBufferID = WorldTransformsBuffer.GetIndex(SRV_CBV);
                     RootConstants.DeltaTime = Time::DeltaTime;
                     RootConstants.Color = particleSystem.Color;
@@ -255,7 +256,7 @@ namespace Waldem
                         RootConstants.SceneBufferID = SceneDataBuffer->GetIndex(SRV_CBV);
                         auto& camera = linkedCamera.get<Camera>();
                         auto& transform = linkedCamera.get<Transform>();
-                        SceneData.View = inverse(transform.Matrix);
+                        SceneData.View = inverse(transform.RenderMatrix);
                         SceneData.Projection = camera.ProjectionMatrix;
                         Renderer::UploadBuffer(SceneDataBuffer, &SceneData, sizeof(ParticleSystemSceneData));
                         Renderer::ResourceBarrier(deferred, RENDER_TARGET);

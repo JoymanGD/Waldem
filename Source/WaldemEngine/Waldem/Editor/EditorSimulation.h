@@ -3,6 +3,7 @@
 #include "Waldem/Audio/Audio.h"
 #include "Waldem/ECS/Components/AudioSource.h"
 #include "Waldem/SceneManagement/SceneManager.h"
+#include "Waldem/Scripting/ScriptEngine.h"
 #include "Waldem/Utils/FileUtils.h"
 
 namespace Waldem
@@ -44,11 +45,17 @@ namespace Waldem
                 return false;
             }
 
+            OriginalScenePath = SceneManager::GetCurrentScenePath();
             SnapshotPath = GetCurrentFolder() / "__EditorPlayMode.scene";
             SceneManager::GetCurrentScene()->Serialize(SnapshotPath);
 
             State = EditorSimulationState::Play;
             SceneManager::LoadSceneImmediate(SnapshotPath);
+            SceneManager::SetCurrentScenePath(OriginalScenePath);
+            if(ScriptEngine::IsInitialized())
+            {
+                ScriptEngine::RecreateEntityInstances();
+            }
             return true;
         }
 
@@ -83,7 +90,10 @@ namespace Waldem
             if(!SnapshotPath.empty() && exists(SnapshotPath))
             {
                 SceneManager::LoadSceneImmediate(SnapshotPath);
+                SceneManager::SetCurrentScenePath(OriginalScenePath);
             }
+
+            OriginalScenePath.clear();
 
             return true;
         }
@@ -101,5 +111,6 @@ namespace Waldem
     private:
         inline static EditorSimulationState State = EditorSimulationState::Edit;
         inline static Path SnapshotPath;
+        inline static Path OriginalScenePath;
     };
 }

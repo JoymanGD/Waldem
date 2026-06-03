@@ -125,26 +125,66 @@ namespace Waldem
 
         void Initialize(InputManager* inputManager) override
         {
-            inputManager->SubscribeToDynamicShortcut([]
-            {
-                return EditorShortcuts::GetShortcut(EditorShortcutAction::ReloadScripts);
-            }, []
+            // inputManager->SubscribeToDynamicShortcut([]
+            // {
+            //     return EditorShortcuts::GetShortcut(EditorShortcutAction::ReloadScripts);
+            // }, []
+            // {
+            //     ScriptEngine::ReloadScripts(true);
+            // });
+            //
+            // inputManager->SubscribeToDynamicShortcut([]
+            // {
+            //     return EditorShortcuts::GetShortcut(EditorShortcutAction::ReloadShaders);
+            // }, []
+            // {
+            //     Renderer::ReloadShaders();
+            // });
+            //
+            // inputManager->SubscribeToDynamicShortcut([]
+            // {
+            //     return EditorShortcuts::GetShortcut(EditorShortcutAction::SaveScene);
+            // }, [this]
+            // {
+            //     SaveScene();
+            // });
+            
+            inputManager->SubscribeToEditorShortcut(EditorShortcutAction::ReloadScripts, []
             {
                 ScriptEngine::ReloadScripts(true);
             });
-
-            inputManager->SubscribeToDynamicShortcut([]
-            {
-                return EditorShortcuts::GetShortcut(EditorShortcutAction::ReloadShaders);
-            }, []
+            
+            inputManager->SubscribeToEditorShortcut(EditorShortcutAction::ReloadShaders, []
             {
                 Renderer::ReloadShaders();
+            });
+            
+            inputManager->SubscribeToEditorShortcut(EditorShortcutAction::SaveScene, [this]
+            {
+                SaveScene();
             });
         }
 
         void ExportScene(Path& path)
         {
             SceneManager::GetCurrentScene()->Serialize(path);
+        }
+
+        void SaveScene()
+        {
+            Path scenePath = SceneManager::GetCurrentScenePath();
+            bool save = true;
+            if(scenePath.empty())
+            {
+                save = SaveFile(scenePath, ".scene", L"Scene Files (*.scene)\0*.scene\0All Files (*.*)\0*.*\0");
+            }
+                    
+            if(save)
+            {
+                ExportScene(scenePath);
+                SceneManager::SetCurrentScenePath(scenePath);
+                WD_CORE_INFO("Scene was successfully saved!");
+            }
         }
 
         void BuildProject(ProjectBuildConfiguration configuration)
@@ -179,10 +219,11 @@ namespace Waldem
                     if (ImGui::MenuItem("Open project", "Ctrl+O"))
                     {
                         Path selectedScenePath;
-                        if(OpenFile(selectedScenePath, "Project Files (*.wproject)\0*.wproject\0All Files (*.*)\0*.*\0"))
+                        if(OpenFile(selectedScenePath, L"Project Files (*.wproject)\0*.wproject\0All Files (*.*)\0*.*\0"))
                         {
                             if(ProjectManager::LoadProject(selectedScenePath))
                             {
+                                ScriptEngine::ReloadScripts(true);
                                 Path startupScenePath = ProjectManager::CurrentProject.GetStartupScenePath();
                                 SceneManager::LoadScene(startupScenePath);
                             }
@@ -202,33 +243,22 @@ namespace Waldem
                     // if (ImGui::MenuItem("Open scene", "Ctrl+O"))
                     // {
                     //     Path selectedScenePath;
-                    //     if(OpenFile(selectedScenePath, "Scene Files (*.scene)\0*.scene\0All Files (*.*)\0*.*\0"))
+                    //     if(OpenFile(selectedScenePath, L"Scene Files (*.scene)\0*.scene\0All Files (*.*)\0*.*\0"))
                     //     {
                     //         EditorCommandHistory::Get().Clear();
                     //         SceneManager::LoadScene(selectedScenePath);
                     //     }
-                    // }
+                    // } 
                     
-                    if (ImGui::MenuItem("Save scene"))
+                    if (ImGui::MenuItem("Save scene", "Ctrl+S"))
                     {
-                        Path scenePath = SceneManager::GetCurrentScenePath();
-                        bool save = true;
-                        if(scenePath.empty())
-                        {
-                            save = SaveFile(scenePath, ".scene", "Scene Files (*.scene)\0*.scene\0All Files (*.*)\0*.*\0");
-                        }
-                    
-                        if(save)
-                        {
-                            ExportScene(scenePath);
-                            SceneManager::SetCurrentScenePath(scenePath);
-                        }
+                        SaveScene();
                     }
                     
                     if (ImGui::MenuItem("Save scene as..."))
                     {
                         Path scenePath = SceneManager::GetCurrentScenePath();
-                        if(SaveFile(scenePath, ".scene", "Scene Files (*.scene)\0*.scene\0All Files (*.*)\0*.*\0"))
+                        if(SaveFile(scenePath, ".scene", L"Scene Files (*.scene)\0*.scene\0All Files (*.*)\0*.*\0"))
                         {
                             ExportScene(scenePath);
                             SceneManager::SetCurrentScenePath(scenePath);

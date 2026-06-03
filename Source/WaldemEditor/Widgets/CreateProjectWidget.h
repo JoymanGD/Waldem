@@ -8,6 +8,7 @@
 #include <string>
 
 #include "Waldem/ProjectManagement/ProjectManager.h"
+#include "Waldem/Scripting/ScriptEngine.h"
 
 namespace Waldem
 {
@@ -68,6 +69,7 @@ namespace Waldem
                 ProjectManager::CreateProject(WString(NameBuffer), Path(PathBuffer));
                 if(ProjectManager::HasProject())
                 {
+                    ScriptEngine::ReloadScripts(true);
                     Path startupScenePath = ProjectManager::CurrentProject.GetStartupScenePath();
                     SceneManager::LoadScene(startupScenePath);
                 }

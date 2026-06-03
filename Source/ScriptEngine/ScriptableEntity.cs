@@ -14,6 +14,10 @@ namespace Waldem
         {
         }
 
+        protected virtual void OnLateUpdate(float deltaTime)
+        {
+        }
+
         protected virtual void OnDestroy()
         {
         }

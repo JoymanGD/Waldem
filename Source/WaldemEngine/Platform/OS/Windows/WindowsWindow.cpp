@@ -120,8 +120,6 @@ namespace Waldem
 
                         WindowResizeEvent event(newWidth, newHeight);
                         Data.EventCallback(event);
-
-                        WD_CORE_INFO("Window Resized: {0}x{1}", newWidth, newHeight);
                         break;
                     }
                 case SDL_WINDOWEVENT_MOVED:
@@ -137,8 +135,6 @@ namespace Waldem
 
                         WindowMovedEvent event(Point2(newX, newY));
                         Data.EventCallback(event);
-
-                        WD_CORE_INFO("Window Moved: {0}:{1}", newX, newY);
                         break;
                     }
                 default:
@@ -151,7 +147,6 @@ namespace Waldem
                     {
                         KeyPressedEvent event(sdlEvent->key.keysym.sym, 0);
                         Data.EventCallback(event);
-                        WD_CORE_INFO("Key Pressed: {0}", SDL_GetKeyName(sdlEvent->key.keysym.sym), sdlEvent->key.repeat);
                     }
                     break;
                 }
@@ -161,7 +156,6 @@ namespace Waldem
                     {
                         KeyReleasedEvent event(sdlEvent->key.keysym.sym);
                         Data.EventCallback(event);
-                        WD_CORE_INFO("Key Released: {0}", SDL_GetKeyName(sdlEvent->key.keysym.sym));
                     }
                     
                     break;
@@ -170,14 +164,12 @@ namespace Waldem
                 {
                     MouseButtonPressedEvent event(sdlEvent->button.button);
                     Data.EventCallback(event);
-                    WD_CORE_INFO("Mouse Button Pressed: {0}", (int)sdlEvent->button.button);
                     break;
                 }
             case SDL_MOUSEBUTTONUP:
                 {
                     MouseButtonReleasedEvent event(sdlEvent->button.button);
                     Data.EventCallback(event);
-                    WD_CORE_INFO("Mouse Button Released: {0}", (int)sdlEvent->button.button);
                     break;
                 }
             case SDL_MOUSEMOTION:

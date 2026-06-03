@@ -209,6 +209,7 @@ namespace Waldem
 
         //TODO: Optimize this
         Matrix = Matrix4(translate(Matrix4(1.0f), Position) * mat4_cast(RotationQuat) * scale(Matrix4(1.0f), LocalScale));
+        SyncRenderStateFromSimulation();
     }
 
     void Transform::ApplyPitchYawRoll()
@@ -258,6 +259,70 @@ namespace Waldem
         Rotation += degrees(Vector3(pitch, yaw, roll));
         // ClampRotation();
         LastRotation = Rotation;
+        SyncRenderStateFromSimulation();
+    }
+
+    void Transform::SyncRenderStateFromSimulation()
+    {
+        RenderMatrix = Matrix;
+        RenderPosition = Position;
+        RenderScale = LocalScale;
+        RenderRotationQuat = RotationQuat;
+    }
+
+    void Transform::SetRenderMatrix(const Matrix4& matrix)
+    {
+        RenderMatrix = matrix;
+        RenderPosition = matrix[3];
+
+        Vector3 scale;
+        scale.x = length(Vector3(matrix[0]));
+        scale.y = length(Vector3(matrix[1]));
+        scale.z = length(Vector3(matrix[2]));
+        RenderScale = scale;
+
+        Matrix4 rotationMatrix = matrix;
+        if(scale.x > 1e-6f) rotationMatrix[0] /= scale.x;
+        if(scale.y > 1e-6f) rotationMatrix[1] /= scale.y;
+        if(scale.z > 1e-6f) rotationMatrix[2] /= scale.z;
+        RenderRotationQuat = quat_cast(rotationMatrix);
+    }
+
+    void Transform::InitializePhysicsInterpolationState()
+    {
+        PhysicsPreviousPosition = Position;
+        PhysicsCurrentPosition = Position;
+        PhysicsPreviousRotationQuat = RotationQuat;
+        PhysicsCurrentRotationQuat = RotationQuat;
+        HasPhysicsInterpolationState = true;
+    }
+
+    void Transform::PushPhysicsInterpolationState(const Vector3& position, const Quaternion& rotation)
+    {
+        if(!HasPhysicsInterpolationState)
+        {
+            InitializePhysicsInterpolationState();
+        }
+
+        PhysicsPreviousPosition = PhysicsCurrentPosition;
+        PhysicsPreviousRotationQuat = PhysicsCurrentRotationQuat;
+        PhysicsCurrentPosition = position;
+        PhysicsCurrentRotationQuat = normalize(rotation);
+    }
+
+    void Transform::ApplyPhysicsInterpolation(float alpha)
+    {
+        if(!HasPhysicsInterpolationState)
+        {
+            SyncRenderStateFromSimulation();
+            return;
+        }
+
+        alpha = glm::clamp(alpha, 0.0f, 1.0f);
+        RenderPosition = glm::mix(PhysicsPreviousPosition, PhysicsCurrentPosition, alpha);
+        RenderRotationQuat = normalize(glm::slerp(PhysicsPreviousRotationQuat, PhysicsCurrentRotationQuat, alpha));
+        RenderScale = LocalScale;
+        RenderMatrix = translate(Matrix4(1.0f), RenderPosition) * mat4_cast(RenderRotationQuat) * scale(Matrix4(1.0f), RenderScale);
     }
     
     void Transform::ClampRotation()

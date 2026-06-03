@@ -7,6 +7,7 @@ namespace Waldem
 	public:
 		inline static float FixedDeltaTime;
 		inline static float DeltaTime;
+		inline static float FixedInterpolationAlpha;
 		inline static float ElapsedTime;
 	};
 }

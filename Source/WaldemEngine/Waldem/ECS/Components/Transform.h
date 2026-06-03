@@ -25,6 +25,15 @@ namespace Waldem
         Quaternion RotationQuat = { 1, 0, 0, 0 };
         
         Matrix4 Matrix = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
+        Matrix4 RenderMatrix = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
+        Vector3 RenderPosition = { 0, 0, 0 };
+        Vector3 RenderScale = { 1, 1, 1 };
+        Quaternion RenderRotationQuat = { 1, 0, 0, 0 };
+        Vector3 PhysicsPreviousPosition = { 0, 0, 0 };
+        Vector3 PhysicsCurrentPosition = { 0, 0, 0 };
+        Quaternion PhysicsPreviousRotationQuat = { 1, 0, 0, 0 };
+        Quaternion PhysicsCurrentRotationQuat = { 1, 0, 0, 0 };
+        bool HasPhysicsInterpolationState = false;
         Vector3 LastRotation = { 0, 0, 0 };
         Vector3 LastPosition = { 0, 0, 0 };
         Vector3 LastScale = { 0, 0, 0 };
@@ -61,10 +70,15 @@ namespace Waldem
         void ApplyPitchYawRoll();
         void ResetQuaternion();
         void DecompileMatrix();
+        void SyncRenderStateFromSimulation();
+        void SetRenderMatrix(const Matrix4& matrix);
+        void InitializePhysicsInterpolationState();
+        void PushPhysicsInterpolationState(const Vector3& position, const Quaternion& rotation);
+        void ApplyPhysicsInterpolation(float alpha);
 
         Matrix3x4 ToMatrix3x4() const
         {
-            Matrix4 originalMat = transpose(Matrix);
+            Matrix4 originalMat = transpose(RenderMatrix);
             Matrix3x4 mat3x4;
             
             for (int row = 0; row < 3; ++row)

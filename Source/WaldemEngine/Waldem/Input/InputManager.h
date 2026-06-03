@@ -1,5 +1,6 @@
 #pragma once
 #include "Shortcut.h"
+#include "../../../WaldemEditor/EditorShortcuts.h"
 #include "Waldem/Events/Event.h"
 #include "Waldem/Events/KeyEvent.h"
 #include "Waldem/Events/MouseEvent.h"
@@ -13,6 +14,20 @@ namespace Waldem
     using ShortcutHandler = std::function<void()>;
     using DynamicShortcutProvider = std::function<Shortcut()>;
     using ShortcutPredicate = std::function<bool()>;
+    
+    struct DynamicShortcutEntry
+    {
+        DynamicShortcutProvider Provider;
+        ShortcutHandler Handler;
+        ShortcutPredicate Predicate;
+    };
+    
+    struct EditorShortcutEntry
+    {
+        EditorShortcutAction Action;
+        ShortcutHandler Handler;
+        ShortcutPredicate Predicate;
+    };
     
     class WALDEM_API InputManager
     {
@@ -46,6 +61,11 @@ namespace Waldem
         {
             DynamicShortcutHandlers.Add({provider, handler, predicate});
         }
+
+        void SubscribeToEditorShortcut(EditorShortcutAction action, ShortcutHandler handler, ShortcutPredicate predicate = {})
+        {
+            EditorShortcutHandlers.Add({action, handler, predicate});
+        }
         
         bool Broadcast(Event& event, bool blockShortcuts = false)
         {
@@ -68,6 +88,15 @@ namespace Waldem
                             {
                                 for (auto& handler : handlers)
                                     handler();
+                            }
+                        }
+
+                        for (auto& entry : EditorShortcutHandlers)
+                        {
+                            Shortcut shortcut = EditorShortcuts::GetShortcut(entry.Action);
+                            if (shortcut.Matches(PressedKeys) && (!entry.Predicate || entry.Predicate()))
+                            {
+                                entry.Handler();
                             }
                         }
 
@@ -146,13 +175,9 @@ namespace Waldem
         std::unordered_map<int, WArray<KeyEventHandler>> KeyEventHandlers;
         std::unordered_map<int, WArray<MouseButtonEventHandler>> MouseButtonEventHandlers;
         std::unordered_map<Shortcut, WArray<ShortcutHandler>, ShortcutHash> ShortcutHandlers;
-        struct DynamicShortcutEntry
-        {
-            DynamicShortcutProvider Provider;
-            ShortcutHandler Handler;
-            ShortcutPredicate Predicate;
-        };
+        
         WArray<DynamicShortcutEntry> DynamicShortcutHandlers;
+        WArray<EditorShortcutEntry> EditorShortcutHandlers;
         WArray<MouseMoveEventHandler> MouseMoveEventHandlers;
         WArray<MouseScrollEventHandler> MouseScrollEventHandlers;
         

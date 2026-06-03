@@ -1,3 +1,10 @@
+newoption
+{
+    trigger = "gameproject",
+    value = "PATH",
+    description = "Path to the active Waldem game project root"
+}
+
 workspace "Waldem"
     architecture "x64"
     startproject "WaldemEditor"
@@ -11,6 +18,16 @@ local SourceDir = "Source"
 local OutputDir = "%{cfg.buildcfg}"
 local rootDir = os.getcwd()
 local contentPath = path.getabsolute(path.join(rootDir, "Content"))
+local contentScriptsPath = path.getabsolute(path.join(contentPath, "Scripts"))
+local gameProjectPath = _OPTIONS["gameproject"]
+local gameProjectScriptsGlob = nil
+
+if gameProjectPath ~= nil and gameProjectPath ~= "" then
+    local absoluteGameProjectScriptsPath = path.getabsolute(path.join(gameProjectPath, "Content", "Scripts"))
+    if absoluteGameProjectScriptsPath ~= contentScriptsPath then
+        gameProjectScriptsGlob = path.join(absoluteGameProjectScriptsPath, "**.cs")
+    end
+end
 
 IncludeDir = {}
 IncludeDir["ImGui"] = "Vendor/imgui"
@@ -413,6 +430,13 @@ project "ScriptEngine"
         SourceDir .. "/ScriptEngine/**.cs",
         "Content/Scripts/**.cs"
     }
+
+    if gameProjectScriptsGlob ~= nil then
+        files
+        {
+            gameProjectScriptsGlob
+        }
+    end
 
     postbuildcommands
     {

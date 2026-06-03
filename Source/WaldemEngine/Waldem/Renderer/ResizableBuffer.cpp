@@ -59,9 +59,15 @@ namespace Waldem
             WD_CORE_ERROR("RemoveData: Offset + Size exceeds buffer size.");
         }
 
-        Size -= size;
-        
         Renderer::ClearBuffer(InternalBuffer, size, offset);
+
+        // These buffers are often indexed by stable freelist IDs, so removals can
+        // leave holes in the middle. Only shrink the logical size when trimming
+        // the current tail; otherwise keep Size large enough for surviving slots.
+        if (offset + size == Size)
+        {
+            Size -= size;
+        }
     }
 
     void ResizableBuffer::UpdateData(void* data, uint size, uint offset)
@@ -84,10 +90,7 @@ namespace Waldem
             Capacity = std::max(Capacity * 2, requiredSize);
 
             auto oldBuffer = InternalBuffer;
-            InternalBuffer = Renderer::CreateBuffer(InternalBuffer->GetName(),
-                                                    InternalBuffer->GetType(),
-                                                    Capacity,
-                                                    Stride);
+            InternalBuffer = Renderer::CreateBuffer(InternalBuffer->GetName(), InternalBuffer->GetType(), Capacity, Stride);
 
             if(Size > 0)
             {

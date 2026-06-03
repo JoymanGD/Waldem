@@ -15,18 +15,18 @@ namespace Waldem
         return Path(buffer).parent_path();
     }
 
-    inline bool SaveFile(Path& outPath, const WString& extension, WString filter)
+    inline bool SaveFile(Path& outPath, const WString& extension, const wchar_t* filter)
     {
         OPENFILENAMEW ofn;
         wchar_t szFile[MAX_PATH] = L"";
+        const std::wstring extensionW = extension.ToWString();
 
         ZeroMemory(&ofn, sizeof(ofn));
         ofn.lStructSize = sizeof(ofn);
         ofn.hwndOwner = CWindow::Instance->GetWindowsHandle();
         ofn.lpstrFile = szFile;
         ofn.nMaxFile = MAX_PATH;
-        // ofn.lpstrFilter = L"Scene Files (*.scene)\0*.scene\0All Files (*.*)\0*.*\0";
-        ofn.lpstrFilter = filter.ToWString().c_str();
+        ofn.lpstrFilter = filter;
         ofn.nFilterIndex = 1;
         ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
 
@@ -34,7 +34,7 @@ namespace Waldem
         {
             Path selectedPath = szFile;
 
-            if (selectedPath.extension().string() != extension.GetData())
+            if (selectedPath.extension().wstring() != extensionW)
             {
                 selectedPath.replace_extension(extension.GetData());
             }
@@ -46,7 +46,7 @@ namespace Waldem
         return false;
     }
 
-    inline bool OpenFile(Path& outPath, WString filter)
+    inline bool OpenFile(Path& outPath, const wchar_t* filter)
     {
         OPENFILENAMEW ofn;
         wchar_t szFile[MAX_PATH] = L"";
@@ -56,7 +56,7 @@ namespace Waldem
         ofn.hwndOwner = CWindow::Instance->GetWindowsHandle();
         ofn.lpstrFile = szFile;
         ofn.nMaxFile = MAX_PATH;
-        ofn.lpstrFilter = filter.ToWString().c_str();
+        ofn.lpstrFilter = filter;
         ofn.nFilterIndex = 1;
         ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
