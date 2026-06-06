@@ -7,15 +7,23 @@ namespace Waldem
         public float MoveSpeed = 10.0f;
         public float JumpForce = 10.0f;
         public float CameraOrbitSensitivity = 0.2f;
-        public float CameraPitchMin = -20.0f;
+        public float CameraPitchMin = -70.0f;
         public float CameraPitchMax = 75.0f;
 
         private Vector3 movement;
         private Camera mainCamera;
+        private float cameraPitch;
 
         protected override void OnCreate()
         {
             mainCamera = Camera.Main;
+            AddComponent<Animator>();
+
+            if (mainCamera != null)
+            {
+                cameraPitch = NormalizeAngle(mainCamera.Entity.Transform.Rotation.x);
+                cameraPitch = Clamp(cameraPitch, CameraPitchMin, CameraPitchMax);
+            }
         }
 
         protected override void OnUpdate(float deltaTime)
@@ -73,17 +81,42 @@ namespace Waldem
                 return;
 
             float cameraHorizontal = 0;
-            float cameraVertical = 0;
-            
+            float cameraVerticalDelta = 0;
+
             if (Input.GetMouse(MouseButton.Right))
             {
                 cameraHorizontal = Input.GetMouseDeltaX() * CameraOrbitSensitivity;
-                cameraVertical = Input.GetMouseDeltaY() * CameraOrbitSensitivity;
+                float targetPitch = cameraPitch + Input.GetMouseDeltaY() * CameraOrbitSensitivity;
+                targetPitch = Clamp(targetPitch, CameraPitchMin, CameraPitchMax);
+                cameraVerticalDelta = targetPitch - cameraPitch;
+                cameraPitch = targetPitch;
             }
 
             var cameraPos = mainCamera.Entity.Transform.Position;
             mainCamera.Entity.Transform.RotateAround(cameraPos, Vector3.Up, cameraHorizontal);
-            mainCamera.Entity.Transform.RotateAround(cameraPos, mainCamera.Entity.Transform.Right, cameraVertical);
+            mainCamera.Entity.Transform.RotateAround(cameraPos, mainCamera.Entity.Transform.Right, cameraVerticalDelta);
+        }
+
+        private float Clamp(float value, float min, float max)
+        {
+            if (value < min)
+                return min;
+
+            if (value > max)
+                return max;
+
+            return value;
+        }
+
+        private float NormalizeAngle(float angle)
+        {
+            while (angle > 180.0f)
+                angle -= 360.0f;
+
+            while (angle < -180.0f)
+                angle += 360.0f;
+
+            return angle;
         }
 
         protected override void OnFixedUpdate(float fixedDeltaTime)
