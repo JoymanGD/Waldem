@@ -38,6 +38,11 @@ namespace Waldem
             return component;
         }
 
+        public void AddComponent<T>() where T : Component, new()
+        {
+            InternalCalls.Entity_AddComponent(EntityId, (int)GetComponentKind(typeof(T)));
+        }
+
         public void Destroy()
         {
             InternalCalls.Entity_Destroy(EntityId);

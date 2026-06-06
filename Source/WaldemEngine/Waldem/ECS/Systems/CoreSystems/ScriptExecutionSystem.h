@@ -14,17 +14,17 @@ namespace Waldem
 
         void Initialize() override
         {
-            ECS::World.observer<ScriptComponent>("ScriptComponentChanged").event(flecs::OnSet).each([&](ECS::Entity entity, ScriptComponent& scriptComponent)
-            {
-                if(EditorSimulation::ShouldRunRuntimeSystems())
-                {
-                    ScriptEngine::CreateEntityInstance(entity, scriptComponent);
-                }
-                else
-                {
-                    ScriptEngine::DestroyEntityInstance(entity.id());
-                }
-            });
+            // ECS::World.observer<ScriptComponent>("ScriptComponentChanged").event(flecs::OnSet).each([&](ECS::Entity entity, ScriptComponent& scriptComponent)
+            // {
+            //     if(EditorSimulation::ShouldRunRuntimeSystems())
+            //     {
+            //         ScriptEngine::CreateEntityInstance(entity, scriptComponent);
+            //     }
+            //     else
+            //     {
+            //         ScriptEngine::DestroyEntityInstance(entity.id());
+            //     }
+            // });
 
             ECS::World.observer<ScriptComponent>("ScriptComponentRemoved").event(flecs::OnRemove).each([&](ECS::Entity entity, ScriptComponent&)
             {

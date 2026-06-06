@@ -39,6 +39,42 @@ namespace Waldem::Bindings
             }
         }
 
+        void Entity_AddComponent(uint64_t entityId, int32_t componentKind)
+        {
+            ECS::Entity entity = GetEntityChecked(entityId);
+            if(!entity.is_alive())
+                return;
+
+            switch(static_cast<ScriptComponentKind>(componentKind))
+            {
+                case ScriptComponentKind::Transform:
+                {
+                    entity.add<Transform>();
+                    break;
+                }
+                case ScriptComponentKind::Camera:
+                {
+                    entity.add<Camera>();
+                    break;
+                }
+                case ScriptComponentKind::RigidBody:
+                {
+                    entity.add<RigidBody>();
+                    break;
+                }
+                case ScriptComponentKind::Light:
+                {
+                    entity.add<Light>();
+                    break;
+                }
+                case ScriptComponentKind::Animator:
+                {
+                    entity.add<AnimatorComponent>();
+                    break;
+                }
+            }
+        }
+
         void Entity_Destroy(uint64_t entityId)
         {
             ECS::Entity entity = GetEntityChecked(entityId);
@@ -53,6 +89,7 @@ namespace Waldem::Bindings
     void RegisterEntityCalls(Mono* runtime)
     {
         BIND(runtime, Entity_HasComponent);
+        BIND(runtime, Entity_AddComponent);
         BIND(runtime, Entity_Destroy);
     }
 }
