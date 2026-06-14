@@ -11,7 +11,7 @@
 
 namespace Waldem
 {
-    class EditorControlSystem : public ISystem
+    class EditorCameraControlSystem : public ISystem
     {
         //Camera control
         Vector2 MousePos = { 0, 0 };
@@ -20,21 +20,15 @@ namespace Waldem
         Vector3 DeltaPos = { 0, 0, 0 };
         float DeltaScroll = 0;
 
-        //Light control
-        Vector3 LightTargetDirection = { 0, 0, 1 };
-        bool IsRotatingLight = false;
-        
     public:
-        EditorControlSystem() {}
+        EditorCameraControlSystem() {}
 
         void Initialize(InputManager* inputManager) override
         {
             InitializeCameraControl(inputManager);
-            InitializeLightControl(inputManager);
             InitializeCameras();
             
             UpdateCameraControl();
-            UpdateLightControl();
             UpdateLastMousePosition();
         }        
 
@@ -89,14 +83,6 @@ namespace Waldem
                 }
             });
         }
-
-        void InitializeLightControl(InputManager* inputManager)
-        {
-            inputManager->SubscribeToMouseButtonEvent(WD_MOUSE_BUTTON_MIDDLE, [&](bool isPressed)
-            {
-                IsRotatingLight = isPressed;
-            });
-        }
         
         void InitializeCameras()
         {
@@ -121,54 +107,6 @@ namespace Waldem
             {
                 LastMousePos.x = MousePos.x;
                 LastMousePos.y = MousePos.y;
-            });
-        }
-        
-        void UpdateLightControl()
-        {
-            ECS::World.system<Light, Transform>("UpdateLightControlSystem").kind(ECS::OnUpdate).each([&](ECS::Entity entity, Light& light, Transform& transform)
-            {
-                if (IsRotatingLight)
-                {
-                    if(light.Type == LightType::Directional)
-                    {
-                        Vector3 cameraUp, cameraRight;
-
-                        if(auto editorCamera = ECS::World.lookup("__EditorCamera"))
-                        {
-                            auto& cameraTransform = editorCamera.get<Transform>();
-                            cameraUp = cameraTransform.GetUpVector();
-                            cameraRight = cameraTransform.GetRightVector();
-                        }
-                        
-                        cameraRight.y = 0;
-                        cameraRight = normalize(cameraRight);
-
-                        cameraUp.y = 0;
-                        if (length(cameraUp) > 0.0001f)
-                        {
-                            cameraUp = normalize(cameraUp);
-                        }
-                        else
-                        {
-                            cameraUp = Vector3(0,1,0);
-                        }
-                    
-                        float deltaX = (MousePos.x - LastMousePos.x) * Time::DeltaTime;
-                        float deltaY = (MousePos.y - LastMousePos.y) * Time::DeltaTime;
-
-                        if(deltaX != 0 || deltaY != 0)
-                        {
-                            Matrix4 rotationMatrix = rotate(Matrix4(1.0f), deltaX, cameraUp) * rotate(Matrix4(1.0f), deltaY, cameraRight);
-                            LightTargetDirection = normalize(Vector3(rotationMatrix * Vector4(LightTargetDirection, 0.0f)));
-
-                            transform.LookAt(transform.Position + LightTargetDirection);
-
-                            entity.modified<Transform>();
-                        }
-
-                    }
-                }
             });
         }
         

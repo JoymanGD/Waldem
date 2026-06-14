@@ -15,99 +15,89 @@ namespace Waldem
     public:
         void Initialize() override
         {
-            // Runs during OnDraw, before SkeletalMeshSkinningSystem dispatches the GPU compute.
-            ECS::World.system<AnimatorComponent, SkeletalMeshComponent>("AnimationSystem")
-                .kind<ECS::OnDraw>()
-                .each([](AnimatorComponent& animator, SkeletalMeshComponent& skeletalMeshComp)
+            ECS::World.system<AnimatorComponent, SkeletalMeshComponent>("AnimationSystem").kind<ECS::OnDraw>().each([this](AnimatorComponent& animator, SkeletalMeshComponent& skeletalMeshComp)
+            {
+                if (!EditorSimulation::ShouldRunRuntimeSystems())
+                    return;
+
+                if(!IsActive)
                 {
-                    if (!EditorSimulation::ShouldRunRuntimeSystems())
-                        return;
+                    return;
+                }
 
-                    if (!animator.Started)
-                    {
-                        animator.Started = true;
-                        animator.IsPlaying = animator.PlayOnStart ? 1 : 0;
-                    }
+                if (!animator.Started)
+                {
+                    animator.Started = true;
+                    animator.IsPlaying = animator.PlayOnStart ? 1 : 0;
+                }
 
-                    if (!animator.IsPlaying)
-                        return;
+                if (!animator.IsPlaying)
+                    return;
 
+                if (!animator.ClipRef.IsValid())
+                {
+                    if (!animator.ClipRef.Reference.empty() && animator.ClipRef.Reference != "Empty")
+                        animator.ClipRef.LoadAsset();
+                    
                     if (!animator.ClipRef.IsValid())
+                        return;
+                }
+
+                if (!skeletalMeshComp.MeshRef.IsValid() || !skeletalMeshComp.BoneMatricesBuffer)
+                    return;
+
+                const AnimationClip* clip = animator.ClipRef.Clip;
+                const SkeletalMesh*  mesh = skeletalMeshComp.MeshRef.Mesh;
+                int boneCount = mesh->BoneCount;
+
+                if (boneCount == 0 || mesh->AnimationNodes.Num() == 0)
+                    return;
+
+                float ticksPerSec = clip->TicksPerSecond > 0.0f ? clip->TicksPerSecond : 25.0f;
+                animator.CurrentTimeTicks += Time::DeltaTime * ticksPerSec * animator.PlaybackSpeed;
+
+                if (animator.Loop)
+                    animator.CurrentTimeTicks = fmodf(animator.CurrentTimeTicks, clip->DurationTicks);
+                else
+                    animator.CurrentTimeTicks = glm::min(animator.CurrentTimeTicks, clip->DurationTicks);
+
+                const float t = animator.CurrentTimeTicks;
+            
+                int nodeCount = (int)mesh->AnimationNodes.Num();
+                WArray<Matrix4> globalTransforms;
+                globalTransforms.Resize(nodeCount, Matrix4(1.0f));
+                WArray<Matrix4> finalMatrices;
+                finalMatrices.Resize(boneCount, Matrix4(1.0f));
+
+                for (int i = 0; i < nodeCount; ++i)
+                {
+                    const AnimationNode& node = mesh->AnimationNodes[i];
+
+                    Matrix4 localTransform = node.LocalTransform;
+
+                    int ch = clip->FindChannel(node.Name);
+                    if (ch >= 0)
                     {
-                        if (!animator.ClipRef.Reference.empty() && animator.ClipRef.Reference != "Empty")
-                            animator.ClipRef.LoadAsset();
-                        if (!animator.ClipRef.IsValid())
-                            return;
+                        const AnimationChannel& chan = clip->Channels[ch];
+                        Vector3 pos = SamplePosition(chan, t);
+                        Quaternion rot = SampleRotation(chan, t);
+                        Vector3 scale = SampleScale(chan, t);
+
+                        localTransform = translate(Matrix4(1.0f), pos) * mat4_cast(rot) * glm::scale(Matrix4(1.0f), scale);
                     }
 
-                    if (!skeletalMeshComp.MeshRef.IsValid() || !skeletalMeshComp.BoneMatricesBuffer)
-                        return;
+                    Matrix4 parentGlobal = node.ParentIndex >= 0 ? globalTransforms[node.ParentIndex] : Matrix4(1.0f);
 
-                    const AnimationClip* clip = animator.ClipRef.Clip;
-                    const SkeletalMesh*  mesh = skeletalMeshComp.MeshRef.Mesh;
-                    int boneCount = mesh->BoneCount;
+                    globalTransforms[i] = parentGlobal * localTransform;
 
-                    if (boneCount == 0 || mesh->AnimationNodes.Num() == 0)
-                        return;
-
-                    // Advance time
-                    float ticksPerSec = clip->TicksPerSecond > 0.0f ? clip->TicksPerSecond : 25.0f;
-                    animator.CurrentTimeTicks += Time::DeltaTime * ticksPerSec * animator.PlaybackSpeed;
-
-                    if (animator.Loop)
-                        animator.CurrentTimeTicks = fmodf(animator.CurrentTimeTicks, clip->DurationTicks);
-                    else
-                        animator.CurrentTimeTicks = glm::min(animator.CurrentTimeTicks, clip->DurationTicks);
-
-                    const float t = animator.CurrentTimeTicks;
-
-                    // FK pass — AnimationNodes are in DFS pre-order so ParentIndex < own index.
-                    // Mirrors the canonical Assimp tutorial: traverse all relevant nodes, apply
-                    // GlobalInverseTransform, then multiply by the inverse bind pose.
-                    int nodeCount = (int)mesh->AnimationNodes.Num();
-                    WArray<Matrix4> globalTransforms;
-                    globalTransforms.Resize(nodeCount, Matrix4(1.0f));
-                    WArray<Matrix4> finalMatrices;
-                    finalMatrices.Resize(boneCount, Matrix4(1.0f));
-
-                    for (int i = 0; i < nodeCount; ++i)
+                    if (node.BoneIndex >= 0)
                     {
-                        const AnimationNode& node = mesh->AnimationNodes[i];
-
-                        Matrix4 localTransform = node.LocalTransform; // bind-pose fallback
-
-                        int ch = clip->FindChannel(node.Name);
-                        if (ch >= 0)
-                        {
-                            const AnimationChannel& chan = clip->Channels[ch];
-                            Vector3    pos   = SamplePosition(chan, t);
-                            Quaternion rot   = SampleRotation(chan, t);
-                            Vector3    scale = SampleScale(chan, t);
-
-                            localTransform = glm::translate(Matrix4(1.0f), pos)
-                                           * glm::mat4_cast(rot)
-                                           * glm::scale(Matrix4(1.0f), scale);
-                        }
-
-                        Matrix4 parentGlobal = (node.ParentIndex >= 0)
-                            ? globalTransforms[node.ParentIndex]
-                            : Matrix4(1.0f);
-
-                        globalTransforms[i] = parentGlobal * localTransform;
-
-                        if (node.BoneIndex >= 0)
-                        {
-                            finalMatrices[node.BoneIndex] =
-                                globalTransforms[i]
-                                * mesh->InverseBindPoseMatrices[node.BoneIndex];
-                        }
+                        finalMatrices[node.BoneIndex] = globalTransforms[i] * mesh->InverseBindPoseMatrices[node.BoneIndex];
                     }
+                }
 
-                    Renderer::UploadBuffer(
-                        skeletalMeshComp.BoneMatricesBuffer,
-                        finalMatrices.GetData(),
-                        (uint32_t)(boneCount * sizeof(Matrix4)));
-                });
+                Renderer::UploadBuffer(skeletalMeshComp.BoneMatricesBuffer, finalMatrices.GetData(), (uint32_t)(boneCount * sizeof(Matrix4)));
+            });
         }
 
     private:
@@ -122,7 +112,7 @@ namespace Waldem
                 {
                     float dt = chan.PositionKeys[i + 1].Time - chan.PositionKeys[i].Time;
                     float f  = (dt > 0.0f) ? (t - chan.PositionKeys[i].Time) / dt : 0.0f;
-                    return glm::mix(chan.PositionKeys[i].Value, chan.PositionKeys[i + 1].Value, f);
+                    return mix(chan.PositionKeys[i].Value, chan.PositionKeys[i + 1].Value, f);
                 }
             }
             return chan.PositionKeys.Last().Value;
@@ -139,7 +129,7 @@ namespace Waldem
                 {
                     float dt = chan.RotationKeys[i + 1].Time - chan.RotationKeys[i].Time;
                     float f  = (dt > 0.0f) ? (t - chan.RotationKeys[i].Time) / dt : 0.0f;
-                    return glm::normalize(glm::slerp(chan.RotationKeys[i].Value, chan.RotationKeys[i + 1].Value, f));
+                    return normalize(slerp(chan.RotationKeys[i].Value, chan.RotationKeys[i + 1].Value, f));
                 }
             }
             return chan.RotationKeys.Last().Value;
@@ -156,7 +146,7 @@ namespace Waldem
                 {
                     float dt = chan.ScaleKeys[i + 1].Time - chan.ScaleKeys[i].Time;
                     float f  = (dt > 0.0f) ? (t - chan.ScaleKeys[i].Time) / dt : 0.0f;
-                    return glm::mix(chan.ScaleKeys[i].Value, chan.ScaleKeys[i + 1].Value, f);
+                    return mix(chan.ScaleKeys[i].Value, chan.ScaleKeys[i + 1].Value, f);
                 }
             }
             return chan.ScaleKeys.Last().Value;

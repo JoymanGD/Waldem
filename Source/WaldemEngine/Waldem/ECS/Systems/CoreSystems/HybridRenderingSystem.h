@@ -1247,9 +1247,7 @@ namespace Waldem
                     const uint width = (uint)resolution.x;
                     const uint height = (uint)resolution.y;
                     const uint pixelCount = width * height;
-                    const uint selectedOutputTarget = viewport->Type == EditorViewport
-                        ? Renderer::RenderData.EditorViewportOutputTarget
-                        : Renderer::RenderData.GameViewportOutputTarget;
+                    const uint selectedOutputTarget = viewport->Type == EditorViewport ? Renderer::RenderData.EditorViewportOutputTarget : Renderer::RenderData.GameViewportOutputTarget;
 
                     bool hasNIVPrediction = false;
                     const bool needNIV = Renderer::RenderData.FeatureToggles.EnableNIVInference || selectedOutputTarget == 8;
