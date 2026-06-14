@@ -42,12 +42,22 @@
   <ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\WaldemGames\FirstPersonController\Content\Scripts\CameraTestScript.cs">
+      <Link>WaldemGames\FirstPersonController\Content\Scripts\CameraTestScript.cs</Link>
+    </Compile>
+    <Compile Include="..\..\WaldemGames\FirstPersonController\Content\Scripts\Collectable.cs">
+      <Link>WaldemGames\FirstPersonController\Content\Scripts\Collectable.cs</Link>
+    </Compile>
+    <Compile Include="..\..\WaldemGames\FirstPersonController\Content\Scripts\FirstPersonController.cs">
+      <Link>WaldemGames\FirstPersonController\Content\Scripts\FirstPersonController.cs</Link>
+    </Compile>
+    <Compile Include="..\..\WaldemGames\FirstPersonController\Content\Scripts\RotatingObject.cs">
+      <Link>WaldemGames\FirstPersonController\Content\Scripts\RotatingObject.cs</Link>
+    </Compile>
+    <Compile Include="..\..\WaldemGames\FirstPersonController\Content\Scripts\TestScript.cs">
+      <Link>WaldemGames\FirstPersonController\Content\Scripts\TestScript.cs</Link>
+    </Compile>
     <Compile Include="Animator.cs" />
-    <Compile Include="C:\Users\Joyman\Desktop\WaldemGames\FirstPersonController\Content\Scripts\CameraTestScript.cs" />
-    <Compile Include="C:\Users\Joyman\Desktop\WaldemGames\FirstPersonController\Content\Scripts\Collectable.cs" />
-    <Compile Include="C:\Users\Joyman\Desktop\WaldemGames\FirstPersonController\Content\Scripts\FirstPersonController.cs" />
-    <Compile Include="C:\Users\Joyman\Desktop\WaldemGames\FirstPersonController\Content\Scripts\RotatingObject.cs" />
-    <Compile Include="C:\Users\Joyman\Desktop\WaldemGames\FirstPersonController\Content\Scripts\TestScript.cs" />
     <Compile Include="Camera.cs" />
     <Compile Include="Collider.cs" />
     <Compile Include="Component.cs" />

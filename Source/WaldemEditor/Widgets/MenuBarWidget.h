@@ -354,21 +354,6 @@ namespace Waldem
                     ImGui::EndMenu();
                 }
 
-                if (ImGui::BeginMenu("Build"))
-                {
-                    if (ImGui::MenuItem("Package Release"))
-                    {
-                        BuildProject(ProjectBuildConfiguration::Release);
-                    }
-
-                    ImGui::TextWrapped("%s", ProjectBuilder::GetLastBuildStatus());
-                    if(!ProjectBuilder::GetLastBuildOutputPath().empty())
-                    {
-                        ImGui::TextWrapped("%s", ProjectBuilder::GetLastBuildOutputPath().string().c_str());
-                    }
-                    ImGui::EndMenu();
-                }
-
                 if (ImGui::BeginMenu("Window"))
                 {
                     bool showCoach = CoachWidget::IsVisible();
@@ -388,10 +373,6 @@ namespace Waldem
                     {
                         PhysXSystem::SetGravity(Vector3(gravityValues[0], gravityValues[1], gravityValues[2]));
                     }
-
-                    ImGui::Separator();
-                    ImGui::TextWrapped("Use RigidBody.MaxSlope to control what counts as walkable ground.");
-                    ImGui::TextWrapped("Steeper contacts are now rejected so bodies don't climb box faces as easily.");
                     ImGui::EndMenu();
                 }
 
