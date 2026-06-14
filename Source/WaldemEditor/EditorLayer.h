@@ -78,7 +78,7 @@ namespace Waldem
             Widgets.Add(new ContentBrowserWidget());
             
             //do it after all entities set up
-            UpdateSystems.Add(new EditorControlSystem());
+            UpdateSystems.Add(new EditorCameraControlSystem());
             DrawSystems.Add(new WorldGridRenderingSystem());
             DrawSystems.Add(new GizmosRenderingSystem());
             DrawSystems.Add(new EntitySelectionSystem());
