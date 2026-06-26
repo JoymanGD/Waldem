@@ -54,7 +54,6 @@ namespace Waldem
         bool IsSleeping = false;
         Vector3 Acceleration = Vector3(0);
         Vector3 GravityAcceleration = Vector3(0);
-        bool IsGrounded = false;
         
         RigidBody() {}
 

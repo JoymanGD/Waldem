@@ -5,12 +5,13 @@ namespace Waldem
     internal enum ComponentKind
     {
         None = 0,
-        Transform = 1,
-        Camera = 2,
-        RigidBody = 3,
-        Light = 4,
-        Animator = 5
-    }
+            Transform = 1,
+            Camera = 2,
+            RigidBody = 3,
+            Light = 4,
+            Animator = 5,
+            CharacterController = 6
+        }
 
     public class Entity
     {
@@ -53,6 +54,7 @@ namespace Waldem
         public RigidBody RigidBody => GetComponent<RigidBody>();
         public Light Light => GetComponent<Light>();
         public Animator Animator => GetComponent<Animator>();
+        public CharacterController CharacterController => GetComponent<CharacterController>();
 
         private static ComponentKind GetComponentKind(Type type)
         {
@@ -61,6 +63,7 @@ namespace Waldem
             if (type == typeof(RigidBody)) return ComponentKind.RigidBody;
             if (type == typeof(Light)) return ComponentKind.Light;
             if (type == typeof(Animator)) return ComponentKind.Animator;
+            if (type == typeof(CharacterController)) return ComponentKind.CharacterController;
 
             return ComponentKind.None;
         }

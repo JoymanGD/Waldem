@@ -29,9 +29,6 @@ namespace Waldem
         internal static extern void RigidBody_RotateTowards(ulong entityId, ref Vector3 target, float maxDegreesDelta);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
-        internal static extern bool RigidBody_GetIsGrounded(ulong entityId);
-
-        [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern float RigidBody_GetMass(ulong entityId);
 
         [MethodImpl(MethodImplOptions.InternalCall)]

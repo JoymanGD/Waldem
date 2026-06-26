@@ -19,6 +19,7 @@
 #include "Waldem/Utils/FileUtils.h"
 #include "Bindings/AnimatorBindings.h"
 #include "Bindings/CameraBindings.h"
+#include "Bindings/CharacterControllerBindings.h"
 #include "Bindings/DebugBindings.h"
 #include "Bindings/EntityBindings.h"
 #include "Bindings/InputBindings.h"
@@ -991,6 +992,7 @@ namespace Waldem
         Bindings::RegisterQuaternionCalls(Runtime);
         Bindings::RegisterTransformCalls(Runtime);
         Bindings::RegisterRigidBodyCalls(Runtime);
+        Bindings::RegisterCharacterControllerCalls(Runtime);
         Bindings::RegisterCameraCalls(Runtime);
         Bindings::RegisterLightCalls(Runtime);
     }

@@ -1,6 +1,7 @@
 #pragma once
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/Input/KeyCodes.h"
+#include "Waldem/ECS/Components/CharacterController.h"
 #include "Waldem/ECS/Components/Transform.h"
 #include "Waldem/ECS/Components/PlayerController.h"
 #include "glm/glm.hpp"
@@ -11,6 +12,7 @@ namespace Waldem
     class PlayerControllerSystem : public ISystem
     {
         Vector3 DeltaPos = { 0, 0, 0 };
+        bool JumpRequested = false;
         
     public:
         void Initialize(InputManager* inputManager) override
@@ -35,9 +37,17 @@ namespace Waldem
                 float multiplier = isPressed ? 1.0f : -1.0f;
                 DeltaPos += Vector3(1, 0, 0) * multiplier;
             });
+            inputManager->SubscribeToKeyEvent(SPACE, [&](bool isPressed)
+            {
+                if(isPressed)
+                {
+                    JumpRequested = true;
+                }
+            });
             
             ECS::World.system<Transform, PlayerController>("PlayerControllerSystem").kind(flecs::OnUpdate).each([&](flecs::entity entity, Transform& transform, PlayerController& playerController)
             {
+                Vector3 worldDir = Vector3(0.0f);
                 if(length(DeltaPos) > 1e-6f)
                 {
                     auto& cameraTransform = ECS::World.lookup("__EditorCamera").get<Transform>();
@@ -47,16 +57,33 @@ namespace Waldem
                     Vector3 right = cameraTransform.GetRightVector();
                     right.y = 0;
                     right = normalize(right);
-                    Vector3 worldDir = normalize(forward * DeltaPos.z + right * DeltaPos.x);
-                    transform.Move(worldDir * Time::DeltaTime * playerController.MovementSpeed);
-                    entity.modified<Transform>();
+                    worldDir = normalize(forward * DeltaPos.z + right * DeltaPos.x);
 
                     if(playerController.RotateTowardMovementDirection)
                     {
                         Vector3 lookAtDir = mix(transform.GetForwardVector(), worldDir, playerController.RotationSpeed);
                         transform.LookAt(transform.Position + lookAtDir);
+                        entity.modified<Transform>();
                     }
                 }
+
+                if(entity.has<CharacterController>())
+                {
+                    auto& controller = entity.get_mut<CharacterController>();
+                    controller.MoveVelocity.x = worldDir.x * playerController.MovementSpeed;
+                    controller.MoveVelocity.z = worldDir.z * playerController.MovementSpeed;
+                    if(JumpRequested)
+                    {
+                        controller.JumpRequested = true;
+                    }
+                }
+                else if(length(worldDir) > 1e-6f)
+                {
+                    transform.Move(worldDir * Time::DeltaTime * playerController.MovementSpeed);
+                    entity.modified<Transform>();
+                }
+
+                JumpRequested = false;
             });
         }
     };

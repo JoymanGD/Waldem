@@ -257,6 +257,7 @@ project "WaldemEngine"
             "PhysXCommon_64.lib",
             "PhysXFoundation_64.lib",
             "PhysXCooking_64.lib",
+            "PhysXCharacterKinematic_static_64.lib",
             "PhysXExtensions_static_64.lib",
             "PhysXPvdSDK_static_64.lib",
         }

@@ -10,6 +10,7 @@ namespace Waldem
     public:
         static Vector3 GetGravity();
         static void SetGravity(const Vector3& gravity);
+        static void ApplyImpulse(ECS::Entity entity, const Vector3& impulse);
         static bool LookAt(ECS::Entity entity, const Vector3& target);
         static bool RotateTowards(ECS::Entity entity, const Vector3& target, float maxDegreesDelta);
         void Initialize() override;

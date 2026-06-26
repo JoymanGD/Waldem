@@ -59,6 +59,7 @@
     </Compile>
     <Compile Include="Animator.cs" />
     <Compile Include="Camera.cs" />
+    <Compile Include="CharacterController.cs" />
     <Compile Include="Collider.cs" />
     <Compile Include="Component.cs" />
     <Compile Include="Debug.cs" />
@@ -66,6 +67,7 @@
     <Compile Include="Input.cs" />
     <Compile Include="InternalCalls.Animator.cs" />
     <Compile Include="InternalCalls.Camera.cs" />
+    <Compile Include="InternalCalls.CharacterController.cs" />
     <Compile Include="InternalCalls.Debug.cs" />
     <Compile Include="InternalCalls.Entity.cs" />
     <Compile Include="InternalCalls.Input.cs" />

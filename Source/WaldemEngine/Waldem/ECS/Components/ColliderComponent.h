@@ -131,7 +131,7 @@ namespace Waldem
     
     COMPONENT()
     struct WALDEM_API ColliderComponent
-    {        
+    {
         FIELD()
         Vector3 BoxSize = Vector3(1, 1, 1);
         FIELD()

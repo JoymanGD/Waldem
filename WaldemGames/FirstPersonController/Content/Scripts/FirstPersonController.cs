@@ -5,19 +5,20 @@ namespace Waldem
     public class FirstPersonController : ScriptableEntity
     {
         public float MoveSpeed = 10.0f;
-        public float JumpForce = 10.0f;
+        public float PushForce = 20.0f;
         public float CameraOrbitSensitivity = 0.2f;
         public float CameraPitchMin = -70.0f;
         public float CameraPitchMax = 75.0f;
 
         private Vector3 movement;
         private Camera mainCamera;
+        private CharacterController characterController;
         private float cameraPitch;
 
         protected override void OnCreate()
         {
             mainCamera = Camera.Main;
-            AddComponent<Animator>();
+            characterController = GetComponent<CharacterController>();
 
             if (mainCamera != null)
             {
@@ -29,9 +30,6 @@ namespace Waldem
         protected override void OnUpdate(float deltaTime)
         {
             movement = Vector3.Zero;
-
-            var animator = GetComponent<Animator>();
-            animator?.Stop();
 
             if (mainCamera != null)
             {
@@ -56,21 +54,37 @@ namespace Waldem
                 if (Input.GetKey(KeyCode.D))
                     movement += right;
                 
-                movement.Normalize();
-
-                var rigidbody = GetComponent<RigidBody>();
+                if (movement.magnitude > 0)
+                    movement.Normalize();
 
                 if (movement.magnitude > 0)
                 {
-                    if (animator != null)
+                    if (characterController != null)
                     {
-                        animator.Play();
+                        Vector3 controllerVelocity = characterController.MoveVelocity;
+                        controllerVelocity.x = movement.x * MoveSpeed;
+                        controllerVelocity.z = movement.z * MoveSpeed;
+                        characterController.MoveVelocity = controllerVelocity;
+                    }
+                    else
+                    {
+                        Transform.Position += movement * MoveSpeed * deltaTime;
                     }
                 }
-
-                if (Input.GetKeyDown(KeyCode.Space) && rigidbody.IsGrounded)
+                else if (characterController != null)
                 {
-                    rigidbody.ApplyImpulse(new Vector3(0, JumpForce, 0));
+                    Vector3 controllerVelocity = characterController.MoveVelocity;
+                    controllerVelocity.x = 0;
+                    controllerVelocity.z = 0;
+                    characterController.MoveVelocity = controllerVelocity;
+                }
+
+                if (Input.GetKeyDown(KeyCode.Space))
+                {
+                    if (characterController != null)
+                    {
+                        characterController.Jump();
+                    }
                 }
             }
         }
@@ -119,29 +133,39 @@ namespace Waldem
             return angle;
         }
 
-        protected override void OnFixedUpdate(float fixedDeltaTime)
-        {
-            var rigidbody = GetComponent<RigidBody>();
-            Vector3 velocity = rigidbody.Velocity;
-            velocity.x = 0;
-            velocity.z = 0;
-            
-            if (movement.magnitude > 0)
-            {
-                velocity += movement * MoveSpeed * fixedDeltaTime;
-                    
-                // rigidbody.RotateTowards(Transform.Position + lastDirection * -1, RotationSpeed * fixedDeltaTime);
-            }
-            
-            rigidbody.Velocity = velocity;
-        }
-
         protected override void OnLateUpdate(float deltaTime)
         {
             if (mainCamera != null)
             {
                 UpdateFirstPersonCamera();
             }
+        }
+
+        protected override void OnCollisionStay(Collision collision)
+        {
+            if (collision.Other == null || !collision.Other.HasComponent<RigidBody>())
+                return;
+
+            RigidBody otherRigidBody = collision.Other.GetComponent<RigidBody>();
+            if (otherRigidBody == null || otherRigidBody.IsKinematic)
+                return;
+
+            Vector3 pushDirection = Vector3.Zero;
+            if (characterController != null)
+            {
+                pushDirection = characterController.MoveVelocity;
+            }
+            else
+            {
+                pushDirection = movement * MoveSpeed;
+            }
+
+            pushDirection.y = 0.0f;
+            if (pushDirection.magnitude <= 0.0f)
+                return;
+
+            pushDirection.Normalize();
+            otherRigidBody.ApplyImpulse(pushDirection * PushForce);
         }
     }
 }
