@@ -65,9 +65,7 @@ namespace Waldem::Bindings
             if(impulse == nullptr) return;
             ECS::Entity entity = GetEntityChecked(entityId);
             if(!entity.is_alive() || !entity.has<RigidBody>()) return;
-            auto& rb = entity.get_mut<RigidBody>();
-            rb.Impulse += Vector3(impulse->x, impulse->y, impulse->z);
-            entity.modified<RigidBody>();
+            PhysXSystem::ApplyImpulse(entity, Vector3(impulse->x, impulse->y, impulse->z));
         }
 
         void RigidBody_LookAt(uint64_t entityId, ScriptVector3* target)
@@ -91,13 +89,6 @@ namespace Waldem::Bindings
             if(!entity.is_alive() || !entity.has<RigidBody>() || !entity.has<Transform>()) return;
 
             PhysXSystem::RotateTowards(entity, Vector3(target->x, target->y, target->z), maxDegreesDelta);
-        }
-
-        bool RigidBody_GetIsGrounded(uint64_t entityId)
-        {
-            ECS::Entity entity = GetEntityChecked(entityId);
-            if(!entity.is_alive() || !entity.has<RigidBody>()) return false;
-            return entity.get<RigidBody>().IsGrounded;
         }
 
         float RigidBody_GetMass(uint64_t entityId)
@@ -231,7 +222,6 @@ namespace Waldem::Bindings
         BIND(runtime, RigidBody_ApplyImpulse);
         BIND(runtime, RigidBody_LookAt);
         BIND(runtime, RigidBody_RotateTowards);
-        BIND(runtime, RigidBody_GetIsGrounded);
         BIND(runtime, RigidBody_GetMass);
         BIND(runtime, RigidBody_SetMass);
         BIND(runtime, RigidBody_GetIsKinematic);

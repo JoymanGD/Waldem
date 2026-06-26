@@ -83,7 +83,7 @@ namespace Waldem
                     }
                 }
 
-                if (Input.GetKeyDown(KeyCode.Space) && rigidbody.IsGrounded)
+                if (Input.GetKeyDown(KeyCode.Space))
                 {
                     rigidbody.ApplyImpulse(new Vector3(0, JumpForce, 0));
                 }

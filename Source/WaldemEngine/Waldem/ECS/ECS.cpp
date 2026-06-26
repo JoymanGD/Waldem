@@ -4,6 +4,7 @@
 
 #include "Components/AnimationListener.h"
 #include "Components/AudioSource.h"
+#include "Components/CharacterController.h"
 #include "Components/Light.h"
 #include "Components/MeshComponent.h"
 #include "Components/ParticleSystemComponent.h"
@@ -241,6 +242,35 @@ namespace Waldem
 
                 return true;
             }
+
+            void PropagateHierarchyTransformsNow()
+            {
+                if(!HierarchyTransformQuery)
+                {
+                    return;
+                }
+
+                HierarchyTransformQuery->each([&](flecs::entity entity, Transform& transform, const Transform& parentTransform)
+                {
+                    auto localTransformIt = LocalTransformMatrices.find(entity.id());
+                    Matrix4 localMatrix = localTransformIt == LocalTransformMatrices.end()
+                        ? inverse(parentTransform.Matrix) * transform.Matrix
+                        : localTransformIt->second;
+
+                    const Matrix4 targetWorldMatrix = parentTransform.Matrix * localMatrix;
+                    if(MatricesNear(transform.Matrix, targetWorldMatrix))
+                    {
+                        return;
+                    }
+
+                    const bool previousTransformFlag = IsTransformHierarchyUpdate;
+                    IsTransformHierarchyUpdate = true;
+                    transform.Matrix = targetWorldMatrix;
+                    transform.DecompileMatrix();
+                    entity.modified<Transform>();
+                    IsTransformHierarchyUpdate = previousTransformFlag;
+                });
+            }
         }
         
         void Core::Initialize()
@@ -321,6 +351,7 @@ namespace Waldem
                 }
 
                 CacheLocalMatrixFromWorld(entity);
+                PropagateHierarchyTransformsNow();
             });
 
             World.observer<Camera, Transform>().event(flecs::OnSet).each([&](flecs::entity, Camera& camera, Transform& transform)
@@ -335,36 +366,11 @@ namespace Waldem
 
             HierarchyTransformQuery = std::make_unique<flecs::query<Transform, const Transform>>(World.query_builder<Transform, const Transform>().term_at(1).parent().cascade().build());
 
-            auto propagateHierarchyTransforms = [&](flecs::iter&)
-            {
-                if(!HierarchyTransformQuery)
-                {
-                    return;
-                }
+            auto propagateHierarchyTransforms = [&](flecs::iter&) { PropagateHierarchyTransformsNow(); };
 
-                HierarchyTransformQuery->each([&](flecs::entity entity, Transform& transform, const Transform& parentTransform)
-                {
-                    auto localTransformIt = LocalTransformMatrices.find(entity.id());
-                    Matrix4 localMatrix = localTransformIt == LocalTransformMatrices.end()
-                        ? inverse(parentTransform.Matrix) * transform.Matrix
-                        : localTransformIt->second;
-
-                    const Matrix4 targetWorldMatrix = parentTransform.Matrix * localMatrix;
-                    if(MatricesNear(transform.Matrix, targetWorldMatrix))
-                    {
-                        return;
-                    }
-
-                    const bool previousTransformFlag = IsTransformHierarchyUpdate;
-                    IsTransformHierarchyUpdate = true;
-                    transform.Matrix = targetWorldMatrix;
-                    transform.DecompileMatrix();
-                    entity.modified<Transform>();
-                    IsTransformHierarchyUpdate = previousTransformFlag;
-                });
-            };
-
+            World.system("HierarchyTransformPropagationFixed").kind<OnFixedUpdate>().run(propagateHierarchyTransforms);
             World.system("HierarchyTransformPropagationUpdate").kind(flecs::OnUpdate).run(propagateHierarchyTransforms);
+            World.system("HierarchyTransformPropagationLate").kind<OnLateUpdate>().run(propagateHierarchyTransforms);
             World.system("HierarchyTransformPropagationDraw").kind<OnDraw>().run(propagateHierarchyTransforms);
             
             // Systems.Add(OceanSimulationSystem());
@@ -743,6 +749,10 @@ namespace Waldem
                 {
                     const auto& rigidBody = entity.get<RigidBody>();
                     shouldInterpolatePhysics = !rigidBody.IsKinematic && transform.HasPhysicsInterpolationState;
+                }
+                else if(entity.has<CharacterController>())
+                {
+                    shouldInterpolatePhysics = transform.HasPhysicsInterpolationState;
                 }
 
                 if(shouldInterpolatePhysics)

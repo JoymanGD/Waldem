@@ -477,44 +477,6 @@ namespace Waldem
                 if (massB > 0)
                     transformB.Position += correction * (massB / totalMass);
             }
-
-            if(!rigidBodyA.IsKinematic)
-            {
-                float groundThreshold = cos(glm::radians(rigidBodyA.MaxSlope));
-                if (groundThreshold < 0) groundThreshold = 0;
-
-                rigidBodyA.IsGrounded = dot(normal, Vector3(0,1,0)) > groundThreshold;
-
-                if (rigidBodyA.IsGrounded)
-                {
-                    float vDot = dot(rigidBodyA.Velocity, normal);
-                    rigidBodyA.Velocity = normal * vDot;
-
-                    if (length(rigidBodyA.Velocity) < 1e-4f)
-                    {
-                        rigidBodyA.Velocity = Vector3(0);
-                    }
-                }
-            }
-
-            if(!rigidBodyB.IsKinematic)
-            {
-                float groundThreshold = cos(glm::radians(rigidBodyB.MaxSlope)) - 0.05f;
-                if (groundThreshold < 0) groundThreshold = 0;
-
-                rigidBodyB.IsGrounded = dot(normal, Vector3(0,1,0)) > groundThreshold;
-
-                if (rigidBodyB.IsGrounded)
-                {
-                    float vDot = dot(rigidBodyB.Velocity, normal);
-                    rigidBodyB.Velocity = normal * vDot;
-
-                    if (length(rigidBodyB.Velocity) < 1e-4f)
-                    {
-                        rigidBodyB.Velocity = Vector3(0);
-                    }
-                }
-            }
         }
 
         void ResolveCollisionOld(Transform& transformA, Transform& transformB, RigidBody& rigidBodyA, RigidBody& rigidBodyB, const ContactsManifold& manifold)

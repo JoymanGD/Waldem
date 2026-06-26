@@ -1,13 +1,17 @@
 #include "wdpch.h"
 #include "PhysXSystem.h"
 
+#include "Waldem/ECS/Components/CharacterController.h"
+
 #if WD_WITH_PHYSX
 
 #include "Waldem/Editor/EditorSimulation.h"
 #include "Waldem/ECS/ECS.h"
+#include "Waldem/ECS/Components/ScriptComponent.h"
 #include "Waldem/ECS/Components/ColliderComponent.h"
 #include "Waldem/ECS/Components/RigidBody.h"
 #include "Waldem/ECS/Components/Transform.h"
+#include "Waldem/Scripting/ScriptEngine.h"
 #include "Waldem/Time.h"
 #include "PxPhysicsAPI.h"
 
@@ -35,9 +39,13 @@ namespace Waldem
             PxDefaultCpuDispatcher* Dispatcher = nullptr;
             PxScene* Scene = nullptr;
             PxMaterial* DefaultMaterial = nullptr;
+            PxControllerManager* ControllerManager;
             std::unordered_map<uint64, PxRigidActor*> Actors;
+            std::unordered_map<uint64, PxController*> Controllers;
             std::unordered_map<uint64, Vector3> PreviousPositions;
-            std::unordered_set<uint64> DirtyEntities;
+            std::unordered_map<uint64, Vector3> ColliderScales;
+            std::unordered_map<uint64, Vector3> ControllerScales;
+            std::unordered_map<uint64, Vector2> ControllerCapsuleSizes;
             bool IsSynchronizing = false;
             Vector3 Gravity = Vector3(0.0f, -30.00f, 0.0f);
         };
@@ -159,102 +167,130 @@ namespace Waldem
         {
             ECS::Entity entityA = GetEntityById(entityAId);
             ECS::Entity entityB = GetEntityById(entityBId);
-            if(!entityA.is_alive() || !entityB.is_alive() || !entityA.has<ColliderComponent>() || !entityB.has<ColliderComponent>())
+            if(!entityA.is_alive() || !entityB.is_alive())
             {
                 return;
             }
 
-            auto& colliderA = entityA.get_mut<ColliderComponent>();
-            auto& colliderB = entityB.get_mut<ColliderComponent>();
+            const bool hasColliderA = entityA.has<ColliderComponent>();
+            const bool hasColliderB = entityB.has<ColliderComponent>();
 
-            if(type != CollisionEventType::Exit && !manifold.Points.IsEmpty())
+            if(hasColliderA)
             {
-                const Vector3 up(0.0f, 1.0f, 0.0f);
-                const ContactPoint& contactPoint = manifold.Points[0];
-                const Vector3 normal = contactPoint.Normal;
+                auto& colliderA = entityA.get_mut<ColliderComponent>();
 
-                if(entityA.has<RigidBody>() && entityA.has<Transform>())
+                if(colliderA.IsTrigger)
                 {
-                    auto& rigidBodyA = entityA.get_mut<RigidBody>();
-                    const auto& transformA = entityA.get<Transform>();
-                    const float groundThreshold = std::max(0.0f, cos(glm::radians(rigidBodyA.MaxSlope)));
-                    const Vector3 toContactA = contactPoint.Position - transformA.Position;
-                    const Vector3 supportNormalA = dot(normal, toContactA) <= 0.0f ? normal : -normal;
-                    rigidBodyA.IsGrounded = rigidBodyA.IsGrounded || dot(supportNormalA, up) > groundThreshold;
+                    switch(type)
+                    {
+                    case CollisionEventType::Enter:
+                        if(colliderA.OnTriggerEnter) colliderA.OnTriggerEnter(entityB);
+                        break;
+                    case CollisionEventType::Stay:
+                        if(colliderA.OnTriggerStay) colliderA.OnTriggerStay(entityB);
+                        break;
+                    case CollisionEventType::Exit:
+                        if(colliderA.OnTriggerExit) colliderA.OnTriggerExit(entityB);
+                        break;
+                    }
                 }
-
-                if(entityB.has<RigidBody>() && entityB.has<Transform>())
+                else
                 {
-                    auto& rigidBodyB = entityB.get_mut<RigidBody>();
-                    const auto& transformB = entityB.get<Transform>();
-                    const float groundThreshold = std::max(0.0f, cos(glm::radians(rigidBodyB.MaxSlope)));
-                    const Vector3 toContactB = contactPoint.Position - transformB.Position;
-                    const Vector3 supportNormalB = dot(normal, toContactB) <= 0.0f ? normal : -normal;
-                    rigidBodyB.IsGrounded = rigidBodyB.IsGrounded || dot(supportNormalB, up) > groundThreshold;
+                    switch(type)
+                    {
+                    case CollisionEventType::Enter:
+                        if(colliderA.OnCollisionEnter) colliderA.OnCollisionEnter(entityB, manifold);
+                        break;
+                    case CollisionEventType::Stay:
+                        if(colliderA.OnCollisionStay) colliderA.OnCollisionStay(entityB, manifold);
+                        break;
+                    case CollisionEventType::Exit:
+                        if(colliderA.OnCollisionExit) colliderA.OnCollisionExit(entityB, manifold);
+                        break;
+                    }
                 }
             }
 
-            if(colliderA.IsTrigger)
+            if(hasColliderB)
             {
-                switch(type)
+                auto& colliderB = entityB.get_mut<ColliderComponent>();
+
+                if(colliderB.IsTrigger)
                 {
-                case CollisionEventType::Enter:
-                    if(colliderA.OnTriggerEnter) colliderA.OnTriggerEnter(entityB);
-                    break;
-                case CollisionEventType::Stay:
-                    if(colliderA.OnTriggerStay) colliderA.OnTriggerStay(entityB);
-                    break;
-                case CollisionEventType::Exit:
-                    if(colliderA.OnTriggerExit) colliderA.OnTriggerExit(entityB);
-                    break;
+                    switch(type)
+                    {
+                    case CollisionEventType::Enter:
+                        if(colliderB.OnTriggerEnter) colliderB.OnTriggerEnter(entityA);
+                        break;
+                    case CollisionEventType::Stay:
+                        if(colliderB.OnTriggerStay) colliderB.OnTriggerStay(entityA);
+                        break;
+                    case CollisionEventType::Exit:
+                        if(colliderB.OnTriggerExit) colliderB.OnTriggerExit(entityA);
+                        break;
+                    }
                 }
-            }
-            else
-            {
-                switch(type)
+                else
                 {
-                case CollisionEventType::Enter:
-                    if(colliderA.OnCollisionEnter) colliderA.OnCollisionEnter(entityB, manifold);
-                    break;
-                case CollisionEventType::Stay:
-                    if(colliderA.OnCollisionStay) colliderA.OnCollisionStay(entityB, manifold);
-                    break;
-                case CollisionEventType::Exit:
-                    if(colliderA.OnCollisionExit) colliderA.OnCollisionExit(entityB, manifold);
-                    break;
+                    switch(type)
+                    {
+                    case CollisionEventType::Enter:
+                        if(colliderB.OnCollisionEnter) colliderB.OnCollisionEnter(entityA, manifold);
+                        break;
+                    case CollisionEventType::Stay:
+                        if(colliderB.OnCollisionStay) colliderB.OnCollisionStay(entityA, manifold);
+                        break;
+                    case CollisionEventType::Exit:
+                        if(colliderB.OnCollisionExit) colliderB.OnCollisionExit(entityA, manifold);
+                        break;
+                    }
                 }
             }
 
-            if(colliderB.IsTrigger)
+            if(entityA.has<CharacterController>() && !hasColliderA && entityA.has<ScriptComponent>())
             {
-                switch(type)
-                {
-                case CollisionEventType::Enter:
-                    if(colliderB.OnTriggerEnter) colliderB.OnTriggerEnter(entityB);
-                    break;
-                case CollisionEventType::Stay:
-                    if(colliderB.OnTriggerStay) colliderB.OnTriggerStay(entityB);
-                    break;
-                case CollisionEventType::Exit:
-                    if(colliderB.OnTriggerExit) colliderB.OnTriggerExit(entityB);
-                    break;
-                }
+                ScriptEngine::OnCollisionEvent(type, entityA, entityB, entityA.get<ScriptComponent>(), manifold);
             }
-            else
+
+            if(entityB.has<CharacterController>() && !hasColliderB && entityB.has<ScriptComponent>())
             {
-                switch(type)
-                {
-                case CollisionEventType::Enter:
-                    if(colliderB.OnCollisionEnter) colliderB.OnCollisionEnter(entityB, manifold);
-                    break;
-                case CollisionEventType::Stay:
-                    if(colliderB.OnCollisionStay) colliderB.OnCollisionStay(entityB, manifold);
-                    break;
-                case CollisionEventType::Exit:
-                    if(colliderB.OnCollisionExit) colliderB.OnCollisionExit(entityB, manifold);
-                    break;
-                }
+                ScriptEngine::OnCollisionEvent(type, entityB, entityA, entityB.get<ScriptComponent>(), manifold);
             }
+        }
+
+        class PhysXControllerHitReport final : public PxUserControllerHitReport
+        {
+        public:
+            void onShapeHit(const PxControllerShapeHit& hit) override
+            {
+                const uint64 controllerEntityId = GetEntityId(hit.controller != nullptr ? hit.controller->getActor() : nullptr);
+                const uint64 otherEntityId = GetEntityId(hit.actor);
+                if(controllerEntityId == 0 || otherEntityId == 0)
+                {
+                    return;
+                }
+
+                ContactsManifold manifold;
+                ContactPoint contactPoint;
+                contactPoint.Position = Vector3(static_cast<float>(hit.worldPos.x), static_cast<float>(hit.worldPos.y), static_cast<float>(hit.worldPos.z));
+                contactPoint.PositionA = contactPoint.Position;
+                contactPoint.PositionB = contactPoint.Position;
+                contactPoint.Normal = normalize(FromPx(hit.worldNormal));
+                contactPoint.Penetration = 0.0f;
+                contactPoint.CalculateBasic();
+                manifold.Points.Add(contactPoint);
+
+                DispatchCollisionEvent(controllerEntityId, otherEntityId, manifold, CollisionEventType::Stay);
+            }
+
+            void onControllerHit(const PxControllersHit&) override {}
+            void onObstacleHit(const PxControllerObstacleHit&) override {}
+        };
+
+        PhysXControllerHitReport& GetControllerHitReport()
+        {
+            static PhysXControllerHitReport report;
+            return report;
         }
 
         class PhysXSimulationCallback final : public PxSimulationEventCallback
@@ -330,14 +366,7 @@ namespace Waldem
             return callback;
         }
 
-        PxFilterFlags FilterShader(
-            PxFilterObjectAttributes attributes0,
-            PxFilterData,
-            PxFilterObjectAttributes attributes1,
-            PxFilterData,
-            PxPairFlags& pairFlags,
-            const void*,
-            PxU32)
+        PxFilterFlags FilterShader(PxFilterObjectAttributes attributes0, PxFilterData, PxFilterObjectAttributes attributes1, PxFilterData, PxPairFlags& pairFlags, const void*, PxU32)
         {
             if(PxFilterObjectIsTrigger(attributes0) || PxFilterObjectIsTrigger(attributes1))
             {
@@ -369,6 +398,27 @@ namespace Waldem
             }
 
             state.Actors.erase(it);
+            state.ColliderScales.erase(entityId);
+        }
+
+        void ReleaseController(uint64 entityId)
+        {
+            auto& state = GetState();
+            auto it = state.Controllers.find(entityId);
+            if(it == state.Controllers.end())
+            {
+                return;
+            }
+
+            if(it->second != nullptr)
+            {
+                it->second->release();
+            }
+
+            state.Controllers.erase(it);
+            state.PreviousPositions.erase(entityId);
+            state.ControllerScales.erase(entityId);
+            state.ControllerCapsuleSizes.erase(entityId);
         }
 
         PxShape* CreateShape(const ColliderComponent& collider, const Transform& transform, PxPhysics& physics, PxMaterial& material)
@@ -436,439 +486,210 @@ namespace Waldem
             dynamicActor.setRigidDynamicLockFlag(PxRigidDynamicLockFlag::eLOCK_ANGULAR_Z, rigidBody.FreezeRotationZ);
         }
 
-        bool QueryGrounded(ECS::Entity entity)
+        bool CreateStaticActor(ECS::Entity entity, Transform& transform, ColliderComponent& collider)
         {
             auto& state = GetState();
-            if(state.Scene == nullptr || !entity.is_alive() || !entity.has<RigidBody>() || !entity.has<Transform>() || !entity.has<ColliderComponent>())
+            if(state.Physics == nullptr || state.Scene == nullptr || state.DefaultMaterial == nullptr)
             {
                 return false;
             }
 
-            const auto& rigidBody = entity.get<RigidBody>();
-            const auto& transform = entity.get<Transform>();
-            const auto& collider = entity.get<ColliderComponent>();
-            const Vector3 colliderScale = GetColliderScale(transform);
-
-            const float probeDistance = 0.12f;
-            const float groundThreshold = std::max(0.0f, cos(glm::radians(rigidBody.MaxSlope)));
-            const PxVec3 down(0.0f, -1.0f, 0.0f);
-
-            PxVec3 origin = ToPx(transform.Position);
-            float maxDistance = probeDistance;
-
-            switch(collider.Type)
-            {
-            case Sphere:
-            {
-                const float radiusScale = std::max(colliderScale.x, std::max(colliderScale.y, colliderScale.z));
-                maxDistance += collider.SphereRadius * radiusScale;
-                break;
-            }
-            case Box:
-            {
-                const Vector3 localCenter = collider.BoxOffset * colliderScale;
-                origin = ToPx(transform.Position) + RotateVector(transform.RotationQuat, localCenter);
-                maxDistance += collider.BoxSize.y * colliderScale.y * 0.5f;
-                break;
-            }
-            case Capsule:
-            {
-                const float radiusScale = std::max(colliderScale.x, colliderScale.z);
-                maxDistance += collider.CapsuleHeight * 0.5f * colliderScale.y + collider.SphereRadius * radiusScale;
-                break;
-            }
-            default:
-                return false;
-            }
-
-            struct QueryFilter final : PxQueryFilterCallback
-            {
-                const PxActor* IgnoredActor = nullptr;
-
-                PxQueryHitType::Enum preFilter(const PxFilterData&, const PxShape* shape, const PxRigidActor* actor, PxHitFlags&) override
-                {
-                    if(actor == IgnoredActor || shape == nullptr || shape->getFlags().isSet(PxShapeFlag::eTRIGGER_SHAPE))
-                    {
-                        return PxQueryHitType::eNONE;
-                    }
-
-                    return PxQueryHitType::eBLOCK;
-                }
-
-                PxQueryHitType::Enum postFilter(const PxFilterData&, const PxQueryHit&, const PxShape*, const PxRigidActor*) override
-                {
-                    return PxQueryHitType::eBLOCK;
-                }
-            } filterCallback;
-
-            auto actorIt = state.Actors.find(static_cast<uint64>(entity.id()));
-            if(actorIt != state.Actors.end())
-            {
-                filterCallback.IgnoredActor = actorIt->second;
-            }
-
-            PxQueryFilterData filterData(PxQueryFlag::eSTATIC | PxQueryFlag::eDYNAMIC | PxQueryFlag::ePREFILTER);
-            PxRaycastBuffer hit;
-            if(!state.Scene->raycast(origin, down, maxDistance, hit, PxHitFlag::eDEFAULT, filterData, &filterCallback))
-            {
-                return false;
-            }
-
-            return dot(FromPx(hit.block.normal), Vector3(0.0f, 1.0f, 0.0f)) > groundThreshold;
-        }
-
-        bool QuerySteepObstacleAhead(ECS::Entity entity, const Vector3& direction, float probeDistance, Vector3& outNormal)
-        {
-            auto& state = GetState();
-            if(state.Scene == nullptr || !entity.is_alive() || !entity.has<RigidBody>() || !entity.has<Transform>() || !entity.has<ColliderComponent>())
-            {
-                return false;
-            }
-
-            Vector3 horizontalDirection(direction.x, 0.0f, direction.z);
-            const float horizontalLength = length(horizontalDirection);
-            if(horizontalLength <= 1e-4f)
-            {
-                return false;
-            }
-
-            const auto& rigidBody = entity.get<RigidBody>();
-            const auto& transform = entity.get<Transform>();
-            const auto& collider = entity.get<ColliderComponent>();
-            const Vector3 colliderScale = GetColliderScale(transform);
-            const float groundThreshold = std::max(0.0f, cos(glm::radians(rigidBody.MaxSlope)));
-
-            horizontalDirection /= horizontalLength;
-            PxVec3 origin = ToPx(transform.Position);
-            probeDistance = std::max(0.15f, probeDistance);
-
-            switch(collider.Type)
-            {
-            case Sphere:
-            {
-                const float radiusScale = std::max(colliderScale.x, std::max(colliderScale.y, colliderScale.z));
-                origin.y -= collider.SphereRadius * radiusScale * 0.5f;
-                break;
-            }
-            case Box:
-            {
-                const Vector3 localCenter = collider.BoxOffset * colliderScale;
-                origin = ToPx(transform.Position) + RotateVector(transform.RotationQuat, localCenter);
-                origin.y -= collider.BoxSize.y * colliderScale.y * 0.5f - std::min(0.05f, collider.BoxSize.y * colliderScale.y * 0.25f);
-                break;
-            }
-            case Capsule:
-            {
-                const float radiusScale = std::max(colliderScale.x, colliderScale.z);
-                const float radius = collider.SphereRadius * radiusScale;
-                const float halfHeight = collider.CapsuleHeight * 0.5f * colliderScale.y;
-                origin.y -= std::max(0.0f, halfHeight + radius - radius * 0.75f);
-                break;
-            }
-            default:
-                return false;
-            }
-
-            struct QueryFilter final : PxQueryFilterCallback
-            {
-                const PxActor* IgnoredActor = nullptr;
-
-                PxQueryHitType::Enum preFilter(const PxFilterData&, const PxShape* shape, const PxRigidActor* actor, PxHitFlags&) override
-                {
-                    if(actor == IgnoredActor || shape == nullptr || shape->getFlags().isSet(PxShapeFlag::eTRIGGER_SHAPE))
-                    {
-                        return PxQueryHitType::eNONE;
-                    }
-
-                    return PxQueryHitType::eBLOCK;
-                }
-
-                PxQueryHitType::Enum postFilter(const PxFilterData&, const PxQueryHit&, const PxShape*, const PxRigidActor*) override
-                {
-                    return PxQueryHitType::eBLOCK;
-                }
-            } filterCallback;
-
-            auto actorIt = state.Actors.find(static_cast<uint64>(entity.id()));
-            if(actorIt != state.Actors.end())
-            {
-                filterCallback.IgnoredActor = actorIt->second;
-            }
-
-            PxQueryFilterData filterData(PxQueryFlag::eSTATIC | PxQueryFlag::eDYNAMIC | PxQueryFlag::ePREFILTER);
-            PxRaycastBuffer hit;
-            if(!state.Scene->raycast(origin, ToPx(horizontalDirection), probeDistance, hit, PxHitFlag::eDEFAULT, filterData, &filterCallback))
-            {
-                return false;
-            }
-
-            outNormal = FromPx(hit.block.normal);
-            return dot(outNormal, Vector3(0.0f, 1.0f, 0.0f)) <= groundThreshold;
-        }
-
-        void PreventSteepSlopeAcceleration(ECS::Entity entity)
-        {
-            if(!entity.is_alive() || !entity.has<RigidBody>())
-            {
-                return;
-            }
-
-            auto& rigidBody = entity.get_mut<RigidBody>();
-            if(rigidBody.IsKinematic)
-            {
-                return;
-            }
-
-            Vector3 horizontalVelocity(rigidBody.Velocity.x, 0.0f, rigidBody.Velocity.z);
-            const float horizontalSpeed = length(horizontalVelocity);
-            if(horizontalSpeed <= 1e-4f)
-            {
-                return;
-            }
-
-            Vector3 obstacleNormal(0.0f);
-            const float probeDistance = std::max(0.15f, horizontalSpeed * Time::FixedDeltaTime + 0.08f);
-            if(!QuerySteepObstacleAhead(entity, horizontalVelocity, probeDistance, obstacleNormal))
-            {
-                return;
-            }
-
-            Vector3 wallNormal(obstacleNormal.x, 0.0f, obstacleNormal.z);
-            const float wallNormalLength = length(wallNormal);
-            if(wallNormalLength <= 1e-4f)
-            {
-                return;
-            }
-
-            wallNormal /= wallNormalLength;
-
-            const float velocityIntoWall = dot(horizontalVelocity, wallNormal);
-            if(velocityIntoWall > 0.0f)
-            {
-                horizontalVelocity -= wallNormal * velocityIntoWall;
-            }
-
-            rigidBody.Velocity.x = horizontalVelocity.x;
-            rigidBody.Velocity.z = horizontalVelocity.z;
-
-            Vector3 horizontalForce(rigidBody.Force.x, 0.0f, rigidBody.Force.z);
-            const float forceIntoWall = dot(horizontalForce, wallNormal);
-            if(forceIntoWall > 0.0f)
-            {
-                horizontalForce -= wallNormal * forceIntoWall;
-                rigidBody.Force.x = horizontalForce.x;
-                rigidBody.Force.z = horizontalForce.z;
-            }
-
-            Vector3 horizontalImpulse(rigidBody.Impulse.x, 0.0f, rigidBody.Impulse.z);
-            const float impulseIntoWall = dot(horizontalImpulse, wallNormal);
-            if(impulseIntoWall > 0.0f)
-            {
-                horizontalImpulse -= wallNormal * impulseIntoWall;
-                rigidBody.Impulse.x = horizontalImpulse.x;
-                rigidBody.Impulse.z = horizontalImpulse.z;
-            }
-
-            entity.modified<RigidBody>();
-        }
-
-        void PreventSteepSlopeClimb(ECS::Entity entity)
-        {
-            auto& state = GetState();
-            if(!entity.is_alive() || !entity.has<RigidBody>() || !entity.has<Transform>())
-            {
-                return;
-            }
-
-            const uint64 entityId = static_cast<uint64>(entity.id());
-            auto previousPositionIt = state.PreviousPositions.find(entityId);
-            auto actorIt = state.Actors.find(entityId);
-            if(previousPositionIt == state.PreviousPositions.end() || actorIt == state.Actors.end() || actorIt->second == nullptr)
-            {
-                return;
-            }
-
-            auto& rigidBody = entity.get_mut<RigidBody>();
-            auto& transform = entity.get_mut<Transform>();
-            const Vector3 previousPosition = previousPositionIt->second;
-            Vector3 displacement = transform.Position - previousPosition;
-            Vector3 horizontalDisplacement(displacement.x, 0.0f, displacement.z);
-            const float horizontalDistance = length(horizontalDisplacement);
-            if(horizontalDistance <= 1e-4f)
-            {
-                return;
-            }
-
-            Vector3 obstacleNormal(0.0f);
-            const float probeDistance = horizontalDistance + 0.08f;
-            if(!QuerySteepObstacleAhead(entity, horizontalDisplacement, probeDistance, obstacleNormal))
-            {
-                return;
-            }
-
-            Vector3 wallNormal(obstacleNormal.x, 0.0f, obstacleNormal.z);
-            const float wallNormalLength = length(wallNormal);
-            if(wallNormalLength <= 1e-4f)
-            {
-                return;
-            }
-            wallNormal /= wallNormalLength;
-
-            Vector3 correctedHorizontal = horizontalDisplacement;
-            const float intoWall = dot(correctedHorizontal, wallNormal);
-            if(intoWall > 0.0f)
-            {
-                correctedHorizontal -= wallNormal * intoWall;
-            }
-
-            const bool previousSynchronizing = state.IsSynchronizing;
-            state.IsSynchronizing = true;
-            transform.Position.x = previousPosition.x + correctedHorizontal.x;
-            transform.Position.z = previousPosition.z + correctedHorizontal.z;
-            if(transform.Position.y > previousPosition.y)
-            {
-                transform.Position.y = previousPosition.y;
-            }
-            transform.Update();
-            entity.modified<Transform>();
-            state.IsSynchronizing = previousSynchronizing;
-
-            Vector3 horizontalVelocity(rigidBody.Velocity.x, 0.0f, rigidBody.Velocity.z);
-            const float velocityIntoWall = dot(horizontalVelocity, wallNormal);
-            if(velocityIntoWall > 0.0f)
-            {
-                horizontalVelocity -= wallNormal * velocityIntoWall;
-            }
-            rigidBody.Velocity.x = horizontalVelocity.x;
-            rigidBody.Velocity.z = horizontalVelocity.z;
-            rigidBody.Velocity.y = std::min(rigidBody.Velocity.y, 0.0f);
-            entity.modified<RigidBody>();
-
-            actorIt->second->setGlobalPose(ToPxTransform(transform), true);
-            if(PxRigidDynamic* dynamicActor = actorIt->second->is<PxRigidDynamic>())
-            {
-                PxVec3 linearVelocity = dynamicActor->getLinearVelocity();
-                linearVelocity.x = rigidBody.Velocity.x;
-                linearVelocity.z = rigidBody.Velocity.z;
-                linearVelocity.y = std::min(linearVelocity.y, 0.0f);
-                dynamicActor->setLinearVelocity(linearVelocity, false);
-            }
-        }
-
-        void SyncActorFromEntity(ECS::Entity entity)
-        {
-            auto& state = GetState();
             const uint64 entityId = static_cast<uint64>(entity.id());
             ReleaseActor(entityId);
 
-            if(!entity.is_alive() || !entity.has<Transform>() || !entity.has<ColliderComponent>())
-            {
-                return;
-            }
-
-            auto& transform = entity.get_mut<Transform>();
-            auto& collider = entity.get_mut<ColliderComponent>();
-
-            PxRigidActor* actor = nullptr;
-            if(entity.has<RigidBody>())
-            {
-                auto& rigidBody = entity.get_mut<RigidBody>();
-                PxRigidDynamic* dynamicActor = state.Physics->createRigidDynamic(ToPxTransform(transform));
-                dynamicActor->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, rigidBody.IsKinematic);
-                dynamicActor->setLinearDamping(rigidBody.LinearDamping);
-                dynamicActor->setAngularDamping(rigidBody.AngularDamping);
-                dynamicActor->setActorFlag(PxActorFlag::eSEND_SLEEP_NOTIFIES, true);
-                dynamicActor->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, !rigidBody.HasGravity);
-                ApplyAxisConstraints(rigidBody, *dynamicActor);
-                dynamicActor->setLinearVelocity(ToPx(rigidBody.Velocity), false);
-                dynamicActor->setAngularVelocity(ToPx(rigidBody.AngularVelocity), false);
-                actor = dynamicActor;
-            }
-            else
-            {
-                actor = state.Physics->createRigidStatic(ToPxTransform(transform));
-            }
-
+            PxRigidStatic* actor = state.Physics->createRigidStatic(ToPxTransform(transform));
             if(actor == nullptr)
             {
-                return;
+                return false;
             }
 
             actor->userData = reinterpret_cast<void*>(static_cast<uintptr_t>(entityId));
 
-            PxMaterial* material = state.DefaultMaterial;
-            if(entity.has<RigidBody>())
-            {
-                auto& rigidBody = entity.get_mut<RigidBody>();
-                material = state.Physics->createMaterial(rigidBody.Friction, rigidBody.Friction, rigidBody.Bounciness);
-            }
-
-            PxShape* shape = CreateShape(collider, transform, *state.Physics, *material);
+            PxShape* shape = CreateShape(collider, transform, *state.Physics, *state.DefaultMaterial);
             if(shape == nullptr)
             {
-                if(material != state.DefaultMaterial)
-                {
-                    material->release();
-                }
                 actor->release();
-                return;
+                return false;
             }
 
             actor->attachShape(*shape);
             shape->release();
 
-            if(material != state.DefaultMaterial)
+            state.Scene->addActor(*actor);
+            state.Actors[entityId] = actor;
+            state.ColliderScales[entityId] = GetColliderScale(transform);
+            return true;
+        }
+
+        bool CreateDynamicActor(ECS::Entity entity, Transform& transform, ColliderComponent& collider, RigidBody& rigidBody)
+        {
+            auto& state = GetState();
+            if(state.Physics == nullptr || state.Scene == nullptr)
             {
-                material->release();
+                return false;
             }
 
-            if(PxRigidDynamic* dynamicActor = actor->is<PxRigidDynamic>())
+            const uint64 entityId = static_cast<uint64>(entity.id());
+            ReleaseActor(entityId);
+
+            PxRigidDynamic* actor = state.Physics->createRigidDynamic(ToPxTransform(transform));
+            if(actor == nullptr)
             {
-                if(entity.has<RigidBody>())
-                {
-                    auto& rigidBody = entity.get_mut<RigidBody>();
-                    if(!rigidBody.IsKinematic)
-                    {
-                        PxRigidBodyExt::setMassAndUpdateInertia(*dynamicActor, rigidBody.Mass);
-                    }
-                }
+                return false;
+            }
+
+            actor->userData = reinterpret_cast<void*>(static_cast<uintptr_t>(entityId));
+            actor->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, rigidBody.IsKinematic);
+            actor->setLinearDamping(rigidBody.LinearDamping);
+            actor->setAngularDamping(rigidBody.AngularDamping);
+            actor->setActorFlag(PxActorFlag::eSEND_SLEEP_NOTIFIES, true);
+            actor->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, !rigidBody.HasGravity);
+            ApplyAxisConstraints(rigidBody, *actor);
+            actor->setLinearVelocity(ToPx(rigidBody.Velocity), false);
+            actor->setAngularVelocity(ToPx(rigidBody.AngularVelocity), false);
+
+            PxMaterial* material = state.Physics->createMaterial(rigidBody.Friction, rigidBody.Friction, rigidBody.Bounciness);
+            PxShape* shape = CreateShape(collider, transform, *state.Physics, *material);
+            if(shape == nullptr)
+            {
+                material->release();
+                actor->release();
+                return false;
+            }
+
+            actor->attachShape(*shape);
+            shape->release();
+            material->release();
+
+            if(!rigidBody.IsKinematic)
+            {
+                PxRigidBodyExt::setMassAndUpdateInertia(*actor, std::max(rigidBody.Mass, 0.0001f));
             }
 
             state.Scene->addActor(*actor);
             state.Actors[entityId] = actor;
+            state.ColliderScales[entityId] = GetColliderScale(transform);
+            return true;
         }
 
-        void SyncDirtyActors()
+        void ValidateActorStorage()
         {
             auto& state = GetState();
-            if(state.DirtyEntities.empty())
+            std::vector<uint64> actorIds;
+            actorIds.reserve(state.Actors.size());
+            for(const auto& [entityId, actor] : state.Actors)
+            {
+                actorIds.push_back(entityId);
+            }
+
+            for(const uint64 entityId : actorIds)
+            {
+                auto actorIt = state.Actors.find(entityId);
+                if(actorIt == state.Actors.end())
+                {
+                    continue;
+                }
+
+                PxRigidActor* actor = actorIt->second;
+                ECS::Entity entity = GetEntityById(entityId);
+                if(!entity.is_alive() || actor == nullptr || !entity.has<Transform>() || !entity.has<ColliderComponent>())
+                {
+                    ReleaseActor(entityId);
+                    continue;
+                }
+
+                auto& transform = entity.get_mut<Transform>();
+                auto& collider = entity.get_mut<ColliderComponent>();
+                if(entity.has<RigidBody>())
+                {
+                    auto& rigidBody = entity.get_mut<RigidBody>();
+                    if(actor->is<PxRigidDynamic>() == nullptr)
+                    {
+                        CreateDynamicActor(entity, transform, collider, rigidBody);
+                    }
+                }
+                else if(actor->is<PxRigidDynamic>() != nullptr)
+                {
+                    CreateStaticActor(entity, transform, collider);
+                }
+            }
+        }
+
+        bool CreateCharacterController(ECS::Entity entity, Transform& transform, CharacterController& controller)
+        {
+            auto& state = GetState();
+            if(state.ControllerManager == nullptr || state.DefaultMaterial == nullptr)
+            {
+                return false;
+            }
+
+            const uint64 entityId = static_cast<uint64>(entity.id());
+            ReleaseController(entityId);
+
+            const Vector3 controllerScale = glm::abs(transform.LocalScale);
+            const float radiusScale = std::max(controllerScale.x, controllerScale.z);
+
+            PxCapsuleControllerDesc desc;
+            desc.material = state.DefaultMaterial;
+            desc.position = PxExtendedVec3(transform.Position.x, transform.Position.y, transform.Position.z);
+            desc.height = std::max(0.0f, controller.CapsuleHeight * controllerScale.y);
+            desc.radius = std::max(0.001f, controller.CapsuleRadius * radiusScale);
+            desc.upDirection = PxVec3(0.0f, 1.0f, 0.0f);
+            desc.climbingMode = PxCapsuleClimbingMode::eCONSTRAINED;
+            desc.contactOffset = std::max(0.02f, desc.radius * 0.1f);
+            desc.stepOffset = std::min(desc.height * 0.5f, std::max(0.1f, controller.CapsuleHeight * controllerScale.y * 0.25f));
+            desc.slopeLimit = cosf(PxPi / 4.0f);
+            desc.reportCallback = &GetControllerHitReport();
+
+            if(!desc.isValid())
+            {
+                WD_CORE_WARN("Invalid PhysX character controller descriptor for entity {}", entityId);
+                return false;
+            }
+
+            PxController* createdController = state.ControllerManager->createController(desc);
+            if(createdController == nullptr)
+            {
+                WD_CORE_WARN("Failed to create PhysX character controller for entity {}", entityId);
+                return false;
+            }
+
+            if(PxRigidDynamic* actor = createdController->getActor()->is<PxRigidDynamic>())
+            {
+                actor->userData = reinterpret_cast<void*>(static_cast<uintptr_t>(entityId));
+            }
+
+            state.Controllers[entityId] = createdController;
+            state.PreviousPositions[entityId] = transform.Position;
+            state.ControllerScales[entityId] = controllerScale;
+            state.ControllerCapsuleSizes[entityId] = Vector2(controller.CapsuleHeight, controller.CapsuleRadius);
+            controller.IsGrounded = false;
+            controller.JumpRequested = false;
+            controller.MoveVelocity = Vector3(0.0f);
+            return true;
+        }
+
+        void PullControllerStateToComponents(ECS::Entity entity, PxController& controller)
+        {
+            if(!entity.is_alive() || !entity.has<Transform>())
             {
                 return;
             }
 
-            std::vector<uint64> dirty(state.DirtyEntities.begin(), state.DirtyEntities.end());
-            state.DirtyEntities.clear();
+            const PxExtendedVec3 position = controller.getPosition();
+            const Vector3 controllerPosition(static_cast<float>(position.x), static_cast<float>(position.y), static_cast<float>(position.z));
 
-            for(uint64 entityId : dirty)
-            {
-                ECS::Entity entity = GetEntityById(entityId);
-                if(entity.is_alive())
-                {
-                    SyncActorFromEntity(entity);
-                }
-                else
-                {
-                    ReleaseActor(entityId);
-                }
-            }
-        }
+            auto& state = GetState();
+            auto& transform = entity.get_mut<Transform>();
+            const bool previousSynchronizing = state.IsSynchronizing;
+            state.IsSynchronizing = true;
+            transform.PushPhysicsInterpolationState(controllerPosition, transform.RotationQuat);
+            transform.Position = controllerPosition;
+            transform.Update();
+            entity.modified<Transform>();
+            state.IsSynchronizing = previousSynchronizing;
 
-        void MarkDirty(ECS::Entity entity)
-        {
-            if(entity.is_alive() && !GetState().IsSynchronizing)
-            {
-                GetState().DirtyEntities.insert(static_cast<uint64>(entity.id()));
-            }
+            state.PreviousPositions[static_cast<uint64>(entity.id())] = controllerPosition;
         }
 
         void PushComponentStateToActor(ECS::Entity entity, PxRigidActor& actor)
@@ -947,7 +768,6 @@ namespace Waldem
                     rigidBody.AngularVelocity = FromPx(dynamicActor->getAngularVelocity());
                     rigidBody.IsSleeping = dynamicActor->isSleeping();
                     rigidBody.Reset();
-                    entity.modified<RigidBody>();
                 }
             }
 
@@ -1010,6 +830,36 @@ namespace Waldem
     Vector3 PhysXSystem::GetGravity()
     {
         return GetState().Gravity;
+    }
+
+    void PhysXSystem::ApplyImpulse(ECS::Entity entity, const Vector3& impulse)
+    {
+        if(!entity.is_alive() || !entity.has<RigidBody>())
+        {
+            return;
+        }
+
+        auto& rigidBody = entity.get_mut<RigidBody>();
+        rigidBody.Impulse += impulse;
+
+        auto& state = GetState();
+        auto actorIt = state.Actors.find(static_cast<uint64>(entity.id()));
+        if(actorIt == state.Actors.end() || actorIt->second == nullptr)
+        {
+            entity.modified<RigidBody>();
+            return;
+        }
+
+        PxRigidDynamic* dynamicActor = actorIt->second->is<PxRigidDynamic>();
+        if(dynamicActor == nullptr || rigidBody.IsKinematic)
+        {
+            entity.modified<RigidBody>();
+            return;
+        }
+
+        dynamicActor->addForce(ToPx(impulse), PxForceMode::eIMPULSE, true);
+        dynamicActor->wakeUp();
+        rigidBody.Impulse = Vector3(0.0f);
     }
 
     void PhysXSystem::SetGravity(const Vector3& gravity)
@@ -1111,21 +961,309 @@ namespace Waldem
         sceneDesc.filterShader = FilterShader;
         sceneDesc.simulationEventCallback = &GetSimulationCallback();
         state.Scene = state.Physics->createScene(sceneDesc);
+        state.ControllerManager = PxCreateControllerManager(*state.Scene);
         state.DefaultMaterial = state.Physics->createMaterial(0.5f, 0.5f, 0.0f);
 
-        ECS::World.observer<Transform, ColliderComponent>("PhysXCreateActorObserver").event(flecs::OnAdd).each([&](ECS::Entity entity, Transform&, ColliderComponent&)
+        ECS::World.observer<Transform, ColliderComponent>("PhysXCreateActorObserver").without<RigidBody>().event(flecs::OnAdd).each([&](ECS::Entity entity, Transform& transform, ColliderComponent& collider)
         {
-            MarkDirty(entity);
+            CreateStaticActor(entity, transform, collider);
         });
 
-        ECS::World.observer<ColliderComponent>("PhysXUpdateColliderObserver").event(flecs::OnSet).each([&](ECS::Entity entity, ColliderComponent&)
+        ECS::World.observer<Transform, CharacterController>("CharacterControllerCreatedObserver").without<RigidBody>().without<ColliderComponent>().event(flecs::OnAdd).each([&](ECS::Entity entity, Transform& transform, CharacterController& controller)
         {
-            MarkDirty(entity);
+            CreateCharacterController(entity, transform, controller);
         });
 
-        ECS::World.observer<Transform, ColliderComponent, RigidBody>("PhysXCreateDynamicActorObserver").event(flecs::OnAdd).each([&](ECS::Entity entity, Transform&, ColliderComponent&, RigidBody&)
+        ECS::World.observer<CharacterController>("CharacterControllerUpdatedObserver").event(flecs::OnSet).each([&](ECS::Entity entity, CharacterController& controller)
         {
-            MarkDirty(entity);
+            if(state.IsSynchronizing || !entity.has<Transform>())
+            {
+                return;
+            }
+
+            const uint64 entityId = static_cast<uint64>(entity.id());
+            const auto sizeIt = state.ControllerCapsuleSizes.find(entityId);
+            const bool sizeChanged = sizeIt == state.ControllerCapsuleSizes.end()
+                || fabsf(sizeIt->second.x - controller.CapsuleHeight) > 1e-5f
+                || fabsf(sizeIt->second.y - controller.CapsuleRadius) > 1e-5f;
+            if(!sizeChanged)
+            {
+                return;
+            }
+
+            auto& transform = entity.get_mut<Transform>();
+            CreateCharacterController(entity, transform, controller);
+        });
+
+        ECS::World.observer<Transform, ColliderComponent, RigidBody>("PhysXCreateDynamicActorObserver").event(flecs::OnAdd).each([&](ECS::Entity entity, Transform& transform, ColliderComponent& collider, RigidBody& rigidBody)
+        {
+            CreateDynamicActor(entity, transform, collider, rigidBody);
+        });
+
+        ECS::World.observer<ColliderComponent>("PhysXUpdateColliderObserver").event(flecs::OnSet).each([&](ECS::Entity entity, ColliderComponent& collider)
+        {
+            if(state.IsSynchronizing || state.Physics == nullptr)
+            {
+                return;
+            }
+
+            const uint64 entityId = static_cast<uint64>(entity.id());
+            auto actorIt = state.Actors.find(entityId);
+            if(!entity.has<Transform>())
+            {
+                return;
+            }
+
+            Transform& transform = entity.get_mut<Transform>();
+            if(entity.has<RigidBody>())
+            {
+                RigidBody& rigidBody = entity.get_mut<RigidBody>();
+                if(actorIt == state.Actors.end() || actorIt->second == nullptr || actorIt->second->is<PxRigidDynamic>() == nullptr)
+                {
+                    CreateDynamicActor(entity, transform, collider, rigidBody);
+                    return;
+                }
+            }
+            else if(actorIt == state.Actors.end() || actorIt->second == nullptr)
+            {
+                CreateStaticActor(entity, transform, collider);
+                return;
+            }
+
+            PxRigidActor* actor = actorIt->second;
+
+            const PxU32 shapeCount = actor->getNbShapes();
+            if(shapeCount > 0)
+            {
+                std::vector<PxShape*> shapes(shapeCount);
+                actor->getShapes(shapes.data(), shapeCount);
+                for(PxShape* shape : shapes)
+                {
+                    actor->detachShape(*shape, true);
+                }
+            }
+
+            PxMaterial* material = state.DefaultMaterial;
+            if(entity.has<RigidBody>())
+            {
+                RigidBody& rigidBody = entity.get_mut<RigidBody>();
+                material = state.Physics->createMaterial(rigidBody.Friction, rigidBody.Friction, rigidBody.Bounciness);
+            }
+
+            PxShape* shape = CreateShape(collider, transform, *state.Physics, *material);
+            if(shape == nullptr)
+            {
+                if(material != state.DefaultMaterial)
+                {
+                    material->release();
+                }
+                ReleaseActor(entityId);
+                return;
+            }
+
+            actor->attachShape(*shape);
+            shape->release();
+
+            if(material != state.DefaultMaterial)
+            {
+                material->release();
+            }
+
+            if(PxRigidDynamic* dynamicActor = actor->is<PxRigidDynamic>())
+            {
+                if(entity.has<RigidBody>())
+                {
+                    RigidBody& rigidBody = entity.get_mut<RigidBody>();
+                    if(!rigidBody.IsKinematic)
+                    {
+                        PxRigidBodyExt::setMassAndUpdateInertia(*dynamicActor, std::max(rigidBody.Mass, 0.0001f));
+                    }
+                }
+            }
+
+            state.ColliderScales[entityId] = GetColliderScale(transform);
+        });
+
+        ECS::World.observer<Transform>("PhysXUpdateTransformObserver").event(flecs::OnSet).each([&](ECS::Entity entity, Transform& transform)
+        {
+            if(state.IsSynchronizing)
+            {
+                return;
+            }
+
+            const uint64 entityId = static_cast<uint64>(entity.id());
+            auto actorIt = state.Actors.find(entityId);
+            if(actorIt != state.Actors.end() && actorIt->second != nullptr)
+            {
+                PxRigidActor* actor = actorIt->second;
+
+                if(entity.has<ColliderComponent>())
+                {
+                    const Vector3 currentScale = GetColliderScale(transform);
+                    const auto scaleIt = state.ColliderScales.find(entityId);
+                    const bool scaleChanged = scaleIt == state.ColliderScales.end() || length(scaleIt->second - currentScale) > 1e-4f;
+                    if(scaleChanged && state.Physics != nullptr)
+                    {
+                        auto& collider = entity.get_mut<ColliderComponent>();
+
+                        const PxU32 shapeCount = actor->getNbShapes();
+                        if(shapeCount > 0)
+                        {
+                            std::vector<PxShape*> shapes(shapeCount);
+                            actor->getShapes(shapes.data(), shapeCount);
+                            for(PxShape* shape : shapes)
+                            {
+                                actor->detachShape(*shape, true);
+                            }
+                        }
+
+                        PxMaterial* material = state.DefaultMaterial;
+                        if(entity.has<RigidBody>())
+                        {
+                            auto& rigidBody = entity.get_mut<RigidBody>();
+                            material = state.Physics->createMaterial(rigidBody.Friction, rigidBody.Friction, rigidBody.Bounciness);
+                        }
+
+                        PxShape* shape = CreateShape(collider, transform, *state.Physics, *material);
+                        if(shape == nullptr)
+                        {
+                            if(material != state.DefaultMaterial)
+                            {
+                                material->release();
+                            }
+                            ReleaseActor(entityId);
+                            return;
+                        }
+
+                        actor->attachShape(*shape);
+                        shape->release();
+
+                        if(material != state.DefaultMaterial)
+                        {
+                            material->release();
+                        }
+
+                        state.ColliderScales[entityId] = currentScale;
+                    }
+                }
+
+                if(PxRigidDynamic* dynamicActor = actor->is<PxRigidDynamic>())
+                {
+                    if(entity.has<RigidBody>())
+                    {
+                        auto& rigidBody = entity.get_mut<RigidBody>();
+                        if(rigidBody.IsKinematic)
+                        {
+                            dynamicActor->setKinematicTarget(ToPxTransform(transform));
+                        }
+                        else
+                        {
+                            dynamicActor->setGlobalPose(ToPxTransform(transform), true);
+                            dynamicActor->wakeUp();
+                        }
+                    }
+                }
+                else
+                {
+                    actor->setGlobalPose(ToPxTransform(transform), true);
+                }
+            }
+
+            auto controllerIt = state.Controllers.find(entityId);
+            if(controllerIt != state.Controllers.end() && controllerIt->second != nullptr && !entity.has<RigidBody>() && !entity.has<ColliderComponent>())
+            {
+                const Vector3 currentScale = glm::abs(transform.LocalScale);
+                const auto scaleIt = state.ControllerScales.find(entityId);
+                const bool scaleChanged = scaleIt == state.ControllerScales.end() || length(scaleIt->second - currentScale) > 1e-4f;
+                if(scaleChanged && entity.has<CharacterController>())
+                {
+                    auto& characterController = entity.get_mut<CharacterController>();
+                    CreateCharacterController(entity, transform, characterController);
+                    return;
+                }
+
+                const Vector3 previousPosition = state.PreviousPositions.contains(entityId) ? state.PreviousPositions[entityId] : transform.Position;
+                const Vector3 displacement = transform.Position - previousPosition;
+                if(length(displacement) > 1e-5f)
+                {
+                    controllerIt->second->setPosition(PxExtendedVec3(transform.Position.x, transform.Position.y, transform.Position.z));
+                    state.PreviousPositions[entityId] = transform.Position;
+                    if(entity.has<CharacterController>())
+                    {
+                        auto& controller = entity.get_mut<CharacterController>();
+                        controller.JumpRequested = false;
+                        controller.IsGrounded = false;
+                    }
+                }
+            }
+        });
+
+        ECS::World.observer<RigidBody>("PhysXUpdateRigidBodyObserver").event(flecs::OnSet).each([&](ECS::Entity entity, RigidBody& rigidBody)
+        {
+            if(state.IsSynchronizing || state.Physics == nullptr || !entity.has<Transform>())
+            {
+                return;
+            }
+
+            const uint64 entityId = static_cast<uint64>(entity.id());
+            auto actorIt = state.Actors.find(entityId);
+            if(actorIt == state.Actors.end() || actorIt->second == nullptr)
+            {
+                if(entity.has<ColliderComponent>())
+                {
+                    auto& transform = entity.get_mut<Transform>();
+                    auto& collider = entity.get_mut<ColliderComponent>();
+                    CreateDynamicActor(entity, transform, collider, rigidBody);
+                }
+                return;
+            }
+
+            PxRigidDynamic* dynamicActor = actorIt->second->is<PxRigidDynamic>();
+            if(dynamicActor == nullptr)
+            {
+                if(entity.has<ColliderComponent>())
+                {
+                    auto& transform = entity.get_mut<Transform>();
+                    auto& collider = entity.get_mut<ColliderComponent>();
+                    CreateDynamicActor(entity, transform, collider, rigidBody);
+                }
+                return;
+            }
+
+            dynamicActor->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, rigidBody.IsKinematic);
+            dynamicActor->setLinearDamping(rigidBody.LinearDamping);
+            dynamicActor->setAngularDamping(rigidBody.AngularDamping);
+            dynamicActor->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, !rigidBody.HasGravity);
+            ApplyAxisConstraints(rigidBody, *dynamicActor);
+
+            if(entity.has<ColliderComponent>())
+            {
+                PxMaterial* material = state.Physics->createMaterial(rigidBody.Friction, rigidBody.Friction, rigidBody.Bounciness);
+                const PxU32 shapeCount = dynamicActor->getNbShapes();
+                if(shapeCount > 0)
+                {
+                    std::vector<PxShape*> shapes(shapeCount);
+                    dynamicActor->getShapes(shapes.data(), shapeCount);
+                    for(PxShape* shape : shapes)
+                    {
+                        PxMaterial* materials[] = { material };
+                        shape->setMaterials(materials, 1);
+                    }
+                }
+                material->release();
+            }
+
+            if(rigidBody.IsKinematic)
+            {
+                dynamicActor->setKinematicTarget(ToPxTransform(entity.get<Transform>()));
+            }
+            else
+            {
+                PxRigidBodyExt::setMassAndUpdateInertia(*dynamicActor, std::max(rigidBody.Mass, 0.0001f));
+                dynamicActor->setLinearVelocity(ToPx(rigidBody.Velocity), false);
+                dynamicActor->setAngularVelocity(ToPx(rigidBody.AngularVelocity), false);
+                dynamicActor->wakeUp();
+            }
         });
 
         ECS::World.observer<ColliderComponent>("PhysXRemoveColliderObserver").event(flecs::OnRemove).each([&](ECS::Entity entity, ColliderComponent&)
@@ -1135,7 +1273,22 @@ namespace Waldem
 
         ECS::World.observer<RigidBody>("PhysXRigidBodyRemovedObserver").event(flecs::OnRemove).each([&](ECS::Entity entity, RigidBody&)
         {
-            MarkDirty(entity);
+            const uint64 entityId = static_cast<uint64>(entity.id());
+            ReleaseActor(entityId);
+
+            if(state.Physics == nullptr || state.Scene == nullptr || !entity.is_alive() || !entity.has<Transform>() || !entity.has<ColliderComponent>())
+            {
+                return;
+            }
+
+            auto& transform = entity.get_mut<Transform>();
+            auto& collider = entity.get_mut<ColliderComponent>();
+            CreateStaticActor(entity, transform, collider);
+        });
+
+        ECS::World.observer<CharacterController>("CharacterControllerRemovedObserver").event(flecs::OnRemove).each([&](ECS::Entity entity, CharacterController&)
+        {
+            ReleaseController(static_cast<uint64>(entity.id()));
         });
 
         ECS::World.system("PhysXFixedUpdateSystem").kind<ECS::OnFixedUpdate>().each([&]
@@ -1145,7 +1298,7 @@ namespace Waldem
                 return;
             }
 
-            SyncDirtyActors();
+            ValidateActorStorage();
 
             for(auto& [entityId, actor] : state.Actors)
             {
@@ -1156,8 +1309,49 @@ namespace Waldem
                 }
 
                 state.PreviousPositions[entityId] = entity.get<Transform>().Position;
-                PreventSteepSlopeAcceleration(entity);
                 PushComponentStateToActor(entity, *actor);
+            }
+
+            for(auto& [entityId, controller] : state.Controllers)
+            {
+                ECS::Entity entity = GetEntityById(entityId);
+                if(!entity.is_alive() || controller == nullptr || !entity.has<Transform>() || !entity.has<CharacterController>())
+                {
+                    continue;
+                }
+
+                auto& characterController = entity.get_mut<CharacterController>();
+
+                Vector3 displacement = characterController.MoveVelocity * Time::FixedDeltaTime;
+
+                if(characterController.JumpRequested && characterController.IsGrounded)
+                {
+                    characterController.MoveVelocity.y = characterController.JumpSpeed;
+                    characterController.IsGrounded = false;
+                }
+
+                characterController.MoveVelocity.y += state.Gravity.y * characterController.GravityScale * Time::FixedDeltaTime;
+                displacement.y += characterController.MoveVelocity.y * Time::FixedDeltaTime;
+
+                const PxControllerCollisionFlags collisionFlags = controller->move(
+                    ToPx(displacement),
+                    0.001f,
+                    Time::FixedDeltaTime,
+                    PxControllerFilters());
+
+                if(collisionFlags.isSet(PxControllerCollisionFlag::eCOLLISION_DOWN) && characterController.MoveVelocity.y < 0.0f)
+                {
+                    characterController.MoveVelocity.y = 0.0f;
+                }
+                if(collisionFlags.isSet(PxControllerCollisionFlag::eCOLLISION_UP) && characterController.MoveVelocity.y > 0.0f)
+                {
+                    characterController.MoveVelocity.y = 0.0f;
+                }
+
+                characterController.IsGrounded = collisionFlags.isSet(PxControllerCollisionFlag::eCOLLISION_DOWN);
+                characterController.JumpRequested = false;
+
+                PullControllerStateToComponents(entity, *controller);
             }
 
             state.Scene->simulate(Time::FixedDeltaTime);
@@ -1169,13 +1363,6 @@ namespace Waldem
                 if(entity.is_alive() && actor != nullptr)
                 {
                     PullActorStateToComponents(entity, *actor);
-                    if(entity.has<RigidBody>())
-                    {
-                        auto& rigidBody = entity.get_mut<RigidBody>();
-                        rigidBody.IsGrounded = QueryGrounded(entity);
-                        entity.modified<RigidBody>();
-                        PreventSteepSlopeClimb(entity);
-                    }
                 }
             }
         });
@@ -1197,13 +1384,28 @@ namespace Waldem
         }
 
         state.Actors.clear();
+        for(auto& [entityId, controller] : state.Controllers)
+        {
+            if(controller != nullptr)
+            {
+                controller->release();
+            }
+        }
+        state.Controllers.clear();
         state.PreviousPositions.clear();
-        state.DirtyEntities.clear();
+        state.ColliderScales.clear();
+        state.ControllerScales.clear();
+        state.ControllerCapsuleSizes.clear();
 
         if(state.DefaultMaterial != nullptr)
         {
             state.DefaultMaterial->release();
             state.DefaultMaterial = nullptr;
+        }
+        if(state.ControllerManager != nullptr)
+        {
+            state.ControllerManager->release();
+            state.ControllerManager = nullptr;
         }
         if(state.Scene != nullptr)
         {
@@ -1235,6 +1437,18 @@ namespace Waldem
 
 namespace Waldem
 {
+    void PhysXSystem::ApplyImpulse(ECS::Entity entity, const Vector3& impulse)
+    {
+        if(!entity.is_alive() || !entity.has<RigidBody>())
+        {
+            return;
+        }
+
+        auto& rigidBody = entity.get_mut<RigidBody>();
+        rigidBody.Impulse += impulse;
+        entity.modified<RigidBody>();
+    }
+
     bool PhysXSystem::LookAt(ECS::Entity entity, const Vector3& target)
     {
         if(!entity.is_alive() || !entity.has<Transform>())

@@ -62,8 +62,6 @@ namespace Waldem
             set { InternalCalls.RigidBody_SetFreezeRotationZ(EntityId, value); }
         }
 
-        public bool IsGrounded => InternalCalls.RigidBody_GetIsGrounded(EntityId);
-
         public void AddForce(Vector3 force) { InternalCalls.RigidBody_AddForce(EntityId, ref force); }
         public void ApplyImpulse(Vector3 impulse) { InternalCalls.RigidBody_ApplyImpulse(EntityId, ref impulse); }
         public void LookAt(Vector3 target) { InternalCalls.RigidBody_LookAt(EntityId, ref target); }
