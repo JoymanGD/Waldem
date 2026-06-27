@@ -9,10 +9,15 @@ namespace Waldem::Bindings
 {
     namespace
     {
+        void Input_SetCursor(bool enable)
+        {
+            return Input::SetCursor(enable);
+        }
+
         bool Input_GetKey(int keyCode)
         {
             SViewport* gameViewport = ViewportManager::GetGameViewport();
-            if(gameViewport != nullptr && !gameViewport->IsFocused)
+            if((gameViewport != nullptr && !gameViewport->IsFocused) || Input::IsEditorCursorReleased())
                 return false;
             return Input::GetKey(keyCode);
         }
@@ -20,7 +25,7 @@ namespace Waldem::Bindings
         bool Input_GetKeyDown(int keyCode)
         {
             SViewport* gameViewport = ViewportManager::GetGameViewport();
-            if(gameViewport != nullptr && !gameViewport->IsFocused)
+            if((gameViewport != nullptr && !gameViewport->IsFocused) || Input::IsEditorCursorReleased())
                 return false;
             return Input::GetKeyDown(keyCode);
         }
@@ -28,7 +33,7 @@ namespace Waldem::Bindings
         bool Input_GetMouse(int button)
         {
             SViewport* gameViewport = ViewportManager::GetGameViewport();
-            if(gameViewport != nullptr && !gameViewport->IsFocused)
+            if((gameViewport != nullptr && !gameViewport->IsFocused) || Input::IsEditorCursorReleased())
                 return false;
             return Input::GetMouse(button);
         }
@@ -36,7 +41,7 @@ namespace Waldem::Bindings
         bool Input_GetMouseDown(int button)
         {
             SViewport* gameViewport = ViewportManager::GetGameViewport();
-            if(gameViewport != nullptr && !gameViewport->IsFocused)
+            if((gameViewport != nullptr && !gameViewport->IsFocused) || Input::IsEditorCursorReleased())
                 return false;
             return Input::GetMouseDown(button);
         }
@@ -44,7 +49,7 @@ namespace Waldem::Bindings
         float Input_GetMouseDeltaX()
         {
             SViewport* gameViewport = ViewportManager::GetGameViewport();
-            if(gameViewport != nullptr && !gameViewport->IsFocused)
+            if((gameViewport != nullptr && !gameViewport->IsFocused) || Input::IsEditorCursorReleased())
                 return 0.0f;
             return static_cast<float>(Input::GetMouseDelta().x);
         }
@@ -52,7 +57,7 @@ namespace Waldem::Bindings
         float Input_GetMouseDeltaY()
         {
             SViewport* gameViewport = ViewportManager::GetGameViewport();
-            if(gameViewport != nullptr && !gameViewport->IsFocused)
+            if((gameViewport != nullptr && !gameViewport->IsFocused) || Input::IsEditorCursorReleased())
                 return 0.0f;
             return static_cast<float>(Input::GetMouseDelta().y);
         }
@@ -60,6 +65,7 @@ namespace Waldem::Bindings
 
     void RegisterInputCalls(Mono* runtime)
     {
+        BIND(runtime, Input_SetCursor);
         BIND(runtime, Input_GetKey);
         BIND(runtime, Input_GetKeyDown);
         BIND(runtime, Input_GetMouse);

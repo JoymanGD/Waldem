@@ -2,6 +2,8 @@
 #include "imgui.h"
 #include "Widget.h"
 #include "../EditorShortcutContext.h"
+#include "Waldem/Editor/EditorSimulation.h"
+#include "Waldem/Input/Input.h"
 #include "Waldem/Renderer/Renderer.h"
 #include "Waldem/Renderer/Viewport/Viewport.h"
 #include "Waldem/Renderer/Viewport/ViewportManager.h"
@@ -13,13 +15,18 @@ namespace Waldem
     private:
         ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
         int SelectedRenderTarget = 0;
-        
     public:
         GameViewportWidget() {}
 
         void OnDraw(float deltaTime) override
         {
             auto viewport = ViewportManager::GetGameViewport();
+            if(viewport->FocusRequested)
+            {
+                ImGui::SetNextWindowFocus();
+                viewport->FocusRequested = false;
+            }
+
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
             const bool isVisible = ImGui::Begin("Game###Game", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus);
             if (isVisible)
@@ -54,10 +61,11 @@ namespace Waldem
                 viewport->IsMouseOver = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
                 if(viewport->IsMouseOver && (ImGui::IsMouseClicked(ImGuiMouseButton_Left) || ImGui::IsMouseClicked(ImGuiMouseButton_Right)))
                 {
-                    viewport->IsFocused = true;
-                    if(auto editorViewport = ViewportManager::GetEditorViewport())
+                    ViewportManager::FocusViewport(viewport);
+
+                    if(EditorSimulation::IsPlaying() && Input::IsEditorCursorReleased() && Input::WantsCursorDisabled())
                     {
-                        editorViewport->IsFocused = false;
+                        Input::SetEditorCursorReleased(false);
                     }
                 }
                 EditorShortcutContexts::SetActive(EditorShortcutContext::GameViewport, viewport->IsFocused);
@@ -68,9 +76,7 @@ namespace Waldem
                 const float buttonWidth = 26.0f;
                 const float buttonHeight = 22.0f;
                 const float buttonPadding = 8.0f;
-                ImGui::SetCursorScreenPos(ImVec2(
-                    viewportPos.x + viewportSize.x - buttonWidth - buttonPadding,
-                    viewportPos.y + buttonPadding));
+                ImGui::SetCursorScreenPos(ImVec2(viewportPos.x + viewportSize.x - buttonWidth - buttonPadding, viewportPos.y + buttonPadding));
 
                 if(ImGui::Button("...##GameViewportOptions", ImVec2(buttonWidth, buttonHeight)))
                 {

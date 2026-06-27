@@ -2,6 +2,8 @@
 
 #include "Waldem/Audio/Audio.h"
 #include "Waldem/ECS/Components/AudioSource.h"
+#include "Waldem/Input/Input.h"
+#include "Waldem/Renderer/Viewport/ViewportManager.h"
 #include "Waldem/SceneManagement/SceneManager.h"
 #include "Waldem/Scripting/ScriptEngine.h"
 #include "Waldem/Utils/FileUtils.h"
@@ -37,6 +39,9 @@ namespace Waldem
             if(State == EditorSimulationState::Pause)
             {
                 State = EditorSimulationState::Play;
+                Input::SetCursor(false);
+                Input::SetEditorCursorReleased(false);
+                ViewportManager::FocusViewport(ViewportManager::GetGameViewport(), true);
                 return true;
             }
 
@@ -56,6 +61,8 @@ namespace Waldem
             {
                 ScriptEngine::RecreateEntityInstances();
             }
+
+            ViewportManager::FocusViewport(ViewportManager::GetGameViewport(), true);
             return true;
         }
 
@@ -65,6 +72,9 @@ namespace Waldem
             {
                 return false;
             }
+
+            Input::SetCursor(true);
+            ViewportManager::FocusViewport(ViewportManager::GetEditorViewport(), true);
 
             State = EditorSimulationState::Pause;
             return true;
@@ -76,6 +86,9 @@ namespace Waldem
             {
                 return false;
             }
+
+            Input::SetCursor(true);
+            ViewportManager::FocusViewport(ViewportManager::GetEditorViewport(), true);
 
             ECS::World.query<AudioSource>().each([&](AudioSource& audioSource)
             {

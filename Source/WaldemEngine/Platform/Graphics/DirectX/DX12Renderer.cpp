@@ -16,6 +16,7 @@
 #include "backends/imgui_impl_dx12.h"
 #include "backends/imgui_impl_sdl2.h"
 #include "Waldem/Editor/UIStyles.h"
+#include "Waldem/Input/Input.h"
 #include "Waldem/Renderer/Model/Quad.h"
 #include "Waldem/Renderer/Viewport/ViewportManager.h"
 #include "Waldem/Utils/FileUtils.h"
@@ -986,6 +987,13 @@ namespace Waldem
         ImGui_ImplDX12_NewFrame();
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
+
+        if(Input::IsCursorCapturedForGameplay())
+        {
+            ImGuiIO& io = ImGui::GetIO();
+            io.MousePos = ImVec2(-FLT_MAX, -FLT_MAX);
+            ImGui::SetMouseCursor(ImGuiMouseCursor_None);
+        }
     }
 
     void DX12Renderer::EndUI()

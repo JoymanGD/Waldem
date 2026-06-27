@@ -2,6 +2,11 @@ namespace Waldem
 {
     public static class Input
     {
+        public static void SetCursor(bool enable)
+        {
+            InternalCalls.Input_SetCursor(enable);
+        }
+
         public static bool GetKey(KeyCode keyCode)
         {
             return InternalCalls.Input_GetKey((int)keyCode);

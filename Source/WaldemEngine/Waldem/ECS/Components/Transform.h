@@ -75,6 +75,7 @@ namespace Waldem
         void InitializePhysicsInterpolationState();
         void PushPhysicsInterpolationState(const Vector3& position, const Quaternion& rotation);
         void ApplyPhysicsInterpolation(float alpha);
+        void ApplyPhysicsInterpolationPositionOnly(float alpha);
 
         Matrix3x4 ToMatrix3x4() const
         {

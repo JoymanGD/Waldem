@@ -64,6 +64,19 @@ namespace Waldem
             }
         }
 
+        public Vector3 LocalRotation
+        {
+            get
+            {
+                InternalCalls.Transform_GetLocalRotation(EntityId, out Vector3 rotation);
+                return rotation;
+            }
+            set
+            {
+                InternalCalls.Transform_SetLocalRotation(EntityId, ref value);
+            }
+        }
+
         public Quaternion RotationQuaternion
         {
             get

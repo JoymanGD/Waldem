@@ -24,6 +24,8 @@ namespace Waldem
         ReloadScripts,
         ReloadShaders,
         SaveScene,
+        ReleaseGameCursor,
+        StopPlayMode,
         Count
     };
 
@@ -51,12 +53,13 @@ namespace Waldem
             ShortcutBinding binding{};
 
             binding.Ctrl = shortcut.Keys.find(LCTRL) != shortcut.Keys.end();
-            binding.Shift = shortcut.Keys.find(LSHIFT) != shortcut.Keys.end();
-            binding.Alt = shortcut.Keys.find(LALT) != shortcut.Keys.end();
+            binding.Ctrl = binding.Ctrl || shortcut.Keys.find(RCTRL) != shortcut.Keys.end();
+            binding.Shift = shortcut.Keys.find(LSHIFT) != shortcut.Keys.end() || shortcut.Keys.find(RSHIFT) != shortcut.Keys.end();
+            binding.Alt = shortcut.Keys.find(LALT) != shortcut.Keys.end() || shortcut.Keys.find(RALT) != shortcut.Keys.end();
 
             for (int key : shortcut.Keys)
             {
-                if(key != LCTRL && key != LSHIFT && key != LALT)
+                if(key != LCTRL && key != RCTRL && key != LSHIFT && key != RSHIFT && key != LALT && key != RALT)
                 {
                     binding.Key = key;
                     break;
@@ -158,6 +161,8 @@ namespace Waldem
             "Reload Scripts",
             "Reload Shaders",
             "Save Scene",
+            "Release Game Cursor",
+            "Stop Play Mode",
         };
 
         inline static const std::array<ShortcutBinding, (int)EditorShortcutAction::Count> DefaultBindings =
@@ -174,6 +179,8 @@ namespace Waldem
             ShortcutBinding{ true, false, true, F11 },
             ShortcutBinding{ true, true, false, PERIOD },
             ShortcutBinding{ true, false, false, S },
+            ShortcutBinding{ false, true, false, F1 },
+            ShortcutBinding{ false, false, false, ESCAPE },
         };
 
         inline static std::array<ShortcutBinding, (int)EditorShortcutAction::Count> Bindings = DefaultBindings;

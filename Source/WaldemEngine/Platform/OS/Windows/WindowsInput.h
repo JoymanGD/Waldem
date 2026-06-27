@@ -8,6 +8,7 @@ namespace Waldem
     class WindowsInput : public Input
     {
     protected:
+        virtual void SetCursorImpl(bool enable) override;
         virtual void UpdateImpl() override;
         virtual bool GetKeyImpl(int keycode) override;
         virtual bool GetKeyDownImpl(int keycode) override;

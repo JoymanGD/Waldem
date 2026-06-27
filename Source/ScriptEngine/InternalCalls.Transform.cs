@@ -32,6 +32,12 @@ namespace Waldem
         internal static extern void Transform_SetRotation(ulong entityId, ref Vector3 rotation);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Transform_GetLocalRotation(ulong entityId, out Vector3 rotation);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Transform_SetLocalRotation(ulong entityId, ref Vector3 rotation);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern void Transform_Rotate(ulong entityId, ref Vector3 rotationDelta);
 
         [MethodImpl(MethodImplOptions.InternalCall)]

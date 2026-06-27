@@ -5,6 +5,9 @@ namespace Waldem
     internal static partial class InternalCalls
     {
         [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Input_SetCursor(bool enable);
+        
+        [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern bool Input_GetKey(int keyCode);
 
         [MethodImpl(MethodImplOptions.InternalCall)]

@@ -3,6 +3,7 @@
 #include "ScriptBindings.h"
 #include "Waldem/Scripting/Mono.h"
 #include "Waldem/ECS/Components/Transform.h"
+#include "Waldem/ECS/ECS.h"
 
 namespace Waldem::Bindings
 {
@@ -91,6 +92,30 @@ namespace Waldem::Bindings
             auto& t = entity.get_mut<Transform>();
             t.SetRotation(rotation->x, rotation->y, rotation->z);
             entity.modified<Transform>();
+        }
+
+        void Transform_GetLocalRotation(uint64_t entityId, ScriptVector3* out)
+        {
+            if(out == nullptr) return;
+            ECS::Entity entity = GetEntityChecked(entityId);
+            if(!entity.is_alive() || !entity.has<Transform>())
+            {
+                *out = {};
+                return;
+            }
+
+            const Vector3 localRotation = ECS::GetLocalRotation(entity);
+            out->x = localRotation.x;
+            out->y = localRotation.y;
+            out->z = localRotation.z;
+        }
+
+        void Transform_SetLocalRotation(uint64_t entityId, ScriptVector3* rotation)
+        {
+            if(rotation == nullptr) return;
+            ECS::Entity entity = GetEntityChecked(entityId);
+            if(!entity.is_alive() || !entity.has<Transform>()) return;
+            ECS::SetLocalRotation(entity, Vector3(rotation->x, rotation->y, rotation->z));
         }
 
         void Transform_Rotate(uint64_t entityId, ScriptVector3* rotationDelta)
@@ -196,6 +221,8 @@ namespace Waldem::Bindings
         BIND(runtime, Transform_Translate);
         BIND(runtime, Transform_GetRotation);
         BIND(runtime, Transform_SetRotation);
+        BIND(runtime, Transform_GetLocalRotation);
+        BIND(runtime, Transform_SetLocalRotation);
         BIND(runtime, Transform_Rotate);
         BIND(runtime, Transform_GetRotationQuaternion);
         BIND(runtime, Transform_SetRotationQuaternion);

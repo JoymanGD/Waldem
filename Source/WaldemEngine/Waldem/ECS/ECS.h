@@ -4,6 +4,7 @@
 #include "Components/SceneEntity.h"
 #include "Systems/CoreSystem.h"
 #include "Waldem/Types/FreeList.h"
+#include "Waldem/Types/MathTypes.h"
 #include "Waldem/Types/String.h"
 #include "Waldem/Types/WMap.h"
 
@@ -94,6 +95,8 @@ namespace Waldem
         void WALDEM_API SetParent(Entity child, Entity parent, bool keepWorldTransform = true);
         void WALDEM_API ClearParent(Entity child, bool keepWorldTransform = true);
         Entity WALDEM_API GetParent(Entity child);
+        Vector3 WALDEM_API GetLocalRotation(Entity entity);
+        void WALDEM_API SetLocalRotation(Entity entity, const Vector3& rotation);
         void WALDEM_API RebuildParentRelations();
         void WALDEM_API Shutdown();
 

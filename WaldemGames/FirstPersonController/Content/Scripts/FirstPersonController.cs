@@ -25,6 +25,8 @@ namespace Waldem
                 cameraPitch = NormalizeAngle(mainCamera.Entity.Transform.Rotation.x);
                 cameraPitch = Clamp(cameraPitch, CameraPitchMin, CameraPitchMax);
             }
+
+            Input.SetCursor(false);
         }
 
         protected override void OnUpdate(float deltaTime)
@@ -33,7 +35,6 @@ namespace Waldem
 
             if (mainCamera != null)
             {
-                // UpdateFirstPersonCamera();
                 Vector3 forward = mainCamera.Entity.Transform.Forward;
                 Vector3 right = mainCamera.Entity.Transform.Right;
                 
@@ -97,14 +98,11 @@ namespace Waldem
             float cameraHorizontal = 0;
             float cameraVerticalDelta = 0;
 
-            if (Input.GetMouse(MouseButton.Right))
-            {
-                cameraHorizontal = Input.GetMouseDeltaX() * CameraOrbitSensitivity;
-                float targetPitch = cameraPitch + Input.GetMouseDeltaY() * CameraOrbitSensitivity;
-                targetPitch = Clamp(targetPitch, CameraPitchMin, CameraPitchMax);
-                cameraVerticalDelta = targetPitch - cameraPitch;
-                cameraPitch = targetPitch;
-            }
+            cameraHorizontal = Input.GetMouseDeltaX() * CameraOrbitSensitivity;
+            float targetPitch = cameraPitch + Input.GetMouseDeltaY() * CameraOrbitSensitivity;
+            targetPitch = Clamp(targetPitch, CameraPitchMin, CameraPitchMax);
+            cameraVerticalDelta = targetPitch - cameraPitch;
+            cameraPitch = targetPitch;
 
             var cameraPos = mainCamera.Entity.Transform.Position;
             mainCamera.Entity.Transform.RotateAround(cameraPos, Vector3.Up, cameraHorizontal);
@@ -160,7 +158,7 @@ namespace Waldem
                 pushDirection = movement * MoveSpeed;
             }
 
-            pushDirection.y = 0.0f;
+            // pushDirection.y = 0.0f;
             if (pushDirection.magnitude <= 0.0f)
                 return;
 
