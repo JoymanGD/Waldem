@@ -16,6 +16,7 @@
 #include "Commands/EditorCommands.h"
 #include "../EditorShortcutContext.h"
 #include "../EditorShortcuts.h"
+#include "Waldem/Editor/EditorSimulation.h"
 
 namespace Waldem
 {
@@ -30,13 +31,11 @@ namespace Waldem
         bool WasUsingGizmo = false;
         ComponentValueBlob GizmoBeforeTransform;
         int SelectedRenderTarget = 0;
-        
     public:
         EditorViewportWidget() {}
 
         void Initialize(InputManager* inputManager) override
         {
-            
             inputManager->SubscribeToMouseButtonEvent(WD_MOUSE_BUTTON_RIGHT, [&](bool isPressed)
             {
                 //when we control camera with RMB we can't change operation
@@ -172,6 +171,12 @@ namespace Waldem
         void OnDraw(float deltaTime) override
         {
             auto viewport = ViewportManager::GetEditorViewport();
+            if(viewport->FocusRequested)
+            {
+                ImGui::SetNextWindowFocus();
+                viewport->FocusRequested = false;
+            }
+
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
             IsVisible = ImGui::Begin("Editor###Editor", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus);
             if (IsVisible)
@@ -208,11 +213,7 @@ namespace Waldem
                 viewport->IsMouseOver = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
                 if(viewport->IsMouseOver && (ImGui::IsMouseClicked(ImGuiMouseButton_Left) || ImGui::IsMouseClicked(ImGuiMouseButton_Right)))
                 {
-                    viewport->IsFocused = true;
-                    if(auto gameViewport = ViewportManager::GetGameViewport())
-                    {
-                        gameViewport->IsFocused = false;
-                    }
+                    ViewportManager::FocusViewport(viewport);
                 }
                 EditorShortcutContexts::SetActive(EditorShortcutContext::EditorViewport, viewport->IsFocused);
                 

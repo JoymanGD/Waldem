@@ -95,5 +95,7 @@ namespace Waldem
         {
             return Renderer::GetCurrentViewport();
         }
+
+        static void FocusViewport(SViewport* targetViewport, bool requestWindowFocus = false);
     };
 }

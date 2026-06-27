@@ -28,6 +28,7 @@
 #include "Bindings/RigidBodyBindings.h"
 #include "Bindings/TimeBindings.h"
 #include "Bindings/TransformBindings.h"
+#include "Waldem/Input/Input.h"
 
 namespace Waldem
 {
@@ -735,6 +736,9 @@ namespace Waldem
             return false;
         }
 
+        const bool wantedCursorDisabled = Input::WantsCursorDisabled();
+        const bool editorCursorReleased = Input::IsEditorCursorReleased();
+
         if(rebuildAssembly && !RebuildScriptAssembly())
         {
             return false;
@@ -774,6 +778,19 @@ namespace Waldem
         }
 
         int recreatedCount = RecreateEntityInstances();
+
+        if(wantedCursorDisabled)
+        {
+            Input::SetCursor(false);
+            if(editorCursorReleased)
+            {
+                Input::SetEditorCursorReleased(true);
+            }
+        }
+        else
+        {
+            Input::SetCursor(true);
+        }
 
         Path currentRuntimePdbPath = CurrentRuntimeAssemblyPath;
         if(!currentRuntimePdbPath.empty())

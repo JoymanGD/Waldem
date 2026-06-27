@@ -1,5 +1,6 @@
 #include <wdpch.h>
 #include "Viewport.h"
+#include "ViewportManager.h"
 #include "Waldem/ECS/Components/Camera.h"
 #include "Waldem/Renderer/FrameBuffer.h"
 #include "Waldem/Renderer/GBuffer.h"
@@ -137,5 +138,20 @@ namespace Waldem
     RenderTarget* SViewport::GetGBufferRenderTarget(GBufferRenderTarget rt)
     {
         return GBuffer ? GBuffer->GetRenderTarget(rt) : nullptr;
+    }
+
+    void ViewportManager::FocusViewport(SViewport* targetViewport, bool requestWindowFocus)
+    {
+        for(auto viewport : Viewports)
+        {
+            if(viewport == nullptr)
+            {
+                continue;
+            }
+
+            const bool isTarget = viewport == targetViewport;
+            viewport->IsFocused = isTarget;
+            viewport->FocusRequested = isTarget && requestWindowFocus;
+        }
     }
 }

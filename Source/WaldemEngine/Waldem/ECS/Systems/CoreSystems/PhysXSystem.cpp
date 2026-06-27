@@ -1354,7 +1354,7 @@ namespace Waldem
                 PullControllerStateToComponents(entity, *controller);
             }
 
-            state.Scene->simulate(Time::FixedDeltaTime);
+            state.Scene->simulate(Time::FixedDeltaTime); 
             state.Scene->fetchResults(true);
 
             for(auto& [entityId, actor] : state.Actors)

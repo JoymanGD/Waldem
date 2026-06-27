@@ -156,8 +156,7 @@ namespace Waldem
     void Transform::SetRotation(Vector3 pitchYawRoll)
     {
         Rotation = pitchYawRoll;
-        
-        ApplyPitchYawRoll();
+        ResetQuaternion();
         LastRotation = Rotation;
         Update();
     }
@@ -321,6 +320,21 @@ namespace Waldem
         alpha = glm::clamp(alpha, 0.0f, 1.0f);
         RenderPosition = glm::mix(PhysicsPreviousPosition, PhysicsCurrentPosition, alpha);
         RenderRotationQuat = normalize(glm::slerp(PhysicsPreviousRotationQuat, PhysicsCurrentRotationQuat, alpha));
+        RenderScale = LocalScale;
+        RenderMatrix = translate(Matrix4(1.0f), RenderPosition) * mat4_cast(RenderRotationQuat) * scale(Matrix4(1.0f), RenderScale);
+    }
+
+    void Transform::ApplyPhysicsInterpolationPositionOnly(float alpha)
+    {
+        if(!HasPhysicsInterpolationState)
+        {
+            SyncRenderStateFromSimulation();
+            return;
+        }
+
+        alpha = glm::clamp(alpha, 0.0f, 1.0f);
+        RenderPosition = glm::mix(PhysicsPreviousPosition, PhysicsCurrentPosition, alpha);
+        RenderRotationQuat = RotationQuat;
         RenderScale = LocalScale;
         RenderMatrix = translate(Matrix4(1.0f), RenderPosition) * mat4_cast(RenderRotationQuat) * scale(Matrix4(1.0f), RenderScale);
     }

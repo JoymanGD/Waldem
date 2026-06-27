@@ -271,6 +271,7 @@ namespace Waldem
                     IsTransformHierarchyUpdate = previousTransformFlag;
                 });
             }
+
         }
         
         void Core::Initialize()
@@ -702,6 +703,61 @@ namespace Waldem
             return GetParentEntityInternal(child);
         }
 
+        Vector3 GetLocalRotation(Entity entity)
+        {
+            if(!entity.is_alive() || !entity.has<Transform>())
+            {
+                return Vector3(0.0f);
+            }
+
+            Entity parent = GetParentEntityInternal(entity);
+            if(!parent.is_alive() || !parent.has<Transform>())
+            {
+                return entity.get<Transform>().Rotation;
+            }
+
+            auto localTransformIt = LocalTransformMatrices.find(entity.id());
+            Matrix4 localMatrix = localTransformIt == LocalTransformMatrices.end()
+                ? inverse(parent.get<Transform>().Matrix) * entity.get<Transform>().Matrix
+                : localTransformIt->second;
+
+            Transform localTransform(localMatrix);
+            return localTransform.Rotation;
+        }
+
+        void SetLocalRotation(Entity entity, const Vector3& rotation)
+        {
+            if(!entity.is_alive() || !entity.has<Transform>())
+            {
+                return;
+            }
+
+            Entity parent = GetParentEntityInternal(entity);
+            auto& transform = entity.get_mut<Transform>();
+            if(!parent.is_alive() || !parent.has<Transform>())
+            {
+                transform.SetRotation(rotation);
+                entity.modified<Transform>();
+                return;
+            }
+
+            auto localTransformIt = LocalTransformMatrices.find(entity.id());
+            Matrix4 localMatrix = localTransformIt == LocalTransformMatrices.end()
+                ? inverse(parent.get<Transform>().Matrix) * transform.Matrix
+                : localTransformIt->second;
+
+            Transform localTransform(localMatrix);
+            localTransform.SetRotation(rotation);
+            LocalTransformMatrices[entity.id()] = localTransform.Matrix;
+
+            const bool previousTransformFlag = IsTransformHierarchyUpdate;
+            IsTransformHierarchyUpdate = true;
+            transform.Matrix = parent.get<Transform>().Matrix * localTransform.Matrix;
+            transform.DecompileMatrix();
+            entity.modified<Transform>();
+            IsTransformHierarchyUpdate = previousTransformFlag;
+        }
+
         void RebuildParentRelations()
         {
             auto query = World.query_builder<SceneEntity>().build();
@@ -757,7 +813,14 @@ namespace Waldem
 
                 if(shouldInterpolatePhysics)
                 {
-                    transform.ApplyPhysicsInterpolation(alpha);
+                    if(entity.has<CharacterController>())
+                    {
+                        transform.ApplyPhysicsInterpolationPositionOnly(alpha);
+                    }
+                    else
+                    {
+                        transform.ApplyPhysicsInterpolation(alpha);
+                    }
                 }
                 else
                 {

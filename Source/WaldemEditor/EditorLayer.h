@@ -278,7 +278,7 @@ namespace Waldem
 
                 // 👉 Instead of splitting the center, dock both as tabs
                 ImGui::DockBuilderDockWindow("Editor###Editor", dock_editor);
-                ImGui::DockBuilderDockWindow("Game###Game", dock_game);
+                ImGui::DockBuilderDockWindow("Game###Game", dock_editor);
 
                 ImGui::DockBuilderFinish(dockspace_id);
                 dockspaceInitialized = true; 

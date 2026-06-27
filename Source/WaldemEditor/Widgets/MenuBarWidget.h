@@ -8,7 +8,9 @@
 #include "Waldem/SceneManagement/SceneManager.h"
 #include "Waldem/Scripting/ScriptEngine.h"
 #include "Waldem/ECS/Systems/CoreSystems/PhysXSystem.h"
+#include "Waldem/Input/Input.h"
 #include "Waldem/ProjectManagement/ProjectBuilder.h"
+#include "Waldem/Renderer/Viewport/ViewportManager.h"
 #include "Waldem/Utils/FileUtils.h"
 #include "Commands/EditorCommands.h"
 #include "../EditorShortcuts.h"
@@ -50,6 +52,7 @@ namespace Waldem
                 { N, "N" }, { O, "O" }, { P, "P" }, { Q, "Q" }, { R, "R" }, { S, "S" }, { T, "T" }, { U, "U" }, { V, "V" }, { W, "W" }, { X, "X" }, { Y, "Y" }, { Z, "Z" },
                 { PERIOD, "." },
                 { F1, "F1" }, { F2, "F2" }, { F3, "F3" }, { F4, "F4" }, { F5, "F5" }, { F6, "F6" }, { F7, "F7" }, { F8, "F8" }, { F9, "F9" }, { F10, "F10" }, { F11, "F11" }, { F12, "F12" },
+                { ESCAPE, "Escape" },
                 { KEY_DELETE, "Delete" },
                 { SPACE, "Space" }
             };
@@ -162,6 +165,24 @@ namespace Waldem
             inputManager->SubscribeToEditorShortcut(EditorShortcutAction::SaveScene, [this]
             {
                 SaveScene();
+            });
+
+            inputManager->SubscribeToEditorShortcut(EditorShortcutAction::ReleaseGameCursor, []
+            {
+                if(!EditorSimulation::IsPlaying())
+                {
+                    return;
+                }
+
+                Input::SetEditorCursorReleased(true);
+            });
+
+            inputManager->SubscribeToEditorShortcut(EditorShortcutAction::StopPlayMode, []
+            {
+                EditorSimulation::Stop();
+            }, []
+            {
+                return EditorSimulation::IsPlaying();
             });
         }
 

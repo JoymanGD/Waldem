@@ -1,9 +1,12 @@
 #include "wdpch.h"
 #include "WindowsInput.h"
 
+#include <SDL_events.h>
+#include <SDL_hints.h>
 #include <SDL_keyboard.h>
 #include <SDL_mouse.h>
 
+#include "imgui.h"
 #include "Waldem/Engine.h"
 
 namespace Waldem
@@ -45,6 +48,8 @@ namespace Waldem
     void Input::Initialize()
     {
         Instance = new WindowsInput();
+        SDL_SetHint(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "0");
+        SDL_SetHint(SDL_HINT_MOUSE_RELATIVE_MODE_CENTER, "0");
     }
 
     void Input::Update()
@@ -53,6 +58,46 @@ namespace Waldem
         {
             Instance->UpdateImpl();
         }
+    }
+
+    void WindowsInput::SetCursorImpl(bool enable)
+    {
+        auto window = (SDL_Window*)CWindow::Instance->GetNativeWindow();
+        ImGuiIO& io = ImGui::GetIO();
+
+        if(enable)
+        {
+            io.ConfigFlags &= ~ImGuiConfigFlags_NoMouseCursorChange;
+            io.ConfigFlags |= ImGuiConfigFlags_NavEnableSetMousePos;
+            io.MouseDrawCursor = false;
+
+            SDL_SetWindowGrab(window, SDL_FALSE);
+            SDL_SetRelativeMouseMode(SDL_FALSE);
+            SDL_ShowCursor(SDL_ENABLE);
+
+            int x, y;
+            SDL_GetMouseState(&x, &y);
+            LastMousePosition = Point2(x, y);
+            MouseDelta = {};
+            return;
+        }
+
+        io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
+        io.ConfigFlags &= ~ImGuiConfigFlags_NavEnableSetMousePos;
+        io.MouseDrawCursor = false;
+        ImGui::SetMouseCursor(ImGuiMouseCursor_None);
+
+        int w, h;
+        SDL_GetWindowSize(window, &w, &h);
+        SDL_WarpMouseInWindow(window, w / 2, h / 2);
+
+        SDL_SetWindowGrab(window, SDL_TRUE);
+        SDL_SetRelativeMouseMode(SDL_TRUE);
+        SDL_ShowCursor(SDL_DISABLE);
+        SDL_GetRelativeMouseState(nullptr, nullptr);
+
+        LastMousePosition = Point2(w / 2, h / 2);
+        MouseDelta = {};
     }
 
     void WindowsInput::UpdateImpl()
@@ -126,6 +171,13 @@ namespace Waldem
 
     Point2 WindowsInput::GetMouseDelta()
     {
+        if(SDL_GetRelativeMouseMode() == SDL_TRUE)
+        {
+            int deltaX, deltaY;
+            SDL_GetRelativeMouseState(&deltaX, &deltaY);
+            return Point2(deltaX, deltaY);
+        }
+
         Point2 mousePos;
         SDL_GetMouseState(&mousePos.x, &mousePos.y);
 
