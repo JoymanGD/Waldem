@@ -198,6 +198,9 @@ namespace Waldem
                 float metallic = 0.0f;
                 aiGetMaterialFloat(assimpMaterial, AI_MATKEY_METALLIC_FACTOR, &metallic);
 
+                int twoSided = 0;
+                aiGetMaterialInteger(assimpMaterial, AI_MATKEY_TWOSIDED, &twoSided);
+
                 Material* material = new Material(
                     materialName,
                     TextureReference(diffuseRef),
@@ -207,6 +210,7 @@ namespace Waldem
                     roughness,
                     metallic
                 );
+                material->TwoSided = twoSided != 0;
 
                 context.Assets.Add(material);
                 context.MaterialRefByIndex[materialIndex] = context.RelativeModelDir / materialName.ToString();

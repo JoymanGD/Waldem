@@ -124,8 +124,7 @@ namespace Waldem
 
             auto extension = AssetTypeToExtension(asset->Type);
             Path toPath = to;
-            toPath /= asset->Name.ToString();
-            toPath.replace_extension(extension.ToString());
+            toPath /= asset->Name.ToString() + extension.ToString();
 
             if(multipleAssets)
             {
@@ -192,8 +191,7 @@ namespace Waldem
 
             auto extension = AssetTypeToExtension(asset->Type);
             Path toPath = to;
-            toPath /= asset->Name.ToString();
-            toPath.replace_extension(extension.ToString());
+            toPath /= asset->Name.ToString() + extension.ToString();
 
             if(multipleAssets)
             {
@@ -236,7 +234,7 @@ namespace Waldem
         Path finalPath = ResolveAssetPath(inPath);
         if (!exists(finalPath))
         {
-            WD_CORE_ERROR("Failed to inspect mesh asset: {0}", finalPath.string());
+            WD_CORE_ERROR("Failed to inspect mesh asset: {0}", finalPath.string()); 
             return MeshAssetKind::Unknown;
         }
 

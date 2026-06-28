@@ -11,6 +11,9 @@
 #include "Waldem/Utils/ECSUtils.h"
 #include "Waldem/SceneManagement/Prefab.h"
 #include "Waldem/SceneManagement/ModelSpawner.h"
+#include "Waldem/AssetsManagement/ContentManager.h"
+#include "Waldem/ECS/Components/MeshComponent.h"
+#include "Waldem/ECS/Components/SkeletalMeshComponent.h"
 #include "Commands/EditorCommands.h"
 #include "../EditorShortcutContext.h"
 #include "../EditorShortcuts.h"
@@ -26,6 +29,7 @@ namespace Waldem
         static constexpr const char* HierarchyDragPayloadType = "WALDEM_HIERARCHY_ENTITY";
         static constexpr const char* PrefabDragPayloadType = "Prefab";
         static constexpr const char* ModelDragPayloadType = "Model";
+        static constexpr const char* MeshDragPayloadType = "Mesh";
         std::string RenameString = "";
         bool DeleteSelectedEntity = false;
         bool RenameSelectedEntity = false;
@@ -255,6 +259,52 @@ namespace Waldem
                     {
                         SelectEntity(spawnedRoot);
                     }
+                };
+
+                auto instantiateMeshFromPayload = [&](const ImGuiPayload* payload, ECS::Entity parentEntity = ECS::Entity{})
+                {
+                    const char* relativeMeshPath = static_cast<const char*>(payload->Data);
+                    if(relativeMeshPath == nullptr || relativeMeshPath[0] == '\0')
+                    {
+                        return;
+                    }
+
+                    Path relativeMeshAssetPath = Path(relativeMeshPath);
+                    Path meshPath = Path(PROJECT_CONTENT_PATH) / relativeMeshAssetPath;
+                    if(meshPath.extension() != ".mesh")
+                    {
+                        return;
+                    }
+
+                    const MeshAssetKind meshKind = CContentManager::GetMeshAssetKind(meshPath);
+                    if(meshKind == MeshAssetKind::Unknown)
+                    {
+                        WD_CORE_ERROR("Failed to determine mesh type for dropped asset {0}.", meshPath.string());
+                        return;
+                    }
+
+                    WString entityName = meshPath.stem().string().c_str();
+                    ECS::Entity meshEntity = ECS::CreateSceneEntity(entityName.IsEmpty() ? WString("Mesh") : entityName);
+
+                    if(parentEntity.is_alive())
+                    {
+                        ECS::SetParent(meshEntity, parentEntity, true);
+                    }
+
+                    if(meshKind == MeshAssetKind::Skeletal)
+                    {
+                        SkeletalMeshComponent skeletalMeshComponent;
+                        skeletalMeshComponent.MeshRef.Reference = relativeMeshAssetPath;
+                        meshEntity.set<SkeletalMeshComponent>(skeletalMeshComponent);
+                    }
+                    else
+                    {
+                        MeshComponent meshComponent;
+                        meshComponent.MeshRef.Reference = relativeMeshAssetPath;
+                        meshEntity.set<MeshComponent>(meshComponent);
+                    }
+
+                    SelectEntity(meshEntity);
                 };
 
                 std::function<void(ECS::EntityT, int)> drawEntityRecursive;
@@ -521,6 +571,10 @@ namespace Waldem
                         {
                             instantiateModelFromPayload(payload, entity);
                         }
+                        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(MeshDragPayloadType))
+                        {
+                            instantiateMeshFromPayload(payload, entity);
+                        }
                         ImGui::EndDragDropTarget();
                     }
 
@@ -603,6 +657,10 @@ namespace Waldem
                     if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(ModelDragPayloadType))
                     {
                         instantiateModelFromPayload(payload);
+                    }
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(MeshDragPayloadType))
+                    {
+                        instantiateMeshFromPayload(payload);
                     }
                     ImGui::EndDragDropTarget();
                 }

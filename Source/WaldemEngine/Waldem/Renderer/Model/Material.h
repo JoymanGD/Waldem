@@ -46,8 +46,9 @@ namespace Waldem
         Vector4 Albedo = Vector4(1.0f);
         float Metallic = 0.0f;
         float Roughness = 1.0f;
-        bool AlphaCut;
+        bool AlphaCut = false;
         bool CastShadows = true;
+        bool TwoSided = false;
         
     private:
         TextureReference DiffuseRef = {};

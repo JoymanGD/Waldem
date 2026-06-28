@@ -529,7 +529,7 @@ namespace Waldem
         {
             if (!SharedFocusAssetPath.has_value())
             {
-                return;
+                return; 
             }
 
             const Path resolvedPath = ResolveFocusAssetPath(SharedFocusAssetPath.value());

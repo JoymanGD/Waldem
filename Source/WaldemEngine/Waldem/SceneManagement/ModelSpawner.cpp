@@ -87,14 +87,18 @@ namespace Waldem::ModelSpawner
                 {
                     WString childName = (std::string(nodeEntity.name().c_str()) + "_Mesh_" + std::to_string(meshIdx)).c_str();
                     targetEntity = ECS::CreateSceneEntity(childName);
-                    ECS::SetParent(targetEntity, nodeEntity, true);
 
-                    if(targetEntity.has<Transform>())
+                    if(targetEntity.has<Transform>() && nodeEntity.has<Transform>())
                     {
                         auto& childTransform = targetEntity.get_mut<Transform>();
-                        childTransform.SetMatrix(Matrix4(1.0f));
+                        const auto& parentTransform = nodeEntity.get<Transform>();
+                        childTransform.Matrix = parentTransform.Matrix;
+                        childTransform.DecompileMatrix();
+                        childTransform.LastRotation = childTransform.Rotation;
                         targetEntity.modified<Transform>();
                     }
+
+                    ECS::SetParent(targetEntity, nodeEntity, true); 
                 }
 
                 const MeshAssetKind meshKind = CContentManager::GetMeshAssetKind(node.MeshPaths[meshIdx]);
