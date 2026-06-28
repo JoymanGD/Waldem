@@ -13,6 +13,7 @@ namespace Waldem
 		outData << Roughness;
 		outData << AlphaCut;
 		outData << CastShadows;
+		outData << TwoSided;
 	}
 
 	void Material::Deserialize(WDataBuffer& inData)
@@ -25,6 +26,11 @@ namespace Waldem
 		inData >> Roughness;
 		inData >> AlphaCut;
 		inData >> CastShadows;
+		TwoSided = false;
+		if(inData.Tell() < inData.GetSize())
+		{
+			inData >> TwoSided;
+		}
 
 		if(!DiffuseRef.Reference.empty() && DiffuseRef.Reference != "Empty")
 		{

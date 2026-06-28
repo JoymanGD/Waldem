@@ -173,19 +173,19 @@
     "scene_id": 3,
     "parent_scene_id": -1,
     "entity": {
-      "name": "Cube_Clone",
+      "name": "Cube",
       "components": {
         "SceneEntity": {
           "ParentId": 0,
           "HierarchyDepth": 0,
-          "HierarchySlot": 5,
+          "HierarchySlot": 4,
           "VisibleInHierarchy": true
         },
         "Waldem.Transform": {
           "Position": {
-            "x": 3.750136137,
-            "y": 8.8964214325,
-            "z": -2.091812849
+            "x": 3.7501370907,
+            "y": 6.1490483284,
+            "z": -6.4683833122
           },
           "Rotation": {
             "x": 0,
@@ -579,64 +579,6 @@
     "scene_id": 10,
     "parent_scene_id": -1,
     "entity": {
-      "name": "Cube",
-      "components": {
-        "SceneEntity": {
-          "ParentId": 0,
-          "HierarchyDepth": 0,
-          "HierarchySlot": 4,
-          "VisibleInHierarchy": true
-        },
-        "Waldem.Transform": {
-          "Position": {
-            "x": 3.7501370907,
-            "y": 6.1490483284,
-            "z": -6.4683833122
-          },
-          "Rotation": {
-            "x": 0,
-            "y": 0,
-            "z": 0
-          },
-          "LocalScale": {
-            "x": 0.1000000015,
-            "y": 1,
-            "z": 0.1000000015
-          },
-          "___RotationQuat": {
-            "x": 0,
-            "y": 0,
-            "z": 0,
-            "w": 1
-          }
-        },
-        "Waldem.MeshComponent": {
-          "MeshRef": "Meshes\\Floor\\Floor.mesh",
-          "MaterialRef": "Meshes\\Mage\\Default.mat"
-        },
-        "Waldem.ColliderComponent": {
-          "BoxSize": {
-            "x": 20,
-            "y": 2,
-            "z": 20
-          },
-          "BoxOffset": {
-            "x": 0,
-            "y": 0,
-            "z": 0
-          },
-          "SphereRadius": 1,
-          "CapsuleHeight": 1,
-          "Type": "Box",
-          "IsTrigger": false
-        }
-      }
-    }
-  },
-  {
-    "scene_id": 11,
-    "parent_scene_id": -1,
-    "entity": {
       "name": "Cube_Clone_1_Clone_1",
       "components": {
         "SceneEntity": {
@@ -734,6 +676,106 @@
     }
   },
   {
+    "scene_id": 11,
+    "parent_scene_id": -1,
+    "entity": {
+      "name": "Cube_Clone",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 0,
+          "HierarchyDepth": 0,
+          "HierarchySlot": 5,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": 3.750136137,
+            "y": 8.8964214325,
+            "z": -2.091812849
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 0.1000000015,
+            "y": 1,
+            "z": 0.1000000015
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.MeshComponent": {
+          "MeshRef": "Meshes\\Floor\\Floor.mesh",
+          "MaterialRef": "Meshes\\Mage\\Default.mat"
+        },
+        "Waldem.ColliderComponent": {
+          "BoxSize": {
+            "x": 20,
+            "y": 2,
+            "z": 20
+          },
+          "BoxOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "SphereRadius": 1,
+          "CapsuleHeight": 1,
+          "Type": "Box",
+          "IsTrigger": false
+        },
+        "Waldem.RigidBody": {
+          "IsKinematic": false,
+          "HasGravity": false,
+          "MaxSlope": 30,
+          "Velocity": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "AngularVelocity": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "Mass": 80,
+          "LinearDamping": 0.0500000007,
+          "AngularDamping": 0.8999999762,
+          "Force": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "Torque": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "Impulse": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "Bounciness": 0,
+          "Friction": 1,
+          "MaxAngularSpeed": 10,
+          "FreezePositionX": false,
+          "FreezePositionY": false,
+          "FreezePositionZ": false,
+          "FreezeRotationX": false,
+          "FreezeRotationY": false,
+          "FreezeRotationZ": false
+        }
+      }
+    }
+  },
+  {
     "scene_id": 12,
     "parent_scene_id": -1,
     "entity": {
@@ -796,7 +838,7 @@
         "Waldem.Transform": {
           "Position": {
             "x": 0,
-            "y": 5.2956075668,
+            "y": 6.1496915817,
             "z": 0
           },
           "Rotation": {
@@ -823,7 +865,10 @@
           "FarPlane": 1000
         }
       },
-      "name": "Camera"
+      "name": "Camera",
+      "tags": [
+        "Waldem.Selected"
+      ]
     }
   }
 ]
