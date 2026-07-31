@@ -12,6 +12,7 @@
 #include "Components/RigidBody.h"
 #include "Components/Selected.h"
 #include "Components/ScriptComponent.h"
+#include "Components/SceneGridComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/Sky.h"
 #include "Components/Sprite.h"
@@ -363,6 +364,43 @@ namespace Waldem
             World.observer<Transform>().event(flecs::OnRemove).each([&](flecs::entity entity, Transform&)
             {
                 LocalTransformMatrices.erase(entity.id());
+            });
+
+            auto syncTransformBoundingBoxFromMesh = [&](flecs::entity entity, Transform& transform, const MeshComponent& meshComponent)
+            {
+                if(meshComponent.MeshRef.IsValid() && meshComponent.MeshRef.Mesh)
+                {
+                    transform.BoundingBox = meshComponent.MeshRef.Mesh->BBox;
+                    transform.HasBoundingBox = true;
+                }
+            };
+
+            World.observer<Transform, MeshComponent>().event(flecs::OnAdd).each([&](flecs::entity entity, Transform& transform, MeshComponent& meshComponent)
+            {
+                syncTransformBoundingBoxFromMesh(entity, transform, meshComponent);
+            });
+
+            World.observer<Transform, MeshComponent>().event(flecs::OnSet).each([&](flecs::entity entity, Transform& transform, MeshComponent& meshComponent)
+            {
+                syncTransformBoundingBoxFromMesh(entity, transform, meshComponent);
+            });
+
+            World.observer<Transform, AABB>().event(flecs::OnAdd).each([&](flecs::entity entity, Transform& transform, AABB& boundingBox)
+            {
+                if(!transform.HasBoundingBox)
+                {
+                    transform.BoundingBox = boundingBox;
+                    transform.HasBoundingBox = true;
+                }
+            });
+
+            World.observer<Transform, AABB>().event(flecs::OnSet).each([&](flecs::entity entity, Transform& transform, AABB& boundingBox)
+            {
+                if(!transform.HasBoundingBox)
+                {
+                    transform.BoundingBox = boundingBox;
+                    transform.HasBoundingBox = true;
+                }
             });
 
             HierarchyTransformQuery = std::make_unique<flecs::query<Transform, const Transform>>(World.query_builder<Transform, const Transform>().term_at(1).parent().cascade().build());

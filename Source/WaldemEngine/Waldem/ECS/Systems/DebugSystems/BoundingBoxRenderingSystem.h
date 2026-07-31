@@ -17,6 +17,58 @@ namespace Waldem
         WMap<ECS::Entity, BoxMesh> BoxMeshes;
         bool IsInitialized = false;
 
+        bool TryGetLocalBounds(ECS::Entity entity, Transform& transform, AABB& outBounds)
+        {
+            if(transform.HasBoundingBox)
+            {
+                outBounds = transform.BoundingBox;
+                return true;
+            }
+
+            if(entity.has<MeshComponent>())
+            {
+                auto& meshComponent = entity.get_mut<MeshComponent>();
+                if(meshComponent.MeshRef.IsValid() && meshComponent.MeshRef.Mesh)
+                {
+                    outBounds = meshComponent.MeshRef.Mesh->BBox;
+                    transform.BoundingBox = outBounds;
+                    transform.HasBoundingBox = true;
+                    return true;
+                }
+            }
+
+            if(entity.has<AABB>())
+            {
+                outBounds = entity.get<AABB>();
+                return true;
+            }
+
+            return false;
+        }
+
+        void SyncBoundingBoxMesh(ECS::Entity entity, Transform& transform)
+        {
+            AABB localBounds;
+            if(!TryGetLocalBounds(entity, transform, localBounds))
+            {
+                if(BoxMeshes.Contains(entity))
+                {
+                    Renderer::Destroy(BoxMeshes[entity].VertexBuffer);
+                    BoxMeshes.Remove(entity);
+                }
+                return;
+            }
+
+            if(!BoxMeshes.Contains(entity))
+            {
+                BoxMeshes[entity] = BoxMesh();
+            }
+
+            Vector4 color = Vector4(0.0f, 1.0f, 0.0f, 1.0f);
+            auto boxLines = localBounds.GetTransformed(transform.RenderMatrix).GetLines(color);
+            Renderer::UploadBuffer(BoxMeshes[entity].VertexBuffer, boxLines.GetData(), boxLines.GetSize());
+        }
+
     public:
         BoundingBoxRenderingSystem() {}
 
@@ -42,38 +94,27 @@ namespace Waldem
                                                                   WD_PRIMITIVE_TOPOLOGY_TYPE_LINE,
                                                                   inputElementDescs);
 
-            ECS::World.observer<Transform, AABB>().event(flecs::OnAdd).each([&](flecs::entity entity, Transform& transform, AABB& bbox)
+            ECS::World.observer<Transform>().event(flecs::OnAdd).each([&](flecs::entity entity, Transform& transform)
             {
-                BoxMeshes[entity] = BoxMesh();
-
-                if(entity.has<MeshComponent>())
-                {
-                    auto& meshComp = entity.get_mut<MeshComponent>();
-                    if(meshComp.MeshRef.IsValid())
-                    {
-                        bbox = meshComp.MeshRef.Mesh->BBox;
-                    }
-                }
-                
-                Vector4 color = Vector4(0.0f, 1.0f, 0.0f, 1.0f);
-                auto boxLines = bbox.GetTransformed(transform).GetLines(color);
-                
-                Renderer::UploadBuffer(BoxMeshes[entity].VertexBuffer, boxLines.GetData(), boxLines.GetSize());
+                SyncBoundingBoxMesh(entity, transform);
             });
 
-            ECS::World.observer<Transform, AABB>().event(flecs::OnSet).each([&](flecs::entity entity, Transform& transform, AABB& bbox)
+            ECS::World.observer<Transform>().event(flecs::OnSet).each([&](flecs::entity entity, Transform& transform)
             {
-                if(BoxMeshes.Contains(entity))
-                {
-                    Vector4 color = Vector4(0.0f, 1.0f, 0.0f, 1.0f);
-                    
-                    auto boxLines = bbox.GetTransformed(transform).GetLines(color);
-                    
-                    Renderer::UploadBuffer(BoxMeshes[entity].VertexBuffer, boxLines.GetData(), boxLines.GetSize());
-                }
+                SyncBoundingBoxMesh(entity, transform);
             });
 
-            ECS::World.observer<AABB>().event(flecs::OnRemove).each([&](flecs::entity entity, AABB& bbox)
+            ECS::World.observer<MeshComponent, Transform>().event(flecs::OnAdd).each([&](flecs::entity entity, MeshComponent&, Transform& transform)
+            {
+                SyncBoundingBoxMesh(entity, transform);
+            });
+
+            ECS::World.observer<MeshComponent, Transform>().event(flecs::OnSet).each([&](flecs::entity entity, MeshComponent&, Transform& transform)
+            {
+                SyncBoundingBoxMesh(entity, transform);
+            });
+
+            ECS::World.observer<Transform>().event(flecs::OnRemove).each([&](flecs::entity entity, Transform& transform)
             {
                 if(BoxMeshes.Contains(entity))
                 {

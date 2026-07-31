@@ -27,6 +27,19 @@
             "y": 1.0000135899,
             "z": 1.0000134706
           },
+          "HasBoundingBox": false,
+          "BoundingBox": {
+            "Min": {
+              "x": -0.5,
+              "y": -0.5,
+              "z": -0.5
+            },
+            "Max": {
+              "x": 0.5,
+              "y": 0.5,
+              "z": 0.5
+            }
+          },
           "___RotationQuat": {
             "x": 0.4345705509,
             "y": -0.0174415801,
@@ -81,6 +94,19 @@
             "y": 1,
             "z": 1
           },
+          "HasBoundingBox": true,
+          "BoundingBox": {
+            "Min": {
+              "x": -10,
+              "y": -1,
+              "z": -10
+            },
+            "Max": {
+              "x": 10,
+              "y": 1,
+              "z": 10
+            }
+          },
           "___RotationQuat": {
             "x": 0,
             "y": 0,
@@ -115,19 +141,19 @@
     "scene_id": 2,
     "parent_scene_id": -1,
     "entity": {
-      "name": "Cube_Clone_Clone_Clone_Clone_1_Clone_Clone_Clone",
+      "name": "Cube_Clone_Clone_Clone_Clone_1_Clone_Clone",
       "components": {
         "SceneEntity": {
           "ParentId": 0,
           "HierarchyDepth": 0,
-          "HierarchySlot": 12,
+          "HierarchySlot": 11,
           "VisibleInHierarchy": true
         },
         "Waldem.Transform": {
           "Position": {
             "x": -5.0939922333,
-            "y": 20.272895813,
-            "z": -5.3970575333
+            "y": 19.0873184204,
+            "z": 0.3841645122
           },
           "Rotation": {
             "x": 0,
@@ -138,6 +164,19 @@
             "x": 0.1000000015,
             "y": 1,
             "z": 0.1000000015
+          },
+          "HasBoundingBox": true,
+          "BoundingBox": {
+            "Min": {
+              "x": -10,
+              "y": -1,
+              "z": -10
+            },
+            "Max": {
+              "x": 10,
+              "y": 1,
+              "z": 10
+            }
           },
           "___RotationQuat": {
             "x": 0,
@@ -197,6 +236,19 @@
             "y": 1,
             "z": 0.1000000015
           },
+          "HasBoundingBox": true,
+          "BoundingBox": {
+            "Min": {
+              "x": -10,
+              "y": -1,
+              "z": -10
+            },
+            "Max": {
+              "x": 10,
+              "y": 1,
+              "z": 10
+            }
+          },
           "___RotationQuat": {
             "x": 0,
             "y": 0,
@@ -254,6 +306,19 @@
             "x": 0.1000000015,
             "y": 1,
             "z": 0.1000000015
+          },
+          "HasBoundingBox": true,
+          "BoundingBox": {
+            "Min": {
+              "x": -10,
+              "y": -1,
+              "z": -10
+            },
+            "Max": {
+              "x": 10,
+              "y": 1,
+              "z": 10
+            }
           },
           "___RotationQuat": {
             "x": 0,
@@ -313,6 +378,19 @@
             "y": 1,
             "z": 0.1000000015
           },
+          "HasBoundingBox": true,
+          "BoundingBox": {
+            "Min": {
+              "x": -10,
+              "y": -1,
+              "z": -10
+            },
+            "Max": {
+              "x": 10,
+              "y": 1,
+              "z": 10
+            }
+          },
           "___RotationQuat": {
             "x": 0,
             "y": 0,
@@ -370,6 +448,19 @@
             "x": 0.1000000015,
             "y": 1,
             "z": 0.1000000015
+          },
+          "HasBoundingBox": true,
+          "BoundingBox": {
+            "Min": {
+              "x": -10,
+              "y": -1,
+              "z": -10
+            },
+            "Max": {
+              "x": 10,
+              "y": 1,
+              "z": 10
+            }
           },
           "___RotationQuat": {
             "x": 0,
@@ -429,6 +520,19 @@
             "y": 1,
             "z": 0.1000000015
           },
+          "HasBoundingBox": true,
+          "BoundingBox": {
+            "Min": {
+              "x": -10,
+              "y": -1,
+              "z": -10
+            },
+            "Max": {
+              "x": 10,
+              "y": 1,
+              "z": 10
+            }
+          },
           "___RotationQuat": {
             "x": 0,
             "y": 0,
@@ -487,6 +591,19 @@
             "y": 1,
             "z": 0.1000000015
           },
+          "HasBoundingBox": true,
+          "BoundingBox": {
+            "Min": {
+              "x": -10,
+              "y": -1,
+              "z": -10
+            },
+            "Max": {
+              "x": 10,
+              "y": 1,
+              "z": 10
+            }
+          },
           "___RotationQuat": {
             "x": 0,
             "y": 0,
@@ -521,19 +638,19 @@
     "scene_id": 9,
     "parent_scene_id": -1,
     "entity": {
-      "name": "Cube_Clone_Clone_Clone_Clone_1_Clone_Clone",
+      "name": "Cube_Clone_Clone_Clone_Clone_1_Clone_Clone_Clone",
       "components": {
         "SceneEntity": {
           "ParentId": 0,
           "HierarchyDepth": 0,
-          "HierarchySlot": 11,
+          "HierarchySlot": 12,
           "VisibleInHierarchy": true
         },
         "Waldem.Transform": {
           "Position": {
-            "x": -5.0939922333,
-            "y": 19.0873184204,
-            "z": 0.3841645122
+            "x": -3.1127920151,
+            "y": 17.7838344574,
+            "z": -5.3970575333
           },
           "Rotation": {
             "x": 0,
@@ -544,6 +661,19 @@
             "x": 0.1000000015,
             "y": 1,
             "z": 0.1000000015
+          },
+          "HasBoundingBox": true,
+          "BoundingBox": {
+            "Min": {
+              "x": -10,
+              "y": -1,
+              "z": -10
+            },
+            "Max": {
+              "x": 10,
+              "y": 1,
+              "z": 10
+            }
           },
           "___RotationQuat": {
             "x": 0,
@@ -602,6 +732,19 @@
             "x": 0.1000000015,
             "y": 1,
             "z": 0.1000000015
+          },
+          "HasBoundingBox": true,
+          "BoundingBox": {
+            "Min": {
+              "x": -10,
+              "y": -1,
+              "z": -10
+            },
+            "Max": {
+              "x": 10,
+              "y": 1,
+              "z": 10
+            }
           },
           "___RotationQuat": {
             "x": 0,
@@ -703,6 +846,19 @@
             "y": 1,
             "z": 0.1000000015
           },
+          "HasBoundingBox": true,
+          "BoundingBox": {
+            "Min": {
+              "x": -10,
+              "y": -1,
+              "z": -10
+            },
+            "Max": {
+              "x": 10,
+              "y": 1,
+              "z": 10
+            }
+          },
           "___RotationQuat": {
             "x": 0,
             "y": 0,
@@ -803,6 +959,19 @@
             "y": 1,
             "z": 1
           },
+          "HasBoundingBox": false,
+          "BoundingBox": {
+            "Min": {
+              "x": -0.5,
+              "y": -0.5,
+              "z": -0.5
+            },
+            "Max": {
+              "x": 0.5,
+              "y": 0.5,
+              "z": 0.5
+            }
+          },
           "___RotationQuat": {
             "x": 0,
             "y": 0,
@@ -851,6 +1020,19 @@
             "y": 1,
             "z": 1
           },
+          "HasBoundingBox": false,
+          "BoundingBox": {
+            "Min": {
+              "x": -0.5,
+              "y": -0.5,
+              "z": -0.5
+            },
+            "Max": {
+              "x": 0.5,
+              "y": 0.5,
+              "z": 0.5
+            }
+          },
           "___RotationQuat": {
             "x": 0,
             "y": 0,
@@ -865,10 +1047,77 @@
           "FarPlane": 1000
         }
       },
-      "name": "Camera",
-      "tags": [
-        "Waldem.Selected"
-      ]
+      "name": "Camera"
+    }
+  },
+  {
+    "scene_id": 14,
+    "parent_scene_id": -1,
+    "entity": {
+      "name": "SceneGrid",
+      "components": {
+        "SceneEntity": {
+          "ParentId": 0,
+          "HierarchyDepth": 0,
+          "HierarchySlot": 17,
+          "VisibleInHierarchy": true
+        },
+        "Waldem.Transform": {
+          "Position": {
+            "x": -0.0000018569,
+            "y": 7.7762775421,
+            "z": -0.5295262337
+          },
+          "Rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "LocalScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "HasBoundingBox": false,
+          "BoundingBox": {
+            "Min": {
+              "x": -0.5,
+              "y": -0.5,
+              "z": -0.5
+            },
+            "Max": {
+              "x": 0.5,
+              "y": 0.5,
+              "z": 0.5
+            }
+          },
+          "___RotationQuat": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "Waldem.SceneGridComponent": {
+          "GridDimensions": {
+            "x": 10,
+            "y": 8,
+            "z": 6
+          },
+          "CellSize": 16,
+          "LocalOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "CenterOnTransform": true,
+          "Visualize": false,
+          "VisualizeOnlyOccupiedCells": false,
+          "SubdivideOccupiedCells": true,
+          "SubdivisionLevels": 3,
+          "SubdivisionFactor": 3
+        }
+      }
     }
   }
 ]

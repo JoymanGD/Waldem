@@ -28,18 +28,100 @@ namespace Waldem
         uint MaxIterations = 50;
         WArray<PersistentContact> ContactCache;
         WArray<ECS::Entity> Entities;
+
+        AABB BuildLocalBoundsFromCollider(const ColliderComponent& collider) const
+        {
+            switch(collider.Type)
+            {
+                case Sphere:
+                {
+                    Vector3 extent(collider.SphereRadius);
+                    return AABB(-extent, extent);
+                }
+                case Capsule:
+                {
+                    Vector3 extent(collider.SphereRadius, collider.CapsuleHeight * 0.5f + collider.SphereRadius, collider.SphereRadius);
+                    return AABB(-extent, extent);
+                }
+                case Box:
+                {
+                    Vector3 halfSize = collider.BoxSize * 0.5f;
+                    return AABB(collider.BoxOffset - halfSize, collider.BoxOffset + halfSize);
+                }
+                case Mesh:
+                {
+                    if(collider.Vertices.IsEmpty())
+                    {
+                        return {};
+                    }
+
+                    Vector3 min = collider.Vertices[0];
+                    Vector3 max = collider.Vertices[0];
+                    for(const auto& vertex : collider.Vertices)
+                    {
+                        min.x = glm::min(min.x, vertex.x);
+                        min.y = glm::min(min.y, vertex.y);
+                        min.z = glm::min(min.z, vertex.z);
+                        max.x = glm::max(max.x, vertex.x);
+                        max.y = glm::max(max.y, vertex.y);
+                        max.z = glm::max(max.z, vertex.z);
+                    }
+
+                    return AABB(min, max);
+                }
+            }
+
+            return {};
+        }
+
+        bool TryGetLocalBounds(const ECS::Entity& entity, const Transform& transform, AABB& outBounds) const
+        {
+            if(entity.has<ColliderComponent>())
+            {
+                outBounds = BuildLocalBoundsFromCollider(entity.get<ColliderComponent>());
+                return true;
+            }
+
+            if(transform.HasBoundingBox)
+            {
+                outBounds = transform.BoundingBox;
+                return true;
+            }
+
+            if(entity.has<MeshComponent>())
+            {
+                const auto& meshComponent = entity.get<MeshComponent>();
+                if(meshComponent.MeshRef.IsValid() && meshComponent.MeshRef.Mesh)
+                {
+                    outBounds = meshComponent.MeshRef.Mesh->BBox;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        AABB GetWorldBounds(const ECS::Entity& entity) const
+        {
+            const auto& transform = entity.get<Transform>();
+            AABB localBounds;
+            if(!TryGetLocalBounds(entity, transform, localBounds))
+            {
+                return {};
+            }
+
+            return localBounds.GetTransformed(transform.Matrix);
+        }
         
         BVHNode* BuildBVH(int start, int end)
         {
             BVHNode* node = new BVHNode();
             int objectCount = end - start;
 
-            auto& transform = Entities[start].get_mut<Transform>();
-            AABB box = Entities[start].get_mut<AABB>().GetTransformed(transform);
+            AABB box = GetWorldBounds(Entities[start]);
             for (int i = start + 1; i < end; i++)
             {
-                auto& secondTransform = Entities[i].get_mut<Transform>();
-                box.Expand(Entities[i].get_mut<AABB>().GetTransformed(secondTransform));
+                box.Expand(GetWorldBounds(Entities[i]));
             }
             node->Box = box;
             node->DebugName = WString(Entities[start].name().c_str());
@@ -58,9 +140,13 @@ namespace Waldem
 
             int mid = start + objectCount / 2;
             std::nth_element(Entities.begin() + start, Entities.begin() + mid, Entities.begin() + end,
-            [axis](const ECS::Entity& a, const ECS::Entity& b)
+            [&](const ECS::Entity& a, const ECS::Entity& b)
             {
-                return a.get_mut<AABB>().Min[axis] < b.get_mut<AABB>().Min[axis];
+                const AABB boundsA = GetWorldBounds(a);
+                const AABB boundsB = GetWorldBounds(b);
+                const float centerA = (boundsA.Min[axis] + boundsA.Max[axis]) * 0.5f;
+                const float centerB = (boundsB.Min[axis] + boundsB.Max[axis]) * 0.5f;
+                return centerA < centerB;
             });
 
             node->Left = BuildBVH(start, mid);
@@ -73,8 +159,7 @@ namespace Waldem
         {
             if (node->IsLeaf()) 
             {
-                auto& transform = Entities[node->ObjectIndex].get_mut<Transform>();
-                node->Box = Entities[node->ObjectIndex].get_mut<AABB>().GetTransformed(transform);
+                node->Box = GetWorldBounds(Entities[node->ObjectIndex]);
                 return;
             }
 
@@ -623,7 +708,7 @@ namespace Waldem
 
         void Initialize() override
         {
-            ECS::World.observer<Transform, ColliderComponent, AABB>().event(flecs::OnAdd).each([&](ECS::Entity e, Transform& transform, ColliderComponent& collider, AABB& bbox)
+            ECS::World.observer<Transform, ColliderComponent>().event(flecs::OnAdd).each([&](ECS::Entity e, Transform& transform, ColliderComponent& collider)
             {
                 Entities.Add(e);
                 

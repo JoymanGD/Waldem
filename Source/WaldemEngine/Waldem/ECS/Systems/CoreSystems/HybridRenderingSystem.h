@@ -441,13 +441,13 @@ namespace Waldem
                         const bool noCulling = activeMaterial != nullptr && activeMaterial->TwoSided;
                         int bfcDrawId = -1;
                         int ncDrawId = -1;
-                        if(!IdManager::GetId(entity, BackFaceCullingDrawIdType, bfcDrawId) || !IdManager::GetId(entity, NoCullingDrawIdType, ncDrawId))
+                        if(!IdManager::GetId(entity, BackFaceCullingDrawIdType, bfcDrawId) || !IdManager::GetId(entity, NoCullingDrawIdType, ncDrawId)) 
                         {
                             return;
                         }
                         uint vertexCount = meshComponent.MeshRef.Mesh->VertexData.Num();
 
-                        const bool isFirstAssignment = (meshComponent.DrawCommand.IndexCountPerInstance == 0);
+                        const bool isFirstAssignment = (meshComponent.DrawCommand.IndexCountPerInstance == 0); 
 
                         if(isFirstAssignment)
                         {

@@ -16,6 +16,7 @@
 #include "Waldem/ECS/ECS.h"
 #include "EditorSystems/EntitySelectionSystem.h"
 #include "EditorSystems/WorldGridRenderingSystem.h"
+#include "Waldem/ECS/Systems/CoreSystems/SceneGridSystem.h"
 #include "Waldem/ECS/Components/Sky.h"
 #include "Widgets/ContentBrowserWidget.h"
 #include "Widgets/CoachWidget.h"
@@ -80,6 +81,7 @@ namespace Waldem
             //do it after all entities set up
             UpdateSystems.Add(new EditorCameraControlSystem());
             DrawSystems.Add(new WorldGridRenderingSystem());
+            DrawSystems.Add(new SceneGridSystem());
             DrawSystems.Add(new GizmosRenderingSystem());
             DrawSystems.Add(new EntitySelectionSystem());
 

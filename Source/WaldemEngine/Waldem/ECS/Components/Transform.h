@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ComponentBase.h"
+#include "Waldem/Renderer/AABB.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp"
 
@@ -21,6 +22,10 @@ namespace Waldem
         Vector3 Rotation = { 0, 0, 0 }; 
         FIELD()
         Vector3 LocalScale = { 1, 1, 1 };
+        FIELD()
+        bool HasBoundingBox = false;
+        FIELD()
+        AABB BoundingBox = {};
         FIELD(Hidden)
         Quaternion RotationQuat = { 1, 0, 0, 0 };
         

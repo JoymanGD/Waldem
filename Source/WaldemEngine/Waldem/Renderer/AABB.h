@@ -1,11 +1,10 @@
 #pragma once
 #include "Model/Line.h"
-#include "Waldem/ECS/Components/Camera.h"
 #include "Waldem/Types/WArray.h"
 
 namespace Waldem
 {
-    COMPONENT()
+    COMPONENT(Hidden)
     struct AABB
     {
         FIELD()
@@ -16,7 +15,7 @@ namespace Waldem
         AABB(){}
         AABB(const Vector3& min, const Vector3& max) : Min(min), Max(max) {}
 
-        AABB GetTransformed(const Matrix4& transform)
+        AABB GetTransformed(const Matrix4& transform) const
         {
             glm::vec3 corners[8] =
             {
@@ -63,7 +62,7 @@ namespace Waldem
             Max = Vector3(transform * Vector4(Max, 1.0f));
         }
 
-        bool Intersects(const AABB& other)
+        bool Intersects(const AABB& other) const
         {
             const float epsilon = 0.001f;
             return !(Max.x + epsilon < other.Min.x || Max.y + epsilon < other.Min.y || Max.z + epsilon < other.Min.z ||
@@ -76,7 +75,7 @@ namespace Waldem
             return 2.0f * (size.x * size.y + size.x * size.z + size.y * size.z);
         }
 
-        WArray<Line> GetLines(Vector4 color)
+        WArray<Line> GetLines(Vector4 color) const
         {
             WArray<Line> lines;
             
@@ -96,7 +95,7 @@ namespace Waldem
             return lines;
         }
 
-        WArray<Vector3> GetCorners()
+        WArray<Vector3> GetCorners() const
         {
             WArray<Vector3> corners;
             
@@ -122,7 +121,8 @@ namespace Waldem
             Max.z = glm::max(Max.z, other.Max.z);
         }
         
-        bool IsInFrustum(WArray<FrustumPlane>& frustrumPlanes)
+        template<typename TPlane>
+        bool IsInFrustum(WArray<TPlane>& frustrumPlanes) const
         {
             //convert BoundingBox to Vector3 for simplicity
             Vector3 min = Vector3(Min.x, Min.y, Min.z);
