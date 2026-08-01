@@ -7,6 +7,22 @@
 
 namespace Waldem
 {
+    static bool Matrix3x4Near(const Matrix3x4& lhs, const Matrix3x4& rhs, const float epsilon = 0.00001f)
+    {
+        for(int row = 0; row < 3; ++row)
+        {
+            for(int col = 0; col < 4; ++col)
+            {
+                if(glm::abs(lhs[row][col] - rhs[row][col]) > epsilon)
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
     static RayTracingInstance CreateEmptyInstance(const int id, const uint64 fallbackBLASAddress)
     {
         Matrix4 identityMatrix = Matrix4(1.0f);
@@ -178,8 +194,18 @@ namespace Waldem
             return;
         }
 
-        auto transposedMatrix = transpose(transform.RenderMatrix);
-        InstanceBuffer->UpdateData(&transposedMatrix, sizeof(Matrix3x4), id * sizeof(RayTracingInstance));
+        auto& instance = Instances[id];
+        const Matrix3x4 transposedMatrix = transpose(transform.RenderMatrix);
+        Matrix3x4 currentMatrix;
+        memcpy(&currentMatrix, instance.Transform, sizeof(Matrix3x4));
+
+        if(Matrix3x4Near(currentMatrix, transposedMatrix))
+        {
+            return;
+        }
+
+        memcpy(instance.Transform, &transposedMatrix, sizeof(Matrix3x4));
+        InstanceBuffer->UpdateData(instance.Transform, sizeof(Matrix3x4), id * sizeof(RayTracingInstance));
 
         const int instanceCount = GetBuildInstanceCount();
         if (instanceCount > 0)
