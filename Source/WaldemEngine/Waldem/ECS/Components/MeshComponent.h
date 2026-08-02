@@ -8,10 +8,10 @@ namespace Waldem
     COMPONENT()
     struct WALDEM_API MeshComponent
     {
-        FIELD(Type=MeshReference)
+        FIELD()
         MeshReference MeshRef;
 
-        FIELD(Type=MaterialReference)
+        FIELD()
         MaterialReference MaterialRef;
         
         DrawIndexedCommand DrawCommand;

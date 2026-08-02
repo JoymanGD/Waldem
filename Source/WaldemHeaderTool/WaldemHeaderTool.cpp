@@ -70,7 +70,7 @@ void GenerateComponent(const Component& comp, const fs::path& outputDir)
         }
         else if (IsAssetReferenceType(field.Type))
         {
-            out << ".member<AssetReference>(\""
+            out << ".member<" << field.Type << ">(\""
                 << fieldName << "\")";
         }
         else

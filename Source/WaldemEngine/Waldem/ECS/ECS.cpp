@@ -2,6 +2,7 @@
 
 #include "ECS.h"
 
+//DONT DELETE COMPONENTS INCLUDES, EVEN IF THEY ARE NOT USED
 #include "Components/AnimationListener.h"
 #include "Components/AudioSource.h"
 #include "Components/CharacterController.h"
@@ -16,6 +17,8 @@
 #include "Components/Sky.h"
 #include "Components/Sprite.h"
 #include "Components/Transform.h"
+/////////////////////////////////////////////////////////////
+
 #include "glm/gtc/type_ptr.hpp"
 #include "Systems/CoreSystems/AnimationSystem.h"
 #include "Systems/CoreSystems/CollisionSystem.h"

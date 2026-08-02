@@ -7,7 +7,7 @@ namespace Waldem
     COMPONENT()
     struct WALDEM_API AnimatorComponent
     {
-        FIELD(Type=AnimationClipReference)
+        FIELD()
         AnimationClipReference ClipRef;
 
         FIELD()

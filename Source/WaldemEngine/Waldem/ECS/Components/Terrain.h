@@ -7,11 +7,15 @@ namespace Waldem
     struct WALDEM_API Terrain
     {
         FIELD()
-        int Resolution = 128;
+        int Resolution = 512;
         FIELD()
-        float Height = 1.f;
+        float Height = 100.f;
+        FIELD()
+        TextureReference Heightmap;
 
-        uint InitializedResolution = 128;
+        uint InitializedResolution = 512;
+        Path InitializedReference = "Empty";
+        float InitializedHeight = 1.f;
 
         Terrain() {}
     };

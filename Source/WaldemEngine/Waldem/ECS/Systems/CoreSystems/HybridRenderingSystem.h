@@ -414,14 +414,12 @@ namespace Waldem
 
                 if(IdManager::GetId(entity, GlobalDrawIdType, globalDrawId))
                 {
-                    bool meshReferenceIsEmpty = meshComponent.MeshRef.Reference.empty() || meshComponent.MeshRef.Reference == "Empty";
-                    
-                    if(meshReferenceIsEmpty && !meshComponent.MeshRef.IsValid())
+                    if(meshComponent.MeshRef.IsEmpty() && !meshComponent.MeshRef.IsValid())
                     {
                         return;
                     }
 
-                    if(!meshReferenceIsEmpty && !meshComponent.MeshRef.IsValid())
+                    if(!meshComponent.MeshRef.IsEmpty() && !meshComponent.MeshRef.IsValid())
                     {
                         meshComponent.MeshRef.LoadAsset();
                     }
@@ -1124,13 +1122,7 @@ namespace Waldem
                 {
                     auto& entry = SkeletalSkinningData.At(skinIdx).value;
 
-                    Renderer::RenderData.TLAS.UpdateGeometry(
-                        entry.GlobalDrawId,
-                        Renderer::RenderData.VertexBuffer.GetBuffer(),
-                        Renderer::RenderData.IndexBuffer.GetBuffer(),
-                        entry.DrawCommand,
-                        entry.VertexCount
-                    );
+                    Renderer::RenderData.TLAS.UpdateGeometry(entry.GlobalDrawId, Renderer::RenderData.VertexBuffer.GetBuffer(), Renderer::RenderData.IndexBuffer.GetBuffer(), entry.DrawCommand, entry.VertexCount);
                 }
             });
 

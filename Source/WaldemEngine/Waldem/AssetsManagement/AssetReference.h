@@ -9,9 +9,10 @@ namespace Waldem
     {
         AssetReference(Path reference = "Empty") : Reference(reference) {}
         
-        Path Reference = "Empty";
+        Path Reference = "Empty"; 
 
         virtual void LoadAsset() = 0;
         virtual AssetType GetType() = 0;
+        bool IsEmpty() const { return Reference.empty() || Reference == "Empty"; }
     };
 }
