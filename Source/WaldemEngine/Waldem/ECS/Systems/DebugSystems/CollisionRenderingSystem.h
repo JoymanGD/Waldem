@@ -26,7 +26,7 @@ namespace Waldem
     public:
         CollisionRenderingSystem() {}
 
-        void Initialize(InputManager* inputManager) override
+        void Initialize() override
         {
             WArray<InputLayoutDesc> inputElementDescs = {
                 { "POSITION", 0, TextureFormat::R32G32B32A32_FLOAT, 0, 0, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },

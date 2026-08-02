@@ -1,5 +1,5 @@
 #pragma once
-#include "Waldem/Editor/EditorSimulation.h"
+#include "..\..\..\Simulation.h"
 #include "Waldem/Time.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/ECS/Components/RigidBody.h"
@@ -7,7 +7,7 @@
 
 namespace Waldem
 {
-    class WALDEM_API PhysicsIntegrationSystem : public ICoreSystem
+    class WALDEM_API PhysicsIntegrationSystem : public ISystem
     {
     public:
         Vector3 Gravity = Vector3(0, -9.81f, 0);
@@ -18,7 +18,7 @@ namespace Waldem
         {
             ECS::World.system<Transform, RigidBody>().kind<ECS::OnFixedUpdate>().each([&](ECS::Entity entity, Transform& transform, RigidBody& rigidBody)
             {
-                if(!EditorSimulation::ShouldRunRuntimeSystems()) return;
+                if(!Simulation::ShouldRunRuntimeSystems()) return;
                 if(rigidBody.IsKinematic) return;
 
                 auto deltaTime = Time::FixedDeltaTime;

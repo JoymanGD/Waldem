@@ -16,7 +16,7 @@
 #include "Commands/EditorCommands.h"
 #include "../EditorShortcutContext.h"
 #include "../EditorShortcuts.h"
-#include "Waldem/Editor/EditorSimulation.h"
+#include "..\..\WaldemEngine\Waldem\Simulation.h"
 
 namespace Waldem
 {
@@ -34,8 +34,10 @@ namespace Waldem
     public:
         EditorViewportWidget() {}
 
-        void Initialize(InputManager* inputManager) override
+        void Initialize() override
         {
+            auto inputManager = Engine::GetCurrentLayer()->GetInputManager();
+                        
             inputManager->SubscribeToMouseButtonEvent(WD_MOUSE_BUTTON_RIGHT, [&](bool isPressed)
             {
                 //when we control camera with RMB we can't change operation

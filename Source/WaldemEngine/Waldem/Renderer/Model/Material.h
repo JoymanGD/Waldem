@@ -1,5 +1,5 @@
 #pragma once
-#include "Waldem/Editor/AssetReference/TextureReference.h"
+#include "Waldem/AssetsManagement/AssetReference/TextureReference.h"
 #include "Waldem/Types/DataBuffer.h"
 
 namespace Waldem

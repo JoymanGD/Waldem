@@ -10,7 +10,10 @@ namespace Waldem
     class WALDEM_API Layer
     {
     public:
-        Layer(const WString& name = "Layer", CWindow* window = nullptr) : DebugName(name), MainWindow(window) {} 
+        Layer(const WString& name = "Layer", CWindow* window = nullptr) : DebugName(name), MainWindow(window) {}
+        
+        inline InputManager* GetInputManager() { return &InputManager; }
+        
         virtual ~Layer() = default;
         virtual void Begin() {}
         virtual void End() {}
@@ -23,22 +26,22 @@ namespace Waldem
         {
             for (ISystem* system : UISystems)
             {
-                system->Initialize(&InputManager);
+                system->Initialize();
             }
         	
             for (ISystem* system : UpdateSystems)
             {
-                system->Initialize(&InputManager);
+                system->Initialize();
             }
         	
             for (ISystem* system : DrawSystems)
             {
-                system->Initialize(&InputManager);
+                system->Initialize();
             }
 			
             for (ISystem* system : PhysicsSystems)
             {
-                system->Initialize(&InputManager);
+                system->Initialize();
             }
 
             Initialized = true;

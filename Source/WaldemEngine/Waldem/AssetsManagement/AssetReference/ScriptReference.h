@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Waldem/Editor/AssetReference.h"
+#include "Waldem/AssetsManagement/AssetReference.h"
 
 namespace Waldem
 {

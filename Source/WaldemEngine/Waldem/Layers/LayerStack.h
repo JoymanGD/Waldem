@@ -16,6 +16,8 @@ namespace Waldem
         void PushOverlay(Layer* overlay);
         void PopLayer(Layer* layer);
         void PopOverlay(Layer* overlay);
+        Layer* GetLastLayer();
+        Layer* GetLastOverlay();
 
         size_t Num() const { return Layers.Num(); }
 

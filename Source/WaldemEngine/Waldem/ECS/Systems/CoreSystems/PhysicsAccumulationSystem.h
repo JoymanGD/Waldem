@@ -1,12 +1,12 @@
 #pragma once
-#include "Waldem/Editor/EditorSimulation.h"
+#include "..\..\..\Simulation.h"
 #include "Waldem/Time.h"
 #include "Waldem/ECS/Systems/System.h"
 #include "Waldem/ECS/Components/RigidBody.h"
 
 namespace Waldem
 {
-    class WALDEM_API PhysicsAccumulationSystem : public ICoreSystem
+    class WALDEM_API PhysicsAccumulationSystem : public ISystem
     {
     public:
         Vector3 Gravity = Vector3(0, -9.81f, 0);
@@ -15,7 +15,7 @@ namespace Waldem
         
         void Initialize() override
         {
-            ECS::World.observer<Transform, ColliderComponent, RigidBody>("InertiaTensorEvaluatingObserver").event(flecs::OnAdd).each([&](ECS::Entity e, Transform& transform, ColliderComponent& collider, RigidBody& rigidbody)
+            Observer("InertiaTensorEvaluatingObserver", flecs::OnAdd,[](ECS::Entity e, Transform& transform, ColliderComponent& collider, RigidBody& rigidbody)
             {
                 rigidbody.InertiaTensor = collider.ComputeInertiaTensor(rigidbody.Mass);
                 rigidbody.InvInertiaTensor = inverse(rigidbody.InertiaTensor);
@@ -23,7 +23,7 @@ namespace Waldem
             
             ECS::World.system<Transform, RigidBody>().kind<ECS::OnFixedUpdate>().each([&](ECS::Entity entity, Transform& transform, RigidBody& rigidBody)
             {
-                if(!EditorSimulation::ShouldRunRuntimeSystems()) return;
+                if(!Simulation::ShouldRunRuntimeSystems()) return;
                 if(rigidBody.IsKinematic) return;
 
                 if(rigidBody.IsSleeping) return;

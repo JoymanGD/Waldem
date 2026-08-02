@@ -3,7 +3,7 @@
 #include "CoachWidget.h"
 #include "Widget.h"
 #include "Waldem/ECS/Systems/System.h"
-#include "Waldem/Editor/EditorSimulation.h"
+#include "..\..\WaldemEngine\Waldem\Simulation.h"
 #include "Waldem/Renderer/Renderer.h"
 #include "Waldem/SceneManagement/SceneManager.h"
 #include "Waldem/Scripting/ScriptEngine.h"
@@ -126,8 +126,10 @@ namespace Waldem
             return SecondaryBarHeight;
         }
 
-        void Initialize(InputManager* inputManager) override
+        void Initialize() override
         {
+            auto inputManager = Engine::GetCurrentLayer()->GetInputManager();
+            
             // inputManager->SubscribeToDynamicShortcut([]
             // {
             //     return EditorShortcuts::GetShortcut(EditorShortcutAction::ReloadScripts);
@@ -169,7 +171,7 @@ namespace Waldem
 
             inputManager->SubscribeToEditorShortcut(EditorShortcutAction::ReleaseGameCursor, []
             {
-                if(!EditorSimulation::IsPlaying())
+                if(!Simulation::IsPlaying())
                 {
                     return;
                 }
@@ -179,10 +181,10 @@ namespace Waldem
 
             inputManager->SubscribeToEditorShortcut(EditorShortcutAction::StopPlayMode, []
             {
-                EditorSimulation::Stop();
+                Simulation::Stop();
             }, []
             {
-                return EditorSimulation::IsPlaying();
+                return Simulation::IsPlaying();
             });
         }
 
@@ -432,15 +434,15 @@ namespace Waldem
 
             if(ImGui::Begin("SimulationToolbar", nullptr, toolbarFlags))
             {
-                const char* pauseLabel = EditorSimulation::IsPaused() ? "Resume" : "Pause";
+                const char* pauseLabel = Simulation::IsPaused() ? "Resume" : "Pause";
                 const float spacing = ImGui::GetStyle().ItemSpacing.x;
-                const bool showPlay = !EditorSimulation::IsPlaying();
-                const bool showPause = EditorSimulation::IsPlaying();
-                const bool showStop = EditorSimulation::IsPlaying();
+                const bool showPlay = !Simulation::IsPlaying();
+                const bool showPause = Simulation::IsPlaying();
+                const bool showStop = Simulation::IsPlaying();
                 const float playWidth = showPlay ? (ImGui::CalcTextSize("Play").x + ImGui::GetStyle().FramePadding.x * 2.0f) : 0.0f;
                 const float pauseWidth = showPause ? (ImGui::CalcTextSize(pauseLabel).x + ImGui::GetStyle().FramePadding.x * 2.0f) : 0.0f;
                 const float stopWidth = showStop ? (ImGui::CalcTextSize("Stop").x + ImGui::GetStyle().FramePadding.x * 2.0f) : 0.0f;
-                const std::string modeLabel = std::string("Mode: ") + EditorSimulation::GetStateName();
+                const std::string modeLabel = std::string("Mode: ") + Simulation::GetStateName();
                 const float modeWidth = ImGui::CalcTextSize(modeLabel.c_str()).x;
                 int visibleItems = (showPlay ? 1 : 0) + (showPause ? 1 : 0) + (showStop ? 1 : 0) + 1;
                 const float totalWidth = playWidth + pauseWidth + stopWidth + modeWidth + spacing * (float)std::max(0, visibleItems - 1);
@@ -456,7 +458,7 @@ namespace Waldem
                 {
                     if(ImGui::Button("Play"))
                     {
-                        EditorSimulation::Play();
+                        Simulation::Play();
                     }
                     needsSameLine = true;
                 }
@@ -470,13 +472,13 @@ namespace Waldem
 
                     if(ImGui::Button(pauseLabel))
                     {
-                        if(EditorSimulation::IsPaused())
+                        if(Simulation::IsPaused())
                         {
-                            EditorSimulation::Play();
+                            Simulation::Play();
                         }
                         else
                         {
-                            EditorSimulation::Pause();
+                            Simulation::Pause();
                         }
                     }
                     needsSameLine = true;
@@ -491,7 +493,7 @@ namespace Waldem
 
                     if(ImGui::Button("Stop"))
                     {
-                        EditorSimulation::Stop();
+                        Simulation::Stop();
                     }
                     needsSameLine = true;
                 }

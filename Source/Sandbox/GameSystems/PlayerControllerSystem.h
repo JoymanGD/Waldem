@@ -15,8 +15,10 @@ namespace Waldem
         bool JumpRequested = false;
         
     public:
-        void Initialize(InputManager* inputManager) override
+        void Initialize() override
         {
+            auto inputManager = Engine::GetCurrentLayer()->GetInputManager();
+            
             inputManager->SubscribeToKeyEvent(W, [&](bool isPressed) 
             {
                 float multiplier = isPressed ? 1.0f : -1.0f;

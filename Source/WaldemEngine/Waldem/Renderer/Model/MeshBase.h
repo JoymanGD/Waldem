@@ -1,7 +1,7 @@
 #pragma once
 #include "Material.h"
 #include "Waldem/ECS/Components/Transform.h"
-#include "Waldem/Editor/AssetReference/MaterialReference.h"
+#include "Waldem/AssetsManagement/AssetReference/MaterialReference.h"
 #include "Waldem/Renderer/AABB.h"
 #include "Waldem/Renderer/Buffer.h"
 #include "Waldem/Serialization/Asset.h"

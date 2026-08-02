@@ -1,10 +1,11 @@
 #pragma once
 #include "Waldem/ECS/Components/MeshComponent.h"
 #include "Waldem/ECS/Components/Terrain.h"
+#include "Waldem/Renderer/Model/TerrainMesh.h"
 
 namespace Waldem
 {
-    class WALDEM_API TerrainSystem : public ICoreSystem
+    class WALDEM_API TerrainSystem : public ISystem
     {
     public:
         TerrainSystem() {}

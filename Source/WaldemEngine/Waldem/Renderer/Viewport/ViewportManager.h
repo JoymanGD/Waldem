@@ -88,7 +88,7 @@ namespace Waldem
 
         static SViewport* GetGameViewport()
         {
-            return GameViewportRef ? GameViewportRef : MainViewportRef;
+            return GameViewportRef;
         }
 
         static SViewport* GetCurrentViewport()

@@ -13,7 +13,7 @@ namespace Waldem
         uint PathTracingEnabled;
     };
     
-    class WALDEM_API ScreenQuadSystem : public ICoreSystem
+    class WALDEM_API ScreenQuadSystem : public ISystem
     {
         Pipeline* QuadDrawPipeline = nullptr;
         PixelShader* QuadDrawPixelShader = nullptr;
@@ -25,6 +25,8 @@ namespace Waldem
         
         void Initialize() override
         {
+            AlwaysActive = true;
+
             WArray<InputLayoutDesc> inputElementDescs = {
                 { "POSITION", 0, TextureFormat::R32G32B32_FLOAT, 0, 0, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
                 { "TEXCOORD", 0, TextureFormat::R32G32_FLOAT, 0, 12, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }

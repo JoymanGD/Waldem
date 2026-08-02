@@ -109,10 +109,12 @@ namespace Waldem
         //     // }
         // }
 
-        void Initialize(InputManager* inputManager) override
+        void Initialize() override
         {
             CacheFrustrumCorners();
 
+            auto inputManager = Engine::GetCurrentLayer()->GetInputManager();
+            
             inputManager->SubscribeToMouseMoveEvent([&](Vector2 mousePos)
             {
                 MousePos = mousePos;

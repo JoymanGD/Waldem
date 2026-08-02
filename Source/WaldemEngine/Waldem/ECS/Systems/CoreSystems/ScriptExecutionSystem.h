@@ -1,13 +1,13 @@
 #pragma once
 #include "Waldem/ECS/Components/ScriptComponent.h"
-#include "Waldem/Editor/EditorSimulation.h"
-#include "Waldem/ECS/Systems/CoreSystem.h"
+#include "..\..\..\Simulation.h"
+#include "Waldem/ECS/Systems/System.h"
 #include "Waldem/Scripting/ScriptEngine.h"
 #include "Waldem/Time.h"
 
 namespace Waldem
 {
-    class WALDEM_API ScriptExecutionSystem : public ICoreSystem
+    class WALDEM_API ScriptExecutionSystem : public ISystem
     {
     public:
         ScriptExecutionSystem() {}
@@ -33,7 +33,7 @@ namespace Waldem
 
             ECS::World.system<ScriptComponent>("ScriptUpdateSystem").kind(flecs::OnUpdate).each([&](ECS::Entity entity, ScriptComponent& scriptComponent)
             {
-                if(!EditorSimulation::ShouldRunRuntimeSystems())
+                if(!Simulation::ShouldRunRuntimeSystems())
                 {
                     return;
                 }
@@ -43,7 +43,7 @@ namespace Waldem
 
             ECS::World.system<ScriptComponent>("ScriptFixedUpdateSystem").kind<ECS::OnFixedUpdate>().each([&](ECS::Entity entity, ScriptComponent& scriptComponent)
             {
-                if(!EditorSimulation::ShouldRunRuntimeSystems())
+                if(!Simulation::ShouldRunRuntimeSystems())
                 {
                     return;
                 }
@@ -53,7 +53,7 @@ namespace Waldem
 
             ECS::World.system<ScriptComponent>("ScriptLateUpdateSystem").kind<ECS::OnLateUpdate>().each([&](ECS::Entity entity, ScriptComponent& scriptComponent)
             {
-                if(!EditorSimulation::ShouldRunRuntimeSystems())
+                if(!Simulation::ShouldRunRuntimeSystems())
                 {
                     return;
                 }

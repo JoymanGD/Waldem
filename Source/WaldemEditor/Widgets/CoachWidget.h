@@ -267,10 +267,8 @@ namespace Waldem
             Visible = visible;
         }
 
-        void Initialize(InputManager* inputManager) override
+        void Initialize() override
         {
-            (void)inputManager;
-
             auto& renderData = Renderer::RenderData;
             const char* path = renderData.TrainingDatasetOutputPath.C_Str();
             if (path && path[0] != '\0')

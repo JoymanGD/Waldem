@@ -75,6 +75,7 @@ namespace Waldem
         Point2 TransformMousePosition(Point2 mousePos);
 
         SGBuffer* GetGBuffer();
+        SFrameBuffer* GetFrameBuffer();
         
         RenderTarget* GetGBufferRenderTarget(GBufferRenderTarget rt);
     };

@@ -19,6 +19,8 @@ namespace Waldem
 	public:
 		GameLayer(CWindow* window) : Layer("GameLayer", window)
 		{
+			auto mainViewport = ViewportManager::GetMainViewport();
+			ViewportManager::CreateViewport(GameViewport, "Game", Vector2(0, 0), Vector2(1920, 1080), Vector2(0, 1), mainViewport->GetFrameBuffer());
 			InputManager = {};
 
 			UpdateSystems.Add(new PlayerControllerSystem());
@@ -43,22 +45,22 @@ namespace Waldem
 
 			for (ISystem* system : UISystems)
 			{
-				system->Initialize(&InputManager);
+				system->Initialize();
 			}
         	
 			for (ISystem* system : UpdateSystems)
 			{
-				system->Initialize(&InputManager);
+				system->Initialize();
 			}
         	
 			for (ISystem* system : DrawSystems)
 			{
-				system->Initialize(&InputManager);
+				system->Initialize();
 			}
 			
 			for (ISystem* system : PhysicsSystems)
 			{
-				system->Initialize(&InputManager);
+				system->Initialize();
 			}
 
 			Initialized = true;

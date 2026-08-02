@@ -49,4 +49,14 @@ namespace Waldem
             Layers.Remove(it);
         }
     }
+
+    Layer* LayerStack::GetLastLayer()
+    {
+        return Layers[LayerInsertIndex - 1];
+    }
+
+    Layer* LayerStack::GetLastOverlay()
+    {
+        return Layers.Last();
+    }
 }

@@ -30,29 +30,35 @@ namespace Waldem
 		WD_CORE_ASSERT(!Instance, "Application already exists!")
 		Instance = this;
 		
+		//PLATOFRM
 		PlatformInitializer::Initialize();
 
+		//INPUT
 		Input::Initialize();
 
+		//AUDIO
 		AudioManager = Audio();
 
+		//SCRIPTING
 		MonoRuntime = Mono();
 		MonoRuntime.Initialize();
 		ScriptEngine::Initialize(&MonoRuntime);
 
-		//Window
+		//WINDOW
 		Window = CWindow::Create();
 		Window->SetEventCallback(BIND_EVENT_FN(Engine::OnEvent));
 
-		//Renderer
+		//RENDERER
 		CurrentRenderer = {};
 		CurrentRenderer.Initialize(Window);
 
+		//ECS
 		ECS.Initialize();
-    
+
+		//DEBUG
 		auto degugLayer = new DebugLayer(Window);
 		degugLayer->Initialize();
-		PushLayer(degugLayer);
+		PushOverlay(degugLayer);
 	}
 
 	Engine::~Engine()

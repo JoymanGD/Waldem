@@ -3,13 +3,13 @@
 #include "Widget.h"
 #include "Waldem/ECS/ECS.h"
 #include "Waldem/ECS/Components/Selected.h"
-#include "Waldem/Editor/AssetReference/AudioClipReference.h"
-#include "Waldem/Editor/AssetReference/TextureReference.h"
-#include "Waldem/Editor/AssetReference/MeshReference.h"
-#include "Waldem/Editor/AssetReference/SkeletalMeshReference.h"
-#include "Waldem/Editor/AssetReference/AnimationClipReference.h"
-#include "Waldem/Editor/AssetReference/MaterialReference.h"
-#include "Waldem/Editor/AssetReference/ScriptReference.h"
+#include "Waldem/AssetsManagement/AssetReference/AudioClipReference.h"
+#include "Waldem/AssetsManagement/AssetReference/TextureReference.h"
+#include "Waldem/AssetsManagement/AssetReference/MeshReference.h"
+#include "Waldem/AssetsManagement/AssetReference/SkeletalMeshReference.h"
+#include "Waldem/AssetsManagement/AssetReference/AnimationClipReference.h"
+#include "Waldem/AssetsManagement/AssetReference/MaterialReference.h"
+#include "Waldem/AssetsManagement/AssetReference/ScriptReference.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
 #include "Waldem/ECS/Components/ScriptComponent.h"
 #include "Waldem/Extensions/ImGUIExtension.h"
@@ -162,7 +162,7 @@ namespace Waldem
     public:
         EntityDetailsWidget() {}
 
-        void Initialize(InputManager* inputManager) override
+        void Initialize() override
         {
         }
 

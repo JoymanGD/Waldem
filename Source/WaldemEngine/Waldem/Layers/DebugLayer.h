@@ -49,7 +49,7 @@ namespace Waldem
         {
             for (ISystem* system : UpdateSystems)
             {
-                system->Initialize(&InputManager);
+                system->Initialize();
             }
 
 			Initialized = true;

@@ -26,8 +26,8 @@ int main(int argc, char** argv)
     auto engine = new Waldem::Engine();
     
     auto editorLayer = new Waldem::EditorLayer(engine->GetWindow());
+    engine->PushLayer(editorLayer);
     editorLayer->Initialize();
-    engine->PushOverlay(editorLayer);
 
     if(Waldem::ProjectManager::HasProject())
     {

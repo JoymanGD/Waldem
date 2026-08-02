@@ -6,18 +6,18 @@
 #include "Waldem/Renderer/Renderer.h"
 #include "Waldem/Renderer/Animation/AnimationClip.h"
 #include "Waldem/Time.h"
-#include "Waldem/Editor/EditorSimulation.h"
+#include "..\..\..\Simulation.h"
 
 namespace Waldem
 {
-    class WALDEM_API AnimationSystem : public ICoreSystem
+    class WALDEM_API AnimationSystem : public ISystem
     {
     public:
         void Initialize() override
         {
             ECS::World.system<AnimatorComponent, SkeletalMeshComponent>("AnimationSystem").kind<ECS::OnDraw>().each([this](AnimatorComponent& animator, SkeletalMeshComponent& skeletalMeshComp)
             {
-                if (!EditorSimulation::ShouldRunRuntimeSystems())
+                if (!Simulation::ShouldRunRuntimeSystems())
                     return;
 
                 if(!IsActive)

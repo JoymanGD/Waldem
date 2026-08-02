@@ -2,7 +2,7 @@
 #include "imgui.h"
 #include "Widget.h"
 #include "../EditorShortcutContext.h"
-#include "Waldem/Editor/EditorSimulation.h"
+#include "..\..\WaldemEngine\Waldem\Simulation.h"
 #include "Waldem/Input/Input.h"
 #include "Waldem/Renderer/Renderer.h"
 #include "Waldem/Renderer/Viewport/Viewport.h"
@@ -63,7 +63,7 @@ namespace Waldem
                 {
                     ViewportManager::FocusViewport(viewport);
 
-                    if(EditorSimulation::IsPlaying() && Input::IsEditorCursorReleased() && Input::WantsCursorDisabled())
+                    if(Simulation::IsPlaying() && Input::IsEditorCursorReleased() && Input::WantsCursorDisabled())
                     {
                         Input::SetEditorCursorReleased(false);
                     }

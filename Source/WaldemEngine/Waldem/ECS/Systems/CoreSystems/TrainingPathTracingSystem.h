@@ -1,5 +1,5 @@
 #pragma once
-#include "Waldem/ECS/Systems/CoreSystem.h"
+#include "Waldem/ECS/Systems/System.h"
 #include "Waldem/ECS/ECS.h"
 #include "Waldem/Coach/TinyCuda/NIV/NIVCoach.h"
 #include "Waldem/Renderer/Renderer.h"
@@ -70,7 +70,7 @@ namespace Waldem
     static_assert((sizeof(TrainingPathTracingRootConstants) % 4) == 0, "TrainingPathTracingRootConstants must be 32-bit aligned.");
     static_assert(sizeof(TrainingPathTracingRootConstants) <= 128, "TrainingPathTracingRootConstants exceeds push constants limit (128 bytes).");
 
-    class WALDEM_API TrainingPathTracingSystem : public ICoreSystem
+    class WALDEM_API TrainingPathTracingSystem : public ISystem
     {
         inline static TrainingPathTracingSystem* Instance = nullptr;
         RayTracingShader* TrainingShader = nullptr;

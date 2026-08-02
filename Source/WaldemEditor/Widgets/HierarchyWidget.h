@@ -70,8 +70,10 @@ namespace Waldem
     public:
         HierarchyWidget() {}
 
-        void Initialize(InputManager* inputManager) override
+        void Initialize() override
         {
+            auto inputManager = Engine::GetCurrentLayer()->GetInputManager();
+            
             inputManager->SubscribeToEditorShortcut(EditorShortcutAction::DeleteEntity, [&]
             {
                 DeleteSelectedEntity = true;

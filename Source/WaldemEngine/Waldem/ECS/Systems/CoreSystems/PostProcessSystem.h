@@ -15,7 +15,7 @@ namespace Waldem
         uint Stage;
     };
     
-    class WALDEM_API PostProcessSystem : public ICoreSystem
+    class WALDEM_API PostProcessSystem : public ISystem
     {
         //Post process pass
         Pipeline* PostProcessPipeline = nullptr;

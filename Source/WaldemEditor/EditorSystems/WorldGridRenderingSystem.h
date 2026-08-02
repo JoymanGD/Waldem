@@ -33,7 +33,7 @@ namespace Waldem
         
     public:
         
-        void Initialize(InputManager* inputManager) override
+        void Initialize() override
         {
             SceneDataBuffer = Renderer::CreateBuffer("SceneDataBuffer", BufferType::StorageBuffer, sizeof(SSceneData), sizeof(SSceneData));
             RootConstants.SceneDataBuffer = SceneDataBuffer->GetIndex(SRV_CBV);

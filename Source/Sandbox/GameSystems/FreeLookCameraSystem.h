@@ -1,6 +1,7 @@
 #pragma once
 #include "Waldem/ECS/Systems/System.h"
 #include "..\..\..\Engine.h"
+#include "Waldem/Engine.h"
 #include "Waldem/Input/Input.h"
 #include "Waldem/Input/KeyCodes.h"
 #include "Waldem/Input/MouseButtonCodes.h"
@@ -20,8 +21,10 @@ namespace Waldem
     public:
         FreeLookCameraSystem() {}
         
-        void Initialize(InputManager* inputManager) override
+        void Initialize() override
         {
+            auto inputManager = Engine::GetCurrentLayer()->GetInputManager();
+            
             inputManager->SubscribeToKeyEvent(W, [&](bool isPressed) 
             {
                 float multiplier = isPressed ? 1.0f : -1.0f;

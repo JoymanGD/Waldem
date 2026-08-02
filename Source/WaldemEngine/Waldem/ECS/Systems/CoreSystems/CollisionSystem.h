@@ -1,5 +1,5 @@
 #pragma once
-#include "Waldem/Editor/EditorSimulation.h"
+#include "..\..\..\Simulation.h"
 #include "Waldem/Time.h"
 #include "Waldem/ECS/Components/ColliderComponent.h"
 #include "Waldem/ECS/Components/MeshComponent.h"
@@ -22,7 +22,7 @@ namespace Waldem
         ContactsManifold Manifold;
     };
     
-    class WALDEM_API CollisionSystem : public ICoreSystem
+    class WALDEM_API CollisionSystem : public ISystem
     {
         BVHNode* RootNode = nullptr;
         uint MaxIterations = 50;
@@ -642,7 +642,7 @@ namespace Waldem
             
             ECS::World.system().kind<ECS::OnFixedUpdate>().each([&]
             {
-                if(!EditorSimulation::ShouldRunRuntimeSystems()) return;
+                if(!Simulation::ShouldRunRuntimeSystems()) return;
 
                 for (auto& contact : ContactCache)
                 {

@@ -130,7 +130,7 @@ namespace Waldem
         uint SceneDataBuffer;
     };
     
-    class WALDEM_API HybridRenderingSystem : public ICoreSystem
+    class WALDEM_API HybridRenderingSystem : public ISystem
     {
         inline static HybridRenderingSystem* ActiveInstance = nullptr;
 
@@ -271,6 +271,8 @@ namespace Waldem
         
         void Initialize() override
         {
+            AlwaysActive = true;
+            
             //Sky
             WArray<InputLayoutDesc> inputElementDescs = {
                 { "POSITION", 0, TextureFormat::R32G32B32_FLOAT, 0, 0, WD_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },

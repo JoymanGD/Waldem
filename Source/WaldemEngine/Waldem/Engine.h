@@ -26,6 +26,8 @@ namespace Waldem
 
 		//Singleton
 		static Engine* Instance;
+
+		static Layer* GetCurrentLayer() { return Instance->LayerStack.GetLastLayer(); }
 	private:
 		bool OnWindowClose(WindowCloseEvent& e);
 		bool OnWindowResize(WindowResizeEvent& e);

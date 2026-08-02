@@ -1,6 +1,6 @@
 #pragma once
 #include "ComponentBase.h"
-#include "Waldem/Editor/AssetReference/AnimationClipReference.h"
+#include "Waldem/AssetsManagement/AssetReference/AnimationClipReference.h"
 
 namespace Waldem
 {

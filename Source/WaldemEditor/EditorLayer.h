@@ -29,6 +29,7 @@
 #include "Commands/EditorCommands.h"
 #include "EditorShortcutContext.h"
 #include "EditorShortcuts.h"
+#include "Appearance/UIStyles.h"
 #include "Widgets/CreateProjectWidget.h"
 
 namespace Waldem
@@ -148,28 +149,30 @@ namespace Waldem
         {
             for (ISystem* system : UISystems)
             {
-                system->Initialize(&InputManager);
+                system->Initialize();
             }
         	
             for (ISystem* system : UpdateSystems)
             {
-                system->Initialize(&InputManager);
+                system->Initialize();
             }
         	
             for (ISystem* system : DrawSystems)
             {
-                system->Initialize(&InputManager);
+                system->Initialize();
             }
 			
             for (ISystem* system : PhysicsSystems)
             {
-                system->Initialize(&InputManager);
+                system->Initialize();
             }
             
             for (auto widget : Widgets)
             {
-                widget->Initialize(&InputManager);
+                widget->Initialize();
             }
+            
+            UIStyles::ApplyDefault();
 
             Initialized = true;
         }

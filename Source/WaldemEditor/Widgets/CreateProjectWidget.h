@@ -32,7 +32,7 @@ namespace Waldem
             Visible = visible;
         }
 
-        void Initialize(InputManager* inputManager) override
+        void Initialize() override
         {
         }
 

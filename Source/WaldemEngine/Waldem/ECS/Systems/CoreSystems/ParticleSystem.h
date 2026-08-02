@@ -43,7 +43,7 @@ namespace Waldem
         float Age;
     };
     
-    class WALDEM_API ParticleSystem : public ICoreSystem
+    class WALDEM_API ParticleSystem : public ISystem
     {
         //Post process pass
         Pipeline* ParticleSystemPipeline = nullptr;

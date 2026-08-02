@@ -1,6 +1,6 @@
 #pragma once
 #include "Waldem/Audio/Audio.h"
-#include "Waldem/Editor/EditorSimulation.h"
+#include "..\..\..\Simulation.h"
 #include "Waldem/ECS/Components/AudioListener.h"
 #include "Waldem/ECS/Components/AudioSource.h"
 #include "Waldem/ECS/Systems/System.h"
@@ -8,7 +8,7 @@
 
 namespace Waldem
 {
-    class WALDEM_API SpatialAudioSystem : public ICoreSystem
+    class WALDEM_API SpatialAudioSystem : public ISystem
     {
     private:
         float PAN_SIMPLIFICATION = 0.8f;
@@ -34,7 +34,7 @@ namespace Waldem
             
             ECS::World.system<AudioListener, Transform>("Spatial audio system").kind(flecs::OnUpdate).each([&](AudioListener& listener, Transform& listenerTransform)
             {
-                if(!EditorSimulation::ShouldRunRuntimeSystems())
+                if(!Simulation::ShouldRunRuntimeSystems())
                 {
                     return;
                 }

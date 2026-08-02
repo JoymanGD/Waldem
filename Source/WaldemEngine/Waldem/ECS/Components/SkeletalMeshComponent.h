@@ -1,6 +1,6 @@
 #pragma once
-#include "Waldem/Editor/AssetReference/SkeletalMeshReference.h"
-#include "Waldem/Editor/AssetReference/MaterialReference.h"
+#include "Waldem/AssetsManagement/AssetReference/SkeletalMeshReference.h"
+#include "Waldem/AssetsManagement/AssetReference/MaterialReference.h"
 #include "Waldem/ECS/Components/ComponentBase.h"
 
 namespace Waldem

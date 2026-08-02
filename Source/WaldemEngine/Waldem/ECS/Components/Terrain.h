@@ -1,7 +1,5 @@
 #pragma once
 #include "ComponentBase.h"
-#include "Waldem/Renderer/Model/StaticMesh.h"
-#include "Waldem/Renderer/Model/TerrainMesh.h"
 
 namespace Waldem
 {
@@ -10,6 +8,8 @@ namespace Waldem
     {
         FIELD()
         int Resolution = 128;
+        FIELD()
+        float Height = 1.f;
 
         uint InitializedResolution = 128;
 

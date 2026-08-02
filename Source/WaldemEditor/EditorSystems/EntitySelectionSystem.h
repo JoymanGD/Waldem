@@ -30,7 +30,7 @@ namespace Waldem
         {
         }
         
-        void Initialize(InputManager* inputManager) override
+        void Initialize() override
         {
             HoveredMeshesBuffer = Renderer::CreateBuffer("HoveredMeshes", StorageBuffer, sizeof(Point2), sizeof(Point2));
             RootConstants.HoveredMeshes = HoveredMeshesBuffer->GetIndex(UAV);

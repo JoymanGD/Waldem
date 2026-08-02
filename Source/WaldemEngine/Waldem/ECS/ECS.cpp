@@ -10,8 +10,8 @@
 #include "Components/ParticleSystemComponent.h"
 #include "Components/PlayerController.h"
 #include "Components/RigidBody.h"
-#include "Components/Selected.h"
 #include "Components/ScriptComponent.h"
+#include "Components/Selected.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/Sky.h"
 #include "Components/Sprite.h"
@@ -22,21 +22,19 @@
 #include "Systems/CoreSystems/HybridRenderingSystem.h"
 #include "Systems/CoreSystems/ParticleSystem.h"
 #include "Systems/CoreSystems/PhysXSystem.h"
-#include "Systems\CoreSystems\PhysicsAccumulationSystem.h"
-#include "Systems\CoreSystems\PhysicsIntegrationSystem.h"
 #include "Systems/CoreSystems/PostProcessSystem.h"
 #include "Systems/CoreSystems/ScreenQuadSystem.h"
 #include "Systems/CoreSystems/ScriptExecutionSystem.h"
 #include "Systems/CoreSystems/SpatialAudioSystem.h"
 #include "Systems/CoreSystems/TrainingPathTracingSystem.h"
-#include "Waldem/Editor/AssetReference.h"
-#include "Waldem/Editor/AssetReference/AudioClipReference.h"
-#include "Waldem/Editor/AssetReference/MeshReference.h"
-#include "Waldem/Editor/AssetReference/SkeletalMeshReference.h"
-#include "Waldem/Editor/AssetReference/AnimationClipReference.h"
-#include "Waldem/Editor/AssetReference/TextureReference.h"
-#include "Waldem/Editor/AssetReference/MaterialReference.h"
-#include "Waldem/Editor/AssetReference/ScriptReference.h"
+#include "Waldem/AssetsManagement/AssetReference.h"
+#include "Waldem/AssetsManagement/AssetReference/AudioClipReference.h"
+#include "Waldem/AssetsManagement/AssetReference/MeshReference.h"
+#include "Waldem/AssetsManagement/AssetReference/SkeletalMeshReference.h"
+#include "Waldem/AssetsManagement/AssetReference/AnimationClipReference.h"
+#include "Waldem/AssetsManagement/AssetReference/TextureReference.h"
+#include "Waldem/AssetsManagement/AssetReference/MaterialReference.h"
+#include "Waldem/AssetsManagement/AssetReference/ScriptReference.h"
 #include "Waldem/Utils/ECSUtils.h"
 #include <cmath>
 #include <memory>
@@ -374,7 +372,6 @@ namespace Waldem
             World.system("HierarchyTransformPropagationLate").kind<OnLateUpdate>().run(propagateHierarchyTransforms);
             World.system("HierarchyTransformPropagationDraw").kind<OnDraw>().run(propagateHierarchyTransforms);
             
-            // Systems.Add(OceanSimulationSystem());
 #if WD_WITH_PHYSX
             Systems.Add(new PhysXSystem());
 #else
@@ -382,6 +379,8 @@ namespace Waldem
             Systems.Add(new PhysicsIntegrationSystem());
             Systems.Add(new CollisionSystem());
 #endif
+            
+            // Systems.Add(OceanSimulationSystem());
             Systems.Add(new SpatialAudioSystem());
             Systems.Add(new ScriptExecutionSystem());
             Systems.Add(new TerrainSystem());
@@ -400,6 +399,10 @@ namespace Waldem
             for (auto system : Systems)
             {
                 system->Initialize();
+                if(system->IsAlwaysActive())
+                {
+                    system->SetActive(true);
+                }
             }
         }
 

@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Waldem/ECS/Systems/CoreSystem.h"
+#include "Waldem/ECS/Systems/System.h"
 #include "Waldem/ECS/ECS.h"
 
 namespace Waldem
 {
-    class WALDEM_API PhysXSystem : public ICoreSystem
+    class WALDEM_API PhysXSystem : public ISystem
     {
     public:
         static Vector3 GetGravity();

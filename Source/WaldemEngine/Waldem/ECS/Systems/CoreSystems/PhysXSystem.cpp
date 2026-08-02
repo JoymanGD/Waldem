@@ -5,7 +5,7 @@
 
 #if WD_WITH_PHYSX
 
-#include "Waldem/Editor/EditorSimulation.h"
+#include "..\..\..\Simulation.h"
 #include "Waldem/ECS/ECS.h"
 #include "Waldem/ECS/Components/ScriptComponent.h"
 #include "Waldem/ECS/Components/ColliderComponent.h"
@@ -964,17 +964,17 @@ namespace Waldem
         state.ControllerManager = PxCreateControllerManager(*state.Scene);
         state.DefaultMaterial = state.Physics->createMaterial(0.5f, 0.5f, 0.0f);
 
-        ECS::World.observer<Transform, ColliderComponent>("PhysXCreateActorObserver").without<RigidBody>().event(flecs::OnAdd).each([&](ECS::Entity entity, Transform& transform, ColliderComponent& collider)
+        Observer<Components<Transform, ColliderComponent>, Without<RigidBody>>("PhysXCreateActorObserver", flecs::OnAdd, [&](ECS::Entity entity, Transform& transform, ColliderComponent& collider)
         {
             CreateStaticActor(entity, transform, collider);
         });
 
-        ECS::World.observer<Transform, CharacterController>("CharacterControllerCreatedObserver").without<RigidBody>().without<ColliderComponent>().event(flecs::OnAdd).each([&](ECS::Entity entity, Transform& transform, CharacterController& controller)
+        Observer<Components<Transform, CharacterController>, Without<RigidBody, ColliderComponent>>("CharacterControllerCreatedObserver", flecs::OnAdd, [&](ECS::Entity entity, Transform& transform, CharacterController& controller)
         {
             CreateCharacterController(entity, transform, controller);
         });
 
-        ECS::World.observer<CharacterController>("CharacterControllerUpdatedObserver").event(flecs::OnSet).each([&](ECS::Entity entity, CharacterController& controller)
+        Observer<CharacterController>("CharacterControllerUpdatedObserver", flecs::OnSet, [&](ECS::Entity entity, CharacterController& controller)
         {
             if(state.IsSynchronizing || !entity.has<Transform>())
             {
@@ -995,12 +995,12 @@ namespace Waldem
             CreateCharacterController(entity, transform, controller);
         });
 
-        ECS::World.observer<Transform, ColliderComponent, RigidBody>("PhysXCreateDynamicActorObserver").event(flecs::OnAdd).each([&](ECS::Entity entity, Transform& transform, ColliderComponent& collider, RigidBody& rigidBody)
+        Observer<Transform, ColliderComponent, RigidBody>("PhysXCreateDynamicActorObserver", flecs::OnAdd, [&](ECS::Entity entity, Transform& transform, ColliderComponent& collider, RigidBody& rigidBody)
         {
             CreateDynamicActor(entity, transform, collider, rigidBody);
         });
 
-        ECS::World.observer<ColliderComponent>("PhysXUpdateColliderObserver").event(flecs::OnSet).each([&](ECS::Entity entity, ColliderComponent& collider)
+        Observer<ColliderComponent>("PhysXUpdateColliderObserver", flecs::OnSet, [&](ECS::Entity entity, ColliderComponent& collider)
         {
             if(state.IsSynchronizing || state.Physics == nullptr)
             {
@@ -1084,7 +1084,7 @@ namespace Waldem
             state.ColliderScales[entityId] = GetColliderScale(transform);
         });
 
-        ECS::World.observer<Transform>("PhysXUpdateTransformObserver").event(flecs::OnSet).each([&](ECS::Entity entity, Transform& transform)
+        Observer<Transform>("PhysXUpdateTransformObserver", flecs::OnSet, [&](ECS::Entity entity, Transform& transform)
         {
             if(state.IsSynchronizing)
             {
@@ -1198,7 +1198,7 @@ namespace Waldem
             }
         });
 
-        ECS::World.observer<RigidBody>("PhysXUpdateRigidBodyObserver").event(flecs::OnSet).each([&](ECS::Entity entity, RigidBody& rigidBody)
+        Observer<RigidBody>("PhysXUpdateRigidBodyObserver", flecs::OnSet, [&](ECS::Entity entity, RigidBody& rigidBody)
         {
             if(state.IsSynchronizing || state.Physics == nullptr || !entity.has<Transform>())
             {
@@ -1266,12 +1266,12 @@ namespace Waldem
             }
         });
 
-        ECS::World.observer<ColliderComponent>("PhysXRemoveColliderObserver").event(flecs::OnRemove).each([&](ECS::Entity entity, ColliderComponent&)
+        Observer<ColliderComponent>("PhysXRemoveColliderObserver", flecs::OnRemove, [&](ECS::Entity entity, ColliderComponent&)
         {
             ReleaseActor(static_cast<uint64>(entity.id()));
         });
 
-        ECS::World.observer<RigidBody>("PhysXRigidBodyRemovedObserver").event(flecs::OnRemove).each([&](ECS::Entity entity, RigidBody&)
+        Observer<RigidBody>("PhysXRigidBodyRemovedObserver", flecs::OnRemove, [&](ECS::Entity entity, RigidBody&)
         {
             const uint64 entityId = static_cast<uint64>(entity.id());
             ReleaseActor(entityId);
@@ -1286,14 +1286,14 @@ namespace Waldem
             CreateStaticActor(entity, transform, collider);
         });
 
-        ECS::World.observer<CharacterController>("CharacterControllerRemovedObserver").event(flecs::OnRemove).each([&](ECS::Entity entity, CharacterController&)
+        Observer<CharacterController>("CharacterControllerRemovedObserver", flecs::OnRemove, [&](ECS::Entity entity, CharacterController&)
         {
             ReleaseController(static_cast<uint64>(entity.id()));
         });
 
-        ECS::World.system("PhysXFixedUpdateSystem").kind<ECS::OnFixedUpdate>().each([&]
+        System<ECS::OnFixedUpdate>("PhysXFixedUpdateSystem", [&]
         {
-            if(!EditorSimulation::ShouldRunRuntimeSystems() || state.Scene == nullptr)
+            if(!Simulation::ShouldRunRuntimeSystems() || state.Scene == nullptr)
             {
                 return;
             }

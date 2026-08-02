@@ -23,17 +23,19 @@ namespace Waldem
     public:
         EditorCameraControlSystem() {}
 
-        void Initialize(InputManager* inputManager) override
+        void Initialize() override
         {
-            InitializeCameraControl(inputManager);
+            InitializeCameraControl();
             InitializeCameras();
             
             UpdateCameraControl();
             UpdateLastMousePosition();
         }        
 
-        void InitializeCameraControl(InputManager* inputManager)
+        void InitializeCameraControl()
         {
+            auto inputManager = Engine::GetCurrentLayer()->GetInputManager();
+            
             inputManager->SubscribeToKeyEvent(W, [&](bool isPressed) 
             {
                 float multiplier = isPressed ? 1.0f : -1.0f;

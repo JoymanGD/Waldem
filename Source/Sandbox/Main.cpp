@@ -5,7 +5,7 @@
 #include "Waldem/Log/Log.h"
 #include "Waldem/Input/KeyCodes.h"
 #include "Waldem/ProjectManagement/ProjectManager.h"
-#include "Waldem/Editor/EditorSimulation.h"
+#include "..\WaldemEngine\Waldem\Simulation.h"
 #include "Waldem/Scripting/ScriptEngine.h"
 #include "Waldem/Utils/FileUtils.h"
 #include "GameLayer.h"
@@ -20,7 +20,7 @@ namespace
     {
         Waldem::Log::Init();
         ecs_os_set_api_defaults();
-        Waldem::EditorSimulation::SetState(Waldem::EditorSimulationState::Play);
+        Waldem::Simulation::SetState(Waldem::SimulationState::Play);
 
         if(argc > 1)
         {

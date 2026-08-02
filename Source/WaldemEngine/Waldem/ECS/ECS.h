@@ -1,8 +1,10 @@
 #pragma once
 
+#include "ECSTypes.h"
+#include "ECSWorld.h"
 #include "../../../../Vendor/flecs/include/flecs.h"
 #include "Components/SceneEntity.h"
-#include "Systems/CoreSystem.h"
+#include "Systems/System.h"
 #include "Waldem/Types/FreeList.h"
 #include "Waldem/Types/MathTypes.h"
 #include "Waldem/Types/String.h"
@@ -12,26 +14,11 @@ namespace Waldem
 {
     namespace ECS
     {
-        struct OnFixedUpdate {};
-        struct OnLateUpdate {};
-        struct OnDraw {};
-        struct OnGUI {};
-        
-        using Entity = flecs::entity;
-        using EntityT = flecs::entity_t;
-        using Id = flecs::id;
-        using IdT = flecs::id_t;
-        using Iter = flecs::iter;
-        using TypeSerializer = flecs::TypeSerializer;
-        using MetaOp = flecs::meta::op_t;
-        using ComponentRegisterFn = void(*)(flecs::world&);
-
         inline const EntityT OnAdd = flecs::OnAdd;
         inline const EntityT OnSet = flecs::OnSet;
         inline const EntityT OnRemove = flecs::OnRemove;
         inline const EntityT OnUpdate = flecs::OnUpdate;
         
-        extern WALDEM_API flecs::world World;
         extern WALDEM_API EntityT UpdatePipeline;
         extern WALDEM_API EntityT FixedUpdatePipeline;
         extern WALDEM_API EntityT LateUpdatePipeline;
@@ -109,7 +96,7 @@ namespace Waldem
             void InitializeSystems();
             
         private:
-            WArray<ICoreSystem*> Systems;
+            WArray<ISystem*> Systems;
             
             void RegisterTypes();
             void RegisterAllComponents();

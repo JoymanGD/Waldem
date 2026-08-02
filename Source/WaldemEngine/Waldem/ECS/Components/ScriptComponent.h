@@ -1,6 +1,6 @@
 #pragma once
 #include "ComponentBase.h"
-#include "Waldem/Editor/AssetReference/ScriptReference.h"
+#include "Waldem/AssetsManagement/AssetReference/ScriptReference.h"
 
 namespace Waldem
 {

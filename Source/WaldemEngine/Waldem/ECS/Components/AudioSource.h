@@ -1,7 +1,7 @@
 #pragma once
 #include "Waldem/Audio/Audio.h"
 #include "ComponentBase.h"
-#include "Waldem/Editor/AssetReference/AudioClipReference.h"
+#include "Waldem/AssetsManagement/AssetReference/AudioClipReference.h"
 
 namespace Waldem
 {

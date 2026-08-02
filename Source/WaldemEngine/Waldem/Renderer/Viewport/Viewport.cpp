@@ -134,6 +134,8 @@ namespace Waldem
     }
 
     SGBuffer* SViewport::GetGBuffer() { return GBuffer; }
+
+    SFrameBuffer* SViewport::GetFrameBuffer() { return FrameBuffer; }
     
     RenderTarget* SViewport::GetGBufferRenderTarget(GBufferRenderTarget rt)
     {

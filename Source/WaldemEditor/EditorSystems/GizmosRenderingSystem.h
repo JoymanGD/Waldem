@@ -95,7 +95,7 @@ namespace Waldem
             GizmoIB = Renderer::CreateBuffer("GizmoIB", BufferType::IndexBuffer, GizmoIndices.GetSize(), sizeof(uint32), GizmoIndices.GetData());
         }
 
-        void Initialize(InputManager* inputManager) override
+        void Initialize() override
         {
             // Load gizmo icons
             CameraGizmo = ImageUtils::LoadTexture("Icons/Camera", true);
