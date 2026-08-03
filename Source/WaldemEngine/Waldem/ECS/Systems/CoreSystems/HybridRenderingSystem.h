@@ -13,10 +13,6 @@
 #include "Waldem/Renderer/ResizableAccelerationStructure.h"
 #include "Waldem/Renderer/ResizableBuffer.h"
 #include "Waldem/Renderer/Viewport/Viewport.h"
-#include "Waldem/Coach/TinyCuda/NIV/NIVCoach.h"
-#include <cstring>
-#include <algorithm>
-#include <vector>
 
 #define MAX_INDIRECT_COMMANDS 500
 
@@ -37,72 +33,6 @@ namespace Waldem
         uint SceneDataBuffer;
     };
     
-    struct SRayTracingSceneData
-    {
-        Matrix4 InvViewMatrix;
-        Matrix4 InvProjectionMatrix;
-        Vector3 CameraPosition;
-        int NumLights = 0;
-    };
-
-    struct RayTracingRootConstants
-    {
-        uint WorldPositionRT;
-        uint NormalRT;
-        uint ColorRT;
-        uint ORMRT;
-        uint RadianceRT;
-        uint PathTracingRT;
-        uint ReflectionRT;
-        uint LightsBuffer;
-        uint LightTransformsBuffer;
-        uint LightsIndicesBuffer;
-        uint SceneDataBuffer; 
-        uint TLAS;
-        uint VertexBuffer;
-        uint IndexBuffer;
-        uint DrawCommandsBuffer;
-        uint MaterialBuffer;
-        uint EnableReflections;
-        uint EnableDirectLighting;
-        uint EnableSpecular;
-        uint EnableMetallic;
-        uint EnablePathTracing;
-        uint PathTracingMaxBounces;
-        uint PathTracingSamplesPerPixel;
-        uint PathTracingFrameIndex;
-        uint EnablePathTracingAccumulation;
-    };
-    
-    struct DeferredRootConstants
-    {
-        uint MeshIDRT;
-        uint RadianceRT;
-        uint PathTracingRT;
-        uint ColorRT;
-        uint DeferredRT;
-        uint NIVIrradianceRT;
-        uint NIVPredictedBuffer;
-        uint SkyColorRT;
-        uint EnableSky;
-        uint EnablePathTracing;
-        uint EnableNIVInference;
-        uint HasNIVPrediction;
-        uint EnableNIVSpatialFilter;
-        float NIVSpatialFilterStrength;
-    };
-
-    struct NIVPackRootConstants
-    {
-        uint WorldPositionRT;
-        uint WorldNormalRT;
-        uint MeshIDRT;
-        uint OutWorldPositionBuffer;
-        uint OutWorldNormalValidBuffer;
-        uint Width;
-        uint Height;
-    };
-
     struct SkinningRootConstants
     {
         uint BindPoseVertexBuffer;
@@ -160,40 +90,13 @@ namespace Waldem
         size_t VerticesCount = 0;
         size_t IndicesCount = 0;
 
-        //RayTracing
-        Pipeline* RTPipeline = nullptr;
-        RayTracingShader* RTShader = nullptr;
-        Pipeline* PathTracingPipeline = nullptr;
-        RayTracingShader* PathTracingShader = nullptr;
         WArray<AccelerationStructure*> BLAS;
         WMap<StaticMesh*, AccelerationStructure*> BLASToUpdate;
-        SRayTracingSceneData RayTracingSceneData;
         ResizableBuffer LightsBuffer;
         ResizableBuffer LightTransformsBuffer;
         ResizableBuffer LightsIndicesBuffer;
         WArray<int> LightsIndices;
-        Buffer* RayTracingSceneDataBuffer = nullptr;
-        RayTracingRootConstants RayTracingRootConstants;
         WArray<Matrix4> LightTransforms;
-        uint PathTracingFrameIndex = 0;
-        bool PathTracingHistoryValid = false;
-        Matrix4 LastPathTracingInvView = Matrix4(1.0f);
-        Matrix4 LastPathTracingInvProjection = Matrix4(1.0f);
-        Vector3 LastPathTracingCameraPosition = Vector3(0.0f);
-
-        //Deferred
-        Pipeline* DeferredRenderingPipeline = nullptr;
-        ComputeShader* DeferredRenderingComputeShader = nullptr;
-        Point3 GroupCount;
-        DeferredRootConstants DeferredRootConstants;
-        ComputeShader* NIVPackComputeShader = nullptr;
-        Pipeline* NIVPackPipeline = nullptr;
-        NIVPackRootConstants NIVPackRootConstants;
-        Buffer* NIVWorldPositionBuffer = nullptr;    // float4[pixelCount]
-        Buffer* NIVWorldNormalValidBuffer = nullptr; // float4[pixelCount]
-        Buffer* NIVPredictedOutputBuffer = nullptr; // float4[pixelCount]
-        Buffer* NIVPredictedHistoryBuffer = nullptr; // float4[pixelCount]
-        uint NIVBufferCapacityPixels = 0;
 
         //Skeletal mesh skinning
         Pipeline* SkinningPipeline = nullptr;
@@ -253,9 +156,6 @@ namespace Waldem
 
             instance.VerticesCount = 0;
             instance.IndicesCount = 0;
-            instance.PathTracingFrameIndex = 0;
-            instance.PathTracingHistoryValid = false;
-
             instance.DrawCommandsBuffer.Size = 0;
             instance.BFCIndirectBuffer.Size = 0;
             instance.NCIndirectBuffer.Size = 0;
@@ -326,31 +226,14 @@ namespace Waldem
                                                             WD_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
                                                             DEFAULT_INPUT_LAYOUT_DESC);
 
-            //Raytracing
-            RTShader = Renderer::LoadRayTracingShader("RayTracing/Radiance");
-            RTPipeline = Renderer::CreateRayTracingPipeline("RayTracingPipeline", RTShader);
-            PathTracingShader = Renderer::LoadRayTracingShader("RayTracing/PathTracing");
-            PathTracingPipeline = Renderer::CreateRayTracingPipeline("PathTracingPipeline", PathTracingShader);
             LightsBuffer = ResizableBuffer("LightsBuffer", StorageBuffer, sizeof(Light), 40);
             LightTransformsBuffer = ResizableBuffer("LightTransformsBuffer", StorageBuffer, sizeof(Matrix4), 40);
             LightsIndicesBuffer = ResizableBuffer("LightsIndicesBuffer", StorageBuffer, sizeof(int), 40);
-            RayTracingSceneDataBuffer = Renderer::CreateBuffer("SceneDataBuffer", StorageBuffer, sizeof(SRayTracingSceneData), sizeof(SRayTracingSceneData), &RayTracingSceneData);
             Renderer::RenderData.TLAS = ResizableAccelerationStructure("RayTracingTLAS", 50);
             
-            //Deferred
-            DeferredRenderingComputeShader = Renderer::LoadComputeShader("DeferredRendering");
-            DeferredRenderingPipeline = Renderer::CreateComputePipeline("DeferredLightingPipeline", DeferredRenderingComputeShader);
-            NIVPackComputeShader = Renderer::LoadComputeShader("NIVPackInputs");
-            NIVPackPipeline = Renderer::CreateComputePipeline("NIVPackPipeline", NIVPackComputeShader);
-            NIVWorldPositionBuffer = Renderer::CreateBuffer("NIVWorldPositionBuffer", StorageBuffer, sizeof(float) * 4, sizeof(float) * 4);
-
             //Skeletal mesh skinning
             SkinningComputeShader = Renderer::LoadComputeShader("Animation");
             SkinningPipeline = Renderer::CreateComputePipeline("SkinningPipeline", SkinningComputeShader);
-            NIVWorldNormalValidBuffer = Renderer::CreateBuffer("NIVWorldNormalValidBuffer", StorageBuffer, sizeof(float) * 4, sizeof(float) * 4);
-            NIVPredictedOutputBuffer = Renderer::CreateBuffer("NIVPredictedOutputBuffer", StorageBuffer, sizeof(float) * 4, sizeof(float) * 4);
-            NIVPredictedHistoryBuffer = Renderer::CreateBuffer("NIVPredictedHistoryBuffer", StorageBuffer, sizeof(float) * 4, sizeof(float) * 4);
-            NIVBufferCapacityPixels = 1;
 
             auto clearIndirectCommand = [&](ResizableBuffer& buffer, WArray<IndirectIndexedCommand>& commands, int drawId)
             {
@@ -965,7 +848,6 @@ namespace Waldem
                 LightsIndices.Add(lightId);
                 LightsIndicesBuffer.UpdateOrAdd(LightsIndices.GetData(), LightsIndices.GetSize(), 0);
                 
-                RayTracingSceneData.NumLights++;
             });
 
             ECS::World.system<Transform>("HybridRenderingTransformSyncSystem").kind<ECS::OnDraw>().each([&](flecs::entity entity, Transform& transform)
@@ -1007,8 +889,6 @@ namespace Waldem
                     LightsBuffer.RemoveData(sizeof(Light), sizeof(Light) * lightId);
                     LightsIndices.Remove(lightId);
                     LightsIndicesBuffer.UpdateData(LightsIndices.GetData(), LightsIndices.GetSize(), 0);
-                    RayTracingSceneData.NumLights--;
-
                     IdManager::RemoveId(entity, LightIdType);
                 }
             });
@@ -1212,315 +1092,6 @@ namespace Waldem
                 }
             });
 
-            ECS::World.system("RayTracingSystem").kind<ECS::OnDraw>().each([&]
-            {
-                auto viewport = Renderer::GetCurrentViewport();
-                
-                ECS::Entity linkedCamera;
-                
-                if(viewport->TryGetLinkedCamera(linkedCamera))
-                {
-                    auto gbuffer = viewport->GetGBuffer();
-                    auto radianceRT = gbuffer->GetRenderTarget(Radiance);
-
-                    if(!Renderer::RenderData.FeatureToggles.EnableRayTracingPass)
-                    {
-                        gbuffer->Clear({ Radiance, Reflection });
-                        return;
-                    }
-
-                    if(!linkedCamera.is_alive() || !linkedCamera.has<Camera>() || !linkedCamera.has<Transform>())
-                    {
-                        return;
-                    }
-                    auto& cameraComponent = linkedCamera.get<Camera>();
-                    auto& transformComponent = linkedCamera.get<Transform>();
-
-                    RayTracingSceneData.CameraPosition = transformComponent.RenderPosition;
-                    RayTracingSceneData.InvViewMatrix = transformComponent.RenderMatrix;
-                    RayTracingSceneData.InvProjectionMatrix = inverse(cameraComponent.ProjectionMatrix);
-                    Renderer::UploadBuffer(RayTracingSceneDataBuffer, &RayTracingSceneData, sizeof(SRayTracingSceneData));
-
-                    auto& toggles = Renderer::RenderData.FeatureToggles;
-                    bool cameraChanged =
-                        !PathTracingHistoryValid ||
-                        memcmp(&LastPathTracingInvView, &RayTracingSceneData.InvViewMatrix, sizeof(Matrix4)) != 0 ||
-                        memcmp(&LastPathTracingInvProjection, &RayTracingSceneData.InvProjectionMatrix, sizeof(Matrix4)) != 0 ||
-                        memcmp(&LastPathTracingCameraPosition, &RayTracingSceneData.CameraPosition, sizeof(Vector3)) != 0;
-
-                    if(toggles.EnablePathTracing)
-                    {
-                        if(cameraChanged || !toggles.EnablePathTracingAccumulation)
-                        {
-                            PathTracingFrameIndex = 0;
-                        }
-                        else
-                        {
-                            PathTracingFrameIndex++;
-                        }
-                    }
-                    else
-                    {
-                        PathTracingFrameIndex = 0;
-                    }
-
-                    PathTracingHistoryValid = true;
-                    LastPathTracingInvView = RayTracingSceneData.InvViewMatrix;
-                    LastPathTracingInvProjection = RayTracingSceneData.InvProjectionMatrix;
-                    LastPathTracingCameraPosition = RayTracingSceneData.CameraPosition;
-
-                    RayTracingRootConstants.WorldPositionRT = gbuffer->GetRenderTarget(WorldPosition)->GetIndex(SRV_CBV);
-                    RayTracingRootConstants.NormalRT = gbuffer->GetRenderTarget(Normal)->GetIndex(SRV_CBV);
-                    RayTracingRootConstants.ColorRT = gbuffer->GetRenderTarget(Color)->GetIndex(SRV_CBV);
-                    RayTracingRootConstants.ORMRT = gbuffer->GetRenderTarget(ORM)->GetIndex(SRV_CBV);
-                    RayTracingRootConstants.RadianceRT = radianceRT->GetIndex(SRV_CBV);
-                    RayTracingRootConstants.PathTracingRT = gbuffer->GetRenderTarget(PathTracing)->GetIndex(SRV_CBV);
-                    RayTracingRootConstants.ReflectionRT = gbuffer->GetRenderTarget(Reflection)->GetIndex(SRV_CBV);
-                    RayTracingRootConstants.LightsBuffer = LightsBuffer.GetIndex(SRV_CBV);
-                    RayTracingRootConstants.LightTransformsBuffer = LightTransformsBuffer.GetIndex(SRV_CBV);
-                    RayTracingRootConstants.LightsIndicesBuffer = LightsIndicesBuffer.GetIndex(SRV_CBV);
-                    RayTracingRootConstants.SceneDataBuffer = RayTracingSceneDataBuffer->GetIndex(SRV_CBV);
-                    RayTracingRootConstants.TLAS = Renderer::RenderData.TLAS.GetIndex(SRV_CBV);
-                    RayTracingRootConstants.VertexBuffer = Renderer::RenderData.VertexBuffer.GetIndex(SRV_CBV);
-                    RayTracingRootConstants.IndexBuffer = Renderer::RenderData.IndexBuffer.GetIndex(SRV_CBV);
-                    RayTracingRootConstants.DrawCommandsBuffer = DrawCommandsBuffer.GetIndex(SRV_CBV);
-                    RayTracingRootConstants.MaterialBuffer = MaterialAttributesBuffer.GetIndex(SRV_CBV);
-                    RayTracingRootConstants.EnableReflections = toggles.EnableReflections ? 1 : 0;
-                    RayTracingRootConstants.EnableDirectLighting = toggles.EnableDirectLighting ? 1 : 0;
-                    RayTracingRootConstants.EnableSpecular = toggles.EnableSpecular ? 1 : 0;
-                    RayTracingRootConstants.EnableMetallic = toggles.EnableMetallic ? 1 : 0;
-                    RayTracingRootConstants.EnablePathTracing = toggles.EnablePathTracing ? 1 : 0;
-                    RayTracingRootConstants.PathTracingMaxBounces = toggles.PathTracingMaxBounces > 4 ? 4 : toggles.PathTracingMaxBounces;
-                    RayTracingRootConstants.PathTracingSamplesPerPixel = toggles.PathTracingSamplesPerPixel;
-                    RayTracingRootConstants.PathTracingFrameIndex = PathTracingFrameIndex;
-                    RayTracingRootConstants.EnablePathTracingAccumulation = toggles.EnablePathTracingAccumulation ? 1 : 0;
-
-                    //dispatching
-                    viewport->GetGBuffer()->Barriers({Radiance, PathTracing, Reflection}, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
-                    Pipeline* activeRTPipeline = toggles.EnablePathTracing ? PathTracingPipeline : RTPipeline;
-                    Renderer::SetPipeline(activeRTPipeline);
-                    Renderer::PushConstants(&RayTracingRootConstants, sizeof(RayTracingRootConstants));
-                    Renderer::TraceRays(activeRTPipeline, Point3(radianceRT->GetWidth(), radianceRT->GetHeight(), 1));
-                    viewport->GetGBuffer()->Barriers({Radiance, PathTracing, Reflection}, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
-                }
-            });
-
-            ECS::World.system("DeferredRenderingSystem").kind<ECS::OnDraw>().run([&](flecs::iter& it)
-            {
-                auto viewport = Renderer::GetCurrentViewport();
-                
-                ECS::Entity linkedCamera;
-                
-                if(viewport->TryGetLinkedCamera(linkedCamera))
-                {
-                    auto gbuffer = viewport->GetGBuffer();
-                    
-                    auto deferredRT = viewport->GetGBufferRenderTarget(Deferred);
-                    gbuffer->Clear({Deferred, NIVIrradiance});
-
-                    if(!Renderer::RenderData.FeatureToggles.EnableDeferredPass)
-                    {
-                        return;
-                    }
-
-                    Vector2 resolution = Vector2(deferredRT->GetWidth(), deferredRT->GetHeight());
-                    const uint width = (uint)resolution.x;
-                    const uint height = (uint)resolution.y;
-                    const uint pixelCount = width * height;
-                    const uint selectedOutputTarget = viewport->Type == EditorViewport ? Renderer::RenderData.EditorViewportOutputTarget : Renderer::RenderData.GameViewportOutputTarget;
-
-                    bool hasNIVPrediction = false;
-                    const bool needNIV = Renderer::RenderData.FeatureToggles.EnableNIVInference || selectedOutputTarget == 8;
-                    auto* nivCoach = reinterpret_cast<Coach::TinyCuda::NIVCoach*>(Renderer::RenderData.NIVRuntimeCoach);
-                    Renderer::RenderData.NIVLastInferenceAttempted = needNIV;
-                    Renderer::RenderData.NIVLastInferenceSucceeded = false;
-                    Renderer::RenderData.NIVLastValidPixelCount = 0;
-                    Renderer::RenderData.NIVLastMeanLuminance = 0.0f;
-                    Renderer::RenderData.NIVLastMaxChannel = 0.0f;
-
-                    if(needNIV && nivCoach && pixelCount > 0)
-                    {
-                        try
-                        {
-                            if(pixelCount > NIVBufferCapacityPixels)
-                            {
-                                if(NIVWorldPositionBuffer)
-                                {
-                                    Renderer::Destroy(NIVWorldPositionBuffer);
-                                    delete NIVWorldPositionBuffer;
-                                    NIVWorldPositionBuffer = nullptr;
-                                }
-
-                                if(NIVWorldNormalValidBuffer)
-                                {
-                                    Renderer::Destroy(NIVWorldNormalValidBuffer);
-                                    delete NIVWorldNormalValidBuffer;
-                                    NIVWorldNormalValidBuffer = nullptr;
-                                }
-
-                                if(NIVPredictedOutputBuffer)
-                                {
-                                    Renderer::Destroy(NIVPredictedOutputBuffer);
-                                    delete NIVPredictedOutputBuffer;
-                                    NIVPredictedOutputBuffer = nullptr;
-                                }
-
-                                if(NIVPredictedHistoryBuffer)
-                                {
-                                    Renderer::Destroy(NIVPredictedHistoryBuffer);
-                                    delete NIVPredictedHistoryBuffer;
-                                    NIVPredictedHistoryBuffer = nullptr;
-                                }
-
-                                NIVWorldPositionBuffer = Renderer::CreateBuffer(
-                                    "NIVWorldPositionBuffer",
-                                    StorageBuffer,
-                                    pixelCount * sizeof(float) * 4,
-                                    sizeof(float) * 4
-                                );
-                                NIVWorldNormalValidBuffer = Renderer::CreateBuffer(
-                                    "NIVWorldNormalValidBuffer",
-                                    StorageBuffer,
-                                    pixelCount * sizeof(float) * 4,
-                                    sizeof(float) * 4
-                                );
-                                NIVPredictedOutputBuffer = Renderer::CreateBuffer(
-                                    "NIVPredictedOutputBuffer",
-                                    StorageBuffer,
-                                    pixelCount * sizeof(float) * 4,
-                                    sizeof(float) * 4
-                                );
-                                NIVPredictedHistoryBuffer = Renderer::CreateBuffer(
-                                    "NIVPredictedHistoryBuffer",
-                                    StorageBuffer,
-                                    pixelCount * sizeof(float) * 4,
-                                    sizeof(float) * 4
-                                );
-                                NIVBufferCapacityPixels = pixelCount;
-                            }
-
-                            NIVPackRootConstants.WorldPositionRT = gbuffer->GetRenderTarget(WorldPosition)->GetIndex(SRV_CBV);
-                            NIVPackRootConstants.WorldNormalRT = gbuffer->GetRenderTarget(Normal)->GetIndex(SRV_CBV);
-                            NIVPackRootConstants.MeshIDRT = gbuffer->GetRenderTarget(MeshID)->GetIndex(SRV_CBV);
-                            NIVPackRootConstants.OutWorldPositionBuffer = NIVWorldPositionBuffer->GetIndex(UAV);
-                            NIVPackRootConstants.OutWorldNormalValidBuffer = NIVWorldNormalValidBuffer->GetIndex(UAV);
-                            NIVPackRootConstants.Width = width;
-                            NIVPackRootConstants.Height = height;
-
-                            Renderer::ResourceBarrier(NIVWorldPositionBuffer, UNORDERED_ACCESS);
-                            Renderer::ResourceBarrier(NIVWorldNormalValidBuffer, UNORDERED_ACCESS);
-                            Renderer::SetPipeline(NIVPackPipeline);
-                            Renderer::PushConstants(&NIVPackRootConstants, sizeof(NIVPackRootConstants));
-                            Point3 nivPackThreads = Renderer::GetNumThreadsPerGroup(NIVPackComputeShader);
-                            Point3 nivPackGroupCount = Point3((width + nivPackThreads.x - 1) / nivPackThreads.x, (height + nivPackThreads.y - 1) / nivPackThreads.y, 1);
-                            Renderer::Compute(nivPackGroupCount);
-                            Renderer::ResourceBarrier(NIVWorldPositionBuffer, ALL_SHADER_RESOURCE);
-                            Renderer::ResourceBarrier(NIVWorldNormalValidBuffer, ALL_SHADER_RESOURCE);
-
-                            Renderer::Flush();
-
-                            uint validPixels = 0;
-                            float meanLuminance = 0.0f;
-                            float maxChannel = 0.0f;
-                            const bool interopSucceeded = nivCoach->InferFromSharedBuffers(
-                                Renderer::GetSharedHandle(NIVWorldPositionBuffer),
-                                pixelCount * sizeof(float) * 4,
-                                Renderer::GetSharedHandle(NIVWorldNormalValidBuffer),
-                                pixelCount * sizeof(float) * 4,
-                                Renderer::GetSharedHandle(NIVPredictedOutputBuffer),
-                                pixelCount * sizeof(float) * 4,
-                                Renderer::GetSharedHandle(NIVPredictedHistoryBuffer),
-                                pixelCount * sizeof(float) * 4,
-                                pixelCount,
-                                Renderer::RenderData.EnableNIVTemporalSmoothing,
-                                Renderer::RenderData.NIVTemporalHistoryWeight,
-                                &validPixels,
-                                &meanLuminance,
-                                &maxChannel
-                            );
-
-                            if(interopSucceeded)
-                            {
-                                NIVPredictedOutputBuffer->SetCurrentState(ALL_SHADER_RESOURCE);
-                                if (NIVPredictedHistoryBuffer)
-                                {
-                                    NIVPredictedHistoryBuffer->SetCurrentState(ALL_SHADER_RESOURCE);
-                                }
-
-                                Renderer::RenderData.NIVLastInferenceSucceeded = true;
-                                Renderer::RenderData.NIVLastValidPixelCount = validPixels;
-                                Renderer::RenderData.NIVLastMeanLuminance = meanLuminance;
-                                Renderer::RenderData.NIVLastMaxChannel = maxChannel;
-                                hasNIVPrediction = true;
-                            }
-                            else
-                            {
-                                std::vector<float> worldPositionRGBA(pixelCount * 4, 0.0f);
-                                std::vector<float> worldNormalValidRGBA(pixelCount * 4, 0.0f);
-                                std::vector<float> predictedRGBA(pixelCount * 4, 0.0f);
-                                Renderer::DownloadBuffer(NIVWorldPositionBuffer, worldPositionRGBA.data(), worldPositionRGBA.size() * sizeof(float));
-                                Renderer::DownloadBuffer(NIVWorldNormalValidBuffer, worldNormalValidRGBA.data(), worldNormalValidRGBA.size() * sizeof(float));
-                                nivCoach->InferFromBuffers(worldPositionRGBA.data(), worldNormalValidRGBA.data(), pixelCount, predictedRGBA.data());
-                                Renderer::UploadBuffer(NIVPredictedOutputBuffer, predictedRGBA.data(), (uint32_t)(predictedRGBA.size() * sizeof(float)), 0);
-                                if(NIVPredictedOutputBuffer->GetCurrentState() != ALL_SHADER_RESOURCE)
-                                {
-                                    Renderer::ResourceBarrier(NIVPredictedOutputBuffer, ALL_SHADER_RESOURCE);
-                                }
-
-                                double lumAccum = 0.0;
-                                for(uint i = 0; i < pixelCount; ++i)
-                                {
-                                    const float valid = worldNormalValidRGBA[i * 4 + 3];
-                                    if(valid <= 0.5f)
-                                    {
-                                        continue;
-                                    }
-                                    validPixels++;
-                                    const float r = predictedRGBA[i * 4 + 0];
-                                    const float g = predictedRGBA[i * 4 + 1];
-                                    const float b = predictedRGBA[i * 4 + 2];
-                                    lumAccum += (double)r * 0.2126 + (double)g * 0.7152 + (double)b * 0.0722;
-                                    maxChannel = std::max(maxChannel, std::max(r, std::max(g, b)));
-                                }
-                                Renderer::RenderData.NIVLastInferenceSucceeded = true;
-                                Renderer::RenderData.NIVLastValidPixelCount = validPixels;
-                                Renderer::RenderData.NIVLastMeanLuminance = validPixels > 0 ? (float)(lumAccum / (double)validPixels) : 0.0f;
-                                Renderer::RenderData.NIVLastMaxChannel = maxChannel;
-                                hasNIVPrediction = true;
-                            }
-                        }
-                        catch(...)
-                        {
-                            hasNIVPrediction = false;
-                        }
-                    }
-
-                    gbuffer->Barriers({Deferred, NIVIrradiance}, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
-                    
-                    DeferredRootConstants.MeshIDRT = gbuffer->GetRenderTarget(MeshID)->GetIndex(SRV_CBV);
-                    DeferredRootConstants.RadianceRT = gbuffer->GetRenderTarget(Radiance)->GetIndex(SRV_CBV);
-                    DeferredRootConstants.PathTracingRT = gbuffer->GetRenderTarget(PathTracing)->GetIndex(SRV_CBV);
-                    DeferredRootConstants.ColorRT = gbuffer->GetRenderTarget(Color)->GetIndex(SRV_CBV);
-                    DeferredRootConstants.DeferredRT = deferredRT->GetIndex(UAV);
-                    DeferredRootConstants.NIVIrradianceRT = gbuffer->GetRenderTarget(NIVIrradiance)->GetIndex(UAV);
-                    DeferredRootConstants.NIVPredictedBuffer = NIVPredictedOutputBuffer ? NIVPredictedOutputBuffer->GetIndex(SRV_CBV) : 0;
-                    DeferredRootConstants.SkyColorRT = gbuffer->GetRenderTarget(SkyColor)->GetIndex(SRV_CBV);
-                    DeferredRootConstants.EnableSky = Renderer::RenderData.FeatureToggles.EnableSkyPass ? 1 : 0;
-                    DeferredRootConstants.EnablePathTracing = Renderer::RenderData.FeatureToggles.EnablePathTracing ? 1 : 0;
-                    DeferredRootConstants.EnableNIVInference = Renderer::RenderData.FeatureToggles.EnableNIVInference ? 1 : 0;
-                    DeferredRootConstants.HasNIVPrediction = hasNIVPrediction ? 1 : 0;
-                    DeferredRootConstants.EnableNIVSpatialFilter = Renderer::RenderData.EnableNIVSpatialFilter ? 1 : 0;
-                    DeferredRootConstants.NIVSpatialFilterStrength = std::clamp(Renderer::RenderData.NIVSpatialFilterStrength, 0.0f, 1.0f);
-                    Renderer::SetPipeline(DeferredRenderingPipeline);
-                    Renderer::PushConstants(&DeferredRootConstants, sizeof(DeferredRootConstants));
-                    
-                    Point3 numThreads = Renderer::GetNumThreadsPerGroup(DeferredRenderingComputeShader);
-                    GroupCount = Point3((resolution.x + numThreads.x - 1) / numThreads.x, (resolution.y + numThreads.y - 1) / numThreads.y, 1);
-                    
-                    Renderer::Compute(GroupCount);
-                    viewport->GetGBuffer()->Barriers({Deferred, NIVIrradiance}, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
-                }
-            });
         }
     };
 }

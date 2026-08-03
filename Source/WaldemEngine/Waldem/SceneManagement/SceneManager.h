@@ -1,7 +1,9 @@
 #pragma once
 #include "GameScene.h"
 #include "Waldem/ECS/IdManager.h"
+#include "Waldem/ECS/Systems/CoreSystems/DeferredRenderingSystem.h"
 #include "Waldem/ECS/Systems/CoreSystems/HybridRenderingSystem.h"
+#include "Waldem/ECS/Systems/CoreSystems/RayTracingRenderingSystem.h"
 #include "Waldem/Renderer/Renderer.h"
 #include <string>
 
@@ -37,6 +39,8 @@ namespace Waldem
 
             IdManager::Reset();
             HybridRenderingSystem::ResetSceneRuntimeData();
+            RayTracingRenderingSystem::ResetSceneRuntimeData();
+            DeferredRenderingSystem::ResetSceneRuntimeData();
             Renderer::Wait();
             
             if(CurrentScene)

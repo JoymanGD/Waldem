@@ -55,7 +55,7 @@ namespace Waldem
             }
             else
             {
-                ECS::World.system<Cs...>(name).template kind<Kind>().each([func = std::forward<Func>(func), this] (ECS::Entity entity, Cs&... components) mutable
+                ECS::World.system<Cs...>(name).template kind<Kind>().each([func = std::forward<Func>(func), this] (ECS::Entity entity, Cs&... components)
                 {
                     if (!IsActive)
                         return;

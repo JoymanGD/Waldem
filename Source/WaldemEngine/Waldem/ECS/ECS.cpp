@@ -10,6 +10,7 @@
 #include "Components/MeshComponent.h"
 #include "Components/ParticleSystemComponent.h"
 #include "Components/PlayerController.h"
+#include "Components/Terrain.h"
 #include "Components/RigidBody.h"
 #include "Components/ScriptComponent.h"
 #include "Components/Selected.h"
@@ -22,10 +23,12 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "Systems/CoreSystems/AnimationSystem.h"
 #include "Systems/CoreSystems/CollisionSystem.h"
+#include "Systems/CoreSystems/DeferredRenderingSystem.h"
 #include "Systems/CoreSystems/HybridRenderingSystem.h"
 #include "Systems/CoreSystems/ParticleSystem.h"
 #include "Systems/CoreSystems/PhysXSystem.h"
 #include "Systems/CoreSystems/PostProcessSystem.h"
+#include "Systems/CoreSystems/RayTracingRenderingSystem.h"
 #include "Systems/CoreSystems/ScreenQuadSystem.h"
 #include "Systems/CoreSystems/ScriptExecutionSystem.h"
 #include "Systems/CoreSystems/SpatialAudioSystem.h"
@@ -386,9 +389,11 @@ namespace Waldem
             // Systems.Add(OceanSimulationSystem());
             Systems.Add(new SpatialAudioSystem());
             Systems.Add(new ScriptExecutionSystem());
-            Systems.Add(new TerrainSystem());
             Systems.Add(new AnimationSystem());
             Systems.Add(new HybridRenderingSystem());
+            Systems.Add(new TerrainSystem());
+            Systems.Add(new RayTracingRenderingSystem());
+            Systems.Add(new DeferredRenderingSystem());
             Systems.Add(new ParticleSystem());
             Systems.Add(new PostProcessSystem());
             Systems.Add(new TrainingPathTracingSystem());

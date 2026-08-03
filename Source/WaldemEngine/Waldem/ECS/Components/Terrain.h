@@ -1,5 +1,6 @@
 #pragma once
 #include "ComponentBase.h"
+#include "Waldem/Renderer/Model/TerrainMesh.h"
 
 namespace Waldem
 {
@@ -12,12 +13,16 @@ namespace Waldem
         float Height = 100.f;
         FIELD()
         TextureReference Heightmap;
+        FIELD()
+        TextureReference Albedo;
 
         uint InitializedResolution = 512;
         Path InitializedReference = "Empty";
         float InitializedHeight = 1.f;
 
-        Terrain() {}
+        Terrain()
+        {
+        }
     };
 }
 #include "Terrain.generated.h"
