@@ -24,7 +24,7 @@
 #include "Systems/CoreSystems/AnimationSystem.h"
 #include "Systems/CoreSystems/CollisionSystem.h"
 #include "Systems/CoreSystems/DeferredRenderingSystem.h"
-#include "Systems/CoreSystems/HybridRenderingSystem.h"
+#include "Systems\CoreSystems\GBufferRenderingSystem.h"
 #include "Systems/CoreSystems/ParticleSystem.h"
 #include "Systems/CoreSystems/PhysXSystem.h"
 #include "Systems/CoreSystems/PostProcessSystem.h"
@@ -378,19 +378,11 @@ namespace Waldem
             World.system("HierarchyTransformPropagationLate").kind<OnLateUpdate>().run(propagateHierarchyTransforms);
             World.system("HierarchyTransformPropagationDraw").kind<OnDraw>().run(propagateHierarchyTransforms);
             
-#if WD_WITH_PHYSX
-            Systems.Add(new PhysXSystem());
-#else
-            Systems.Add(new PhysicsAccumulationSystem());
-            Systems.Add(new PhysicsIntegrationSystem());
-            Systems.Add(new CollisionSystem());
-#endif
-            
             // Systems.Add(OceanSimulationSystem());
             Systems.Add(new SpatialAudioSystem());
             Systems.Add(new ScriptExecutionSystem());
             Systems.Add(new AnimationSystem());
-            Systems.Add(new HybridRenderingSystem());
+            Systems.Add(new GBufferRenderingSystem());
             Systems.Add(new TerrainSystem());
             Systems.Add(new RayTracingRenderingSystem());
             Systems.Add(new DeferredRenderingSystem());
@@ -398,6 +390,14 @@ namespace Waldem
             Systems.Add(new PostProcessSystem());
             Systems.Add(new TrainingPathTracingSystem());
             Systems.Add(new ScreenQuadSystem());
+            
+#if WD_WITH_PHYSX
+            Systems.Add(new PhysXSystem());
+#else
+            Systems.Add(new PhysicsAccumulationSystem());
+            Systems.Add(new PhysicsIntegrationSystem());
+            Systems.Add(new CollisionSystem());
+#endif
 
             InitializeSystems();
         }

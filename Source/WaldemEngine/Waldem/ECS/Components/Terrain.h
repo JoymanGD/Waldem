@@ -4,6 +4,15 @@
 
 namespace Waldem
 {
+#define DEFAULT_TERRAIN_SIZE 100.0f
+    
+    struct PhysXTerrainSample
+    {
+        int16 Height;
+        uint8 Material1;
+        uint8 Material2;
+    };
+
     COMPONENT()
     struct WALDEM_API Terrain
     {
@@ -16,9 +25,13 @@ namespace Waldem
         FIELD()
         TextureReference Albedo;
 
-        uint InitializedResolution = 512;
-        Path InitializedReference = "Empty";
-        float InitializedHeight = 1.f;
+        ResizableBuffer* VertexBuffer;
+        ResizableBuffer* IndexBuffer;
+        ResizableBuffer* PhysXSamplesBuffer;
+        Buffer* DataBuffer;
+        DrawIndexedCommand DrawCommand;
+        int VertexCount;
+        uint IndexCount;
 
         Terrain()
         {

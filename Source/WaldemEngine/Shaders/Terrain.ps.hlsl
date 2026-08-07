@@ -3,11 +3,8 @@
 struct PS_INPUT
 {
     float4 Position : SV_POSITION;
-    float4 Color : COLOR;
     float4 WorldPosition : POSITION;
     float3 Normal : NORMAL;
-    float3 Tangent : TANGENT;
-    float3 Bitangent : BITANGENT;
     float2 UV : TEXCOORD;
     uint MeshId : MESH_ID;
 };
@@ -29,7 +26,7 @@ PS_OUTPUT main(PS_INPUT input)
     StructuredBuffer<TerrainSceneData> sceneDataBuffer = ResourceDescriptorHeap[SceneDataBufferId];
     TerrainSceneData sceneData = sceneDataBuffer[0];
 
-    float4 color = input.Color;
+    float4 color = float4(1, 1, 1, 1);
     
     if(sceneData.AlbedoIndex > 0)
     {

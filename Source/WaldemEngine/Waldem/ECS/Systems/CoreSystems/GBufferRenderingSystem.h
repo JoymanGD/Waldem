@@ -60,9 +60,9 @@ namespace Waldem
         uint SceneDataBuffer;
     };
     
-    class WALDEM_API HybridRenderingSystem : public ISystem
+    class WALDEM_API GBufferRenderingSystem : public ISystem
     {
-        inline static HybridRenderingSystem* ActiveInstance = nullptr;
+        inline static GBufferRenderingSystem* ActiveInstance = nullptr;
 
         //Sky pass
         Pipeline* SkyPipeline = nullptr;
@@ -122,7 +122,7 @@ namespace Waldem
         Buffer* SpriteIndexBuffer;
         
     public:
-        HybridRenderingSystem()
+        GBufferRenderingSystem()
         {
             ActiveInstance = this;
             SpriteVertices =
@@ -850,13 +850,16 @@ namespace Waldem
                 
             });
 
-            ECS::World.system<Transform>("HybridRenderingTransformSyncSystem").kind<ECS::OnDraw>().each([&](flecs::entity entity, Transform& transform)
+            Observer<Transform>("HybridRenderingTransformSyncOnSet", flecs::OnSet, [&](flecs::entity entity, Transform& transform)
             {
-                int globalDrawId;
-                if(IdManager::GetId(entity, GlobalDrawIdType, globalDrawId))
+                if(entity.has<MeshComponent>() || entity.has<Light>() || entity.has<Sprite>())
                 {
-                    WorldTransformsBuffer.UpdateData(&transform.RenderMatrix, sizeof(Matrix4), globalDrawId * sizeof(Matrix4));
-                    Renderer::RenderData.TLAS.UpdateTransform(globalDrawId, transform);
+                    int globalDrawId;
+                    if(IdManager::GetId(entity, GlobalDrawIdType, globalDrawId))
+                    {
+                        WorldTransformsBuffer.UpdateData(&transform.RenderMatrix, sizeof(Matrix4), globalDrawId * sizeof(Matrix4));
+                        Renderer::RenderData.TLAS.UpdateTransform(globalDrawId, transform);
+                    }
                 }
 
                 if(entity.has<Light>())
@@ -982,11 +985,11 @@ namespace Waldem
                     auto& entry = SkeletalSkinningData.At(skinIdx).value;
 
                     SkinningConstants.BindPoseVertexBuffer = entry.BindPoseVertexSRV;
-                    SkinningConstants.SkinnedVertexBuffer  = Renderer::RenderData.VertexBuffer.GetIndex(UAV);
-                    SkinningConstants.VertexBonesBuffer    = entry.VertexBonesSRV;
-                    SkinningConstants.BoneMatricesBuffer   = entry.BoneMatricesBuffer->GetIndex(SRV_CBV);
-                    SkinningConstants.VertexOffset         = (uint)entry.VertexOffset;
-                    SkinningConstants.VertexCount          = entry.VertexCount;
+                    SkinningConstants.SkinnedVertexBuffer = Renderer::RenderData.VertexBuffer.GetIndex(UAV);
+                    SkinningConstants.VertexBonesBuffer = entry.VertexBonesSRV;
+                    SkinningConstants.BoneMatricesBuffer = entry.BoneMatricesBuffer->GetIndex(SRV_CBV);
+                    SkinningConstants.VertexOffset = (uint)entry.VertexOffset;
+                    SkinningConstants.VertexCount = entry.VertexCount;
 
                     Renderer::SetPipeline(SkinningPipeline);
                     Renderer::PushConstants(&SkinningConstants, sizeof(SkinningRootConstants));

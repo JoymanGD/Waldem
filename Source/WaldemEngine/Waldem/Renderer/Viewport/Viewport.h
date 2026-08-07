@@ -36,6 +36,7 @@ namespace Waldem
         SFrameBuffer* FrameBuffer = nullptr;
         bool IsMouseOver = false;
         bool IsFocused = false;
+        bool IsVisible = true;
         bool FocusRequested = false;
     private:
         WArray<ResizeCallback> ResizeCallbacks;

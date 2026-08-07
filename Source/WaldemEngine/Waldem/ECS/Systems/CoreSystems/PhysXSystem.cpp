@@ -2,6 +2,7 @@
 #include "PhysXSystem.h"
 
 #include "Waldem/ECS/Components/CharacterController.h"
+#include "Waldem/ECS/Components/Terrain.h"
 
 #if WD_WITH_PHYSX
 
@@ -521,6 +522,59 @@ namespace Waldem
             return true;
         }
 
+        bool CreateTerrain(PxPhysics& physics, ECS::Entity entity, Terrain& terrain)
+        {
+            auto& state = GetState();
+            if(state.Physics == nullptr || state.Scene == nullptr || state.DefaultMaterial == nullptr)
+            {
+                return false;
+            }
+
+            const uint64 entityId = static_cast<uint64>(entity.id());
+            ReleaseActor(entityId);
+
+            auto& transformComponent = entity.get<Transform>();
+
+            PxRigidStatic* actor = state.Physics->createRigidStatic(ToPxTransform(transformComponent));
+            if(actor == nullptr)
+            {
+                return false;
+            }
+
+            actor->userData = reinterpret_cast<void*>(static_cast<uintptr_t>(entityId));
+
+            int numRows, numCols;
+            numRows = numCols = terrain.Resolution;
+
+            PxHeightFieldSample* samples = new PxHeightFieldSample[terrain.VertexCount];
+            Renderer::DownloadBuffer(terrain.PhysXSamplesBuffer->GetBuffer(), samples, sizeof(uint) * terrain.VertexCount);
+
+            PxHeightFieldDesc hfDesc;
+            hfDesc.format             = PxHeightFieldFormat::eS16_TM;
+            hfDesc.nbColumns          = numCols;
+            hfDesc.nbRows             = numRows;
+            hfDesc.samples.data       = samples;
+            hfDesc.samples.stride     = sizeof(PxHeightFieldSample);
+
+            PxHeightField* aHeightField = PxCreateHeightField(hfDesc, physics.getPhysicsInsertionCallback());
+            
+            const Vector3 terrainScale = GetColliderScale(transformComponent);
+            const float rowScale = (DEFAULT_TERRAIN_SIZE * terrainScale.x) / float(terrain.Resolution - 1);
+            const float columnScale = (DEFAULT_TERRAIN_SIZE * terrainScale.z) / float(terrain.Resolution - 1);
+            const float heightScale = (terrain.Height * terrainScale.y) / 32767.0f;
+            
+            PxHeightFieldGeometry hfGeom(aHeightField, PxMeshGeometryFlag::eDOUBLE_SIDED, heightScale, rowScale, columnScale);
+            
+            delete [] samples;
+            
+            auto shape = PxRigidActorExt::createExclusiveShape(*actor, hfGeom, *state.DefaultMaterial);
+            
+            state.Scene->addActor(*actor);
+            state.Actors[entityId] = actor;
+            state.ColliderScales[entityId] = GetColliderScale(transformComponent);
+            return true;
+        }
+
         bool CreateDynamicActor(ECS::Entity entity, Transform& transform, ColliderComponent& collider, RigidBody& rigidBody)
         {
             auto& state = GetState();
@@ -592,7 +646,7 @@ namespace Waldem
 
                 PxRigidActor* actor = actorIt->second;
                 ECS::Entity entity = GetEntityById(entityId);
-                if(!entity.is_alive() || actor == nullptr || !entity.has<Transform>() || !entity.has<ColliderComponent>())
+                if(!entity.is_alive() || actor == nullptr || !entity.has<Transform>() || (!entity.has<ColliderComponent>() && !entity.has<Terrain>()))
                 {
                     ReleaseActor(entityId);
                     continue;
@@ -969,6 +1023,11 @@ namespace Waldem
             CreateStaticActor(entity, transform, collider);
         });
 
+        Observer<Terrain>("PhysXCreateTerrainObserver", flecs::OnSet, [&](ECS::Entity entity, Terrain& terrain)
+        {
+            CreateTerrain(*state.Physics, entity, terrain);
+        });
+
         Observer<Components<Transform, CharacterController>, Without<RigidBody, ColliderComponent>>("CharacterControllerCreatedObserver", flecs::OnAdd, [&](ECS::Entity entity, Transform& transform, CharacterController& controller)
         {
             CreateCharacterController(entity, transform, controller);
@@ -1144,6 +1203,18 @@ namespace Waldem
                         }
 
                         state.ColliderScales[entityId] = currentScale;
+                    }
+                }
+                else if(entity.has<Terrain>())
+                {
+                    const Vector3 currentScale = GetColliderScale(transform);
+                    const auto scaleIt = state.ColliderScales.find(entityId);
+                    const bool scaleChanged = scaleIt == state.ColliderScales.end() || length(scaleIt->second - currentScale) > 1e-4f;
+                    if(scaleChanged && state.Physics != nullptr)
+                    {
+                        auto& terrain = entity.get_mut<Terrain>();
+                        CreateTerrain(*state.Physics, entity, terrain);
+                        return;
                     }
                 }
 

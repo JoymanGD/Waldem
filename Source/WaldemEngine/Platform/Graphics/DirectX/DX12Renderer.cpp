@@ -328,23 +328,37 @@ namespace Waldem
         rootParameters[1].InitAsConstants(32, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
 
         // Define a static sampler
-        D3D12_STATIC_SAMPLER_DESC staticSampler;
-        staticSampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-        staticSampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-        staticSampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-        staticSampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-        staticSampler.MipLODBias = 0;
-        staticSampler.MaxAnisotropy = 1;
-        staticSampler.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-        staticSampler.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE;
-        staticSampler.MinLOD = 0.0f;
-        staticSampler.MaxLOD = D3D12_FLOAT32_MAX;
-        staticSampler.ShaderRegister = 0;
-        staticSampler.RegisterSpace = 0;
-        staticSampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+        D3D12_STATIC_SAMPLER_DESC staticSampler[2];
+        staticSampler[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+        staticSampler[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        staticSampler[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        staticSampler[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        staticSampler[0].MipLODBias = 0;
+        staticSampler[0].MaxAnisotropy = 1;
+        staticSampler[0].ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+        staticSampler[0].BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE;
+        staticSampler[0].MinLOD = 0.0f;
+        staticSampler[0].MaxLOD = D3D12_FLOAT32_MAX;
+        staticSampler[0].ShaderRegister = 0;
+        staticSampler[0].RegisterSpace = 0;
+        staticSampler[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+        
+        staticSampler[1].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+        staticSampler[1].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        staticSampler[1].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        staticSampler[1].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        staticSampler[1].MipLODBias = 0;
+        staticSampler[1].MaxAnisotropy = 1;
+        staticSampler[1].ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+        staticSampler[1].BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE;
+        staticSampler[1].MinLOD = 0.0f;
+        staticSampler[1].MaxLOD = D3D12_FLOAT32_MAX;
+        staticSampler[1].ShaderRegister = 1;
+        staticSampler[1].RegisterSpace = 0;
+        staticSampler[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
         
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSigDesc;
-        rootSigDesc.Init_1_1(_countof(rootParameters), rootParameters, 1, &staticSampler, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED | D3D12_ROOT_SIGNATURE_FLAG_SAMPLER_HEAP_DIRECTLY_INDEXED);
+        rootSigDesc.Init_1_1(_countof(rootParameters), rootParameters, 2, &staticSampler[0], D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED | D3D12_ROOT_SIGNATURE_FLAG_SAMPLER_HEAP_DIRECTLY_INDEXED);
 
         // === Serialize and Create Root Signature ===
         ComPtr<ID3DBlob> serializedRootSig = nullptr;

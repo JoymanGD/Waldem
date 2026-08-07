@@ -5,6 +5,7 @@ namespace Waldem
     public class FirstPersonController : ScriptableEntity
     {
         public float MoveSpeed = 10.0f;
+        public float SprintSpeed = 20.0f;
         public float PushForce = 20.0f;
         public float CameraOrbitSensitivity = 0.2f;
         public float CameraPitchMin = -70.0f;
@@ -54,22 +55,26 @@ namespace Waldem
 
                 if (Input.GetKey(KeyCode.D))
                     movement += right;
+
+                bool isSprinting = Input.GetKey(KeyCode.LeftShift);
                 
                 if (movement.magnitude > 0)
                     movement.Normalize();
 
                 if (movement.magnitude > 0)
                 {
+                    float currentMoveSpeed = isSprinting ? SprintSpeed : MoveSpeed;
+                    
                     if (characterController != null)
                     {
                         Vector3 controllerVelocity = characterController.MoveVelocity;
-                        controllerVelocity.x = movement.x * MoveSpeed;
-                        controllerVelocity.z = movement.z * MoveSpeed;
+                        controllerVelocity.x = movement.x * currentMoveSpeed;
+                        controllerVelocity.z = movement.z * currentMoveSpeed;
                         characterController.MoveVelocity = controllerVelocity;
                     }
                     else
                     {
-                        Transform.Position += movement * MoveSpeed * deltaTime;
+                        Transform.Position += movement * currentMoveSpeed * deltaTime;
                     }
                 }
                 else if (characterController != null)
