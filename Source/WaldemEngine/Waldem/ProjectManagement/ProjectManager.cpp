@@ -9,6 +9,9 @@
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
 
+#include "Waldem/Config/EngineConfig.h"
+#include "Waldem/Utils/JsonUtils.h"
+
 namespace Waldem
 {
     namespace
@@ -63,232 +66,239 @@ namespace Waldem
             return exitCode == 0;
         }
     }
-}
-
-void Waldem::ProjectManager::CreateProject(WString name, Path path)
-{
-    //create project folder
-    Path projectFolder = path / name.GetData();
-    create_directories(projectFolder);
-
-    //create project file
-    Path projectFile = projectFolder / name.GetData();
-    projectFile.replace_extension(".wproject");
     
-    //create content folder
-    Path contentFolder = projectFolder / "Content";
-    create_directories(contentFolder);
+    void ProjectManager::CreateProject(WString name, Path path)
+    {
+        //create project folder
+        Path projectFolder = path / name.GetData();
+        create_directories(projectFolder);
 
-    //create scenes folder
-    Path scenesFolder = contentFolder / "Scenes";
-    create_directories(scenesFolder);
+        //create project file
+        Path projectFile = projectFolder / name.GetData();
+        projectFile.replace_extension(".wproject");
+        
+        //create content folder
+        Path contentFolder = projectFolder / "Content";
+        create_directories(contentFolder);
 
-    //create scripts folder
-    Path scriptsFolder = contentFolder / "Scripts";
-    create_directories(scriptsFolder);
+        //create scenes folder
+        Path scenesFolder = contentFolder / "Scenes";
+        create_directories(scenesFolder);
 
-    //create default scene
-    const char* defaultScene = R"([
-      {
-        "scene_id": 0,
-        "parent_scene_id": -1,
-        "entity": {
-          "name": "Sun",
-          "components": {
-            "SceneEntity": {
-              "ParentId": 0,
-              "HierarchyDepth": 0,
-              "HierarchySlot": 1,
-              "VisibleInHierarchy": true
-            },
-            "Waldem.Transform": {
-              "Position": {
-                "x": 53.7033996582,
-                "y": 21.5136680603,
-                "z": -22.0206680298
-              },
-              "Rotation": {
-                "x": 32.0072174072,
-                "y": 0,
-                "z": 0
-              },
-              "LocalScale": {
-                "x": 1,
-                "y": 1,
-                "z": 1
+        //create scripts folder
+        Path scriptsFolder = contentFolder / "Scripts";
+        create_directories(scriptsFolder);
+
+        //create default scene
+        const char* defaultScene = R"([
+          {
+            "scene_id": 0,
+            "parent_scene_id": -1,
+            "entity": {
+              "name": "Sun",
+              "components": {
+                "SceneEntity": {
+                  "ParentId": 0,
+                  "HierarchyDepth": 0,
+                  "HierarchySlot": 1,
+                  "VisibleInHierarchy": true
+                },
+                "Waldem.Transform": {
+                  "Position": {
+                    "x": 53.7033996582,
+                    "y": 21.5136680603,
+                    "z": -22.0206680298
+                  },
+                  "Rotation": {
+                    "x": 32.0072174072,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "LocalScale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                },
+                "Waldem.Light": {
+                  "Color": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  },
+                  "Intensity": 60,
+                  "Radius": 10,
+                  "InnerCone": 1,
+                  "OuterCone": 45,
+                  "Softness": 0.001,
+                  "AreaWidth": 1,
+                  "AreaHeight": 1,
+                  "AreaTwoSided": 0,
+                  "Type": "Directional"
+                }
               }
-            },
-            "Waldem.Light": {
-              "Color": {
-                "x": 1,
-                "y": 1,
-                "z": 1
-              },
-              "Intensity": 60,
-              "Radius": 10,
-              "InnerCone": 1,
-              "OuterCone": 45,
-              "Softness": 0.001,
-              "AreaWidth": 1,
-              "AreaHeight": 1,
-              "AreaTwoSided": 0,
-              "Type": "Directional"
+            }
+          },
+          {
+            "scene_id": 1,
+            "parent_scene_id": -1,
+            "entity": {
+              "name": "Camera",
+              "components": {
+                "SceneEntity": {
+                  "ParentId": 0,
+                  "HierarchyDepth": 0,
+                  "HierarchySlot": 0,
+                  "VisibleInHierarchy": true
+                },
+                "Waldem.Transform": {
+                  "Position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "Rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "LocalScale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                },
+                "Waldem.Camera": {
+                  "FieldOfView": 60,
+                  "AspectRatio": 1.7777778,
+                  "NearPlane": 0.001,
+                  "FarPlane": 1000
+                }
+              }
             }
           }
+        ])";
+
+        Path defaultSceneFile = scenesFolder / "Default.scene";
+        std::ofstream sceneFile(defaultSceneFile);
+
+        if (!sceneFile)
+        {
+            WD_CORE_ERROR("Couldn't create default scene");
+            return;
         }
-      },
-      {
-        "scene_id": 1,
-        "parent_scene_id": -1,
-        "entity": {
-          "name": "Camera",
-          "components": {
-            "SceneEntity": {
-              "ParentId": 0,
-              "HierarchyDepth": 0,
-              "HierarchySlot": 0,
-              "VisibleInHierarchy": true
-            },
-            "Waldem.Transform": {
-              "Position": {
-                "x": 0,
-                "y": 0,
-                "z": 0
-              },
-              "Rotation": {
-                "x": 0,
-                "y": 0,
-                "z": 0
-              },
-              "LocalScale": {
-                "x": 1,
-                "y": 1,
-                "z": 1
-              }
-            },
-            "Waldem.Camera": {
-              "FieldOfView": 60,
-              "AspectRatio": 1.7777778,
-              "NearPlane": 0.001,
-              "FarPlane": 1000
-            }
-          }
+
+        sceneFile << defaultScene;
+        
+        ProjectData newProject = {};
+        newProject.Name = name;
+        newProject.ProjectFilePath = projectFile;
+        newProject.ProjectPath = projectFolder;
+        
+        rapidjson::Document projectDoc;
+        projectDoc.SetObject();
+
+        auto& allocator = projectDoc.GetAllocator();
+        projectDoc.AddMember("name", rapidjson::Value(newProject.Name.GetData(), allocator), allocator);
+        projectDoc.AddMember("startupscene", rapidjson::Value(newProject.StartupScene.string().c_str(), allocator), allocator);
+        rapidjson::StringBuffer buffer;
+        rapidjson::Writer writer(buffer);
+        projectDoc.Accept(writer);
+        std::ofstream file(projectFile);
+
+        if (!file)
+        {
+            WD_CORE_ERROR("Couldn't create a project file");
+            return;
         }
-      }
-    ])";
+        
+        file << buffer.GetString();
 
-    Path defaultSceneFile = scenesFolder / "Default.scene";
-    std::ofstream sceneFile(defaultSceneFile);
+        CurrentProject = newProject;
+        GenerateProjectFiles();
 
-    if (!sceneFile)
-    {
-        WD_CORE_ERROR("Couldn't create default scene");
-        return;
+        //Update engine config
+        EngineConfig::SetLastProjectPath(projectFile);
     }
 
-    sceneFile << defaultScene;
-    
-    ProjectData newProject = {};
-    newProject.Name = name;
-    newProject.ProjectFilePath = projectFile;
-    newProject.ProjectPath = projectFolder;
-    
-    rapidjson::Document projectDoc;
-    projectDoc.SetObject();
-
-    auto& allocator = projectDoc.GetAllocator();
-    projectDoc.AddMember("name", rapidjson::Value(newProject.Name.GetData(), allocator), allocator);
-    projectDoc.AddMember("startupscene", rapidjson::Value(newProject.StartupScene.string().c_str(), allocator), allocator);
-    rapidjson::StringBuffer buffer;
-    rapidjson::Writer writer(buffer);
-    projectDoc.Accept(writer);
-    std::ofstream file(projectFile);
-
-    if (!file)
+    bool ProjectManager::LoadProject(Path path)
     {
-        WD_CORE_ERROR("Couldn't create a project file");
-        return;
-    }
-    
-    file << buffer.GetString();
+        rapidjson::Document doc;
 
-    CurrentProject = newProject;
-    GenerateProjectFiles();
-}
+        if(!JsonUtils::LoadJson(path, doc))
+        {
+            return false;
+        }
 
-bool Waldem::ProjectManager::LoadProject(Path path)
-{
-    std::ifstream file(path);
+        if(!doc.IsObject() || !doc.HasMember("name") || !doc["name"].IsString() || !doc.HasMember("startupscene") || !doc["startupscene"].IsString())
+        {
+            WD_CORE_ERROR("Project file is missing required fields");
+            return false;
+        }
 
-    if (!file)
-    {
-      WD_CORE_ERROR("Failed to open project file");
-      return false;
+        ProjectData project;
+
+        project.Name = doc["name"].GetString();
+        project.ProjectFilePath = std::filesystem::absolute(path).lexically_normal();
+        project.ProjectPath = project.ProjectFilePath.parent_path();
+        project.StartupScene = doc["startupscene"].GetString();
+
+        CurrentProject = project;
+        GenerateProjectFiles();
+
+        //Update engine config
+        EngineConfig::SetLastProjectPath(project.ProjectFilePath);
+
+        return true;
     }
 
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-
-    std::string json = buffer.str();
-
-    rapidjson::Document doc;
-    doc.Parse(json.c_str());
-
-    if (doc.HasParseError())
+    bool ProjectManager::LoadLastProject()
     {
-        WD_CORE_ERROR("Failed to parse project file");
-        return false;
+        auto lastProjectPath = GetLastRecentProject();
+
+        if(lastProjectPath.empty())
+        {
+            return false;
+        }
+
+        return LoadProject(lastProjectPath);        
     }
 
-    if(!doc.IsObject() || !doc.HasMember("name") || !doc["name"].IsString() ||
-        !doc.HasMember("startupscene") || !doc["startupscene"].IsString())
+    bool ProjectManager::GenerateProjectFiles()
     {
-        WD_CORE_ERROR("Project file is missing required fields");
-        return false;
+        const Path engineRoot = FindEngineRoot();
+        if(engineRoot.empty())
+        {
+            WD_CORE_ERROR("Failed to locate engine root for Premake generation");
+            return false;
+        }
+
+        const Path premakePath = engineRoot / "Vendor" / "premake" / "premake5.exe";
+        if(!exists(premakePath))
+        {
+            WD_CORE_ERROR("Premake executable was not found");
+            return false;
+        }
+
+        std::wstring commandLine = L"\"" + premakePath.wstring() + L"\" vs2022";
+        if(HasProject())
+        {
+            commandLine += L" --gameproject=\"";
+            commandLine += std::filesystem::absolute(CurrentProject.ProjectPath).wstring();
+            commandLine += L"\"";
+        }
+
+        if(!RunProcessBlocking(commandLine, engineRoot))
+        {
+            WD_CORE_ERROR("Premake generation failed");
+            return false;
+        }
+
+        return true;
     }
 
-    ProjectData project;
-
-    project.Name = doc["name"].GetString();
-    project.ProjectFilePath = std::filesystem::absolute(path).lexically_normal();
-    project.ProjectPath = project.ProjectFilePath.parent_path();
-    project.StartupScene = doc["startupscene"].GetString();
-
-    CurrentProject = project;
-    GenerateProjectFiles();
-
-    return true;
-}
-
-bool Waldem::ProjectManager::GenerateProjectFiles()
-{
-    const Path engineRoot = FindEngineRoot();
-    if(engineRoot.empty())
+    Path ProjectManager::GetLastRecentProject()
     {
-        WD_CORE_ERROR("Failed to locate engine root for Premake generation");
-        return false;
+        return EngineConfig::Get()->LastProjectPath;
     }
-
-    const Path premakePath = engineRoot / "Vendor" / "premake" / "premake5.exe";
-    if(!exists(premakePath))
-    {
-        WD_CORE_ERROR("Premake executable was not found");
-        return false;
-    }
-
-    std::wstring commandLine = L"\"" + premakePath.wstring() + L"\" vs2022";
-    if(HasProject())
-    {
-        commandLine += L" --gameproject=\"";
-        commandLine += std::filesystem::absolute(CurrentProject.ProjectPath).wstring();
-        commandLine += L"\"";
-    }
-
-    if(!RunProcessBlocking(commandLine, engineRoot))
-    {
-        WD_CORE_ERROR("Premake generation failed");
-        return false;
-    }
-
-    return true;
 }

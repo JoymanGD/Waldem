@@ -124,7 +124,8 @@ local function SetupCommonCppProject()
 
     defines
     {
-        'CONTENT_PATH=L"' .. contentPath .. '"'
+        'CONTENT_PATH=L"' .. contentPath .. '"',
+        'ENGINE_PATH=L"' .. rootDir .. '"',
     }
 
     if HasPhysX then
