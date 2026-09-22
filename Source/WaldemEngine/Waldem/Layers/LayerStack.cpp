@@ -52,7 +52,7 @@ namespace Waldem
 
     Layer* LayerStack::GetLastLayer()
     {
-        return Layers[LayerInsertIndex - 1];
+        return Layers[LayerInsertIndex];
     }
 
     Layer* LayerStack::GetLastOverlay()

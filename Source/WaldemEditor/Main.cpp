@@ -17,10 +17,14 @@ int main(int argc, char** argv)
 {
     Waldem::Log::Init();
     ecs_os_set_api_defaults();
-
+    
     if(argc > 1)
     {
         Waldem::ProjectManager::LoadProject(argv[1]);
+    }
+    else
+    {
+        Waldem::ProjectManager::LoadLastProject();
     }
 
     auto engine = new Waldem::Engine();
@@ -28,13 +32,6 @@ int main(int argc, char** argv)
     auto editorLayer = new Waldem::EditorLayer(engine->GetWindow());
     engine->PushLayer(editorLayer);
     editorLayer->Initialize();
-
-    if(Waldem::ProjectManager::HasProject())
-    {
-        Waldem::ScriptEngine::ReloadScripts(true);
-        Waldem::Path startupScenePath = Waldem::ProjectManager::CurrentProject.GetStartupScenePath();
-        Waldem::SceneManager::LoadScene(startupScenePath);
-    }
     
     engine->Run();
     delete engine;

@@ -174,8 +174,6 @@ namespace Waldem
             
             UIStyles::ApplyDefault();
 
-            ProjectManager::LoadLastProject();
-
             Initialized = true;
         }
         

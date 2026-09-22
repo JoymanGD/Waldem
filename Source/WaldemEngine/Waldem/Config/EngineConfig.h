@@ -22,32 +22,37 @@ namespace Waldem
         {
             if(!Instance)
             {
-                rapidjson::Document doc;
-
-                Path configPath = Path(ENGINE_PATH) / "Engine.json";
-
-                if(!JsonUtils::LoadJson(configPath, doc))
-                {
-                    doc.SetObject();
-                    auto& allocator = doc.GetAllocator();
-                    doc.AddMember("LastProjectPath", rapidjson::Value(), allocator);
-                    std::ofstream output(configPath);
-
-                    rapidjson::OStreamWrapper outputWrapper(output);
-                    rapidjson::PrettyWriter writer(outputWrapper);
-
-                    doc.Accept(writer);
-                }
-
-                Instance = new EngineConfig;
-
-                if(doc.HasMember("LastProjectPath") && doc["LastProjectPath"].IsString())
-                {
-                    Instance->LastProjectPath = doc["LastProjectPath"].GetString();
-                }
+                Load();
             }
 
             return Instance;
+        }
+
+        static void Load()
+        {
+            rapidjson::Document doc;
+
+            Path configPath = Path(ENGINE_PATH) / "Engine.json";
+
+            if(!JsonUtils::LoadJson(configPath, doc))
+            {
+                doc.SetObject();
+                auto& allocator = doc.GetAllocator();
+                doc.AddMember("LastProjectPath", rapidjson::Value(), allocator);
+                std::ofstream output(configPath);
+
+                rapidjson::OStreamWrapper outputWrapper(output);
+                rapidjson::PrettyWriter writer(outputWrapper);
+
+                doc.Accept(writer);
+            }
+
+            Instance = new EngineConfig;
+
+            if(doc.HasMember("LastProjectPath") && doc["LastProjectPath"].IsString())
+            {
+                Instance->LastProjectPath = doc["LastProjectPath"].GetString();
+            }
         }
 
         static void Write()
@@ -82,7 +87,7 @@ namespace Waldem
         
         static void SetLastProjectPath(Path& lastProjectPath)
         {
-            Instance->LastProjectPath = lastProjectPath;
+            Get()->LastProjectPath = lastProjectPath;
             Write();
         }
     };

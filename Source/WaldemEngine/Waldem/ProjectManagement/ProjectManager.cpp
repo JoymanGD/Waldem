@@ -10,6 +10,8 @@
 #include <rapidjson/writer.h>
 
 #include "Waldem/Config/EngineConfig.h"
+#include "Waldem/SceneManagement/SceneManager.h"
+#include "Waldem/Scripting/ScriptEngine.h"
 #include "Waldem/Utils/JsonUtils.h"
 
 namespace Waldem
@@ -248,6 +250,12 @@ namespace Waldem
 
         //Update engine config
         EngineConfig::SetLastProjectPath(project.ProjectFilePath);
+
+        //Reload scripts
+        ScriptEngine::ReloadScripts(true);
+        
+        //Load Scene
+        SceneManager::LoadScene(CurrentProject.GetStartupScenePath());
 
         return true;
     }

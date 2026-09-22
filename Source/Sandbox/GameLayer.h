@@ -97,13 +97,13 @@ namespace Waldem
 
 			switch (eventType)
 			{
-			case EventType::KeyPressed:
-			case EventType::KeyReleased:
-			case EventType::KeyTyped:
-			case EventType::MouseButtonPressed:
-			case EventType::MouseButtonReleased:
-			case EventType::MouseMoved:
-			case EventType::MouseScrolled:
+				case EventType::KeyPressed:
+				case EventType::KeyReleased:
+				case EventType::KeyTyped:
+				case EventType::MouseButtonPressed:
+				case EventType::MouseButtonReleased:
+				case EventType::MouseMoved:
+				case EventType::MouseScrolled:
 				{
 					event.Handled = InputManager.Broadcast(event);
 				}
@@ -116,16 +116,6 @@ namespace Waldem
 			Renderer::Begin(viewport);
 			ECS::RunDrawPipeline(Time::DeltaTime);
 			Renderer::End(PRESENT);
-			
-			if(!SceneLoaded)
-			{
-				if(ProjectManager::HasProject())
-				{
-					const Path startupScenePath = ProjectManager::CurrentProject.GetStartupScenePath();
-					SceneManager::LoadScene(startupScenePath);
-					SceneLoaded = true;
-				}
-			}
 		}
 
 		void Begin() override {}
