@@ -220,7 +220,8 @@ namespace Waldem
         GenerateProjectFiles();
 
         //Update engine config
-        EngineConfig::SetLastProjectPath(projectFile);
+        auto string = WString(projectFile.string());
+        EngineConfig::SetLastProjectPath(string);
     }
 
     bool ProjectManager::LoadProject(Path path)
@@ -249,7 +250,8 @@ namespace Waldem
         GenerateProjectFiles();
 
         //Update engine config
-        EngineConfig::SetLastProjectPath(project.ProjectFilePath);
+        auto stringPath = WString(project.ProjectFilePath.string());
+        EngineConfig::SetLastProjectPath(stringPath);
 
         //Reload scripts
         ScriptEngine::ReloadScripts(true);
@@ -264,12 +266,12 @@ namespace Waldem
     {
         auto lastProjectPath = GetLastRecentProject();
 
-        if(lastProjectPath.empty())
+        if(lastProjectPath.IsEmpty())
         {
             return false;
         }
 
-        return LoadProject(lastProjectPath);        
+        return LoadProject(Path(lastProjectPath.C_Str()));        
     }
 
     bool ProjectManager::GenerateProjectFiles()
@@ -305,8 +307,13 @@ namespace Waldem
         return true;
     }
 
-    Path ProjectManager::GetLastRecentProject()
+    WString ProjectManager::GetLastRecentProject()
     {
         return EngineConfig::Get()->LastProjectPath;
+    }
+
+    WArray<WString>& ProjectManager::GetRecentProjects()
+    {
+        return EngineConfig::Get()->RecentProjects;
     }
 }

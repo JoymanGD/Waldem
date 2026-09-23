@@ -16,7 +16,8 @@ namespace Waldem
         static inline EngineConfig* Instance;
         
     public:
-        Path LastProjectPath;
+        WString LastProjectPath;
+        WArray<WString> RecentProjects;
         
         static EngineConfig* Get()
         {
@@ -39,6 +40,7 @@ namespace Waldem
                 doc.SetObject();
                 auto& allocator = doc.GetAllocator();
                 doc.AddMember("LastProjectPath", rapidjson::Value(), allocator);
+                doc.AddMember("RecentProjects", rapidjson::Value(rapidjson::kArrayType), allocator);
                 std::ofstream output(configPath);
 
                 rapidjson::OStreamWrapper outputWrapper(output);
@@ -53,10 +55,21 @@ namespace Waldem
             {
                 Instance->LastProjectPath = doc["LastProjectPath"].GetString();
             }
+            
+            if(doc.HasMember("RecentProjects") && doc["RecentProjects"].IsArray())
+            {
+                auto docArray = doc["RecentProjects"].GetArray();
+
+                for (auto& entry : docArray)
+                {
+                    Instance->RecentProjects.Add(entry.GetString());
+                }
+            }
         }
 
         static void Write()
         {
+            auto instance = Get();
             rapidjson::Document doc;
 
             Path configPath = Path(ENGINE_PATH) / "Engine.json";
@@ -71,7 +84,19 @@ namespace Waldem
 
             if(doc.HasMember("LastProjectPath"))
             {
-                doc["LastProjectPath"].SetString(Instance->LastProjectPath.string().c_str(), static_cast<rapidjson::SizeType>(Instance->LastProjectPath.string().size()), allocator);
+                doc["LastProjectPath"].SetString(instance->LastProjectPath.C_Str(), instance->LastProjectPath.Length(), allocator);
+            }
+
+            if(doc.HasMember("RecentProjects"))
+            {
+                rapidjson::Value& projects = doc["RecentProjects"];
+                projects.Clear();
+                for (auto& project : instance->RecentProjects)
+                {
+                    rapidjson::Value value;
+                    value.SetString(project.C_Str(), project.Length(), doc.GetAllocator());
+                    projects.PushBack(value, doc.GetAllocator());
+                }
             }
             
             std::ofstream output(configPath);
@@ -85,10 +110,20 @@ namespace Waldem
             doc.Accept(writer);
         }
         
-        static void SetLastProjectPath(Path& lastProjectPath)
+        static void SetLastProjectPath(WString& lastProjectPath)
         {
+            AddRecentProject(lastProjectPath);
             Get()->LastProjectPath = lastProjectPath;
             Write();
+        }
+
+        static void AddRecentProject(WString& project)
+        {
+            EngineConfig* instance = Get();
+            if(!instance->RecentProjects.Contains(project))
+            {
+                instance->RecentProjects.Add(project);
+            }
         }
     };
 }

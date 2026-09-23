@@ -42,22 +42,12 @@
   <ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\Build\Debug\Sandbox\Content\Scripts\CameraTestScript.cs">
-      <Link>Build\Debug\Sandbox\Content\Scripts\CameraTestScript.cs</Link>
-    </Compile>
-    <Compile Include="..\..\Build\Debug\Sandbox\Content\Scripts\Collectable.cs">
-      <Link>Build\Debug\Sandbox\Content\Scripts\Collectable.cs</Link>
-    </Compile>
-    <Compile Include="..\..\Build\Debug\Sandbox\Content\Scripts\FirstPersonController.cs">
-      <Link>Build\Debug\Sandbox\Content\Scripts\FirstPersonController.cs</Link>
-    </Compile>
-    <Compile Include="..\..\Build\Debug\Sandbox\Content\Scripts\RotatingObject.cs">
-      <Link>Build\Debug\Sandbox\Content\Scripts\RotatingObject.cs</Link>
-    </Compile>
-    <Compile Include="..\..\Build\Debug\Sandbox\Content\Scripts\TestScript.cs">
-      <Link>Build\Debug\Sandbox\Content\Scripts\TestScript.cs</Link>
-    </Compile>
     <Compile Include="Animator.cs" />
+    <Compile Include="C:\Users\Joyman\Desktop\testgame\FirstPersonController\Content\Scripts\CameraTestScript.cs" />
+    <Compile Include="C:\Users\Joyman\Desktop\testgame\FirstPersonController\Content\Scripts\Collectable.cs" />
+    <Compile Include="C:\Users\Joyman\Desktop\testgame\FirstPersonController\Content\Scripts\FirstPersonController.cs" />
+    <Compile Include="C:\Users\Joyman\Desktop\testgame\FirstPersonController\Content\Scripts\RotatingObject.cs" />
+    <Compile Include="C:\Users\Joyman\Desktop\testgame\FirstPersonController\Content\Scripts\TestScript.cs" />
     <Compile Include="Camera.cs" />
     <Compile Include="CharacterController.cs" />
     <Compile Include="Collider.cs" />

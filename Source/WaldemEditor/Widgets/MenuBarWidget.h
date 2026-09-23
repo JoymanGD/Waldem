@@ -252,22 +252,23 @@ namespace Waldem
                             }
                         }
                     }
+                    
+                    auto recentProjects = ProjectManager::GetRecentProjects();
 					       
-                    if (ImGui::BeginMenu("Recent"))
+                    if (recentProjects.Num() > 0 && ImGui::BeginMenu("Recent"))
                     {
-                        if (ImGui::MenuItem("Open project"))
+                        for (auto& project : recentProjects)
                         {
-                            Path selectedScenePath;
-                            if(OpenFile(selectedScenePath, L"Project Files (*.wproject)\0*.wproject\0All Files (*.*)\0*.*\0"))
+                            if (ImGui::MenuItem(project.C_Str()))
                             {
-                                if(ProjectManager::LoadProject(selectedScenePath))
+                                if(project != ProjectManager::GetLastRecentProject())
                                 {
-                                    ScriptEngine::ReloadScripts(true);
-                                    Path startupScenePath = ProjectManager::CurrentProject.GetStartupScenePath();
-                                    SceneManager::LoadScene(startupScenePath);
+                                    ProjectManager::LoadProject(Path(project.C_Str()));
                                 }
                             }
                         }
+
+                        ImGui::EndMenu();
                     }
                     
                     bool showCreateProject = CreateProjectWidget::IsVisible();

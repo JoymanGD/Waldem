@@ -39,7 +39,8 @@ namespace Waldem
         static bool LoadProject(Path path);
         static bool LoadLastProject();
         static bool GenerateProjectFiles();
-        static Path GetLastRecentProject();
+        static WString GetLastRecentProject();
+        static WArray<WString>& GetRecentProjects();
         static bool HasProject() { return CurrentProject.IsValid(); }
         static inline ProjectData CurrentProject;
     };

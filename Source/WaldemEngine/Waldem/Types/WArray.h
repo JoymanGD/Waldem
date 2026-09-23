@@ -19,7 +19,7 @@ namespace Waldem
     class WArray : ISerializable
     {
     private:
-        std::vector<T> ArrayInternal;
+        std::vector<T> ArrayInternal; 
 
     public:
         WArray() = default; 
@@ -65,6 +65,30 @@ namespace Waldem
 
         void Reserve(size_t capacity) { ArrayInternal.reserve(capacity); }
         void Resize(size_t newSize, const T& defaultValue = T()) { ArrayInternal.resize(newSize, defaultValue); }
+
+        void Collapse()
+        {
+            auto& size = ArrayInternal.size();
+            for (int i = 0; i < size; ++i)
+            {
+                for (int j = i + 1; j < size;)
+                {
+                    if(ArrayInternal[i] == ArrayInternal[j])
+                    {
+                        for (int k = 0; k < size - 1; k++)
+                        {
+                            ArrayInternal[k] = ArrayInternal[k+1];
+                        }
+
+                        size--;
+                    }
+                    else
+                    {
+                        j++;
+                    }
+                }
+            }
+        }
 
         T* GetData() { return ArrayInternal.data(); }
         size_t GetSize() const { return ArrayInternal.size() * sizeof(T); }
