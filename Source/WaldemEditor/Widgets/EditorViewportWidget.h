@@ -78,7 +78,9 @@ namespace Waldem
 
             inputManager->SubscribeToMouseButtonEvent(WD_MOUSE_BUTTON_LEFT, [&](bool isPressed)
             {
-                if (isPressed)
+                auto viewport = ViewportManager::GetEditorViewport();
+                
+                if (isPressed && viewport->IsMouseOver && !WasUsingGizmo)
                 {
                     ECS::World.defer([&]
                     {
