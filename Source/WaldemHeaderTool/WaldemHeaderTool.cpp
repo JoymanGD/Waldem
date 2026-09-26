@@ -12,6 +12,7 @@ struct Field
     std::string Type;
     std::string Name;
     bool Hidden = false;
+    bool Color = false;
     std::string ExplicitRegisterType;
 };
 
@@ -65,24 +66,18 @@ void GenerateComponent(const Component& comp, const fs::path& outputDir)
 
         if (!field.ExplicitRegisterType.empty())
         {
-            out << ".member<" << field.ExplicitRegisterType
-                << ">(\"" << fieldName << "\")";
+            out << ".member<" << field.ExplicitRegisterType << ">(\"" << fieldName << "\")";
         }
         else if (IsAssetReferenceType(field.Type))
         {
-            out << ".member<" << field.Type << ">(\""
-                << fieldName << "\")";
+            out << ".member<" << field.Type << ">(\"" << fieldName << "\")";
         }
         else
         {
-            out << ".member(\""
-                << fieldName
-                << "\", &"
-                << comp.Name
-                << "::"
-                << field.Name
-                << ")";
+            out << ".member(\"" << fieldName << "\", &" << comp.Name << "::" << field.Name << ")";
         }
+
+        out << "\n";
 
         out << "\n";
     }
@@ -94,6 +89,18 @@ void GenerateComponent(const Component& comp, const fs::path& outputDir)
         out << "            .add<HiddenComponent>()\n";
 
     out << "        ;\n\n";
+
+    //Field metadata
+    for (const auto& field : comp.Fields)
+    {
+        if (field.Color)
+        {
+            std::string fieldName =
+                field.Hidden ? "___" + field.Name : field.Name;
+
+            out << "        component.lookup(\"" << fieldName << "\").add<ColorField>();\n";
+        }
+    }
 
     if (!comp.HiddenComponent)
     {
@@ -135,6 +142,9 @@ void ProcessComponents(const std::string& content, const fs::path& outputDir)
 
         if (componentArgs.find("EditorOnly") != std::string::npos)
             comp.EditorOnly = true;
+
+        if (componentArgs.find("Hidden") != std::string::npos)
+            comp.HiddenComponent = true;
 
         if (componentArgs.find("Hidden") != std::string::npos)
             comp.HiddenComponent = true;
@@ -189,6 +199,9 @@ void ProcessComponents(const std::string& content, const fs::path& outputDir)
 
                 if (args.find("Hidden") != std::string::npos)
                     currentField.Hidden = true;
+
+                if (args.find("Color") != std::string::npos)
+                    currentField.Color = true;
 
                 std::smatch typeMatch;
                 std::regex typeArg(R"(Type\s*=\s*([\w:<>]+))");

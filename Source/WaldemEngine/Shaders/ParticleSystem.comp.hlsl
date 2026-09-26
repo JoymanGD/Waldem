@@ -1,67 +1,39 @@
-cbuffer RootConstants : register(b0)
-{
-    uint WorldTransformsBufferID;
-    uint SceneDataBufferID;
-    float DeltaTime;
-    uint ParticleBuffersIndicesBufferID;
-    float4 Color;
-    float3 Size;
-    uint ParticlesAmount;
-    float3 Acceleration;
-    float Lifetime;
-    uint BufferId;
-};
-
-struct Particle
-{
-    float4 Color;
-    float3 BasePosition;
-    float Padding1;
-    float3 Position;
-    float Lifetime;
-    float3 Velocity;
-    float Age;
-};
-
-float rand(uint seed)
-{
-    seed = (seed << 13U) ^ seed;
-    return (1.0f - ((seed * (seed * seed * 15731U + 789221U) + 1376312589U) & 0x7fffffff) / 1073741824.0f);
-}
+#include "ParticleSystem.hlsl"
+#include "Utils/Random.hlsl"
 
 [numthreads(32, 1, 1)]
 void main(uint3 tid : SV_DispatchThreadID)
 {
-    RWStructuredBuffer<Particle> particles = ResourceDescriptorHeap[BufferId];
+    RWStructuredBuffer<Particle> particles = ResourceDescriptorHeap[ParticlesBufferId];
+    RWStructuredBuffer<ParticleSystem> particleSystemBuffer = ResourceDescriptorHeap[ParticleSystemBufferId];
+    ParticleSystem particleSystem = particleSystemBuffer[0];
 
     uint id = tid.x;
     
-    if (id >= ParticlesAmount) return;
+    if (id >= particleSystem.ParticlesAmount) return;
     
     Particle p = particles[id];
 
     p.Age += DeltaTime;
     if (p.Age >= p.Lifetime)
     {
-        p.BasePosition = float3(0, 0, 0);
+        float2 randomInCircle = RandomInCircle(Time, id * 3.65438f, particleSystem.Radius);
+        p.Position = float3(randomInCircle.x, 0, randomInCircle.y);
 
-        p.Velocity = float3(
-            (rand(id * 13) - 0.5f) * 2.0f,
-            abs(rand(id * 97)) * 2.0f,
-            (rand(id * 31) - 0.5f) * 2.0f
-        );
-        p.Lifetime = Lifetime * (0.5f + rand(id * 7));
+        p.Velocity = 0;
+        p.Lifetime = RandomRange(Time, id * 7.38f, particleSystem.LifetimeMinMax.x, particleSystem.LifetimeMinMax.y);
         p.Age = 0.0f;
+        float randomSize = RandomRange(Time, id * 4.35558f, particleSystem.SizeMinMax.x, particleSystem.SizeMinMax.y);
+        p.Size = float3(randomSize, randomSize, randomSize);
     }
     else
     {
-        p.Velocity += Acceleration * DeltaTime;
-        p.BasePosition += p.Velocity * DeltaTime;
+        float randomSpeed = RandomRange(Time, id * 12.382315f, particleSystem.SpeedMinMax.x, particleSystem.SpeedMinMax.y);
+        p.Velocity += float3(0, 1, 0) * randomSpeed * DeltaTime;
+        p.Position += p.Velocity * DeltaTime;
     }
 
-    p.Position = p.BasePosition;
-
-    p.Color = Color;
+    p.Color = particleSystem.Color;
 
     particles[id] = p;
 }

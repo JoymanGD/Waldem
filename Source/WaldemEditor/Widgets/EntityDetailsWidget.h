@@ -17,6 +17,7 @@
 #include "Waldem/Scripting/ScriptEngine.h"
 #include "Commands/EditorCommands.h"
 #include "ContentBrowserWidget.h"
+#include "Waldem/ECS/Components/FieldComponents/ColorField.h"
 
 namespace Waldem
 {
@@ -245,6 +246,36 @@ namespace Waldem
 
                 if (op->kind == EcsOpPushStruct)
                 {
+                    flecs::entity componentType = ECS::World.entity(id);
+                    flecs::entity member = componentType.lookup(op->name);
+
+                    bool isColor = member && member.has<ColorField>();
+
+                    if (isColor)
+                    {
+                        ImGui::TableNextRow();
+
+                        ImGui::TableSetColumnIndex(0);
+                        ImGui::TextUnformatted(op->name);
+
+                        ImGui::TableSetColumnIndex(1);
+
+                        float* color = static_cast<float*>(ptr);
+
+                        ComponentValueBlob before(id.raw_id(), base);
+
+                        ImGui::SetNextItemWidth(200.0f);
+
+                        if (ImGui::ColorEdit4(uniqueId.c_str(), color))
+                        {
+                            entity.modified(id);
+                            PushComponentStateCommand(entity, id, before, base);
+                        }
+
+                        i += op->op_count - 1;
+                        continue;
+                    }
+                    
                     bool isNestedStruct = !prefix.empty();
 
                     if (!isNestedStruct)
@@ -338,9 +369,7 @@ namespace Waldem
                     continue;
                 }
 
-                if (op->kind != EcsOpPop &&
-                    op->kind != EcsOpPushArray &&
-                    op->kind != EcsOpPushVector)
+                if (op->kind != EcsOpPop && op->kind != EcsOpPushArray && op->kind != EcsOpPushVector)
                 {
                     ImGui::TableNextRow();
                     ImGui::TableSetColumnIndex(0);

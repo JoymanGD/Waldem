@@ -49,10 +49,10 @@ namespace Waldem
         // Keep hovered tabs visible; active tab should never blend into background on hover.
         colors[ImGuiCol_TabHovered]             = ImVec4(0.17f, 0.26f, 0.33f, 1.00f);
         colors[ImGuiCol_TabSelected]            = ImVec4(0.15f, 0.23f, 0.29f, 1.00f);
-        colors[ImGuiCol_TabSelectedOverline]    = ImVec4(0.22f, 0.58f, 0.95f, 1.00f);
+        colors[ImGuiCol_TabSelectedOverline]    = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
         colors[ImGuiCol_TabDimmed]              = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
         colors[ImGuiCol_TabDimmedSelected]      = ImVec4(0.15f, 0.23f, 0.29f, 1.00f);
-        colors[ImGuiCol_TabDimmedSelectedOverline] = ImVec4(0.22f, 0.58f, 0.95f, 1.00f);
+        colors[ImGuiCol_TabDimmedSelectedOverline] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
         colors[ImGuiCol_PlotLines]              = ImVec4(0.33f, 0.67f, 0.96f, 1.00f);
         colors[ImGuiCol_PlotLinesHovered]       = ImVec4(0.56f, 0.82f, 1.00f, 1.00f);
         colors[ImGuiCol_PlotHistogram]          = ImVec4(0.28f, 0.58f, 0.86f, 1.00f);

@@ -57,7 +57,7 @@ namespace Waldem
             
             ECS::World.observer<Transform, ColliderComponent>().event(flecs::OnAdd).each([&](flecs::entity entity, Transform& transform, ColliderComponent& collider)
             {
-                if (collider.Type != Box)
+                if (collider.Type != ColliderType::Box)
                     return;
 
                 ColliderMeshes[entity] = BoxMesh();

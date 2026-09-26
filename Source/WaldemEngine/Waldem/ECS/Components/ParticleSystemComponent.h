@@ -3,21 +3,29 @@
 
 namespace Waldem
 {
+    enum class EmitterShape
+    {
+        Circle = 0,
+        Sphere = 1
+    };
+    
     COMPONENT()
     struct WALDEM_API ParticleSystemComponent
-    {        
+    {
         FIELD()
+        uint ParticlesAmount = 100;
+        FIELD(Color)
         Vector4 Color = Vector4(1, 1, 1, 1);
         FIELD()
-        Vector3 Size = Vector3(1.f, 1.f, 1.f);
+        Vector2 SizeMinMax = Vector2(1.f, 1.f);
         FIELD()
-        uint ParticlesAmount = 1;
+        Vector2 SpeedMinMax = Vector2(1, 1);
         FIELD()
-        Vector3 Acceleration = Vector3(0, -9.81f, 0);
+        Vector2 LifetimeMinMax = Vector2(5.0f, 5.0f);
         FIELD()
-        float Lifetime = 5.0f;
-        
-        uint BufferId = -1;
+        EmitterShape Shape = EmitterShape::Circle;
+        FIELD()
+        float Radius = 1;
         
         ParticleSystemComponent() {}
     };

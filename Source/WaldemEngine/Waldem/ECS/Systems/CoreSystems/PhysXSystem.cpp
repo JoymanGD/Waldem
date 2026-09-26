@@ -429,13 +429,13 @@ namespace Waldem
 
             switch(collider.Type)
             {
-            case Sphere:
+            case ColliderType::Sphere:
             {
                 const float radiusScale = std::max(colliderScale.x, std::max(colliderScale.y, colliderScale.z));
                 shape = physics.createShape(PxSphereGeometry(collider.SphereRadius * radiusScale), material, true);
                 break;
             }
-            case Box:
+            case ColliderType::Box:
             {
                 const Vector3 halfExtents = (collider.BoxSize * colliderScale) * 0.5f;
                 shape = physics.createShape(PxBoxGeometry(halfExtents.x, halfExtents.y, halfExtents.z), material, true);
@@ -445,7 +445,7 @@ namespace Waldem
                 }
                 break;
             }
-            case Capsule:
+            case ColliderType::Capsule:
             {
                 const float radiusScale = std::max(colliderScale.x, colliderScale.z);
                 const float radius = collider.SphereRadius * radiusScale;
@@ -457,7 +457,7 @@ namespace Waldem
                 }
                 break;
             }
-            case Mesh:
+            case ColliderType::Mesh:
                 WD_CORE_WARN("PhysX mesh colliders are not implemented yet; skipping collider creation for a mesh collider.");
                 break;
             default:

@@ -114,7 +114,7 @@ namespace Waldem
     
     using CollisionPair = std::pair<int, int>;
     
-    enum ColliderType
+    enum class ColliderType
     {
         Sphere,
         Box,
@@ -141,7 +141,7 @@ namespace Waldem
         FIELD()
         float CapsuleHeight = 1.0f;
         FIELD()
-        ColliderType Type = Box;
+        ColliderType Type = ColliderType::Box;
         FIELD()
         bool IsTrigger = false;
         
@@ -161,18 +161,18 @@ namespace Waldem
         {
             switch (Type)
             {
-                case Sphere:
+                case ColliderType::Sphere:
                 {
                     return worldTransform.Position + normalize(dir) * SphereRadius;
                 }
-                case Capsule:
+                case ColliderType::Capsule:
                 {
                     Vector3 top = worldTransform.Matrix * Vector4(0, CapsuleHeight * 0.5f, 0, 1);
                     Vector3 bottom = worldTransform.Matrix * Vector4(0, -CapsuleHeight * 0.5f, 0, 1);
                     Vector3 furthestEnd = (dot(top, dir) > dot(bottom, dir)) ? top : bottom;
                     return furthestEnd + normalize(dir) * SphereRadius;
                 }
-                case Box:
+                case ColliderType::Box:
                 {
                     Vector3 half = BoxSize * 0.5f;
 
@@ -206,7 +206,7 @@ namespace Waldem
 
                     return furthestPoint;
                 }
-                case Mesh:
+                case ColliderType::Mesh:
                 {
                     Vector3 maxPoint = Vector3(0.0f);
                     float maxDistance = -FLT_MAX;
@@ -241,9 +241,9 @@ namespace Waldem
         {
             switch (Type)
             {
-            case Sphere:
+            case ColliderType::Sphere:
                 return (2.0f / 5.0f) * mass * SphereRadius * SphereRadius;
-            case Box:
+            case ColliderType::Box:
                 {
                     Vector3 half = BoxSize * 0.5f;
                     float x2 = half.x * half.x;
@@ -262,7 +262,7 @@ namespace Waldem
 
                     return I + offsetTerm;
                 }
-            case Capsule:
+            case ColliderType::Capsule:
                 {
                     float radius2 = SphereRadius * SphereRadius;
                     float height2 = CapsuleHeight * CapsuleHeight;
@@ -277,7 +277,7 @@ namespace Waldem
                         0, 0, Izz
                     );
                 }
-            case Mesh:
+            case ColliderType::Mesh:
                 {
                     return PhysicsUtils::ComputeMeshInertiaTensor(Vertices, Indices, mass);
                 }
@@ -292,7 +292,7 @@ namespace Waldem
 
             switch (Type)
             {
-                case Box:
+                case ColliderType::Box:
                 {
                     Matrix3 R = Matrix3(tr.RotationQuat);
                     Vector3 nLocal = normalize(transpose(R) * worldNormal);
@@ -335,7 +335,7 @@ namespace Waldem
                     break;
                 }
 
-                case Sphere:
+                case ColliderType::Sphere:
                 {
                     ref.Normal = worldNormal;
                     ref.Center = tr.Position + worldNormal * SphereRadius;
@@ -343,7 +343,7 @@ namespace Waldem
                     break;
                 }
 
-                case Capsule:
+                case ColliderType::Capsule:
                 {
                     Matrix3 R = Matrix3(tr.RotationQuat);
                     Vector3 axis = R * Vector3(0, 1, 0);
@@ -366,7 +366,7 @@ namespace Waldem
                     break;
                 }
 
-                case Mesh:
+                case ColliderType::Mesh:
                 {
                     float bestDot = -FLT_MAX;
                     int bestTri = -1;

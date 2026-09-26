@@ -80,7 +80,7 @@ namespace Waldem
             {
                 auto viewport = ViewportManager::GetEditorViewport();
                 
-                if (isPressed && viewport->IsMouseOver && !WasUsingGizmo)
+                if (isPressed && viewport->IsMouseOver && !WasUsingGizmo) //TODO: make it smarter later
                 {
                     ECS::World.defer([&]
                     {

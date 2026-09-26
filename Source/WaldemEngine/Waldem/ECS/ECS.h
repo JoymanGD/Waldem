@@ -4,6 +4,7 @@
 #include "ECSWorld.h"
 #include "../../../../Vendor/flecs/include/flecs.h"
 #include "Components/SceneEntity.h"
+#include "Components/FieldComponents/ColorField.h" 
 #include "Systems/System.h"
 #include "Waldem/Types/FreeList.h"
 #include "Waldem/Types/MathTypes.h"
