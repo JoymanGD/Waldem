@@ -18,6 +18,7 @@ namespace Waldem
     
     struct ParticleSystemRootConstants
     {
+        Matrix4 WorldTransform;
         uint WorldTransformsBufferID;
         uint SceneBufferID;
         float Time;
@@ -35,7 +36,7 @@ namespace Waldem
         Vector3 Velocity;
         float Age;
         Vector3 Size;
-        float Padding3;
+        uint WorldSpace;
     };
     
     class WALDEM_API ParticleSystem : public ISystem
@@ -224,6 +225,7 @@ namespace Waldem
                     RootConstants.Time = Time::ElapsedTime;
                     RootConstants.ParticleSystemBufferId = ParticleSystemsBuffersMap[(uint)particleSystemId]->GetIndex(UAV);
                     RootConstants.ParticlesBufferId = ParticleBuffersMap[(uint)particleSystemId].GetIndex(UAV);
+                    RootConstants.WorldTransform = transform.Matrix;
                     Renderer::SetPipeline(ParticleSystemPipeline);
                     Renderer::PushConstants(&RootConstants, sizeof(ParticleSystemRootConstants));
                     Point3 GroupCount = Point3((particleSystem.ParticlesAmount + NumThreads.x - 1) / NumThreads.x, 1, 1);

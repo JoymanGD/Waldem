@@ -7,6 +7,7 @@ struct ParticleSystem
     float2 LifetimeMinMax;
     int Shape;
     float Radius;
+    uint WorldSpace;
 };
 
 struct Particle
@@ -17,11 +18,12 @@ struct Particle
     float3 Velocity;
     float Age;
     float3 Size;
-    float Padding3;
+    uint WorldSpace;
 };
 
 cbuffer RootConstants : register(b0)
 {
+    float4x4 WorldTransform;
     uint WorldTransformsBufferID;
     uint SceneDataBufferID;
     float Time;

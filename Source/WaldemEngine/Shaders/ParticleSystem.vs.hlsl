@@ -46,16 +46,16 @@ VSOutput main(VSInput vin, uint instanceID : SV_InstanceID)
     // lifetime fade
     float lifeRatio = saturate(1.0f - p.Age / max(0.001f, p.Lifetime));
 
-    float4x4 worldViewMatrix = mul(sceneData.View, worldTransform);
+    float4x4 worldViewMatrix = p.WorldSpace ? sceneData.View : mul(sceneData.View, worldTransform);
     float3 scaledPosition = vin.Position * p.Size;
     float3 positionVS = scaledPosition + float3(worldViewMatrix._14, worldViewMatrix._24, worldViewMatrix._34);
     
-    float3 deltaViewPosition = mul(sceneData.View, float4(p.Position, 0.0f)).xyz;
+    float3 deltaViewPosition = mul(worldViewMatrix, float4(p.Position, 0.0f)).xyz;
     positionVS += deltaViewPosition;
     
     vout.Position = mul(sceneData.Projection, float4(positionVS, 1.0f));
 
-    vout.UV    = vin.UV;
+    vout.UV = vin.UV;
     vout.Alpha = lifeRatio;
     vout.Color = p.Color * vin.Color;
     return vout;

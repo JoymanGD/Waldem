@@ -26,6 +26,10 @@ namespace Waldem
         EmitterShape Shape = EmitterShape::Circle;
         FIELD()
         float Radius = 1;
+        FIELD()
+        bool WorldSpace = false;
+
+        uint8 _WorldSpacePadding[3] = {};
         
         ParticleSystemComponent() {}
     };
