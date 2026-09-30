@@ -37,6 +37,7 @@ namespace Waldem
         float Age;
         Vector3 Size;
         uint WorldSpace;
+        uint SpawnId;
     };
     
     class WALDEM_API ParticleSystem : public ISystem
@@ -104,7 +105,7 @@ namespace Waldem
             
             ECS::World.observer<ParticleSystemComponent, Transform>().event(flecs::OnAdd).each([&](flecs::entity entity, ParticleSystemComponent& particleSystem, Transform& transform)
             {
-                auto particleSystemId = IdManager::AddId(entity, ParticleSystemIdType);
+                auto particleSystemId = IdManager::AddId(entity, ParticleSystemDrawIdType);
                 
                 if(particleSystemId >= IndirectCommands.Num())
                 {
@@ -129,20 +130,20 @@ namespace Waldem
                 auto particlesBuffer = ResizableBuffer(WString("ParticlesBuffer_") + std::to_string(particleSystemId), BufferType::StorageBuffer, sizeof(Particle), 1000);
                 if(particlesBuffer.Size != sizeof(Particle) * particleSystem.ParticlesAmount)
                 {
-                    particlesBuffer.UpdateOrAdd(nullptr, sizeof(Particle) * particleSystem.ParticlesAmount, 0);
+                    particlesBuffer.UpdateData(nullptr, sizeof(Particle) * particleSystem.ParticlesAmount, 0);
                 }
                 ParticleBuffersMap[(uint)particleSystemId] = particlesBuffer;
                 
                 auto index = ParticleBuffersMap[(uint)particleSystemId].GetIndex(SRV_CBV);
-                ParticleBuffersIndicesBuffer.UpdateOrAdd(&index, sizeof(uint), particleSystemId * sizeof(uint));
-                WorldTransformsBuffer.UpdateOrAdd(&transform.RenderMatrix, sizeof(Matrix4), particleSystemId * sizeof(Matrix4));
+                ParticleBuffersIndicesBuffer.UpdateData(&index, sizeof(uint), particleSystemId * sizeof(uint));
+                WorldTransformsBuffer.UpdateData(&transform.RenderMatrix, sizeof(Matrix4), particleSystemId * sizeof(Matrix4));
             });
 
             ECS::World.observer<ParticleSystemComponent>().event(flecs::OnSet).each([&](flecs::entity entity, ParticleSystemComponent& particleSystem)
             {
                 int particleSystemId;
 
-                if(IdManager::GetId(entity, ParticleSystemIdType, particleSystemId))
+                if(IdManager::GetId(entity, ParticleSystemDrawIdType, particleSystemId))
                 {
                     auto& command = IndirectCommands[particleSystemId];
 
@@ -168,7 +169,9 @@ namespace Waldem
                     if(buffer.Size != sizeof(Particle) * particleSystem.ParticlesAmount)
                     {
                         //TODO: change to resize
-                        buffer.UpdateOrAdd(nullptr, sizeof(Particle) * particleSystem.ParticlesAmount, 0);
+                        buffer.UpdateData(nullptr, sizeof(Particle) * particleSystem.ParticlesAmount, 0);
+                        auto index = buffer.GetIndex(SRV_CBV);
+                        ParticleBuffersIndicesBuffer.UpdateData(&index, sizeof(uint), particleSystemId * sizeof(uint));
                     }
                 }
             });
@@ -177,7 +180,7 @@ namespace Waldem
             {
                 int particleSystemId;
 
-                if(IdManager::GetId(entity, ParticleSystemIdType, particleSystemId))
+                if(IdManager::GetId(entity, ParticleSystemDrawIdType, particleSystemId))
                 {
                     IndirectIndexedCommand& command = IndirectCommands[particleSystemId];
                     
@@ -206,7 +209,7 @@ namespace Waldem
                 {
                     int particleSystemId;
 
-                    if(IdManager::GetId(entity, ParticleSystemIdType, particleSystemId))
+                    if(IdManager::GetId(entity, ParticleSystemDrawIdType, particleSystemId))
                     {
                         WorldTransformsBuffer.UpdateData(&transform.RenderMatrix, sizeof(Matrix4), particleSystemId * sizeof(Matrix4));
                     }
@@ -217,7 +220,7 @@ namespace Waldem
             {
                 int particleSystemId;
 
-                if(IdManager::GetId(entity, ParticleSystemIdType, particleSystemId))
+                if(IdManager::GetId(entity, ParticleSystemDrawIdType, particleSystemId))
                 {
                     WorldTransformsBuffer.UpdateData(&transform.RenderMatrix, sizeof(Matrix4), particleSystemId * sizeof(Matrix4));
                     RootConstants.WorldTransformsBufferID = WorldTransformsBuffer.GetIndex(SRV_CBV);

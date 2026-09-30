@@ -81,7 +81,7 @@ namespace Waldem
             {
                 const RayTracingInstance emptyInstance = CreateEmptyInstance((int)i, fallbackBLASAddress);
                 Instances[i] = emptyInstance;
-                InstanceBuffer->UpdateOrAdd(&Instances[i], sizeof(RayTracingInstance), (uint)(i * sizeof(RayTracingInstance)));
+                InstanceBuffer->UpdateData(&Instances[i], sizeof(RayTracingInstance), (uint)(i * sizeof(RayTracingInstance)));
             }
         }
     }
@@ -119,7 +119,7 @@ namespace Waldem
         const RayTracingInstance emptyInstance = CreateEmptyInstance(id, DummyBLAS ? DummyBLAS->GetGPUAddress() : 0ull);
         Instances[id] = emptyInstance;
         BLAS[id] = nullptr;
-        InstanceBuffer->UpdateOrAdd(&Instances[id], sizeof(RayTracingInstance), id * sizeof(RayTracingInstance));
+        InstanceBuffer->UpdateData(&Instances[id], sizeof(RayTracingInstance), id * sizeof(RayTracingInstance));
 
         const int instanceCount = GetBuildInstanceCount();
         if (instanceCount > 0)
@@ -149,7 +149,7 @@ namespace Waldem
         auto transposedMatrix = transpose(transform.RenderMatrix);
         memcpy(instance.Transform, &transposedMatrix, sizeof(Matrix3x4));
         
-        InstanceBuffer->UpdateOrAdd(&instance, sizeof(RayTracingInstance), id * sizeof(RayTracingInstance));
+        InstanceBuffer->UpdateData(&instance, sizeof(RayTracingInstance), id * sizeof(RayTracingInstance));
 
         const int instanceCount = GetBuildInstanceCount();
         if (instanceCount > 0)
@@ -178,7 +178,7 @@ namespace Waldem
         instance.Flags = 0;
         instance.AccelerationStructure = DummyBLAS ? DummyBLAS->GetGPUAddress() : 0ull;
         
-        InstanceBuffer->UpdateOrAdd(&instance, sizeof(RayTracingInstance), id * sizeof(RayTracingInstance));
+        InstanceBuffer->UpdateData(&instance, sizeof(RayTracingInstance), id * sizeof(RayTracingInstance));
 
         const int instanceCount = GetBuildInstanceCount();
         if (instanceCount > 0)

@@ -1,17 +1,27 @@
-float Random(float time, float seed)
+uint Hash(uint x)
 {
-    return frac(sin(dot(seed * time, float2(12.9898, 78.233))) * 43758.5453);
+    x ^= x >> 16;
+    x *= 0x7feb352du;
+    x ^= x >> 15;
+    x *= 0x846ca68bu;
+    x ^= x >> 16;
+    return x;
 }
 
-float RandomRange(float time, float seed, float minValue, float maxValue)
+float Random(uint seed)
 {
-    return lerp(minValue, maxValue, Random(time, seed));
+    return (Hash(seed) & 0x00FFFFFFu) / 16777216.0f;
 }
 
-float2 RandomInCircle(float time, float seed, float radius)
+float RandomRange(float seed, float minValue, float maxValue)
 {
-    float angle = Random(time, seed) * 6.28318530718;
-    float r = sqrt(Random(time, seed + 1.0)) * radius;
+    return lerp(minValue, maxValue, Random(seed));
+}
+
+float2 RandomInCircle(uint seed, float radius)
+{
+    float angle = Random(seed) * 6.28318530718f;
+    float r = sqrt(Random(seed + 1u)) * radius;
 
     return float2(cos(angle), sin(angle)) * r;
 }

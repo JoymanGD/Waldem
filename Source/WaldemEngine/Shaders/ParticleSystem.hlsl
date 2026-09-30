@@ -19,6 +19,7 @@ struct Particle
     float Age;
     float3 Size;
     uint WorldSpace;
+    uint SpawnId;
 };
 
 cbuffer RootConstants : register(b0)

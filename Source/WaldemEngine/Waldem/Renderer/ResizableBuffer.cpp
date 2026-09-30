@@ -61,9 +61,7 @@ namespace Waldem
 
         Renderer::ClearBuffer(InternalBuffer, size, offset);
 
-        // These buffers are often indexed by stable freelist IDs, so removals can
-        // leave holes in the middle. Only shrink the logical size when trimming
-        // the current tail; otherwise keep Size large enough for surviving slots.
+        //these buffers are often indexed by stable freelist IDs, so removals can leave holes in the middle. Only shrink the logical size when trimming the current tail; otherwise keep Size large enough for surviving slots.
         if (offset + size == Size)
         {
             Size -= size;
@@ -71,16 +69,6 @@ namespace Waldem
     }
 
     void ResizableBuffer::UpdateData(void* data, uint size, uint offset)
-    {
-        if (offset + size > Size)
-        {
-            WD_CORE_ERROR("UpdateData: Offset + Size exceeds buffer size.");
-        }
-        
-        Renderer::UploadBuffer(InternalBuffer, data, size, offset);
-    }
-
-    void ResizableBuffer::UpdateOrAdd(void* data, uint size, uint offset)
     {
         uint requiredSize = offset + size;
 

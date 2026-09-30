@@ -25,8 +25,6 @@ namespace Waldem
 
         void UpdateData(void* data, uint size, uint offset = 0);
 
-        void UpdateOrAdd(void* data, uint size, uint offset);
-
         uint64 GetGPUAddress() const { return InternalBuffer->GetGPUAddress(); }
         uint GetIndex(ResourceHeapType heapType) { return InternalBuffer->GetIndex(heapType); }
         

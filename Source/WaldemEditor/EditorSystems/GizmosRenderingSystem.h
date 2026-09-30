@@ -149,7 +149,7 @@ namespace Waldem
             particleSystemMat.DiffuseTextureID = ParticleSystemGizmo->GetIndex(SRV_CBV);
             MaterialAttributes.Add(particleSystemMat);
 
-            MaterialBuffer.UpdateOrAdd(MaterialAttributes.GetData(), MaterialAttributes.GetSize(), 0);
+            MaterialBuffer.UpdateData(MaterialAttributes.GetData(), MaterialAttributes.GetSize(), 0);
 
             // ECS observers
             ECS::World.observer<Camera, Transform>().without<EditorComponent>().event(ECS::OnAdd).each([&](ECS::Entity e, Camera&, Transform& t)
@@ -206,7 +206,7 @@ namespace Waldem
         {
             int gizmoId = IdManager::AddId(e, GizmoDrawIdType);
 
-            WorldTransformsBuffer.UpdateOrAdd(&t.Matrix, sizeof(Matrix4), gizmoId * sizeof(Matrix4));
+            WorldTransformsBuffer.UpdateData(&t.Matrix, sizeof(Matrix4), gizmoId * sizeof(Matrix4));
 
             if(gizmoId >= IndirectCommands.Num())
             {
@@ -219,7 +219,7 @@ namespace Waldem
             IndirectIndexedCommand& cmd = IndirectCommands[gizmoId];
             cmd.DrawId = packed;
             cmd.Command = { (uint)GizmoIndices.Num(), 1, 0, 0, 0 };
-            IndirectBuffer.UpdateOrAdd(&cmd, sizeof(IndirectIndexedCommand), gizmoId * sizeof(IndirectIndexedCommand));
+            IndirectBuffer.UpdateData(&cmd, sizeof(IndirectIndexedCommand), gizmoId * sizeof(IndirectIndexedCommand));
         }
 
         void ChangeLightIcon(ECS::Entity e, Light& light)

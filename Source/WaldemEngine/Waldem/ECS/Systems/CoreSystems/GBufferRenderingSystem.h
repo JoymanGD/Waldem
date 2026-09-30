@@ -267,7 +267,7 @@ namespace Waldem
                     }
                 }
 
-                buffer.UpdateOrAdd(nullptr, sizeof(IndirectIndexedCommand), drawId * sizeof(IndirectIndexedCommand));
+                buffer.UpdateData(nullptr, sizeof(IndirectIndexedCommand), drawId * sizeof(IndirectIndexedCommand));
             };
             
             ECS::World.observer<MeshComponent, Transform>().event(flecs::OnAdd).each([&](flecs::entity entity, MeshComponent& meshComponent, Transform& transform)
@@ -279,7 +279,7 @@ namespace Waldem
                 ensureIndirectSlot(NCIndirectBuffer, NCIndirectCommands, ncDrawId);
                 clearIndirectCommand(BFCIndirectBuffer, BFCIndirectCommands, bfcDrawId);
                 clearIndirectCommand(NCIndirectBuffer, NCIndirectCommands, ncDrawId);
-                WorldTransformsBuffer.UpdateOrAdd(&transform.RenderMatrix, sizeof(Matrix4), globalDrawId * sizeof(Matrix4)); 
+                WorldTransformsBuffer.UpdateData(&transform.RenderMatrix, sizeof(Matrix4), globalDrawId * sizeof(Matrix4)); 
 
                 if(globalDrawId >= MaterialAttributes.Num())
                 {
@@ -468,7 +468,7 @@ namespace Waldem
                 clearIndirectCommand(BFCIndirectBuffer, BFCIndirectCommands, bfcDrawId);
                 clearIndirectCommand(NCIndirectBuffer, NCIndirectCommands, ncDrawId);
 
-                WorldTransformsBuffer.UpdateOrAdd(&transform.RenderMatrix, sizeof(Matrix4), globalDrawId * sizeof(Matrix4));
+                WorldTransformsBuffer.UpdateData(&transform.RenderMatrix, sizeof(Matrix4), globalDrawId * sizeof(Matrix4));
 
                 if(globalDrawId >= MaterialAttributes.Num())
                 {
@@ -697,16 +697,16 @@ namespace Waldem
                 if(ncDrawId >= NCIndirectCommands.Num())
                 {
                     NCIndirectCommands.Add(IndirectIndexedCommand());
-                    NCIndirectBuffer.UpdateOrAdd(nullptr, sizeof(IndirectIndexedCommand), ncDrawId * sizeof(IndirectIndexedCommand));
+                    NCIndirectBuffer.UpdateData(nullptr, sizeof(IndirectIndexedCommand), ncDrawId * sizeof(IndirectIndexedCommand));
                 }
                 
-                WorldTransformsBuffer.UpdateOrAdd(&transform.RenderMatrix, sizeof(Matrix4), globalDrawId * sizeof(Matrix4));
+                WorldTransformsBuffer.UpdateData(&transform.RenderMatrix, sizeof(Matrix4), globalDrawId * sizeof(Matrix4));
 
                 if(globalDrawId >= MaterialAttributes.Num())
                 {
                     MaterialAttributes.Add(MaterialShaderAttribute());
-                    MaterialAttributesBuffer.UpdateOrAdd(nullptr, sizeof(MaterialShaderAttribute), globalDrawId * sizeof(MaterialShaderAttribute));
-                    DrawCommandsBuffer.UpdateOrAdd(nullptr, sizeof(DrawIndexedCommand), globalDrawId * sizeof(DrawIndexedCommand));
+                    MaterialAttributesBuffer.UpdateData(nullptr, sizeof(MaterialShaderAttribute), globalDrawId * sizeof(MaterialShaderAttribute));
+                    DrawCommandsBuffer.UpdateData(nullptr, sizeof(DrawIndexedCommand), globalDrawId * sizeof(DrawIndexedCommand));
                 }
 
                 Renderer::RenderData.TLAS.AddEmptyData(globalDrawId);
@@ -843,10 +843,10 @@ namespace Waldem
             {
                 auto lightId = IdManager::AddId(entity, LightIdType);
 
-                LightsBuffer.UpdateOrAdd(&light, sizeof(Light), sizeof(Light) * lightId);
-                LightTransformsBuffer.UpdateOrAdd(&transform.RenderMatrix, sizeof(Matrix4), sizeof(Matrix4) * lightId);
+                LightsBuffer.UpdateData(&light, sizeof(Light), sizeof(Light) * lightId);
+                LightTransformsBuffer.UpdateData(&transform.RenderMatrix, sizeof(Matrix4), sizeof(Matrix4) * lightId);
                 LightsIndices.Add(lightId);
-                LightsIndicesBuffer.UpdateOrAdd(LightsIndices.GetData(), LightsIndices.GetSize(), 0);
+                LightsIndicesBuffer.UpdateData(LightsIndices.GetData(), LightsIndices.GetSize(), 0);
                 
             });
 

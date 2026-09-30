@@ -11,7 +11,7 @@ namespace Waldem
         BackFaceCullingDrawIdType,
         NoCullingDrawIdType,
         RTXInstanceIdType,
-        ParticleSystemIdType,
+        ParticleSystemDrawIdType,
         GizmoDrawIdType,
     };
     
@@ -64,7 +64,7 @@ namespace Waldem
                     id = RTXInstanceIdFreeList.Allocate();
                     break;
                 }
-                case ParticleSystemIdType:
+                case ParticleSystemDrawIdType:
                 {
                     id = ParticleSystemIdFreeList.Allocate();
                     break;
@@ -143,7 +143,7 @@ namespace Waldem
                             RTXInstanceIdFreeList.Free(id);
                             break;
                         }
-                        case ParticleSystemIdType:
+                        case ParticleSystemDrawIdType:
                         {
                             ParticleSystemIdFreeList.Free(id);
                             break;
