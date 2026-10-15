@@ -1383,6 +1383,8 @@ namespace Waldem
                 PushComponentStateToActor(entity, *actor);
             }
 
+            const float dt = Time::FixedDeltaTime;
+
             for(auto& [entityId, controller] : state.Controllers)
             {
                 ECS::Entity entity = GetEntityById(entityId);
@@ -1393,22 +1395,30 @@ namespace Waldem
 
                 auto& characterController = entity.get_mut<CharacterController>();
 
-                Vector3 displacement = characterController.MoveVelocity * Time::FixedDeltaTime;
+                if(characterController.IsGrounded)
+                {
+                    characterController.CoyoteTimer = characterController.CoyoteTime;
+                }
+                else
+                {
+                    characterController.CoyoteTimer = std::max(0.0f, characterController.CoyoteTimer - dt);
+                }
 
-                if(characterController.JumpRequested && characterController.IsGrounded)
+                const bool canJump = characterController.IsGrounded || characterController.CoyoteTimer > 0.0f;
+
+                const bool jumping = characterController.JumpRequested && canJump;
+
+                if(jumping)
                 {
                     characterController.MoveVelocity.y = characterController.JumpSpeed;
                     characterController.IsGrounded = false;
+                    characterController.CoyoteTimer = 0.0f;
                 }
 
-                characterController.MoveVelocity.y += state.Gravity.y * characterController.GravityScale * Time::FixedDeltaTime;
-                displacement.y += characterController.MoveVelocity.y * Time::FixedDeltaTime;
+                characterController.MoveVelocity.y += state.Gravity.y * characterController.GravityScale * dt;
+                Vector3 displacement = characterController.MoveVelocity * dt;
 
-                const PxControllerCollisionFlags collisionFlags = controller->move(
-                    ToPx(displacement),
-                    0.001f,
-                    Time::FixedDeltaTime,
-                    PxControllerFilters());
+                const PxControllerCollisionFlags collisionFlags = controller->move(ToPx(displacement), 0.001f, dt, PxControllerFilters());
 
                 if(collisionFlags.isSet(PxControllerCollisionFlag::eCOLLISION_DOWN) && characterController.MoveVelocity.y < 0.0f)
                 {
@@ -1419,13 +1429,13 @@ namespace Waldem
                     characterController.MoveVelocity.y = 0.0f;
                 }
 
-                characterController.IsGrounded = collisionFlags.isSet(PxControllerCollisionFlag::eCOLLISION_DOWN);
+                characterController.IsGrounded = collisionFlags.isSet(PxControllerCollisionFlag::eCOLLISION_DOWN) && characterController.MoveVelocity.y <= 0.0f;
                 characterController.JumpRequested = false;
 
                 PullControllerStateToComponents(entity, *controller);
             }
 
-            state.Scene->simulate(Time::FixedDeltaTime); 
+            state.Scene->simulate(dt); 
             state.Scene->fetchResults(true);
 
             for(auto& [entityId, actor] : state.Actors)

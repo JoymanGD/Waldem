@@ -15,6 +15,7 @@
 *.sln.DotSettings
 *.vcxproj
 *.vcxproj.filters
+*.csproj
 
 # Rider
 .idea/
@@ -374,3 +375,6 @@ FodyWeavers.xsd
 
 !**/vendor/
 !**/vendor/**
+
+# Engine config
+Engine.json

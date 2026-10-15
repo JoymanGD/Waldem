@@ -23,8 +23,6 @@ namespace Waldem
 			ViewportManager::CreateViewport(GameViewport, "Game", Vector2(0, 0), Vector2(1920, 1080), Vector2(0, 1), mainViewport->GetFrameBuffer());
 			InputManager = {};
 
-			UpdateSystems.Add(new PlayerControllerSystem());
-
 			ECS::World.observer<Camera>().without<EditorComponent>().yield_existing().event(flecs::OnAdd).each([&](flecs::entity entity, Camera& camera)
 			{
 				auto viewport = ViewportManager::GetGameViewport();

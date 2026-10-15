@@ -16,10 +16,13 @@ namespace Waldem
         float JumpSpeed = 12.0f;
         FIELD()
         float GravityScale = 1.0f;
+        FIELD()
+        float CoyoteTime = 0.12f;
 
         Vector3 MoveVelocity = Vector3(0.0f);
         bool JumpRequested = false;
         bool IsGrounded = false;
+        float CoyoteTimer = 0.0f;
         
         CharacterController() {}
     };
