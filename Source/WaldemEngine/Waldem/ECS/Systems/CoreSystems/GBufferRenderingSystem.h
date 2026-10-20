@@ -185,7 +185,7 @@ namespace Waldem
             SkyPixelShader = Renderer::LoadPixelShader("Sky");
             SkyPipeline = Renderer::CreateGraphicPipeline("SkyPipeline",
                                                             SkyPixelShader,
-                                                            { SGBuffer::GetFormat(SkyColor) },
+                                                            { SGBuffer::GetFormat(GBufferRenderTarget::SkyColor) },
                                                             TextureFormat::UNKNOWN,
                                                             DEFAULT_RASTERIZER_DESC,
                                                             DEFAULT_DEPTH_STENCIL_DESC,
@@ -206,7 +206,7 @@ namespace Waldem
             GBufferPixelShader = Renderer::LoadPixelShader("GBuffer");
             BFCGBufferPipeline = Renderer::CreateGraphicPipeline("BFCGBufferPipeline",
                                                             GBufferPixelShader,
-                                                            { SGBuffer::GetFormat(WorldPosition), SGBuffer::GetFormat(Normal), SGBuffer::GetFormat(Color), SGBuffer::GetFormat(ORM), SGBuffer::GetFormat(MeshID) },
+                                                            { SGBuffer::GetFormat(GBufferRenderTarget::WorldPosition), SGBuffer::GetFormat(GBufferRenderTarget::Normal), SGBuffer::GetFormat(GBufferRenderTarget::Color), SGBuffer::GetFormat(GBufferRenderTarget::ORM), SGBuffer::GetFormat(GBufferRenderTarget::MeshID) },
                                                             TextureFormat::D32_FLOAT,
                                                             DEFAULT_RASTERIZER_DESC,
                                                             DEFAULT_DEPTH_STENCIL_DESC,
@@ -218,7 +218,7 @@ namespace Waldem
             spriteRasterizer.CullMode = WD_CULL_MODE_NONE;
             NCGBufferPipeline = Renderer::CreateGraphicPipeline("NCGBufferPipeline",
                                                             GBufferPixelShader,
-                                                            { SGBuffer::GetFormat(WorldPosition), SGBuffer::GetFormat(Normal), SGBuffer::GetFormat(Color), SGBuffer::GetFormat(ORM), SGBuffer::GetFormat(MeshID) },
+                                                            { SGBuffer::GetFormat(GBufferRenderTarget::WorldPosition), SGBuffer::GetFormat(GBufferRenderTarget::Normal), SGBuffer::GetFormat(GBufferRenderTarget::Color), SGBuffer::GetFormat(GBufferRenderTarget::ORM), SGBuffer::GetFormat(GBufferRenderTarget::MeshID) },
                                                             TextureFormat::D32_FLOAT,
                                                             spriteRasterizer,
                                                             DEFAULT_DEPTH_STENCIL_DESC,
@@ -907,7 +907,7 @@ namespace Waldem
             {
                 auto viewport = Renderer::GetCurrentViewport();
                 
-                viewport->GetGBuffer()->Clear({SkyColor});
+                viewport->GetGBuffer()->Clear({GBufferRenderTarget::SkyColor});
             });
             
             ECS::World.system<Sky>("SkyRenderingSystem").kind<ECS::OnDraw>().each([&](Sky& skybox)
@@ -945,7 +945,7 @@ namespace Waldem
                 
                 if(viewport->TryGetLinkedCamera(linkedCamera))
                 {
-                    auto skyColor = viewport->GetGBufferRenderTarget(SkyColor);
+                    auto skyColor = viewport->GetGBufferRenderTarget(GBufferRenderTarget::SkyColor);
                     if(!linkedCamera.is_alive() || !linkedCamera.has<Camera>() || !linkedCamera.has<Transform>())
                     {
                         return;
@@ -1012,7 +1012,7 @@ namespace Waldem
             ECS::World.system("GBufferClearSystem").kind<ECS::OnDraw>().run([&](flecs::iter& it)
             {
                 SViewport* viewport = Renderer::GetCurrentViewport();
-                viewport->GetGBuffer()->Clear({WorldPosition, Normal, Color, ORM, MeshID, Depth});
+                viewport->GetGBuffer()->Clear({GBufferRenderTarget::WorldPosition, GBufferRenderTarget::Normal, GBufferRenderTarget::Color, GBufferRenderTarget::ORM, GBufferRenderTarget::MeshID, GBufferRenderTarget::Depth});
             });
             
             ECS::World.system("GBufferSystem").kind<ECS::OnDraw>().run([&](flecs::iter& it)
@@ -1063,16 +1063,16 @@ namespace Waldem
                     GBufferRootConstants.MaterialAttributes = MaterialAttributesBuffer.GetIndex(SRV_CBV);
                     GBufferRootConstants.SceneDataBuffer = GBufferSceneDataBuffer->GetIndex(SRV_CBV);
 
-                    gbuffer->Barriers({WorldPosition, Normal, Color, ORM, MeshID}, ALL_SHADER_RESOURCE, RENDER_TARGET);
-                    gbuffer->Barrier(Depth, ALL_SHADER_RESOURCE, DEPTH_WRITE);
+                    gbuffer->Barriers({GBufferRenderTarget::WorldPosition, GBufferRenderTarget::Normal, GBufferRenderTarget::Color, GBufferRenderTarget::ORM, GBufferRenderTarget::MeshID}, ALL_SHADER_RESOURCE, RENDER_TARGET);
+                    gbuffer->Barrier(GBufferRenderTarget::Depth, ALL_SHADER_RESOURCE, DEPTH_WRITE);
                     
                     // Back face culling pass
                     if(BFCIndirectCommands.Num() > 0)
                     {
                         Renderer::SetPipeline(BFCGBufferPipeline);
                         Renderer::PushConstants(&GBufferRootConstants, sizeof(GBufferRootConstants));
-                        Renderer::BindRenderTargets({ gbuffer->GetRenderTarget(WorldPosition), gbuffer->GetRenderTarget(Normal), gbuffer->GetRenderTarget(Color), gbuffer->GetRenderTarget(ORM), gbuffer->GetRenderTarget(MeshID) });
-                        Renderer::BindDepthStencil(gbuffer->GetRenderTarget(Depth));
+                        Renderer::BindRenderTargets({ gbuffer->GetRenderTarget(GBufferRenderTarget::WorldPosition), gbuffer->GetRenderTarget(GBufferRenderTarget::Normal), gbuffer->GetRenderTarget(GBufferRenderTarget::Color), gbuffer->GetRenderTarget(GBufferRenderTarget::ORM), gbuffer->GetRenderTarget(GBufferRenderTarget::MeshID) });
+                        Renderer::BindDepthStencil(gbuffer->GetRenderTarget(GBufferRenderTarget::Depth));
                         Renderer::SetVertexBuffers(Renderer::RenderData.VertexBuffer.GetBuffer(), 1);
                         Renderer::SetIndexBuffer(Renderer::RenderData.IndexBuffer.GetBuffer());
                         Renderer::DrawIndirect(BFCIndirectCommands.Num(), BFCIndirectBuffer);
@@ -1083,15 +1083,15 @@ namespace Waldem
                     {
                         Renderer::SetPipeline(NCGBufferPipeline);
                         Renderer::PushConstants(&GBufferRootConstants, sizeof(GBufferRootConstants));
-                        Renderer::BindRenderTargets({ gbuffer->GetRenderTarget(WorldPosition), gbuffer->GetRenderTarget(Normal), gbuffer->GetRenderTarget(Color), gbuffer->GetRenderTarget(ORM), gbuffer->GetRenderTarget(MeshID) });
-                        Renderer::BindDepthStencil(gbuffer->GetRenderTarget(Depth));
+                        Renderer::BindRenderTargets({ gbuffer->GetRenderTarget(GBufferRenderTarget::WorldPosition), gbuffer->GetRenderTarget(GBufferRenderTarget::Normal), gbuffer->GetRenderTarget(GBufferRenderTarget::Color), gbuffer->GetRenderTarget(GBufferRenderTarget::ORM), gbuffer->GetRenderTarget(GBufferRenderTarget::MeshID) });
+                        Renderer::BindDepthStencil(gbuffer->GetRenderTarget(GBufferRenderTarget::Depth));
                         Renderer::SetVertexBuffers(Renderer::RenderData.VertexBuffer.GetBuffer(), 1);
                         Renderer::SetIndexBuffer(Renderer::RenderData.IndexBuffer.GetBuffer());
                         Renderer::DrawIndirect(NCIndirectCommands.Num(), NCIndirectBuffer);
                     }
                     
-                    gbuffer->Barriers({WorldPosition, Normal, Color, ORM, MeshID}, RENDER_TARGET, ALL_SHADER_RESOURCE);
-                    gbuffer->Barrier(Depth, DEPTH_WRITE, ALL_SHADER_RESOURCE);
+                    gbuffer->Barriers({GBufferRenderTarget::WorldPosition, GBufferRenderTarget::Normal, GBufferRenderTarget::Color, GBufferRenderTarget::ORM, GBufferRenderTarget::MeshID}, RENDER_TARGET, ALL_SHADER_RESOURCE);
+                    gbuffer->Barrier(GBufferRenderTarget::Depth, DEPTH_WRITE, ALL_SHADER_RESOURCE);
                 }
             });
 

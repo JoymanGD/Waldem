@@ -17,7 +17,8 @@
 #include "Waldem/Scripting/ScriptEngine.h"
 #include "Commands/EditorCommands.h"
 #include "ContentBrowserWidget.h"
-#include "Waldem/ECS/Components/FieldComponents/ColorField.h"
+#include "Waldem/ECS/Components/ComponentField.h"
+#include <ImCurveEdit.h>
 
 namespace Waldem
 {
@@ -249,9 +250,7 @@ namespace Waldem
                     flecs::entity componentType = ECS::World.entity(id);
                     flecs::entity member = componentType.lookup(op->name);
 
-                    bool isColor = member && member.has<ColorField>();
-
-                    if (isColor)
+                    if (op->type == ECS::World.id<WColor>())
                     {
                         ImGui::TableNextRow();
 
@@ -267,6 +266,28 @@ namespace Waldem
                         ImGui::SetNextItemWidth(200.0f);
 
                         if (ImGui::ColorEdit4(uniqueId.c_str(), color))
+                        {
+                            entity.modified(id);
+                            PushComponentStateCommand(entity, id, before, base);
+                        }
+
+                        i += op->op_count - 1;
+                        continue;
+                    }
+                    if (op->type == ECS::World.id<WGradient>())
+                    {
+                        auto& gradient = *static_cast<WGradient*>(ptr);
+
+                        ImGui::TableNextRow();
+
+                        ImGui::TableSetColumnIndex(0);
+                        ImGui::TextUnformatted(op->name);
+
+                        ImGui::TableSetColumnIndex(1);
+
+                        ComponentValueBlob before(id.raw_id(), base);
+
+                        if (ImGui::GradientField(uniqueId.c_str(), gradient))
                         {
                             entity.modified(id);
                             PushComponentStateCommand(entity, id, before, base);
@@ -489,9 +510,9 @@ namespace Waldem
                         const auto stringId = ECS::World.id<WString>();
                         const auto textureRefId = ECS::World.id<TextureReference>();
                         const auto meshRefId = ECS::World.id<MeshReference>();
-                        const auto skeletalMeshRefId   = ECS::World.id<SkeletalMeshReference>();
-                        const auto animClipRefId        = ECS::World.id<AnimationClipReference>();
-                        const auto materialRefId        = ECS::World.id<MaterialReference>();
+                        const auto skeletalMeshRefId = ECS::World.id<SkeletalMeshReference>();
+                        const auto animClipRefId = ECS::World.id<AnimationClipReference>();
+                        const auto materialRefId = ECS::World.id<MaterialReference>();
                         const auto audioRefId = ECS::World.id<AudioClipReference>();
                         const auto scriptRefId = ECS::World.id<ScriptReference>();
                         const auto baseAssetRefId = ECS::World.id<AssetReference>();

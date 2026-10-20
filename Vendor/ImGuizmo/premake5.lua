@@ -1,6 +1,6 @@
 project "ImGuizmo"
     location "."
-    kind "SharedLib"
+    kind "StaticLib"
     language "C++"
     cppdialect "C++20"
     staticruntime "off"
@@ -11,7 +11,9 @@ project "ImGuizmo"
     files
     {
         "ImGuizmo.cpp",
-        "ImGuizmo.h"
+        "ImGuizmo.h",
+        "ImCurveEdit.h", "ImCurveEdit.cpp",
+        "ImGradient.h", "ImGradient.cpp",
     }
 
     includedirs
@@ -27,7 +29,7 @@ project "ImGuizmo"
 
     defines
     {
-        "IMGUIZMO_EXPORTS",
+        "IMGUIZMO_API=",
         "IMGUI_API=__declspec(dllimport)"
     }
 

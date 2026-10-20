@@ -42,12 +42,14 @@
 #include "Waldem/AssetsManagement/AssetReference/MaterialReference.h"
 #include "Waldem/AssetsManagement/AssetReference/ScriptReference.h"
 #include "Waldem/Utils/ECSUtils.h"
+#include "..\Types\WColor.h"
 #include <cmath>
 #include <memory>
 #include <unordered_map>
 #include <vector>
 
 #include "Systems/CoreSystems/TerrainSystem.h"
+#include "Waldem/Types/WGradient.h"
 
 namespace Waldem
 {
@@ -437,28 +439,26 @@ namespace Waldem
                 .member<float>("z")
                 .member<float>("w");
 
-            World.component<Quaternion>("Quaternion")
-                .opaque(
-                    World.component()
-                        .member<float>("x")
-                        .member<float>("y")
-                        .member<float>("z")
-                        .member<float>("w")
-                )
-                .serialize([](const flecs::serializer *s, const Quaternion *q) {
-                    s->member("x"); s->value(q->x);
-                    s->member("y"); s->value(q->y);
-                    s->member("z"); s->value(q->z);
-                    s->member("w"); s->value(q->w);
-                    return 0;
-                })
-                .ensure_member([](Quaternion *dst, const char *member) -> void* {
-                    if (!strcmp(member, "x")) return &dst->x;
-                    if (!strcmp(member, "y")) return &dst->y;
-                    if (!strcmp(member, "z")) return &dst->z;
-                    if (!strcmp(member, "w")) return &dst->w;
-                    return nullptr;
-                });
+            World.component<Quaternion>("Quaternion").opaque(World.component()
+                .member<float>("x")
+                .member<float>("y")
+                .member<float>("z")
+                .member<float>("w")
+            )
+            .serialize([](const flecs::serializer *s, const Quaternion *q) {
+                s->member("x"); s->value(q->x);
+                s->member("y"); s->value(q->y);
+                s->member("z"); s->value(q->z);
+                s->member("w"); s->value(q->w);
+                return 0;
+            })
+            .ensure_member([](Quaternion *dst, const char *member) -> void* {
+                if (!strcmp(member, "x")) return &dst->x;
+                if (!strcmp(member, "y")) return &dst->y;
+                if (!strcmp(member, "z")) return &dst->z;
+                if (!strcmp(member, "w")) return &dst->w;
+                return nullptr;
+            });
 
             World.component<Matrix4>("Matrix4")
                 .opaque(
@@ -491,6 +491,16 @@ namespace Waldem
                     }
                     return nullptr;
                 });
+
+            World.component<WColor>("Color")
+                .member<float>("r")
+                .member<float>("g")
+                .member<float>("b")
+                .member<float>("a");
+
+            World.component<WGradient>("Gradient")
+                .member("Points", &WGradient::Points)
+                .member("Count", &WGradient::Count);
             
             World.component<WString>()
                 .opaque(flecs::String)

@@ -1,5 +1,7 @@
 #pragma once
 #include "ComponentBase.h"
+#include "Waldem/Types/WColor.h"
+#include "Waldem/Types/WGradient.h"
 
 namespace Waldem
 {
@@ -15,7 +17,9 @@ namespace Waldem
         FIELD()
         uint ParticlesAmount = 100;
         FIELD(Color)
-        Vector4 Color = Vector4(1, 1, 1, 1);
+        WColor Color = WColor(1, 1, 1, 1);
+        FIELD()
+        WGradient ColorOverLifetime;
         FIELD()
         Vector2 SizeMinMax = Vector2(1.f, 1.f);
         FIELD()

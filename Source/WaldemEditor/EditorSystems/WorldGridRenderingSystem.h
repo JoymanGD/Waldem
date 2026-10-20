@@ -65,7 +65,7 @@ namespace Waldem
                     auto targetRT = viewport->FrameBuffer->GetCurrentRenderTarget();
                     
                     RootConstants.TargetRTID = targetRT->GetIndex(UAV);
-                    RootConstants.DepthRTID = gbuffer->GetRenderTarget(Depth)->GetIndex(SRV_CBV);
+                    RootConstants.DepthRTID = gbuffer->GetRenderTarget(GBufferRenderTarget::Depth)->GetIndex(SRV_CBV);
                     Renderer::SetPipeline(WorldGridRenderingPipeline);
                     Renderer::PushConstants(&RootConstants, sizeof(SRootConstants));
                     

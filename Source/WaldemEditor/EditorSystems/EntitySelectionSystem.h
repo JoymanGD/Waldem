@@ -53,9 +53,9 @@ namespace Waldem
                 {
                     auto gbuffer = viewport->GetGBuffer();
                     
-                    auto deferredRT = viewport->GetGBufferRenderTarget(Deferred);
+                    auto deferredRT = viewport->GetGBufferRenderTarget(GBufferRenderTarget::Deferred);
                     
-                    RootConstants.MeshIDRT = gbuffer->GetRenderTarget(MeshID)->GetIndex(SRV_CBV);
+                    RootConstants.MeshIDRT = gbuffer->GetRenderTarget(GBufferRenderTarget::MeshID)->GetIndex(SRV_CBV);
                     Renderer::SetPipeline(EntitySelectionPipeline);
                     auto mousePos = Input::GetMousePos();
                     Point2 relativeMousePos = viewport->TransformMousePosition(mousePos);

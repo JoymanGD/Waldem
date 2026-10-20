@@ -281,7 +281,7 @@ namespace Waldem
                 auto& camera = linkedCamera.get<Camera>();
                 auto& transform = linkedCamera.get<Transform>();
                 auto targetRT = viewport->FrameBuffer->GetCurrentRenderTarget();
-                auto meshIdRT = gbuffer->GetRenderTarget(MeshID);
+                auto meshIdRT = gbuffer->GetRenderTarget(GBufferRenderTarget::MeshID);
 
                 SceneData.ProjectionMatrix = camera.ProjectionMatrix;
                 SceneData.ViewMatrix = inverse(transform.Matrix);
@@ -301,9 +301,9 @@ namespace Waldem
                 rc.MeshIDRTID = meshIdRT->GetIndex(UAV);
                 Renderer::PushConstants(&rc, sizeof(GizmoRootConstants));
 
-                gbuffer->Barrier(MeshID, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
+                gbuffer->Barrier(GBufferRenderTarget::MeshID, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
                 Renderer::DrawIndirect(IndirectCommands.Num(), IndirectBuffer);
-                gbuffer->Barrier(MeshID, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
+                gbuffer->Barrier(GBufferRenderTarget::MeshID, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
             }
         }
     };

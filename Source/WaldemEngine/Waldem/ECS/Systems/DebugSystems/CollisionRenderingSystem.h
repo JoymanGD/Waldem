@@ -107,7 +107,7 @@ namespace Waldem
                 
                 auto gbuffer = viewport->GetGBuffer();
 
-                gbuffer->Barrier(Depth, ALL_SHADER_RESOURCE, DEPTH_READ);
+                gbuffer->Barrier(GBufferRenderTarget::Depth, ALL_SHADER_RESOURCE, DEPTH_READ);
                 
                 Renderer::SetPipeline(CollidersRenderingPipeline);
                 Renderer::PushConstants(&cameraComponent.ViewProjectionMatrix, sizeof(Matrix4));
@@ -115,11 +115,11 @@ namespace Waldem
                 for (auto& pair : ColliderMeshes)
                 {
                     Renderer::BindRenderTargets(viewport->FrameBuffer->GetCurrentRenderTarget());
-                    Renderer::BindDepthStencil(gbuffer->GetRenderTarget(Depth));
+                    Renderer::BindDepthStencil(gbuffer->GetRenderTarget(GBufferRenderTarget::Depth));
                     Renderer::Draw(&pair.value);
                 }
 
-                gbuffer->Barrier(Depth, DEPTH_READ, ALL_SHADER_RESOURCE);
+                gbuffer->Barrier(GBufferRenderTarget::Depth, DEPTH_READ, ALL_SHADER_RESOURCE);
             });
 
             IsInitialized = true;

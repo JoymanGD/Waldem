@@ -4,6 +4,8 @@
 #include <regex>
 #include <vector>
 #include <filesystem>
+#include <magic_enum.hpp>
+#include "FieldSerializationType.h"
 
 namespace fs = std::filesystem;
 
@@ -12,7 +14,7 @@ struct Field
     std::string Type;
     std::string Name;
     bool Hidden = false;
-    bool Color = false;
+    FieldSerializationType SerializationType = FieldSerializationType::Default;
     std::string ExplicitRegisterType;
 };
 
@@ -26,8 +28,7 @@ struct Component
 
 bool IsAssetReferenceType(const std::string& type)
 {
-    return type.size() >= 9 &&
-           type.substr(type.size() - 9) == "Reference";
+    return type.size() >= 9 && type.substr(type.size() - 9) == "Reference";
 }
 
 static std::string Trim(const std::string& s)
@@ -93,13 +94,9 @@ void GenerateComponent(const Component& comp, const fs::path& outputDir)
     //Field metadata
     for (const auto& field : comp.Fields)
     {
-        if (field.Color)
-        {
-            std::string fieldName =
-                field.Hidden ? "___" + field.Name : field.Name;
+        std::string fieldName = field.Hidden ? "___" + field.Name : field.Name;
 
-            out << "        component.lookup(\"" << fieldName << "\").add<ColorField>();\n";
-        }
+        out << "        component.lookup(\"" << fieldName << "\").set<ComponentField>({FieldSerializationType::" << std::string(magic_enum::enum_name(field.SerializationType)) << "});\n";
     }
 
     if (!comp.HiddenComponent)
@@ -200,8 +197,7 @@ void ProcessComponents(const std::string& content, const fs::path& outputDir)
                 if (args.find("Hidden") != std::string::npos)
                     currentField.Hidden = true;
 
-                if (args.find("Color") != std::string::npos)
-                    currentField.Color = true;
+                currentField.SerializationType = FieldSerializationType::Default;
 
                 std::smatch typeMatch;
                 std::regex typeArg(R"(Type\s*=\s*([\w:<>]+))");

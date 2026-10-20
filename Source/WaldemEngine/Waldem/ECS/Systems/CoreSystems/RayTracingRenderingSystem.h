@@ -105,11 +105,11 @@ namespace Waldem
                 }
 
                 auto gbuffer = viewport->GetGBuffer();
-                auto radianceRT = gbuffer->GetRenderTarget(Radiance);
+                auto radianceRT = gbuffer->GetRenderTarget(GBufferRenderTarget::Radiance);
 
                 if(!Renderer::RenderData.FeatureToggles.EnableRayTracingPass)
                 {
-                    gbuffer->Clear({ Radiance, Reflection });
+                    gbuffer->Clear({ GBufferRenderTarget::Radiance, GBufferRenderTarget::Reflection });
                     return;
                 }
 
@@ -161,13 +161,13 @@ namespace Waldem
                 LastPathTracingInvProjection = RayTracingSceneData.InvProjectionMatrix;
                 LastPathTracingCameraPosition = RayTracingSceneData.CameraPosition;
 
-                RayTracingRootConstantsData.WorldPositionRT = gbuffer->GetRenderTarget(WorldPosition)->GetIndex(SRV_CBV);
-                RayTracingRootConstantsData.NormalRT = gbuffer->GetRenderTarget(Normal)->GetIndex(SRV_CBV);
-                RayTracingRootConstantsData.ColorRT = gbuffer->GetRenderTarget(Color)->GetIndex(SRV_CBV);
-                RayTracingRootConstantsData.ORMRT = gbuffer->GetRenderTarget(ORM)->GetIndex(SRV_CBV);
+                RayTracingRootConstantsData.WorldPositionRT = gbuffer->GetRenderTarget(GBufferRenderTarget::WorldPosition)->GetIndex(SRV_CBV);
+                RayTracingRootConstantsData.NormalRT = gbuffer->GetRenderTarget(GBufferRenderTarget::Normal)->GetIndex(SRV_CBV);
+                RayTracingRootConstantsData.ColorRT = gbuffer->GetRenderTarget(GBufferRenderTarget::Color)->GetIndex(SRV_CBV);
+                RayTracingRootConstantsData.ORMRT = gbuffer->GetRenderTarget(GBufferRenderTarget::ORM)->GetIndex(SRV_CBV);
                 RayTracingRootConstantsData.RadianceRT = radianceRT->GetIndex(SRV_CBV);
-                RayTracingRootConstantsData.PathTracingRT = gbuffer->GetRenderTarget(PathTracing)->GetIndex(SRV_CBV);
-                RayTracingRootConstantsData.ReflectionRT = gbuffer->GetRenderTarget(Reflection)->GetIndex(SRV_CBV);
+                RayTracingRootConstantsData.PathTracingRT = gbuffer->GetRenderTarget(GBufferRenderTarget::PathTracing)->GetIndex(SRV_CBV);
+                RayTracingRootConstantsData.ReflectionRT = gbuffer->GetRenderTarget(GBufferRenderTarget::Reflection)->GetIndex(SRV_CBV);
                 RayTracingRootConstantsData.LightsBuffer = renderData.SharedLightsBuffer ? renderData.SharedLightsBuffer->GetIndex(SRV_CBV) : 0;
                 RayTracingRootConstantsData.LightTransformsBuffer = renderData.SharedLightTransformsBuffer ? renderData.SharedLightTransformsBuffer->GetIndex(SRV_CBV) : 0;
                 RayTracingRootConstantsData.LightsIndicesBuffer = renderData.SharedLightsIndicesBuffer ? renderData.SharedLightsIndicesBuffer->GetIndex(SRV_CBV) : 0;
@@ -187,12 +187,12 @@ namespace Waldem
                 RayTracingRootConstantsData.PathTracingFrameIndex = PathTracingFrameIndex;
                 RayTracingRootConstantsData.EnablePathTracingAccumulation = toggles.EnablePathTracingAccumulation ? 1 : 0;
 
-                gbuffer->Barriers({Radiance, PathTracing, Reflection}, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
+                gbuffer->Barriers({GBufferRenderTarget::Radiance, GBufferRenderTarget::PathTracing, GBufferRenderTarget::Reflection}, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
                 Pipeline* activeRTPipeline = toggles.EnablePathTracing ? PathTracingPipeline : RTPipeline;
                 Renderer::SetPipeline(activeRTPipeline);
                 Renderer::PushConstants(&RayTracingRootConstantsData, sizeof(RayTracingRootConstantsData));
                 Renderer::TraceRays(activeRTPipeline, Point3(radianceRT->GetWidth(), radianceRT->GetHeight(), 1));
-                gbuffer->Barriers({Radiance, PathTracing, Reflection}, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
+                gbuffer->Barriers({GBufferRenderTarget::Radiance, GBufferRenderTarget::PathTracing, GBufferRenderTarget::Reflection}, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
             });
         }
     };

@@ -77,7 +77,7 @@ namespace Waldem
             depthDesc.DepthFunc = WD_COMPARISON_FUNC_LESS_EQUAL;
             ParticleSystemGraphicPipeline = Renderer::CreateGraphicPipeline("ParticleSystemGraphicPipeline",
                                                             ParticleSystemPixelShader,
-                                                            { SGBuffer::GetFormat(Deferred) },
+                                                            { SGBuffer::GetFormat(GBufferRenderTarget::Deferred) },
                                                             TextureFormat::D32_FLOAT,
                                                             DEFAULT_RASTERIZER_DESC,
                                                             depthDesc,
@@ -247,8 +247,8 @@ namespace Waldem
                     if(viewport->TryGetLinkedCamera(linkedCamera))
                     {
                         auto gbuffer = viewport->GetGBuffer();
-                        auto deferred = gbuffer->GetRenderTarget(Deferred);
-                        auto depth = gbuffer->GetRenderTarget(Depth);
+                        auto deferred = gbuffer->GetRenderTarget(GBufferRenderTarget::Deferred);
+                        auto depth = gbuffer->GetRenderTarget(GBufferRenderTarget::Depth);
                         RootConstants.ParticleBuffersIndicesBufferID = ParticleBuffersIndicesBuffer.GetIndex(SRV_CBV);
                         RootConstants.WorldTransformsBufferID = WorldTransformsBuffer.GetIndex(SRV_CBV);
                         RootConstants.SceneBufferID = SceneDataBuffer->GetIndex(SRV_CBV);

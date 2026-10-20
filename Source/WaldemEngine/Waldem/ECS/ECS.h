@@ -4,8 +4,8 @@
 #include "ECSWorld.h"
 #include "../../../../Vendor/flecs/include/flecs.h"
 #include "Components/SceneEntity.h"
-#include "Components/FieldComponents/ColorField.h" 
 #include "Systems/System.h"
+#include "Waldem/ECS/Components/ComponentField.h" //keep it for the generated files
 #include "Waldem/Types/FreeList.h"
 #include "Waldem/Types/MathTypes.h"
 #include "Waldem/Types/String.h"

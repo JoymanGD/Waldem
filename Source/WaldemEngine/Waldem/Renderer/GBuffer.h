@@ -6,7 +6,7 @@ namespace Waldem
 {
     class RenderTarget;
 
-    enum GBufferRenderTarget
+    enum class GBufferRenderTarget
     {
         Deferred = 0,
         WorldPosition = 1,
@@ -195,20 +195,20 @@ namespace Waldem
         {
             WArray formats
             {
-                GetFormat(Deferred),
-                GetFormat(WorldPosition),
-                GetFormat(Normal),
-                GetFormat(Color),
-                GetFormat(ORM),
-                GetFormat(MeshID),
-                GetFormat(Depth),
-                GetFormat(Radiance),
-                GetFormat(Reflection),
-                GetFormat(SkyColor),
-                GetFormat(NIVIrradiance),
-                GetFormat(PathTracing),
-                GetFormat(Ping),
-                GetFormat(Pong)
+                GetFormat(GBufferRenderTarget::Deferred),
+                GetFormat(GBufferRenderTarget::WorldPosition),
+                GetFormat(GBufferRenderTarget::Normal),
+                GetFormat(GBufferRenderTarget::Color),
+                GetFormat(GBufferRenderTarget::ORM),
+                GetFormat(GBufferRenderTarget::MeshID),
+                GetFormat(GBufferRenderTarget::Depth),
+                GetFormat(GBufferRenderTarget::Radiance),
+                GetFormat(GBufferRenderTarget::Reflection),
+                GetFormat(GBufferRenderTarget::SkyColor),
+                GetFormat(GBufferRenderTarget::NIVIrradiance),
+                GetFormat(GBufferRenderTarget::PathTracing),
+                GetFormat(GBufferRenderTarget::Ping),
+                GetFormat(GBufferRenderTarget::Pong)
             };
             
             return formats;

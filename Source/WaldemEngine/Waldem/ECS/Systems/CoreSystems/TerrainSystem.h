@@ -105,7 +105,7 @@ namespace Waldem
             TerrainPixelShader = Renderer::LoadPixelShader("Terrain");
             TerrainRenderingPipeline = Renderer::CreateGraphicPipeline("TerrainPipeline",
                                                             TerrainPixelShader,
-                                                            { SGBuffer::GetFormat(WorldPosition), SGBuffer::GetFormat(Normal), SGBuffer::GetFormat(Color), SGBuffer::GetFormat(ORM), SGBuffer::GetFormat(MeshID) },
+                                                            { SGBuffer::GetFormat(GBufferRenderTarget::WorldPosition), SGBuffer::GetFormat(GBufferRenderTarget::Normal), SGBuffer::GetFormat(GBufferRenderTarget::Color), SGBuffer::GetFormat(GBufferRenderTarget::ORM), SGBuffer::GetFormat(GBufferRenderTarget::MeshID) },
                                                             TextureFormat::D32_FLOAT,
                                                             DEFAULT_RASTERIZER_DESC,
                                                             DEFAULT_DEPTH_STENCIL_DESC,
@@ -196,19 +196,19 @@ namespace Waldem
                     auto sceneDataBufferIndex = terrain.DataBuffer->GetIndex(SRV_CBV);
 
                     auto gbuffer = viewport->GetGBuffer();
-                    gbuffer->Barriers({WorldPosition, Normal, Color, ORM, MeshID}, ALL_SHADER_RESOURCE, RENDER_TARGET);
-                    gbuffer->Barrier(Depth, ALL_SHADER_RESOURCE, DEPTH_WRITE);
+                    gbuffer->Barriers({GBufferRenderTarget::WorldPosition, GBufferRenderTarget::Normal, GBufferRenderTarget::Color, GBufferRenderTarget::ORM, GBufferRenderTarget::MeshID}, ALL_SHADER_RESOURCE, RENDER_TARGET);
+                    gbuffer->Barrier(GBufferRenderTarget::Depth, ALL_SHADER_RESOURCE, DEPTH_WRITE);
                     
                     Renderer::SetPipeline(TerrainRenderingPipeline);
                     Renderer::PushConstants(&sceneDataBufferIndex, sizeof(uint));
-                    Renderer::BindRenderTargets({ gbuffer->GetRenderTarget(WorldPosition), gbuffer->GetRenderTarget(Normal), gbuffer->GetRenderTarget(Color), gbuffer->GetRenderTarget(ORM), gbuffer->GetRenderTarget(MeshID) });
-                    Renderer::BindDepthStencil(gbuffer->GetRenderTarget(Depth));
+                    Renderer::BindRenderTargets({ gbuffer->GetRenderTarget(GBufferRenderTarget::WorldPosition), gbuffer->GetRenderTarget(GBufferRenderTarget::Normal), gbuffer->GetRenderTarget(GBufferRenderTarget::Color), gbuffer->GetRenderTarget(GBufferRenderTarget::ORM), gbuffer->GetRenderTarget(GBufferRenderTarget::MeshID) });
+                    Renderer::BindDepthStencil(gbuffer->GetRenderTarget(GBufferRenderTarget::Depth));
                     Renderer::SetVertexBuffers(terrain.VertexBuffer->GetBuffer(), 1);
                     Renderer::SetIndexBuffer(terrain.IndexBuffer->GetBuffer());
                     Renderer::DrawIndirect(IndirectCommands.Num(), IndirectBuffer);
                     
-                    gbuffer->Barriers({WorldPosition, Normal, Color, ORM, MeshID}, RENDER_TARGET, ALL_SHADER_RESOURCE);
-                    gbuffer->Barrier(Depth, DEPTH_WRITE, ALL_SHADER_RESOURCE);
+                    gbuffer->Barriers({GBufferRenderTarget::WorldPosition, GBufferRenderTarget::Normal, GBufferRenderTarget::Color, GBufferRenderTarget::ORM, GBufferRenderTarget::MeshID}, RENDER_TARGET, ALL_SHADER_RESOURCE);
+                    gbuffer->Barrier(GBufferRenderTarget::Depth, DEPTH_WRITE, ALL_SHADER_RESOURCE);
                 }
             });
         }

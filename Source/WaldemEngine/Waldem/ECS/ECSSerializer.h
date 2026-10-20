@@ -1,6 +1,6 @@
 #pragma once
 #include <cinttypes>
-#include <flecs/include/flecs.h>
+#include <flecs.h>
 
 namespace Waldem
 {

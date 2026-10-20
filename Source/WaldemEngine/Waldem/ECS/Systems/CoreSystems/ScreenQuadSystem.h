@@ -61,59 +61,59 @@ namespace Waldem
 
                     if(selectedOutputTarget == 1)
                     {
-                        RootConstants.TargetRT = gbuffer->GetRenderTarget(Normal)->GetIndex(SRV_CBV);
+                        RootConstants.TargetRT = gbuffer->GetRenderTarget(GBufferRenderTarget::Normal)->GetIndex(SRV_CBV);
                     }
                     else if(selectedOutputTarget == 2)
                     {
-                        RootConstants.TargetRT = gbuffer->GetRenderTarget(Reflection)->GetIndex(SRV_CBV);
+                        RootConstants.TargetRT = gbuffer->GetRenderTarget(GBufferRenderTarget::Reflection)->GetIndex(SRV_CBV);
                     }
                     else if(selectedOutputTarget == 3)
                     {
-                        RootConstants.TargetRT = gbuffer->GetRenderTarget(WorldPosition)->GetIndex(SRV_CBV);
+                        RootConstants.TargetRT = gbuffer->GetRenderTarget(GBufferRenderTarget::WorldPosition)->GetIndex(SRV_CBV);
                     }
                     else if(selectedOutputTarget == 4)
                     {
-                        RootConstants.TargetRT = gbuffer->GetRenderTarget(ORM)->GetIndex(SRV_CBV);
+                        RootConstants.TargetRT = gbuffer->GetRenderTarget(GBufferRenderTarget::ORM)->GetIndex(SRV_CBV);
                     }
                     else if(selectedOutputTarget == 5)
                     {
-                        RootConstants.TargetRT = gbuffer->GetRenderTarget(MeshID)->GetIndex(SRV_CBV);
+                        RootConstants.TargetRT = gbuffer->GetRenderTarget(GBufferRenderTarget::MeshID)->GetIndex(SRV_CBV);
                     }
                     else if(selectedOutputTarget == 6)
                     {
-                        RootConstants.TargetRT = gbuffer->GetRenderTarget(Color)->GetIndex(SRV_CBV);
+                        RootConstants.TargetRT = gbuffer->GetRenderTarget(GBufferRenderTarget::Color)->GetIndex(SRV_CBV);
                     }
                     else if(selectedOutputTarget == 7)
                     {
-                        RootConstants.TargetRT = gbuffer->GetRenderTarget(Radiance)->GetIndex(SRV_CBV);
+                        RootConstants.TargetRT = gbuffer->GetRenderTarget(GBufferRenderTarget::Radiance)->GetIndex(SRV_CBV);
                     }
                     else if(selectedOutputTarget == 8)
                     {
-                        RootConstants.TargetRT = gbuffer->GetRenderTarget(NIVIrradiance)->GetIndex(SRV_CBV);
+                        RootConstants.TargetRT = gbuffer->GetRenderTarget(GBufferRenderTarget::NIVIrradiance)->GetIndex(SRV_CBV);
                     }
                     else if(selectedOutputTarget == 9)
                     {
-                        RootConstants.TargetRT = gbuffer->GetRenderTarget(PathTracing)->GetIndex(SRV_CBV);
+                        RootConstants.TargetRT = gbuffer->GetRenderTarget(GBufferRenderTarget::PathTracing)->GetIndex(SRV_CBV);
                     }
                     else if(Renderer::RenderData.FeatureToggles.EnableDeferredPass)
                     {
-                        RootConstants.TargetRT = gbuffer->GetRenderTarget(Deferred)->GetIndex(SRV_CBV);
+                        RootConstants.TargetRT = gbuffer->GetRenderTarget(GBufferRenderTarget::Deferred)->GetIndex(SRV_CBV);
                     }
                     else if(Renderer::RenderData.FeatureToggles.EnableRayTracingPass)
                     {
-                        RootConstants.TargetRT = gbuffer->GetRenderTarget(Radiance)->GetIndex(SRV_CBV);
+                        RootConstants.TargetRT = gbuffer->GetRenderTarget(GBufferRenderTarget::Radiance)->GetIndex(SRV_CBV);
                     }
                     else if(Renderer::RenderData.FeatureToggles.EnableGBufferPass)
                     {
-                        RootConstants.TargetRT = gbuffer->GetRenderTarget(Color)->GetIndex(SRV_CBV);
+                        RootConstants.TargetRT = gbuffer->GetRenderTarget(GBufferRenderTarget::Color)->GetIndex(SRV_CBV);
                     }
                     else if(Renderer::RenderData.FeatureToggles.EnableSkyPass)
                     {
-                        RootConstants.TargetRT = gbuffer->GetRenderTarget(SkyColor)->GetIndex(SRV_CBV);
+                        RootConstants.TargetRT = gbuffer->GetRenderTarget(GBufferRenderTarget::SkyColor)->GetIndex(SRV_CBV);
                     }
                     else
                     {
-                        RootConstants.TargetRT = gbuffer->GetRenderTarget(Deferred)->GetIndex(SRV_CBV);
+                        RootConstants.TargetRT = gbuffer->GetRenderTarget(GBufferRenderTarget::Deferred)->GetIndex(SRV_CBV);
                     }
 
                     Renderer::BindRenderTargets(viewport->FrameBuffer->GetCurrentRenderTarget());

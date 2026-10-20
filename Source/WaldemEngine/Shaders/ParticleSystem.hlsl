@@ -1,7 +1,10 @@
+#include "Color.hlsl"
+
 struct ParticleSystem
 {
     uint ParticlesAmount;
     float4 Color;
+    Gradient ColorOverLifetime;
     float2 SizeMinMax;
     float2 SpeedMinMax;
     float2 LifetimeMinMax;

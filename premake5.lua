@@ -30,6 +30,7 @@ if gameProjectPath ~= nil and gameProjectPath ~= "" then
 end
 
 IncludeDir = {}
+IncludeDir["WaldemShared"] = "Source/WaldemShared"
 IncludeDir["ImGui"] = "Vendor/imgui"
 IncludeDir["ImGuizmo"] = "Vendor/ImGuizmo"
 IncludeDir["glm"] = "Vendor/glm"
@@ -37,6 +38,7 @@ IncludeDir["SDL"] = "Vendor/SDL/include"
 IncludeDir["SPDLog"] = "Vendor/spdlog/include"
 IncludeDir["Assimp"] = "Vendor/assimp/include"
 IncludeDir["stb"] = "Vendor/stb/include"
+IncludeDir["magic"] = "Vendor/magic/include"
 IncludeDir["dxc"] = "Vendor/dxc/inc"
 IncludeDir["mono"] = "Vendor/mono/include"
 IncludeDir["flecs"] = "Vendor/flecs/include"
@@ -88,9 +90,11 @@ local function SetupCommonCppProject()
     includedirs
     {
         SourceDir .. "/WaldemEngine",
+        "%{IncludeDir.WaldemShared}",
         "%{IncludeDir.SPDLog}",
         "%{IncludeDir.Assimp}",
         "%{IncludeDir.stb}",
+        "%{IncludeDir.magic}",
         "%{IncludeDir.SDL}",
         "%{IncludeDir.glm}",
         "%{IncludeDir.ImGui}",
@@ -126,6 +130,7 @@ local function SetupCommonCppProject()
     {
         'CONTENT_PATH=L"' .. contentPath .. '"',
         'ENGINE_PATH=L"' .. rootDir .. '"',
+        "IMGUIZMO_API="
     }
 
     if HasPhysX then
@@ -186,7 +191,6 @@ local function SetupPostBuild(prjName)
         'xcopy /Y "%{wks.location}Build\\%{cfg.buildcfg}\\ScriptEngine\\ScriptEngine.pdb" "%{cfg.targetdir}\\"',
         'xcopy /Y "%{wks.location}Build\\%{cfg.buildcfg}\\flecs\\flecs.dll" "%{cfg.targetdir}\\"',
         'xcopy /Y "%{wks.location}Build\\%{cfg.buildcfg}\\imgui\\imgui.dll" "%{cfg.targetdir}\\"',
-        'xcopy /Y "%{wks.location}Build\\%{cfg.buildcfg}\\ImGuizmo\\ImGuizmo.dll" "%{cfg.targetdir}\\"',
         'xcopy /Y "%{wks.location}Vendor\\SDL\\lib\\SDL2.dll" "%{cfg.targetdir}\\"',
         'xcopy /Y "%{wks.location}Vendor\\mono\\bin\\mono-2.0-sgen.dll" "%{cfg.targetdir}\\"',
         'xcopy /E /I /Y "%{wks.location}Vendor\\mono\\lib\\4.5" "%{cfg.targetdir}\\mono\\lib\\4.5"',
@@ -215,6 +219,12 @@ project "WaldemHeaderTool"
     language "C++"
     cppdialect "C++20"
     SetDefaultPaths()
+
+    includedirs
+    {
+        "%{IncludeDir.magic}",
+        "%{IncludeDir.WaldemShared}"
+    }
 
     files
     {

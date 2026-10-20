@@ -161,8 +161,8 @@ namespace Waldem
                 {
                     auto gbuffer = viewport->GetGBuffer();
 
-                    auto deferredRT = viewport->GetGBufferRenderTarget(Deferred);
-                    gbuffer->Clear({Deferred, NIVIrradiance});
+                    auto deferredRT = viewport->GetGBufferRenderTarget(GBufferRenderTarget::Deferred);
+                    gbuffer->Clear({GBufferRenderTarget::Deferred, GBufferRenderTarget::NIVIrradiance});
 
                     if(!Renderer::RenderData.FeatureToggles.EnableDeferredPass)
                     {
@@ -190,9 +190,9 @@ namespace Waldem
                         {
                             EnsureNIVBuffers(pixelCount);
 
-                            NIVPackRootConstantsData.WorldPositionRT = gbuffer->GetRenderTarget(WorldPosition)->GetIndex(SRV_CBV);
-                            NIVPackRootConstantsData.WorldNormalRT = gbuffer->GetRenderTarget(Normal)->GetIndex(SRV_CBV);
-                            NIVPackRootConstantsData.MeshIDRT = gbuffer->GetRenderTarget(MeshID)->GetIndex(SRV_CBV);
+                            NIVPackRootConstantsData.WorldPositionRT = gbuffer->GetRenderTarget(GBufferRenderTarget::WorldPosition)->GetIndex(SRV_CBV);
+                            NIVPackRootConstantsData.WorldNormalRT = gbuffer->GetRenderTarget(GBufferRenderTarget::Normal)->GetIndex(SRV_CBV);
+                            NIVPackRootConstantsData.MeshIDRT = gbuffer->GetRenderTarget(GBufferRenderTarget::MeshID)->GetIndex(SRV_CBV);
                             NIVPackRootConstantsData.OutWorldPositionBuffer = NIVWorldPositionBuffer->GetIndex(UAV);
                             NIVPackRootConstantsData.OutWorldNormalValidBuffer = NIVWorldNormalValidBuffer->GetIndex(UAV);
                             NIVPackRootConstantsData.Width = width;
@@ -286,16 +286,16 @@ namespace Waldem
                         }
                     }
 
-                    gbuffer->Barriers({Deferred, NIVIrradiance}, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
+                    gbuffer->Barriers({GBufferRenderTarget::Deferred, GBufferRenderTarget::NIVIrradiance}, ALL_SHADER_RESOURCE, UNORDERED_ACCESS);
 
-                    DeferredRootConstantsData.MeshIDRT = gbuffer->GetRenderTarget(MeshID)->GetIndex(SRV_CBV);
-                    DeferredRootConstantsData.RadianceRT = gbuffer->GetRenderTarget(Radiance)->GetIndex(SRV_CBV);
-                    DeferredRootConstantsData.PathTracingRT = gbuffer->GetRenderTarget(PathTracing)->GetIndex(SRV_CBV);
-                    DeferredRootConstantsData.ColorRT = gbuffer->GetRenderTarget(Color)->GetIndex(SRV_CBV);
+                    DeferredRootConstantsData.MeshIDRT = gbuffer->GetRenderTarget(GBufferRenderTarget::MeshID)->GetIndex(SRV_CBV);
+                    DeferredRootConstantsData.RadianceRT = gbuffer->GetRenderTarget(GBufferRenderTarget::Radiance)->GetIndex(SRV_CBV);
+                    DeferredRootConstantsData.PathTracingRT = gbuffer->GetRenderTarget(GBufferRenderTarget::PathTracing)->GetIndex(SRV_CBV);
+                    DeferredRootConstantsData.ColorRT = gbuffer->GetRenderTarget(GBufferRenderTarget::Color)->GetIndex(SRV_CBV);
                     DeferredRootConstantsData.DeferredRT = deferredRT->GetIndex(UAV);
-                    DeferredRootConstantsData.NIVIrradianceRT = gbuffer->GetRenderTarget(NIVIrradiance)->GetIndex(UAV);
+                    DeferredRootConstantsData.NIVIrradianceRT = gbuffer->GetRenderTarget(GBufferRenderTarget::NIVIrradiance)->GetIndex(UAV);
                     DeferredRootConstantsData.NIVPredictedBuffer = NIVPredictedOutputBuffer ? NIVPredictedOutputBuffer->GetIndex(SRV_CBV) : 0;
-                    DeferredRootConstantsData.SkyColorRT = gbuffer->GetRenderTarget(SkyColor)->GetIndex(SRV_CBV);
+                    DeferredRootConstantsData.SkyColorRT = gbuffer->GetRenderTarget(GBufferRenderTarget::SkyColor)->GetIndex(SRV_CBV);
                     DeferredRootConstantsData.EnableSky = Renderer::RenderData.FeatureToggles.EnableSkyPass ? 1 : 0;
                     DeferredRootConstantsData.EnablePathTracing = Renderer::RenderData.FeatureToggles.EnablePathTracing ? 1 : 0;
                     DeferredRootConstantsData.EnableNIVInference = Renderer::RenderData.FeatureToggles.EnableNIVInference ? 1 : 0;
@@ -309,7 +309,7 @@ namespace Waldem
                     GroupCount = Point3((resolution.x + numThreads.x - 1) / numThreads.x, (resolution.y + numThreads.y - 1) / numThreads.y, 1);
 
                     Renderer::Compute(GroupCount);
-                    viewport->GetGBuffer()->Barriers({Deferred, NIVIrradiance}, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
+                    viewport->GetGBuffer()->Barriers({GBufferRenderTarget::Deferred, GBufferRenderTarget::NIVIrradiance}, UNORDERED_ACCESS, ALL_SHADER_RESOURCE);
                 }
             });
         }

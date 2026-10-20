@@ -42,7 +42,9 @@ void main(uint3 tid : SV_DispatchThreadID)
         p.Position += p.Velocity * DeltaTime, 1.0f;
     }
 
-    p.Color = particleSystem.Color;
+    // p.Color = particleSystem.Color;
+    float lifetimeT = saturate(p.Age / max(p.Lifetime, 0.0001f));
+    p.Color = SampleGradient(particleSystem.ColorOverLifetime, lifetimeT);
 
     particles[id] = p;
 }

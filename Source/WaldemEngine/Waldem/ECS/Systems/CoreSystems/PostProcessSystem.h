@@ -53,11 +53,11 @@ namespace Waldem
                 
                 if(viewport->TryGetLinkedCamera(linkedCamera))
                 {
-                    viewport->GetGBuffer()->Clear({ Ping, Pong });
+                    viewport->GetGBuffer()->Clear({ GBufferRenderTarget::Ping, GBufferRenderTarget::Pong });
                     
-                    auto deferredRT = viewport->GetGBufferRenderTarget(Deferred);
-                    auto pingRT = viewport->GetGBufferRenderTarget(Ping);
-                    auto pongRT = viewport->GetGBufferRenderTarget(Pong);
+                    auto deferredRT = viewport->GetGBufferRenderTarget(GBufferRenderTarget::Deferred);
+                    auto pingRT = viewport->GetGBufferRenderTarget(GBufferRenderTarget::Ping);
+                    auto pongRT = viewport->GetGBufferRenderTarget(GBufferRenderTarget::Pong);
                     
                     Vector2 resolution = Vector2(deferredRT->GetWidth(), deferredRT->GetHeight());
                     Point3 numThreads = Renderer::GetNumThreadsPerGroup(PostProcessComputeShader);
