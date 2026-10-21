@@ -17,9 +17,17 @@ namespace ImGui
     struct ImGuiCurve : ImCurveEdit::Delegate
     {
         Waldem::WCurve& Curve;
+        std::vector<ImVec2> Points;
 
         ImGuiCurve(Waldem::WCurve& curve) : Curve(curve)
         {
+            Points.reserve(Curve.Count);
+
+            for (Waldem::uint i = 0; i < Curve.Count; ++i)
+            {
+                const Waldem::Vector2& point = Curve.Points[i];
+                Points.emplace_back(point.x, point.y);
+            }
         }
 
         size_t GetCurveCount() override
@@ -34,7 +42,7 @@ namespace ImGui
 
         size_t GetPointCount(size_t) override
         {
-            return Curve.Points.Num();
+            return Points.size();
         }
 
         uint32_t GetCurveColor(size_t) override
@@ -44,7 +52,7 @@ namespace ImGui
 
         ImVec2* GetPoints(size_t) override
         {
-            return reinterpret_cast<ImVec2*>(Curve.Points.GetData());
+            return Points.data();
         }
 
         ImCurveEdit::CurveType GetCurveType(size_t) const override
@@ -54,16 +62,16 @@ namespace ImGui
 
         int EditPoint(size_t, int index, ImVec2 value) override
         {
-            Curve.Points[index] = Waldem::Vector2{value.x, value.y};
+            Points[index] = ImVec2{value.x, value.y};
 
-            std::sort(Curve.Points.begin(), Curve.Points.end(), [](const Waldem::Vector2& a, const Waldem::Vector2& b)
+            std::sort(Points.begin(), Points.end(), [](const ImVec2& a, const ImVec2& b)
             {
                 return a.x < b.x;
             });
 
-            for (int i = 0; i < static_cast<int>(Curve.Points.Num()); ++i)
+            for (int i = 0; i < static_cast<int>(Points.size()); ++i)
             {
-                if (Curve.Points[i].x == value.x && Curve.Points[i].y == value.y)
+                if (Points[i].x == value.x && Points[i].y == value.y)
                     return i;
             }
 
@@ -72,9 +80,9 @@ namespace ImGui
 
         void AddPoint(size_t, ImVec2 value) override
         {
-            Curve.Points.Add({value.x, value.y});
+            Points.push_back({value.x, value.y});
 
-            std::sort(Curve.Points.begin(), Curve.Points.end(), [](const Waldem::Vector2& a, const Waldem::Vector2& b)
+            std::sort(Points.begin(), Points.end(), [](const ImVec2& a, const ImVec2& b)
             {
                 return a.x < b.x;
             });
@@ -93,6 +101,21 @@ namespace ImGui
         unsigned int GetBackgroundColor() override
         {
             return IM_COL32(25, 29, 34, 255);
+        }
+
+        void Apply()
+        {
+            Curve.Count = static_cast<Waldem::uint>(std::min(Points.size(), static_cast<size_t>(Waldem::WCurve::MaxPoints)));
+
+            for (Waldem::uint i = 0; i < Curve.Count; ++i)
+            {
+                Curve.Points[i] = Waldem::Vector2(Points[i].x, Points[i].y);
+            }
+
+            for (Waldem::uint i = Curve.Count; i < Waldem::WCurve::MaxPoints; ++i)
+            {
+                Curve.Points[i] = Waldem::Vector2(0.0f);
+            }
         }
     };
     
@@ -204,14 +227,13 @@ namespace ImGui
         }
     };
     
-    inline void CurveField(const char* label, Waldem::WCurve& wCurve)
+    inline bool CurveField(const char* label, Waldem::WCurve& wCurve)
     {
         ImGuiCurve curve(wCurve);
+
+        bool changed = false;
         
         PushID(label);
-
-        TextUnformatted(label);
-        SameLine();
 
         ImVec2 size(180, 28);
         ImVec2 pos = GetCursorScreenPos();
@@ -245,8 +267,7 @@ namespace ImGui
                     float x = (points[i].x - min.x) / dx;
                     float y = (points[i].y - min.y) / dy;
 
-                    ImVec2 current(pos.x + x * size.x, pos.y + (1.0f - y) * size.y
-                    );
+                    ImVec2 current(pos.x + x * size.x, pos.y + (1.0f - y) * size.y);
 
                     if (i > 0)
                         draw->AddLine(prev, current, IM_COL32(130, 220, 130, 255), 2.0f);
@@ -263,12 +284,22 @@ namespace ImGui
             TextUnformatted("Curve Editor");
             Separator();
 
-            Edit(curve, ImVec2(400, 240), GetID("##Editor"));
+            if(Edit(curve, ImVec2(400, 240), GetID("##Editor")))
+            {
+                changed = true;
+            }
 
             EndPopup();
         }
 
+        if (changed)
+        {
+            curve.Apply();
+        }
+
         PopID();
+
+        return changed;
     }
 
     inline bool GradientField(const char* label, Waldem::WGradient& gradient)

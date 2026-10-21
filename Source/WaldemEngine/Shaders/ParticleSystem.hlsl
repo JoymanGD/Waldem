@@ -1,16 +1,18 @@
 #include "Color.hlsl"
+#include "Curve.hlsl"
 
 struct ParticleSystem
 {
     uint ParticlesAmount;
+    int Shape;
+    float Radius;
+    uint WorldSpace;
     float4 Color;
     Gradient ColorOverLifetime;
     float2 SizeMinMax;
     float2 SpeedMinMax;
     float2 LifetimeMinMax;
-    int Shape;
-    float Radius;
-    uint WorldSpace;
+    Curve SizeOverLifetime;
 };
 
 struct Particle

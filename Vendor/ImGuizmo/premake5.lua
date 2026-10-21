@@ -37,7 +37,7 @@ project "ImGuizmo"
         systemversion "latest"
 
     filter "configurations:Debug"
-        runtime "Debug"
+        runtime "Release"
         symbols "on"
 
     filter "configurations:Release"

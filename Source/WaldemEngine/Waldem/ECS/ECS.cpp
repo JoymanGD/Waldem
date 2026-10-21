@@ -501,6 +501,12 @@ namespace Waldem
             World.component<WGradient>("Gradient")
                 .member("Points", &WGradient::Points)
                 .member("Count", &WGradient::Count);
+
+            World.component<WCurve>("Curve")
+                .member("Points", &WCurve::Points)
+                .member("Min", &WCurve::Min)
+                .member("Max", &WCurve::Max)
+                .member("Count", &WCurve::Count); 
             
             World.component<WString>()
                 .opaque(flecs::String)

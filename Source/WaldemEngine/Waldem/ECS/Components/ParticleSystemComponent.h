@@ -1,6 +1,7 @@
 #pragma once
 #include "ComponentBase.h"
 #include "Waldem/Types/WColor.h"
+#include "Waldem/Types/WCurve.h"
 #include "Waldem/Types/WGradient.h"
 
 namespace Waldem
@@ -16,7 +17,13 @@ namespace Waldem
     {
         FIELD()
         uint ParticlesAmount = 100;
-        FIELD(Color)
+        FIELD()
+        EmitterShape Shape = EmitterShape::Circle;
+        FIELD()
+        float Radius = 1;
+        FIELD()
+        bool WorldSpace = false;
+        FIELD()
         WColor Color = WColor(1, 1, 1, 1);
         FIELD()
         WGradient ColorOverLifetime;
@@ -27,13 +34,7 @@ namespace Waldem
         FIELD()
         Vector2 LifetimeMinMax = Vector2(5.0f, 5.0f);
         FIELD()
-        EmitterShape Shape = EmitterShape::Circle;
-        FIELD()
-        float Radius = 1;
-        FIELD()
-        bool WorldSpace = false;
-
-        uint8 _WorldSpacePadding[3] = {};
+        WCurve SizeOverLifeTime;
         
         ParticleSystemComponent() {}
     };

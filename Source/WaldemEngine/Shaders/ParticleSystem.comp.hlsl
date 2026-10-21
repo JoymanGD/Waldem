@@ -29,10 +29,8 @@ void main(uint3 tid : SV_DispatchThreadID)
         p.Velocity = 0;
         p.Lifetime = RandomRange(id * 7.38f, particleSystem.LifetimeMinMax.x, particleSystem.LifetimeMinMax.y);
         p.Age = 0.0f;
-        float randomSize = RandomRange(id * 4.35558f, particleSystem.SizeMinMax.x, particleSystem.SizeMinMax.y);
-
-        float3 scale = float3(length(WorldTransform[0].xyz), length(WorldTransform[1].xyz), length(WorldTransform[2].xyz));
-        p.Size = mul(scale, float3(randomSize, randomSize, randomSize));
+        // float randomSize = RandomRange(id * 4.35558f, particleSystem.SizeMinMax.x, particleSystem.SizeMinMax.y);
+        // p.Size = scale * randomSize;
     }
     else
     {
@@ -41,10 +39,15 @@ void main(uint3 tid : SV_DispatchThreadID)
         p.Velocity += (p.WorldSpace ? mul(WorldTransform, float4(0, 1, 0, 0)) : float3(0, 1, 0)) * randomSpeed * DeltaTime;
         p.Position += p.Velocity * DeltaTime, 1.0f;
     }
+    
+    float lifetimeT = saturate(p.Age / max(p.Lifetime, 0.0001f));
 
     // p.Color = particleSystem.Color;
-    float lifetimeT = saturate(p.Age / max(p.Lifetime, 0.0001f));
     p.Color = SampleGradient(particleSystem.ColorOverLifetime, lifetimeT);
+
+    float3 scale = float3(length(WorldTransform[0].xyz), length(WorldTransform[1].xyz), length(WorldTransform[2].xyz));
+    float curveSize = SampleCurve(particleSystem.SizeOverLifetime, lifetimeT);
+    p.Size = scale * curveSize;
 
     particles[id] = p;
 }

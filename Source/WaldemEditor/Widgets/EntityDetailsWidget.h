@@ -296,6 +296,28 @@ namespace Waldem
                         i += op->op_count - 1;
                         continue;
                     }
+                    if (op->type == ECS::World.id<WCurve>())
+                    {
+                        auto& curve = *static_cast<WCurve*>(ptr);
+
+                        ImGui::TableNextRow();
+
+                        ImGui::TableSetColumnIndex(0);
+                        ImGui::TextUnformatted(op->name);
+
+                        ImGui::TableSetColumnIndex(1);
+
+                        ComponentValueBlob before(id.raw_id(), base);
+
+                        if (ImGui::CurveField(uniqueId.c_str(), curve))
+                        {
+                            entity.modified(id);
+                            PushComponentStateCommand(entity, id, before, base);
+                        }
+
+                        i += op->op_count - 1;
+                        continue;
+                    }
                     
                     bool isNestedStruct = !prefix.empty();
 
