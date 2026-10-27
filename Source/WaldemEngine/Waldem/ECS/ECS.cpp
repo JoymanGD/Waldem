@@ -50,6 +50,7 @@
 
 #include "Systems/CoreSystems/TerrainSystem.h"
 #include "Waldem/Types/WGradient.h"
+#include "Waldem/Utils/IdUtils.h"
 
 namespace Waldem
 {
@@ -419,6 +420,7 @@ namespace Waldem
         void Core::RegisterTypes()
         {
             World.component<SceneEntity>("SceneEntity")
+                .member<uint64>("UUID")
                 .member<uint64>("ParentId")
                 .member<float>("HierarchyDepth")
                 .member<float>("HierarchySlot")
@@ -662,6 +664,7 @@ namespace Waldem
             auto slot = HierarchySlots.Allocate();
             
             Entity entity = World.entity().set<SceneEntity>({
+                .UUID = GenerateUUID(),
                 .ParentId = 0,
                 .HierarchySlot = (float)slot,
                 .VisibleInHierarchy = visibleInHierarchy,
@@ -693,6 +696,7 @@ namespace Waldem
             
             auto clone = entity.clone().set<SceneEntity>(
             {
+                .UUID = GenerateUUID(),
                 .ParentId = sceneEntityComponent.ParentId,
                 .HierarchySlot = (float)newSlot,
                 .VisibleInHierarchy = sceneEntityComponent.VisibleInHierarchy,
@@ -708,6 +712,23 @@ namespace Waldem
             ResetCloneRuntimeState(clone);
             
             return clone;
+        }
+
+        Entity FindEntityByUUID(uint64 uuid)
+        {
+            if(uuid == 0)
+                return {};
+
+            Entity result;
+
+            auto query = World.query_builder<const SceneEntity>().build();
+            query.each([&](Entity entity, const SceneEntity& sceneEntity)
+            {
+                if(sceneEntity.UUID == uuid)
+                    result = entity;
+            });
+
+            return result;
         }
 
         void SetParent(Entity child, Entity parent, bool keepWorldTransform)

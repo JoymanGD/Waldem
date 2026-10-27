@@ -23,6 +23,8 @@
 #include <regex>
 #include <cstdlib>
 
+#include "DragPayload.h"
+#include "HierarchyWidget.h"
 #include "imgui_internal.h"
 #include "Waldem/ProjectManagement/ProjectManager.h"
 
@@ -31,7 +33,6 @@ namespace Waldem
     class ContentBrowserWidget : public IWidget
     {
     private:
-        static constexpr const char* HierarchyDragPayloadType = "WALDEM_HIERARCHY_ENTITY";
         ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
         char SearchBuffer[128] = "";
         Path CurrentPath = PROJECT_CONTENT_PATH;
@@ -1243,7 +1244,7 @@ namespace Waldem
 
             if (ImGui::BeginDragDropTarget())
             {
-                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(HierarchyDragPayloadType))
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(Payload::HierarchyDragPayloadType))
                 {
                     const auto entityId = *(const ECS::EntityT*)payload->Data;
                     Path targetFolder = isFolder ? entryPath : CurrentPath;
@@ -1472,9 +1473,7 @@ namespace Waldem
                 }
             }
 
-            if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) &&
-                ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
-                !ImGui::IsAnyItemHovered())
+            if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) && ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !ImGui::IsAnyItemHovered())
             {
                 SelectedAssetListPath.reset(); // Deselect
                 SharedSelectedAssetPath.reset();
@@ -1492,7 +1491,7 @@ namespace Waldem
             ImGui::InvisibleButton("##PrefabDropTarget", dropTargetSize);
             if (ImGui::BeginDragDropTarget())
             {
-                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(HierarchyDragPayloadType))
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(Payload::HierarchyDragPayloadType))
                 {
                     const auto entityId = *(const ECS::EntityT*)payload->Data;
                     Path targetFolder = HoveredDropTargetFolder.has_value() ? HoveredDropTargetFolder.value() : CurrentPath;

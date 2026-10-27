@@ -15,6 +15,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "Waldem/Utils/IdUtils.h"
+
 namespace Waldem::Prefab
 {
     namespace
@@ -210,6 +212,10 @@ namespace Waldem::Prefab
             if(entity.has<SceneEntity>())
             {
                 auto& sceneEntity = entity.get_mut<SceneEntity>();
+                if(sceneEntity.UUID == 0)
+                {
+                    sceneEntity.UUID = GenerateUUID();
+                }
                 sceneEntity.ParentId = 0;
                 sceneEntity.HierarchySlot = -1.0f;
                 sceneEntity.HierarchyDepth = 0.0f;

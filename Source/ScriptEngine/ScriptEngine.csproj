@@ -51,6 +51,9 @@
     <Compile Include="..\..\Build\Release\Sandbox\Content\Scripts\FirstPersonController.cs">
       <Link>Build\Release\Sandbox\Content\Scripts\FirstPersonController.cs</Link>
     </Compile>
+    <Compile Include="..\..\Build\Release\Sandbox\Content\Scripts\RocketController.cs">
+      <Link>Build\Release\Sandbox\Content\Scripts\RocketController.cs</Link>
+    </Compile>
     <Compile Include="..\..\Build\Release\Sandbox\Content\Scripts\RotatingObject.cs">
       <Link>Build\Release\Sandbox\Content\Scripts\RotatingObject.cs</Link>
     </Compile>

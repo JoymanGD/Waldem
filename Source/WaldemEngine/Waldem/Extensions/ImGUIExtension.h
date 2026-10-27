@@ -4,8 +4,10 @@
 #include <ImGradient.h>
 
 #include "imgui_internal.h"
+#include "Waldem/ProjectManagement/ProjectBuilder.h"
 #include "Waldem/Types/WCurve.h"
 #include "Waldem/Types/WGradient.h"
+#include "Waldem/ECS/ECSTypes.h"
 
 namespace Waldem
 {
@@ -433,14 +435,9 @@ namespace ImGui
         return ret;
     }
 
-    inline void AssetInputSlot(
-        Waldem::Path& inPathToAsset,
-        const char* assetType,
-        std::function<void()> onDropCallback = nullptr,
-        const char* label = nullptr,
-        std::function<void()> onClickCallback = nullptr)
+    inline void AssetInputSlot(Waldem::Path& inPathToAsset, const char* assetType, std::function<void()> onDropCallback = nullptr, const char* label = nullptr, std::function<void()> onClickCallback = nullptr)
     {
-        PushID((void*)&inPathToAsset);
+        PushID(&inPathToAsset);
 
         if(label)
         {
@@ -503,5 +500,66 @@ namespace ImGui
         }
 
         PopID();
+    }
+
+    inline void EntityInputSlot(Waldem::ECS::Entity& entity, std::function<void()> onDropCallback = nullptr, const char* label = nullptr, std::function<void()> onClickCallback = nullptr)
+    {
+        if(label)
+        {
+            PushID(label);
+        } 
+
+        std::string buttonLabel = "<None>";
+
+        if(entity.is_alive())
+        {
+            buttonLabel = std::string(entity.name().c_str());
+        }
+
+        Button((buttonLabel + "###EntityInputSlot").c_str(), ImVec2(200, 0));
+        
+        if (onClickCallback && IsItemClicked(ImGuiMouseButton_Left))
+        {
+            onClickCallback();
+        }
+    
+        // Accept drag and drop payload
+        if (BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = AcceptDragDropPayload(Waldem::Payload::HierarchyDragPayloadType))
+            {
+                if(payload->IsDelivery() && payload->Data != nullptr && payload->DataSize == sizeof(Waldem::ECS::EntityT))
+                {
+                    const Waldem::ECS::EntityT entityId = *static_cast<const Waldem::ECS::EntityT*>(payload->Data);
+                    Waldem::ECS::Entity droppedEntity = Waldem::ECS::World.entity(entityId);
+
+                    if(droppedEntity.is_alive())
+                    {
+                        entity = droppedEntity;
+
+                        if (onDropCallback)
+                        {
+                            onDropCallback();
+                        }
+                    }
+                }
+            }
+            EndDragDropTarget();
+        }
+    
+        // Optional: Right-click to clear
+        if (BeginPopupContextItem())
+        {
+            if (MenuItem("Clear"))
+            {
+                entity = {};
+            }
+            EndPopup();
+        }
+    
+        if(label)
+        {
+            PopID();
+        }
     }
 }

@@ -25,7 +25,8 @@ namespace Waldem
             Int,
             Bool,
             Vector3,
-            Quaternion
+            Quaternion,
+            Entity,
         };
 
         struct ScriptFieldValue
@@ -36,6 +37,7 @@ namespace Waldem
             bool BoolValue = false;
             Vector3 Vector3Value = { 0, 0, 0 };
             Quaternion QuaternionValue = { 1, 0, 0, 0 };
+            ECS::Entity EntityValue;
         };
 
         struct ScriptFieldDescriptor
@@ -51,7 +53,7 @@ namespace Waldem
         static const char* GetLastReloadStatus() { return LastReloadStatus.c_str(); }
         static bool GetScriptFieldDescriptors(const ScriptComponent& scriptComponent, std::vector<ScriptFieldDescriptor>& outFields);
         static bool GetScriptFieldValue(const ScriptComponent& scriptComponent, const std::string& fieldName, ScriptFieldValue& outValue);
-        static void SetScriptFieldValue(ScriptComponent& scriptComponent, const std::string& fieldName, const ScriptFieldValue& value);
+        static void SetScriptFieldValue(ECS::Entity owner, ScriptComponent& scriptComponent, const std::string& fieldName, const ScriptFieldValue& value);
 
         static bool IsInitialized() { return Runtime != nullptr; }
         static bool CreateEntityInstance(ECS::Entity entity, const ScriptComponent& scriptComponent);

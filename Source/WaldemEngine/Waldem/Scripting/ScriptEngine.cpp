@@ -4,6 +4,7 @@
 #include <mono/jit/jit.h>
 #include <mono/metadata/assembly.h>
 #include <mono/metadata/attrdefs.h>
+#include <mono/metadata/appdomain.h>
 #include <mono/metadata/class.h>
 #include <mono/metadata/object.h>
 
@@ -135,21 +136,34 @@ namespace Waldem
 
                 const char* classNamespace = mono_class_get_namespace(typeClass);
                 const char* className = mono_class_get_name(typeClass);
-                if(classNamespace != nullptr && className != nullptr &&
-                    strcmp(classNamespace, "Waldem") == 0 &&
-                    strcmp(className, "Vector3") == 0)
+                    
+                if(classNamespace != nullptr && className != nullptr && strcmp(classNamespace, "Waldem") == 0 && strcmp(className, "Vector3") == 0)
                 {
                     return ScriptFieldType::Vector3;
                 }
 
-                if(classNamespace != nullptr && className != nullptr &&
-                    strcmp(classNamespace, "Waldem") == 0 &&
-                    strcmp(className, "Quaternion") == 0)
+                if(classNamespace != nullptr && className != nullptr && strcmp(classNamespace, "Waldem") == 0 && strcmp(className, "Quaternion") == 0)
                 {
                     return ScriptFieldType::Quaternion;
                 }
 
                 return ScriptFieldType::None;
+            }
+            case MONO_TYPE_CLASS:
+            {
+                MonoClass* typeClass = mono_class_from_mono_type(monoType);
+                if(typeClass == nullptr)
+                {
+                    return ScriptFieldType::None;
+                }
+
+                const char* classNamespace = mono_class_get_namespace(typeClass);
+                const char* className = mono_class_get_name(typeClass);
+
+                if(classNamespace != nullptr && className != nullptr && strcmp(classNamespace, "Waldem") == 0 && strcmp(className, "Entity") == 0)
+                {
+                    return ScriptFieldType::Entity;
+                }
             }
             default:
                 return ScriptFieldType::None;
@@ -209,6 +223,38 @@ namespace Waldem
                 value.QuaternionValue = Quaternion(quaternionValue.w, quaternionValue.x, quaternionValue.y, quaternionValue.z);
                 break;
             }
+            case ScriptFieldType::Entity:
+            {
+                MonoObject* managedEntity = mono_field_get_value_object(mono_domain_get(), field, instanceObject);
+
+                if(managedEntity == nullptr)
+                {
+                    value.EntityValue = {};
+                    break;
+                }
+
+                MonoClass* entityClass = mono_object_get_class(managedEntity);
+                MonoClassField* entityIdField = nullptr;
+
+                for(MonoClass* currentClass = entityClass; currentClass != nullptr; currentClass = mono_class_get_parent(currentClass))
+                {
+                    entityIdField = mono_class_get_field_from_name(currentClass, "EntityId");
+
+                    if(entityIdField != nullptr)
+                        break;
+                }
+
+                if(entityIdField == nullptr)
+                {
+                    value.EntityValue = {};
+                    break;
+                }
+
+                uint64_t entityId = 0;
+                mono_field_get_value(managedEntity, entityIdField, &entityId);
+                value.EntityValue = entityId != 0 ? ECS::World.entity(entityId) : ECS::Entity{};
+                break;
+            }
             default:
                 break;
             }
@@ -248,6 +294,45 @@ namespace Waldem
                 mono_field_set_value(instanceObject, field, &quaternionValue);
                 break;
             }
+            case ScriptFieldType::Entity:
+            {
+                uint64_t entityId = value.EntityValue.is_alive() ? value.EntityValue.id() : 0;
+
+                if(entityId == 0)
+                {
+                    mono_field_set_value(instanceObject, field, nullptr);
+                    break;
+                }
+
+                MonoClass* entityClass = mono_class_from_mono_type(mono_field_get_type(field));
+
+                if(entityClass == nullptr)
+                    break;
+
+                MonoObject* managedEntity = mono_object_new(mono_domain_get(), entityClass);
+
+                if(managedEntity == nullptr)
+                    break;
+
+                mono_runtime_object_init(managedEntity);
+
+                MonoClassField* entityIdField = nullptr;
+
+                for(MonoClass* currentClass = entityClass; currentClass != nullptr; currentClass = mono_class_get_parent(currentClass))
+                {
+                    entityIdField = mono_class_get_field_from_name(currentClass, "EntityId");
+
+                    if(entityIdField != nullptr)
+                        break;
+                }
+
+                if(entityIdField == nullptr)
+                    break;
+
+                mono_field_set_value(managedEntity, entityIdField, &entityId);
+                mono_field_set_value(instanceObject, field, managedEntity);
+                break;
+            }
             default:
                 break;
             }
@@ -281,60 +366,77 @@ namespace Waldem
 
                 switch(value.Type)
                 {
-                case ScriptFieldType::Float:
-                    if(entry.HasMember("float") && entry["float"].IsNumber())
+                    case ScriptFieldType::Float:
                     {
-                        value.FloatValue = entry["float"].GetFloat();
-                        outValues[fieldName] = value;
-                    }
-                    break;
-                case ScriptFieldType::Int:
-                    if(entry.HasMember("int") && entry["int"].IsInt())
-                    {
-                        value.IntValue = entry["int"].GetInt();
-                        outValues[fieldName] = value;
-                    }
-                    break;
-                case ScriptFieldType::Bool:
-                    if(entry.HasMember("bool") && entry["bool"].IsBool())
-                    {
-                        value.BoolValue = entry["bool"].GetBool();
-                        outValues[fieldName] = value;
-                    }
-                    break;
-                case ScriptFieldType::Vector3:
-                    if(entry.HasMember("vector3") && entry["vector3"].IsObject())
-                    {
-                        const auto& vectorObject = entry["vector3"];
-                        if(vectorObject.HasMember("x") && vectorObject["x"].IsNumber() &&
-                            vectorObject.HasMember("y") && vectorObject["y"].IsNumber() &&
-                            vectorObject.HasMember("z") && vectorObject["z"].IsNumber())
+                        if(entry.HasMember("float") && entry["float"].IsNumber())
                         {
-                            value.Vector3Value = Vector3(vectorObject["x"].GetFloat(), vectorObject["y"].GetFloat(), vectorObject["z"].GetFloat());
+                            value.FloatValue = entry["float"].GetFloat();
                             outValues[fieldName] = value;
                         }
+                        break;
                     }
-                    break;
-                case ScriptFieldType::Quaternion:
-                    if(entry.HasMember("quaternion") && entry["quaternion"].IsObject())
+                    case ScriptFieldType::Int:
                     {
-                        const auto& quaternionObject = entry["quaternion"];
-                        if(quaternionObject.HasMember("w") && quaternionObject["w"].IsNumber() &&
-                            quaternionObject.HasMember("x") && quaternionObject["x"].IsNumber() &&
-                            quaternionObject.HasMember("y") && quaternionObject["y"].IsNumber() &&
-                            quaternionObject.HasMember("z") && quaternionObject["z"].IsNumber())
+                        if(entry.HasMember("int") && entry["int"].IsInt())
                         {
-                            value.QuaternionValue = Quaternion(
-                                quaternionObject["w"].GetFloat(),
-                                quaternionObject["x"].GetFloat(),
-                                quaternionObject["y"].GetFloat(),
-                                quaternionObject["z"].GetFloat());
+                            value.IntValue = entry["int"].GetInt();
                             outValues[fieldName] = value;
                         }
+                        break;
                     }
-                    break;
-                default:
-                    break;
+                    case ScriptFieldType::Bool:
+                    {
+                        if(entry.HasMember("bool") && entry["bool"].IsBool())
+                        {
+                            value.BoolValue = entry["bool"].GetBool();
+                            outValues[fieldName] = value;
+                        }
+                        break;
+                    }
+                    case ScriptFieldType::Vector3:
+                    {
+                        if(entry.HasMember("vector3") && entry["vector3"].IsObject())
+                        {
+                            const auto& vectorObject = entry["vector3"];
+                            if(vectorObject.HasMember("x") && vectorObject["x"].IsNumber() &&
+                                vectorObject.HasMember("y") && vectorObject["y"].IsNumber() &&
+                                vectorObject.HasMember("z") && vectorObject["z"].IsNumber())
+                            {
+                                value.Vector3Value = Vector3(vectorObject["x"].GetFloat(), vectorObject["y"].GetFloat(), vectorObject["z"].GetFloat());
+                                outValues[fieldName] = value;
+                            }
+                        }
+                        break;
+                    }
+                    case ScriptFieldType::Quaternion:
+                    {
+                        if(entry.HasMember("quaternion") && entry["quaternion"].IsObject())
+                        {
+                            const auto& quaternionObject = entry["quaternion"];
+                            if(quaternionObject.HasMember("w") && quaternionObject["w"].IsNumber() &&
+                                quaternionObject.HasMember("x") && quaternionObject["x"].IsNumber() &&
+                                quaternionObject.HasMember("y") && quaternionObject["y"].IsNumber() &&
+                                quaternionObject.HasMember("z") && quaternionObject["z"].IsNumber())
+                            {
+                                value.QuaternionValue = Quaternion(quaternionObject["w"].GetFloat(), quaternionObject["x"].GetFloat(), quaternionObject["y"].GetFloat(), quaternionObject["z"].GetFloat());
+                                outValues[fieldName] = value;
+                            }
+                        }
+                        break;
+                    }
+                    case ScriptFieldType::Entity:
+                    {
+                        if(entry.HasMember("entity") && entry["entity"].IsUint64())
+                        {
+                            uint64 uuid = entry["entity"].GetUint64();
+                            value.EntityValue = ECS::FindEntityByUUID(uuid);
+                            outValues[fieldName] = value;
+                        }
+
+                        break;
+                    }
+                    default:
+                        break;
                 }
             }
 
@@ -357,44 +459,67 @@ namespace Waldem
 
                 switch(value.Type)
                 {
-                case ScriptFieldType::Float:
-                    writer.Key("float");
-                    writer.Double(value.FloatValue);
-                    break;
-                case ScriptFieldType::Int:
-                    writer.Key("int");
-                    writer.Int(value.IntValue);
-                    break;
-                case ScriptFieldType::Bool:
-                    writer.Key("bool");
-                    writer.Bool(value.BoolValue);
-                    break;
-                case ScriptFieldType::Vector3:
-                    writer.Key("vector3");
-                    writer.StartObject();
-                    writer.Key("x");
-                    writer.Double(value.Vector3Value.x);
-                    writer.Key("y");
-                    writer.Double(value.Vector3Value.y);
-                    writer.Key("z");
-                    writer.Double(value.Vector3Value.z);
-                    writer.EndObject();
-                    break;
-                case ScriptFieldType::Quaternion:
-                    writer.Key("quaternion");
-                    writer.StartObject();
-                    writer.Key("w");
-                    writer.Double(value.QuaternionValue.w);
-                    writer.Key("x");
-                    writer.Double(value.QuaternionValue.x);
-                    writer.Key("y");
-                    writer.Double(value.QuaternionValue.y);
-                    writer.Key("z");
-                    writer.Double(value.QuaternionValue.z);
-                    writer.EndObject();
-                    break;
-                default:
-                    break;
+                    case ScriptFieldType::Float:
+                    {
+                        writer.Key("float");
+                        writer.Double(value.FloatValue);
+                        break;
+                    }
+                    case ScriptFieldType::Int:
+                    {
+                        writer.Key("int");
+                        writer.Int(value.IntValue);
+                        break;
+                    }
+                    case ScriptFieldType::Bool:
+                    {
+                        writer.Key("bool");
+                        writer.Bool(value.BoolValue);
+                        break;
+                    }
+                    case ScriptFieldType::Vector3:
+                    {
+                        writer.Key("vector3");
+                        writer.StartObject();
+                        writer.Key("x");
+                        writer.Double(value.Vector3Value.x);
+                        writer.Key("y");
+                        writer.Double(value.Vector3Value.y);
+                        writer.Key("z");
+                        writer.Double(value.Vector3Value.z);
+                        writer.EndObject();
+                        break;
+                    }
+                    case ScriptFieldType::Quaternion:
+                    {
+                        writer.Key("quaternion");
+                        writer.StartObject();
+                        writer.Key("w");
+                        writer.Double(value.QuaternionValue.w);
+                        writer.Key("x");
+                        writer.Double(value.QuaternionValue.x);
+                        writer.Key("y");
+                        writer.Double(value.QuaternionValue.y);
+                        writer.Key("z");
+                        writer.Double(value.QuaternionValue.z);
+                        writer.EndObject();
+                        break;
+                    }
+                    case ScriptFieldType::Entity:
+                    {
+                        writer.Key("entity");
+                        uint64 uuid = 0;
+
+                        if(value.EntityValue.is_alive() && value.EntityValue.has<SceneEntity>())
+                        {
+                            uuid = value.EntityValue.get<SceneEntity>().UUID;
+                        }
+
+                        writer.Uint64(uuid);
+                        break;
+                    }
+                    default:
+                        break;
                 }
 
                 writer.EndObject();
@@ -900,12 +1025,30 @@ namespace Waldem
         return outValue.Type != ScriptFieldType::None;
     }
 
-    void ScriptEngine::SetScriptFieldValue(ScriptComponent& scriptComponent, const std::string& fieldName, const ScriptFieldValue& value)
+    void ScriptEngine::SetScriptFieldValue(ECS::Entity owner, ScriptComponent& scriptComponent, const std::string& fieldName, const ScriptFieldValue& value)
     {
         std::unordered_map<std::string, ScriptFieldValue> overrides;
         TryParseFieldOverrides(scriptComponent.FieldOverrides, overrides);
         overrides[fieldName] = value;
         scriptComponent.FieldOverrides = SerializeFieldOverrides(overrides);
+
+        ScriptInstance* instance = GetInstance(owner.id());
+
+        if(instance == nullptr)
+            return;
+
+        MonoObject* managedInstance = GetManagedInstance(*instance);
+
+        if(managedInstance == nullptr)
+            return;
+
+        ScriptFieldType actualType = ScriptFieldType::None;
+        MonoClassField* field = FindScriptField(instance->Class, fieldName, &actualType);
+
+        if(field == nullptr || actualType != value.Type)
+            return;
+
+        WriteFieldValue(managedInstance, field, value);
     }
 
     bool ScriptEngine::LoadCoreAssembly()

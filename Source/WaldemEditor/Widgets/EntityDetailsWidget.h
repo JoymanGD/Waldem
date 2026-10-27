@@ -46,9 +46,6 @@ namespace Waldem
                 return;
             }
 
-            ImGui::Spacing();
-            ImGui::SeparatorText("Script Fields");
-
             if(ImGui::BeginTable("##ScriptFieldsTable", 2, ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_SizingStretchProp))
             {
                 ImGui::TableSetupColumn("Property", ImGuiTableColumnFlags_WidthFixed, 120.0f);
@@ -76,7 +73,7 @@ namespace Waldem
                     {
                         if(ImGui::DragFloat(uniqueId.c_str(), &value.FloatValue, 0.1f))
                         {
-                            ScriptEngine::SetScriptFieldValue(scriptComponent, field.Name, value);
+                            ScriptEngine::SetScriptFieldValue(entity, scriptComponent, field.Name, value);
                             entity.modified(id);
                             PushComponentStateCommand(entity, id, before, &scriptComponent);
                         }
@@ -86,7 +83,7 @@ namespace Waldem
                     {
                         if(ImGui::DragInt(uniqueId.c_str(), &value.IntValue))
                         {
-                            ScriptEngine::SetScriptFieldValue(scriptComponent, field.Name, value);
+                            ScriptEngine::SetScriptFieldValue(entity, scriptComponent, field.Name, value);
                             entity.modified(id);
                             PushComponentStateCommand(entity, id, before, &scriptComponent);
                         }
@@ -96,7 +93,7 @@ namespace Waldem
                     {
                         if(ImGui::Checkbox(uniqueId.c_str(), &value.BoolValue))
                         {
-                            ScriptEngine::SetScriptFieldValue(scriptComponent, field.Name, value);
+                            ScriptEngine::SetScriptFieldValue(entity, scriptComponent, field.Name, value);
                             entity.modified(id);
                             PushComponentStateCommand(entity, id, before, &scriptComponent);
                         }
@@ -108,7 +105,7 @@ namespace Waldem
                         if(ImGui::DragFloat3(uniqueId.c_str(), vectorValues, 0.1f))
                         {
                             value.Vector3Value = Vector3(vectorValues[0], vectorValues[1], vectorValues[2]);
-                            ScriptEngine::SetScriptFieldValue(scriptComponent, field.Name, value);
+                            ScriptEngine::SetScriptFieldValue(entity, scriptComponent, field.Name, value);
                             entity.modified(id);
                             PushComponentStateCommand(entity, id, before, &scriptComponent);
                         }
@@ -116,23 +113,24 @@ namespace Waldem
                     }
                     case ScriptEngine::ScriptFieldType::Quaternion:
                     {
-                        float quaternionValues[4] = {
-                            value.QuaternionValue.w,
-                            value.QuaternionValue.x,
-                            value.QuaternionValue.y,
-                            value.QuaternionValue.z
-                        };
+                        float quaternionValues[4] = { value.QuaternionValue.w, value.QuaternionValue.x, value.QuaternionValue.y, value.QuaternionValue.z };
                         if(ImGui::DragFloat4(uniqueId.c_str(), quaternionValues, 0.01f))
                         {
-                            value.QuaternionValue = Quaternion(
-                                quaternionValues[0],
-                                quaternionValues[1],
-                                quaternionValues[2],
-                                quaternionValues[3]);
-                            ScriptEngine::SetScriptFieldValue(scriptComponent, field.Name, value);
+                            value.QuaternionValue = Quaternion(quaternionValues[0],quaternionValues[1],quaternionValues[2],quaternionValues[3]);
+                            ScriptEngine::SetScriptFieldValue(entity, scriptComponent, field.Name, value);
                             entity.modified(id);
                             PushComponentStateCommand(entity, id, before, &scriptComponent);
                         }
+                        break;
+                    }
+                    case ScriptEngine::ScriptFieldType::Entity:
+                    {
+                        ImGui::EntityInputSlot(value.EntityValue, [this, &scriptComponent, &field, &value, &entity, &id, &before]
+                        {
+                            ScriptEngine::SetScriptFieldValue(entity, scriptComponent, field.Name, value);
+                            entity.modified(id);
+                            PushComponentStateCommand(entity, id, before, &scriptComponent);
+                        }, field.Name.c_str());
                         break;
                     }
                     default:
@@ -597,10 +595,7 @@ namespace Waldem
 
                             WString assetTypeString = AssetTypeToString(assetType);
                             ComponentValueBlob before(id.raw_id(), base);
-                            const bool isMeshRefField =
-                                (op->type == meshRefId) &&
-                                op->name &&
-                                (std::string(op->name) == "MeshRef");
+                            const bool isMeshRefField = (op->type == meshRefId) && op->name && (std::string(op->name) == "MeshRef");
 
                             ImGui::AssetInputSlot(assetRef->Reference, assetTypeString.C_Str(), [this, entity, id, base, before, isMeshRefField, op, materialRefId]()
                             {
@@ -751,9 +746,6 @@ namespace Waldem
                         ImGui::EndPopup();
                     }
 
-                    ImGui::Separator();
-
-                    // === New Flecs Reflection Handling ===
                     if (comp.has<ECS::TypeSerializer>())
                     {
                         const auto& ts = comp.get<ECS::TypeSerializer>();

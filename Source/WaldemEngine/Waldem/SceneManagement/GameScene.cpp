@@ -11,6 +11,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "Waldem/Utils/IdUtils.h"
+
 Waldem::GameScene::~GameScene()
 {
 }
@@ -163,6 +165,17 @@ void Waldem::GameScene::Deserialize(Path& inPath)
         // Create a new entity from JSON
         auto entity = ECS::World.entity();
         entity.from_json(buffer.GetString());
+
+        if(entity.has<SceneEntity>())
+        {
+            auto& sceneEntity = entity.get_mut<SceneEntity>();
+
+            if(sceneEntity.UUID == 0 || sceneEntity.UUID == 0x7FFFFFFFFFFFFFFFULL)
+            {
+                sceneEntity.UUID = GenerateUUID();
+                entity.modified<SceneEntity>();
+            }
+        }
         
         if(sceneId >= 0)
         {

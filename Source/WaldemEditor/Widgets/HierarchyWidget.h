@@ -22,11 +22,12 @@
 #include <unordered_map>
 #include <vector>
 
+#include "DragPayload.h"
+
 namespace Waldem
 {
     class HierarchyWidget : public IWidget
     {
-        static constexpr const char* HierarchyDragPayloadType = "WALDEM_HIERARCHY_ENTITY";
         static constexpr const char* PrefabDragPayloadType = "Prefab";
         static constexpr const char* ModelDragPayloadType = "Model";
         static constexpr const char* MeshDragPayloadType = "Mesh";
@@ -421,7 +422,7 @@ namespace Waldem
                         ImGui::SetItemDefaultFocus();
                     }
 
-                    if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
+                    if (ImGui::IsMouseReleased(ImGuiMouseButton_Left) && ImGui::IsItemHovered(ImGuiHoveredFlags_None))
                     {
                         const bool ctrlHeld = ImGui::GetIO().KeyCtrl;
                         const bool shiftHeld = ImGui::GetIO().KeyShift;
@@ -486,7 +487,7 @@ namespace Waldem
                     if (ImGui::BeginDragDropSource())
                     {
                         const auto draggedEntityId = entity.id();
-                        ImGui::SetDragDropPayload(HierarchyDragPayloadType, &draggedEntityId, sizeof(draggedEntityId));
+                        ImGui::SetDragDropPayload(Payload::HierarchyDragPayloadType, &draggedEntityId, sizeof(draggedEntityId));
 
                         std::vector<ECS::EntityT> draggedSelectionIds;
                         if(entity.has<Selected>())
@@ -511,7 +512,7 @@ namespace Waldem
 
                     if (ImGui::BeginDragDropTarget())
                     {
-                        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(HierarchyDragPayloadType))
+                        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(Payload::HierarchyDragPayloadType))
                         {
                             auto draggedEntityId = *(const ECS::EntityT*)payload->Data;
                             auto draggedEntity = ECS::World.entity(draggedEntityId);
@@ -611,7 +612,7 @@ namespace Waldem
                 }
                 if (ImGui::BeginDragDropTarget())
                 {
-                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(HierarchyDragPayloadType))
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(Payload::HierarchyDragPayloadType))
                     {
                         auto draggedEntityId = *(const ECS::EntityT*)payload->Data;
                         auto draggedEntity = ECS::World.entity(draggedEntityId);

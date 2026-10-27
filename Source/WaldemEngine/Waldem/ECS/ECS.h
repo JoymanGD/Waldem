@@ -80,6 +80,7 @@ namespace Waldem
         Entity WALDEM_API CreateEntity(const WString& name = "", bool enabled = true);
         Entity WALDEM_API CreateSceneEntity(const WString& name, bool enabled = true, bool visibleInHierarchy = true);
         Entity WALDEM_API CloneSceneEntity(Entity entity);
+        Entity WALDEM_API FindEntityByUUID(uint64 uuid);
         void WALDEM_API SetParent(Entity child, Entity parent, bool keepWorldTransform = true);
         void WALDEM_API ClearParent(Entity child, bool keepWorldTransform = true);
         Entity WALDEM_API GetParent(Entity child);

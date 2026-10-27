@@ -22,7 +22,7 @@ namespace Waldem
         FIELD()
         float Radius = 1;
         FIELD()
-        bool WorldSpace = false;
+        bool WorldSpace = false; uint8 Padding[3] = {};
         FIELD()
         WColor Color = WColor(1, 1, 1, 1);
         FIELD()
