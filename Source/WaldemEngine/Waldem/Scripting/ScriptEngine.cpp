@@ -25,6 +25,7 @@
 #include "Bindings/EntityBindings.h"
 #include "Bindings/InputBindings.h"
 #include "Bindings/LightBindings.h"
+#include "Bindings/ParticleSystemBindings.h"
 #include "Bindings/QuaternionBindings.h"
 #include "Bindings/RigidBodyBindings.h"
 #include "Bindings/TimeBindings.h"
@@ -1155,6 +1156,7 @@ namespace Waldem
         Bindings::RegisterCharacterControllerCalls(Runtime);
         Bindings::RegisterCameraCalls(Runtime);
         Bindings::RegisterLightCalls(Runtime);
+        Bindings::RegisterParticleSystemCalls(Runtime);
     }
 
     MonoObject* ScriptEngine::GetManagedInstance(const ScriptInstance& instance)

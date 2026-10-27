@@ -6,6 +6,7 @@
 #include "Waldem/ECS/Components/Camera.h"
 #include "Waldem/ECS/Components/CharacterController.h"
 #include "Waldem/ECS/Components/Light.h"
+#include "Waldem/ECS/Components/ParticleSystemComponent.h"
 #include "Waldem/ECS/Components/RigidBody.h"
 #include "Waldem/ECS/Components/Transform.h"
 
@@ -21,7 +22,8 @@ namespace Waldem::Bindings
             RigidBody = 3,
             Light = 4,
             Animator = 5,
-            CharacterController = 6
+            CharacterController = 6,
+            ParticleSystem = 7
         };
 
         bool Entity_HasComponent(uint64_t entityId, int32_t componentKind)
@@ -38,6 +40,7 @@ namespace Waldem::Bindings
             case ScriptComponentKind::Light:     return entity.has<Light>();
             case ScriptComponentKind::Animator:  return entity.has<AnimatorComponent>();
             case ScriptComponentKind::CharacterController: return entity.has<CharacterController>();
+            case ScriptComponentKind::ParticleSystem: return entity.has<ParticleSystemComponent>();
             default: return false;
             }
         }
@@ -78,6 +81,11 @@ namespace Waldem::Bindings
                 case ScriptComponentKind::CharacterController:
                 {
                     entity.add<CharacterController>();
+                    break;
+                }
+                case ScriptComponentKind::ParticleSystem:
+                {
+                    entity.add<ParticleSystemComponent>();
                     break;
                 }
             }

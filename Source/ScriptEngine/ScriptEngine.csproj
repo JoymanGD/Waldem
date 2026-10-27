@@ -64,9 +64,12 @@
     <Compile Include="Camera.cs" />
     <Compile Include="CharacterController.cs" />
     <Compile Include="Collider.cs" />
+    <Compile Include="Color.cs" />
     <Compile Include="Component.cs" />
+    <Compile Include="Curve.cs" />
     <Compile Include="Debug.cs" />
     <Compile Include="Entity.cs" />
+    <Compile Include="Gradient.cs" />
     <Compile Include="Input.cs" />
     <Compile Include="InternalCalls.Animator.cs" />
     <Compile Include="InternalCalls.Camera.cs" />
@@ -75,6 +78,7 @@
     <Compile Include="InternalCalls.Entity.cs" />
     <Compile Include="InternalCalls.Input.cs" />
     <Compile Include="InternalCalls.Light.cs" />
+    <Compile Include="InternalCalls.ParticleSystem.cs" />
     <Compile Include="InternalCalls.Quaternion.cs" />
     <Compile Include="InternalCalls.RigidBody.cs" />
     <Compile Include="InternalCalls.Time.cs" />
@@ -84,12 +88,15 @@
     <Compile Include="Light.cs" />
     <Compile Include="Math.cs" />
     <Compile Include="MouseButton.cs" />
+    <Compile Include="ParticleSystem.cs" />
     <Compile Include="Quaternion.cs" />
     <Compile Include="RigidBody.cs" />
     <Compile Include="ScriptableEntity.cs" />
     <Compile Include="Time.cs" />
     <Compile Include="Transform.cs" />
+    <Compile Include="Vector2.cs" />
     <Compile Include="Vector3.cs" />
+    <Compile Include="Vector4.cs" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>
